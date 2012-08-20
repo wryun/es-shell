@@ -213,7 +213,7 @@ static void printlimit(const Limit *limit, Boolean hard) {
 				lim /= suf->amount;
 				break;
 			}
-		print("%-8s\t%d%s\n", limit->name, lim, (suf == NULL || lim == 0) ? "" : suf->name);
+		print("%-8s\t%d%s\n", limit->name, (int)lim, (suf == NULL || lim == 0) ? "" : suf->name);
 	}
 }
 
