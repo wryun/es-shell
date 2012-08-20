@@ -358,11 +358,23 @@ extern void gcdisable(size_t minfree) {
 	++gcblocked;
 }
 
+/* gcisblocked -- is collection disabled? */
+extern Boolean gcisblocked(void) {
+	assert(gcblocked >= 0);
+	return gcblocked != 0;
+}
+
 /* gc -- actually do a garbage collection */
 extern void gc(void) {
 	do {
 		size_t livedata;
 		Space *space;
+
+#if GCINFO
+		size_t olddata = 0;
+		for (space = new; space != NULL; space = space->next)
+			olddata += SPACEUSED(space);
+#endif
 
 		assert(gcblocked >= 0);
 		if (gcblocked > 0)
@@ -400,9 +412,17 @@ extern void gc(void) {
 
 		for (livedata = 0, space = new; space != NULL; space = space->next)
 			livedata += SPACEUSED(space);
-		if (minspace < livedata * 5)
+
+#if GCINFO
+		eprint(
+			"[GC: old %8d  live %8d  min %8d  (pid %5d)]\n",
+			olddata, livedata, minspace, getpid()
+		);
+#endif
+
+		if (minspace < livedata * 2)
 			minspace = livedata * 4;
-		else if (minspace > livedata * 16)
+		else if (minspace > livedata * 12)
 			minspace /= 2;
 
 		--gcblocked;
@@ -456,6 +476,8 @@ extern void *gcalloc(size_t nbytes, Tag *tag) {
  * strings
  */
 
+DefineTag(String,);
+
 extern char *gcndup(const char *s, size_t n) {
 	char *ns;
 
@@ -484,8 +506,6 @@ static void *StringCopy(void *op) {
 static size_t StringScan(void *p) {
 	return strlen(p) + 1;
 }
-
-DefineTag(String);
 
 
 /*

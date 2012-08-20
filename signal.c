@@ -75,14 +75,14 @@ static sigresult sigint(int sig) {
 	if (sigint_newline)
 		eprint("\n");
 	sigint_newline = TRUE;
-	while (gcblocked)
+	while (gcisblocked())
 		gcenable();
 	throw(mklist(mkterm("signal", NULL), mklist(mkterm("sigint", NULL), NULL)));
 	unreached(SIGRESULT);
 }
 
 static sigresult trapsig(int sig) {
-	while (gcblocked)
+	while (gcisblocked())
 		gcenable();
 	throw(mklist(mkterm("signal", NULL), mklist(mkterm(signals[sig].name, NULL), NULL)));
 	unreached(SIGRESULT);
@@ -114,12 +114,12 @@ extern void initsignals(Boolean allowdumps) {
 			signal(sig, h);
 		sighandlers[sig] = h;
 	}
-	if (interactive || sighandlers[SIGINT] != SIG_IGN)
+	if (isinteractive() || sighandlers[SIGINT] != SIG_IGN)
 		esignal(SIGINT, default_sigint = sigint);
 	if (!allowdumps) {
-		if (interactive)
+		if (isinteractive())
 			esignal(SIGTERM, default_sigterm = noop);
-		if (interactive || sighandlers[SIGQUIT] != SIG_IGN)
+		if (isinteractive() || sighandlers[SIGQUIT] != SIG_IGN)
 			esignal(SIGQUIT, default_sigquit = noop);
 	}
 }
@@ -133,13 +133,13 @@ extern Boolean issilentsignal(List *e) {
 extern void setsigdefaults(Boolean background) {
 
 #if JOB_PROTECT && SIGTTOU && SIGTTIN && SIGTSTP
-#define	IGNORE(signal) (CONCAT(default_, signal) = SIG_DFL)
+#define	IGNORE(signal) (CONCAT(default_,signal) = SIG_DFL)
 #else
 #define	IGNORE(signal) \
 	if (!background) \
-		CONCAT(default_, signal) = SIG_DFL; \
+		CONCAT(default_,signal) = SIG_DFL; \
 	else { \
-		CONCAT(default_, signal) = SIG_IGN; \
+		CONCAT(default_,signal) = SIG_IGN; \
 		esignal(sig, SIG_IGN); \
 		/* TODO: remove #signal from $signals */ \
 		break; \
@@ -147,7 +147,6 @@ extern void setsigdefaults(Boolean background) {
 #endif
 
 	int sig;
-	closefds();
 	for (sig = 1; sig < NUMOFSIGNALS; sig++)
 		if (sighandlers[sig] != SIG_IGN) {
 			sighandlers[sig] = NULL;

@@ -2,7 +2,6 @@
 
 #include "es.h"
 
-Boolean interactive	= FALSE;	/* -i or isatty(input) */
 Boolean loginshell	= FALSE;	/* -l or $0[0] == '-' */
 Boolean noexecute	= FALSE;	/* -n */
 Boolean verbose		= FALSE;	/* -v */
@@ -25,6 +24,7 @@ extern int optind;
 extern char *optarg;
 
 extern int isatty(int fd);
+extern char **environ;
 
 
 /* checkfd -- open /dev/null on an fd if it is closed */
@@ -58,13 +58,14 @@ static noreturn usage(void) {
 }
 
 /* main -- initialize, parse command arguments, and start running */
-int main(int argc, char **argv, char **envp) {
+int main(int argc, char **argv) {
 	Handler h;
 	List *e;
 	int c;
 
 	Boolean keepclosed = FALSE;		/* -o */
 	const char *volatile cmd = NULL;	/* -c */
+	volatile Boolean interactive = FALSE;	/* -i */
 	volatile Boolean protected = FALSE;	/* -p */
 	volatile Boolean allowquit = FALSE;	/* -d */
 	volatile Boolean stdin = FALSE;		/* -s */
@@ -129,35 +130,32 @@ getopt_done:
 
 	initinput();
 	initprims();
-	initvars(envp, initial, protected);
+	initvars(environ, initial, protected);
 	initsignals(allowquit);
 
 	if (loginshell) {
 		char *esrc = str("%L/.esrc", varlookup("home", NULL), "\001");
 		int fd = eopen(esrc, oOpen);
-		if (fd != -1) {
-			Boolean save_interactive = interactive;
-			interactive = FALSE;
-			runfd(fd);
-			interactive = save_interactive;
-		}
+		if (fd != -1)
+			runfd(fd, esrc, FALSE);
 	}
 
 	if (cmd == NULL && !stdin && optind < argc) {
-		char *file = argv[optind++];
-		int fd = eopen(file, oOpen);
-		if (fd == -1) {
+		int fd;
+		Ref(char *, file, argv[optind++]);
+		if ((fd = eopen(file, oOpen)) == -1) {
 			eprint("%s: %s\n", file, strerror(errno));
 			return 1;
 		}
 		vardef("*", NULL, listify(argc - optind, argv + optind));
 		vardef("0", NULL, mklist(mkterm(file, NULL), NULL));
-		return exitstatus(runfd(fd));
+		return exitstatus(runfd(fd, file, interactive));
+		RefEnd(file);
 	}
 
 	vardef("*", NULL, listify(argc - optind, argv + optind));
 	vardef("0", NULL, mklist(mkterm(argv[0], NULL), NULL));
 	if (cmd != NULL)
-		return exitstatus(runstring(cmd));
-	return exitstatus(runfd(0));
+		return exitstatus(runstring(cmd, NULL));
+	return exitstatus(runfd(0, "stdin", interactive));
 }

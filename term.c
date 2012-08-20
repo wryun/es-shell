@@ -15,7 +15,7 @@ extern Generation nextgen(void) {
 	return generation;
 }
 
-static Tag TermTag;
+DefineTag(Term, static);
 
 extern Term *mkterm(char *str, Closure *closure) {
 	gcdisable(0);
@@ -97,4 +97,3 @@ static size_t TermScan(void *p) {
 	return sizeof (Term);
 }
 
-static DefineTag(Term);

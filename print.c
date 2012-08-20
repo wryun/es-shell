@@ -300,7 +300,7 @@ static void fdprint(Format *format, int fd, const char *fmt) {
 	format->bufend	= buf + sizeof buf;
 	format->grow	= fprint_flush;
 	format->flushed	= 0;
-	format->u.n	= fd;
+	format->u.n	= fdmap(fd);
 
 	gcdisable(0);
 	printfmt(format, fmt);

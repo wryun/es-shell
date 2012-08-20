@@ -12,20 +12,53 @@ fn-%close	= $&close
 fn-%count	= $&count
 fn-%create	= $&create
 fn-%dup		= $&dup
-fn-%fork	= $&fork
 fn-%flatten	= $&flatten
 fn-%fsplit	= $&fsplit
 fn-%here	= $&here
 fn-%not		= $&not
-fn-%newfd	= $&newfd
-fn-%one		= $&one
 fn-%open	= $&open
 fn-%or		= $&or
 fn-%pipe	= $&pipe
 fn-%seq		= $&seq
 fn-%split	= $&split
-fn-%var		= $&var
+
+#
+# internal shell mechanisms (non-syntax hooks)
+#
+
+fn-%batch-loop	= $&batchloop
+fn-%newfd	= $&newfd
+fn-%parse	= $&parse
+fn-%pathsearch	= $&pathsearch
 fn-%whatis	= $&whatis
+fn-%var		= $&var
+
+#
+# the read-eval-print loop
+#
+
+fn %interactive-loop {
+	let (result = <>$&true) {
+		catch @ e msg {
+			if {~ $e eof} {
+				return $result
+			} {~ $e error} {
+				echo >[1=2] $msg
+			} {!~ $e(1) signal && !~ $e(2) sigint} {
+				echo >[1=2] uncaught exception: $e $msg
+			}
+			throw retry
+		} {
+			while {} {
+				%prompt
+				result = <>{<>{%parse $prompt}}
+			}
+		}
+	}
+}
+
+fn %prompt {}
+prompt = '; ' ''
 
 #
 # primitive functions
@@ -62,10 +95,15 @@ fn var		{ for (i = $*) echo <>{%var $i} }
 fn whatis	{ for (i = $*) echo <>{%whatis $i} }
 
 fn vars {
-	if {!~ $* -[vfs]}	{ * = $* -v }
-	if {!~ $* -[ep]}	{ * = $* -e }
+	if {~ $* -a} {
+		* = -v -f -s -e -p
+	} {
+		if {!~ $* -[vfs]}	{ * = $* -v }
+		if {!~ $* -[ep]}	{ * = $* -e }
+	}
 	for (i = $*) if {!~ $i -[vfsep]} 
-	local (
+
+	let (
 		vars	= $&false
 		fns	= $&false
 		sets	= $&false
@@ -80,14 +118,11 @@ fn vars {
 			{~ $i -p}	{priv	= $&true}
 			{throw error var: bad option: $i}
 		)
-		for (var = <>{$&vars})
+		for (var = <>{$&vars}) {
 			if {isnoexport $var} $priv $export &&
-			if (
-				{~ $var fn-*}	$fns
-				{~ $var set-*}	$sets
-						$vars
-			) &&
-			var $var
+			if {~ $var fn-*} $fns {~ $var set-*} $sets $vars &&
+			echo <>{%var $var}
+		}
 	}
 }
 
@@ -95,16 +130,15 @@ fn vars {
 # settor functions
 #
 
-set-home = @ { let (set-HOME = ) HOME = $*; return $* }
-set-HOME = @ { let (set-home = ) home = $*; return $* }
+set-home = @ { local (set-HOME = ) HOME = $*; return $* }
+set-HOME = @ { local (set-home = ) home = $*; return $* }
 
-set-path = @ { let (set-PATH = ) PATH = <>{%flatten : $*}; return $* }
-set-PATH = @ { let (set-path = ) path = <>{%fsplit : $*}; return $* }
+set-path = @ { local (set-PATH = ) PATH = <>{%flatten : $*}; return $* }
+set-PATH = @ { local (set-path = ) path = <>{%fsplit : $*}; return $* }
 
-set-cdpath = @ { let (set-CDPATH = ) CDPATH = <>{%flatten : $*}; return $* }
-set-CDPATH = @ { let (set-cdpath = ) cdpath = <>{%fsplit : $*}; return $* }
+set-cdpath = @ { local (set-CDPATH = ) CDPATH = <>{%flatten : $*}; return $* }
+set-CDPATH = @ { local (set-cdpath = ) cdpath = <>{%fsplit : $*}; return $* }
 
-set-prompt = $&setprompt
 set-history = $&sethistory
 set-signals = $&setsignals
 
@@ -113,6 +147,5 @@ set-signals = $&setsignals
 #
 
 ifs = ' ' \t \n
-prompt = ';; ' ''
 home = /		# so home definitely exists, even if wrong
 cdpath = ''

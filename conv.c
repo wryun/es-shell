@@ -70,7 +70,7 @@ top:
 	case nMatch:	fmtprint(f, "~ %#T %T", n->u[0].p, n->u[1].p);	return FALSE;
 	case nPrim:	fmtprint(f, "$&%s", n->u[0].s);			return FALSE;
 	case nThunk:	fmtprint(f, "{%T}", n->u[0].p);			return FALSE;
-	case nVar:	fmtprint(f, "$%#T", n->u[0].p);			return FALSE;
+	case nVar:	fmtprint(f, "$(%#T)", n->u[0].p);		return FALSE;
 	case nVarsub:	fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p);	return FALSE;
 	case nWord:	fmtprint(f, "%s", n->u[0].s);			return FALSE;
 

@@ -53,7 +53,7 @@ static unsigned long strhash(const char *str) {
  * data structures and garbage collection
  */
 
-static Tag DictTag;
+DefineTag(Dict, static);
 
 typedef struct {
 	char *name;
@@ -93,8 +93,6 @@ static size_t DictScan(void *p) {
 	}
 	return offsetof(Dict, table[dict->size]);
 }
-
-static DefineTag(Dict);
 
 
 /*

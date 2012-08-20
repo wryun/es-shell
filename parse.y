@@ -1,9 +1,9 @@
 /* parse.y -- grammar for es */
 
 %{
-	#include "es.h"
-	#include "input.h"
-	#include "syntax.h"
+#include "es.h"
+#include "input.h"
+#include "syntax.h"
 %}
 
 %token	WORD QWORD
@@ -16,6 +16,7 @@
 %left	'!'
 %left	'|'
 %right	'$' 
+
 %left	SUB
 
 %union {

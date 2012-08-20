@@ -9,17 +9,19 @@
 
 #define	isodigit(c)	('0' <= (c) && (c) < '8')
 
+#define	BUFSIZE	((size_t) 1000)
+#define	BUFMAX	(8 * BUFSIZE)
 
-#define	BUFSIZE	((size_t) 1000)	/*	malloc hates power of 2 buffers? */
-#define	BUFMAX	(8 * BUFSIZE)	/* 	How big the buffer can get before we re-allocate the
-				 *	space at BUFSIZE again. Premature optimization? Maybe.
-				 */
+typedef enum { NW, RW, KW } State;	/* "nonword", "realword", "keyword" */
 
-typedef enum wordstates {
-	NW, RW, KW /* "nonword", "realword", "keyword" */
-} wordstates;
+static State w = NW;
+static Boolean newline = FALSE;
+static Boolean goterror = FALSE;
+static size_t bufsize = 0;
+static char *tokenbuf = NULL;
 
-int lineno;
+#define	InsertFreeCaret()	do {if (w != NW) { w = NW; UNGETC(c); return '^'; }} while (0)
+
 
 /*
  *	Special characters (i.e., "non-word") in es:
@@ -64,24 +66,27 @@ const char dnw[] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 240 - 255 */
 };
 
-static size_t bufsize = BUFSIZE;
-static char *realbuf = NULL;
-static Boolean newline = FALSE;
-static wordstates w = NW;
-static Boolean goterror = FALSE;
 
-#define	checkfreecaret {if (w != NW) { w = NW; ugchar(c); return '^'; }}
-
-
-/* pr_error -- print error with line number on noninteractive shells (i.e., scripts) */
-extern void pr_error(char *s) {
-	assert(s != NULL);
-	if (interactive)
-		eprint("%s\n", s);
-	else
-		eprint("line %d: %s\n", lineno - 1, s);
+/* print_prompt2 -- called before all continuation lines */
+extern void print_prompt2(void) {
+	input->lineno++;
+#if READLINE
+	prompt = prompt2;
+#else
+	if (input->interactive && prompt2 != NULL)
+		eprint("%s", prompt2);
+#endif
 }
 
+/* scanerror -- called for lexical errors */
+static void scanerror(char *s) {
+	int c;
+	/* TODO: check previous character? rc's last hack? */
+	while ((c = GETC()) != '\n' && c != EOF)
+		;
+	goterror = TRUE;
+	yyerror(s);
+}
 
 /*
  * getfds
@@ -101,28 +106,28 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	fd[1] = default1;
 
 	if (c != '[') {
-		ugchar(c);
+		UNGETC(c);
 		return TRUE;
 	}
-	if ((unsigned int) (n = gchar() - '0') > 9) {
+	if ((unsigned int) (n = GETC() - '0') > 9) {
 		scanerror("expected digit after '['");
 		return FALSE;
 	}
 
-	while ((unsigned int) (c = gchar() - '0') <= 9)
+	while ((unsigned int) (c = GETC() - '0') <= 9)
 		n = n * 10 + c;
 	fd[0] = n;
 
 	switch (c += '0') {
 	case '=':
-		if ((unsigned int) (n = gchar() - '0') > 9) {
+		if ((unsigned int) (n = GETC() - '0') > 9) {
 			if (n != ']' - '0') {
 				scanerror("expected digit or ']' after '='");
 				return FALSE;
 			}
 			fd[1] = CLOSED;
 		} else {
-			while ((unsigned int) (c = gchar() - '0') <= 9)
+			while ((unsigned int) (c = GETC() - '0') <= 9)
 				n = n * 10 + c;
 			if (c != ']' - '0') {
 				scanerror("expected ']' after digit");
@@ -140,24 +145,17 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	return TRUE;
 }
 
-/* print_prompt2 -- called before all continuation lines */
-extern void print_prompt2(void) {
-	lineno++;
-#if READLINE
-	prompt = prompt2;
-#else
-	if (interactive)
-		eprint("%s", prompt2);
-#endif
-}
-
 extern int yylex(void) {
 	static Boolean dollar = FALSE;
 	int c;
-	size_t i;			/* The purpose of all these local assignments is to	*/
-	const char *meta;		/* allow optimizing compilers like gcc to load these	*/
-	char *buf = realbuf;		/* values into registers. On a sparc this is a		*/
-	YYSTYPE *y = &yylval;		/* win, in code size *and* execution time		*/
+	size_t i;			/* The purpose of all these local assignments is to 
+	*/
+	const char *meta;		/* allow optimizing compilers like gcc to load these 
+	*/
+	char *buf = tokenbuf;		/* values into registers. On a sparc this is a 
+		*/
+	YYSTYPE *y = &yylval;		/* win, in code size *and* execution time 
+		*/
 
 	if (goterror) {
 		goterror = FALSE;
@@ -168,24 +166,24 @@ extern int yylex(void) {
 	meta = (dollar ? dnw : nw);
 	dollar = FALSE;
 	if (newline) {
-		--lineno; /* slight space optimization; print_prompt2() always increments lineno */
+		--input->lineno; /* slight space optimization; print_prompt2() always increments lineno */
 		print_prompt2();
 		newline = FALSE;
 	}
-top:	while ((c = gchar()) == ' ' || c == '\t')
+top:	while ((c = GETC()) == ' ' || c == '\t')
 		w = NW;
 	if (c == EOF)
 		return ENDFILE;
 	if (!meta[(unsigned char) c]) {	/* it's a word or keyword. */
-		checkfreecaret;
+		InsertFreeCaret();
 		w = RW;
 		i = 0;
 		do {
 			buf[i++] = c;
 			if (i >= bufsize)
-				buf = realbuf = erealloc(buf, bufsize *= 2);
-		} while ((c = gchar()) != EOF && !meta[(unsigned char) c]);
-		ugchar(c);
+				buf = tokenbuf = erealloc(buf, bufsize *= 2);
+		} while ((c = GETC()) != EOF && !meta[(unsigned char) c]);
+		UNGETC(c);
 		buf[i] = '\0';
 		w = KW;
 		if (streq(buf, "@"))			return '@';
@@ -204,34 +202,31 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		return WORD;
 	}
 	if (c == '`' || c == '!' || c == '$' || c == '\'') {
-		checkfreecaret;
+		InsertFreeCaret();
 		if (c == '!')
 			w = KW;
 	}
 	switch (c) {
-	case '\0':
-		pr_error("warning: null character ignored");
-		goto top;
 	case '!':
 		return '!';
 	case '`':
-		c = gchar();
+		c = GETC();
 		if (c == '`')
 			return BACKBACK;
-		ugchar(c);
+		UNGETC(c);
 		return '`';
 	case '$':
 		dollar = TRUE;
-		switch (c = gchar()) {
+		switch (c = GETC()) {
 		case '#':	return COUNT;
 		case '^':	return FLAT;
 		case '&':	return PRIM;
-		default:	ugchar(c); return '$';
+		default:	UNGETC(c); return '$';
 		}
 	case '\'':
 		w = RW;
 		i = 0;
-		while ((c = gchar()) != '\'' || (c = gchar()) == '\'') {
+		while ((c = GETC()) != '\'' || (c = GETC()) == '\'') {
 			buf[i++] = c;
 			if (c == '\n')
 				print_prompt2();
@@ -241,27 +236,27 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 				return ERROR;
 			}
 			if (i >= bufsize)
-				buf = realbuf = erealloc(buf, bufsize *= 2);
+				buf = tokenbuf = erealloc(buf, bufsize *= 2);
 		}
-		ugchar(c);
+		UNGETC(c);
 		buf[i] = '\0';
 		y->str = gcdup(buf);
 		return QWORD;
 	case '\\':
-		if ((c = gchar()) == '\n') {
+		if ((c = GETC()) == '\n') {
 			print_prompt2();
-			ugchar(' ');
+			UNGETC(' ');
 			goto top; /* Pretend it was just another space. */
 		}
 		if (c == EOF) {
-			ugchar(EOF);
+			UNGETC(EOF);
 			goto badescape;
 		}
-		ugchar(c);
+		UNGETC(c);
 		c = '\\';
-		checkfreecaret;
+		InsertFreeCaret();
 		w = RW;
-		c = gchar();
+		c = GETC();
 		switch (c) {
 		case 'a':	*buf = '\a';	break;
 		case 'b':	*buf = '\b';	break;
@@ -273,14 +268,14 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		case 'x': {
 			int n = 0;
 			for (;;) {
-				c = gchar();
+				c = GETC();
 				if (!isxdigit(c))
 					break;
 				n = (n << 4) | (c - (isdigit(c) ? '0' : islower(c) ? 'a' : 'A'));
 			}
 			if (n == 0)
 				goto badescape;
-			ugchar(c);
+			UNGETC(c);
 			*buf = n;
 			break;
 		}
@@ -288,11 +283,11 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 			int n = 0;
 			do {
 				n = (n << 3) | (c - '0');
-				c = gchar();
+				c = GETC();
 			} while (isodigit(c));
 			if (n == 0)
 				goto badescape;
-			ugchar(c);
+			UNGETC(c);
 			*buf = n;
 			break;
 		}
@@ -309,12 +304,12 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		y->str = gcdup(buf);
 		return QWORD;
 	case '#':
-		while ((c = gchar()) != '\n') /* skip comment until newline */
+		while ((c = GETC()) != '\n') /* skip comment until newline */
 			if (c == EOF)
 				return ENDFILE;
 		/* FALLTHROUGH */
 	case '\n':
-		lineno++;
+		input->lineno++;
 		newline = TRUE;
 		w = NW;
 		return NL;
@@ -331,16 +326,16 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		return c;
 	case '&':
 		w = NW;
-		c = gchar();
+		c = GETC();
 		if (c == '&')
 			return ANDAND;
-		ugchar(c);
+		UNGETC(c);
 		return '&';
 
 	case '|': {
 		int p[2];
 		w = NW;
-		c = gchar();
+		c = GETC();
 		if (c == '|')
 			return OROR;
 		if (!getfds(p, c, 1, 0))
@@ -356,14 +351,13 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 	{
 		char *cmd;
 		int fd[2];
-
 	case '<':
 		fd[0] = 0;
-		if ((c = gchar()) == '>')
+		if ((c = GETC()) == '>')
 			return BOX;
 		else if (c == '<')
-			if ((c = gchar()) == '<') {
-				c = gchar();
+			if ((c = GETC()) == '<') {
+				c = GETC();
 				cmd = "%here";
 			} else
 				cmd = "%heredoc";
@@ -372,8 +366,8 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		goto redirection;
 	case '>':
 		fd[0] = 1;
-		if ((c = gchar()) == '>') {
-			c = gchar();
+		if ((c = GETC()) == '>') {
+			c = GETC();
 			cmd = "%append";
 		} else
 			cmd = "%create";
@@ -393,40 +387,21 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 	}
 
 	default:
+		assert(c != '\0');
 		w = NW;
 		return c; /* don't know what it is, let yacc barf on it */
 	}
 }
 
-extern void inityy() {
+extern void inityy(void) {
 	newline = FALSE;
 	w = NW;
-	/* return memory to the system if the buffer got too large */
-	if (bufsize > BUFMAX && realbuf != NULL) {
-		efree(realbuf);
+	if (bufsize > BUFMAX) {		/* return memory to the system if the buffer got too large */
+		efree(tokenbuf);
+		tokenbuf = NULL;
+	}
+	if (tokenbuf == NULL) {
 		bufsize = BUFSIZE;
-		realbuf = ealloc(bufsize);
-	} else if (realbuf == NULL)
-		realbuf = ealloc(bufsize);
-}
-
-/* locate -- identify where an error came from */
-extern char *locate(char *s) {
-	if (interactive)
-		return s;
-	return str("%d: %s near %s", lineno - (last == '\n'), s,
-			w == NW
-			  ? last == EOF
-			    ? "end of file"
-			    : last == '\n'
-			      ? "end of line"
-			      : str((last < 32 || last > 126) ? "<ascii %d>" : "'%c'", last)
-			  : realbuf);
-}
-
-/* scanerror -- called for lexical errors */
-extern void scanerror(char *s) {
-	goterror = TRUE;
-	flushu(); /* flush upto newline */
-	yyerror(s);
+		tokenbuf = ealloc(bufsize);
+	}
 }

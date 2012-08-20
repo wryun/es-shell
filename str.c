@@ -85,7 +85,7 @@ extern char *mprint VARARGS1(const char *, fmt) {
  *	to even include these is probably a premature optimization
  */
 
-static Tag StrListTag;
+DefineTag(StrList, static);
 
 extern StrList *mkstrlist(char *str, StrList *next) {
 	gcdisable(0);
@@ -109,6 +109,4 @@ static size_t StrListScan(void *p) {
 	list->next = forward(list->next);
 	return sizeof (StrList);
 }
-
-static DefineTag(StrList);
 

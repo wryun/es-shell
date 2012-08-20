@@ -8,7 +8,7 @@ extern List *forkexec(char *file, List *list, Boolean parent) {
 	Vector *env;
 	gcdisable(0);
 	env = mkenv();
-	pid = efork(parent, FALSE, FALSE);
+	pid = efork(parent, FALSE);
 	if (pid == 0) {
 		if (printcmds)
 			eprint("%L\n", list, " ");
@@ -58,12 +58,12 @@ static Binding *bindargs(Tree *params, List *args, Binding *binding) {
 	RefReturn(result);
 }
 
-/* whatis -- evaluate %whatis + some argument */
-extern List *whatis(Term *term) {
+/* pathsearch -- evaluate %pathsearch + some argument */
+extern List *pathsearch(Term *term) {
 	static Term *cmd = NULL;
 	if (cmd == NULL) {
 		globalroot(&cmd);
-		cmd = mkterm("%whatis", NULL);
+		cmd = mkterm("%pathsearch", NULL);
 	}
 	Ref(List *, list, mklist(term, NULL));
 	list = eval(mklist(cmd, list), NULL, TRUE, FALSE);
@@ -130,6 +130,11 @@ restart:
 		goto done;
 	}
 
+	if (isabsolute(lp->term->str)) {
+		lp = forkexec(lp->term->str, lp, parent);
+		goto done;
+	}
+
 	fn = varlookup2("fn-", lp->term->str);
 	if (fn != NULL) {
 		funcname = lp->term->str;
@@ -138,9 +143,8 @@ restart:
 		goto restart;
 	}
 
-	fn = whatis(lp->term);
-	assert(fn != NULL);
-	if (fn->next == NULL && fn->term->closure == NULL) {
+	fn = pathsearch(lp->term);
+	if (fn != NULL && fn->next == NULL && fn->term->closure == NULL) {
 		char *name = fn->term->str;
 		lp = forkexec(name, lp, parent);
 		goto done;
@@ -208,7 +212,7 @@ top:
 		return true;
 	}
 
-	case nLocal: case nClosure: {
+	case nLet: case nClosure: {
 		Ref(Binding *, bp, binding);
 		Ref(Tree *, body, tree->u[1].p);
 		Ref(Tree *, defn, tree->u[0].p);
@@ -230,7 +234,7 @@ top:
 		goto top;
 	}
 
-	case nLet: {
+	case nLocal: {
 		Handler h;
 		List *e;
 

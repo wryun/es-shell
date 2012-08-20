@@ -43,7 +43,7 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 
 	if (!hasmeta(pattern, quote)) {
 		char *name = str("%s%s", prefix, pattern);
-		if (stat(name, &s) == -1)
+		if (lstat(name, &s) == -1)
 			return NULL;
 		return mklist(mkterm(name, NULL), NULL);
 	}
@@ -57,7 +57,7 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 				return mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
 		}
 
-	assert(gcblocked > 0);
+	assert(gcisblocked());
 
 	/* opendir succeeds on regular files on some systems, so the stat() call is necessary (sigh) */
 	if (stat(dirname, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR || (dirp = opendir(dirname)) == NULL)

@@ -3,7 +3,7 @@
 #include "es.h"
 #include "gc.h"
 
-static Tag VectorTag;
+DefineTag(Vector, static);
 
 extern Vector *mkvector(int n) {
 	int i;
@@ -29,8 +29,6 @@ static size_t VectorScan(void *p) {
 		v->vector[i] = forward(v->vector[i]);
 	return offsetof(Vector, vector[v->alloclen + 1]);
 }
-
-static DefineTag(Vector);
 
 
 extern Vector *vectorize(List *list) {

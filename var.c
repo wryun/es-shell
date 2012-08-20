@@ -16,11 +16,12 @@ struct Var {
 Dict *vars;
 static Vector *env, *sortenv;
 static int envmin;
-static Tag VarTag;
 static Boolean isdirty = TRUE;
 static char notexported;
 
 #define	specialvar(name)	(streq(name, "*") || streq(name, "0"))
+
+DefineTag(Var, static);
 
 static Boolean hasbindings(List *list) {
 	for (; list != NULL; list = list->next) {
@@ -58,8 +59,6 @@ static size_t VarScan(void *p) {
 	var->env = (var->binder && rebound) ? NULL : forward(var->env);
 	return sizeof (Var);
 }
-
-static DefineTag(Var);
 
 
 /*
@@ -250,7 +249,7 @@ extern void varpop(char *name) {
 
 static void mkenv0(void *dummy, char *key, void *value) {
 	Var *var = value;
-	assert(gcblocked > 0);
+	assert(gcisblocked());
 	if (var == NULL || var->env == &notexported)
 		return;
 	if (var->env == NULL || (rebound && var->binder)) {
@@ -285,10 +284,6 @@ extern Vector *mkenv(void) {
 	return sortenv;
 }
 
-static void hide(void *dummy, char *key, void *value) {
-	((Var *) value)->env = &notexported;
-}
-
 /* noexport -- make a variable as unexported */
 extern void noexport(char *name) {
 	Var *var;
@@ -308,7 +303,7 @@ extern Boolean isnoexport(const char *name) {
 	return var != NULL && var->env == &notexported;
 }
 
-
+/* initpath -- set $path based on the configuration default */
 static void initpath(void) {
 	int i;
 	static const char * const path[] = { INITIAL_PATH };
@@ -320,8 +315,14 @@ static void initpath(void) {
 	RefEnd(list);
 }
 
+/* initpath -- set $pid for this shell */
 static void initpid(void) {
 	vardef("pid", NULL, mklist(mkterm(str("%d", getpid()), NULL), NULL));
+}
+
+/* hide -- worker function for dictforall to hide initial state */
+static void hide(void *dummy, char *key, void *value) {
+	((Var *) value)->env = &notexported;
 }
 
 extern void initvars(char **envp, const char *initial, Boolean protected) {
@@ -344,7 +345,7 @@ extern void initvars(char **envp, const char *initial, Boolean protected) {
 	vars = mkdict();
 	env = mkvector(10);
 
-	runstring(initial);
+	runstring(initial, "initial.es");
 	initpath();
 	initpid();
 	dictforall(vars, hide, NULL);

@@ -1,19 +1,6 @@
 /* gc.h -- garbage collector interface for es */
 
-
-/*
- * garbage collector controls
- */
-
-extern void initgc(void);		/* must be called at the dawn of time */
-extern void gc(void);			/* provoke a collection, if enabled */
-extern void gcenable(void);		/* enable collections */
-extern void gcdisable(size_t);		/* disable collections, collect first if space needed */
-
-#ifndef GARBAGE_COLLECTOR
-extern const int gcblocked;
-#endif
-
+/* see also es.h for more generally applicable definitions */
 
 /*
  * tags
@@ -32,9 +19,15 @@ extern Tag StringTag;
 
 #if ASSERTIONS || GCVERBOSE
 enum {TAGMAGIC = 0xDefaced};
-#define	DefineTag(t)	Tag CONCAT(t, Tag) = { CONCAT(t, Copy), CONCAT(t, Scan), TAGMAGIC, STRING(t) }
+#define	DefineTag(t, storage) \
+	static void *CONCAT(t,Copy)(void *); \
+	static size_t CONCAT(t,Scan)(void *); \
+	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), TAGMAGIC, STRING(t) }
 #else
-#define	DefineTag(t)	Tag CONCAT(t, Tag) = { CONCAT(t, Copy), CONCAT(t, Scan) }
+#define	DefineTag(t, storage) \
+	static void *CONCAT(t,Copy)(void *); \
+	static size_t CONCAT(t,Scan)(void *); \
+	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan) }
 #endif
 
 /*

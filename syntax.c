@@ -152,10 +152,8 @@ extern Tree *redirect(Tree *t) {
 	Tree *r, *p;
 	if (t == NULL)
 		return NULL;
-	if (t->kind != nRedir) {
-		assert(t->kind == nList);
+	if (t->kind != nRedir)
 		return t;
-	}
 	r = t->CAR;
 	for (p = r; p->CAR != &placeholder; p = p->CDR) {
 		assert(p != NULL);

@@ -48,6 +48,7 @@ extern void initprims(void) {
 	prims = initprims_controlflow(prims);
 	prims = initprims_io(prims);
 	prims = initprims_etc(prims);
+	prims = initprims_sys(prims);
 
 #define	primdict prims
 	X(primitives);

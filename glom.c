@@ -27,7 +27,7 @@ static char *qcat(const char *q1, const char *q2, Term *t1, Term *t2) {
 	size_t len1, len2;
 	char *result, *s;
 
-	assert(gcblocked > 0);
+	assert(gcisblocked());
 
 	if (q1 == QUOTED && q2 == QUOTED)
 		return QUOTED;
@@ -155,7 +155,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 	Ref(Tree *, tp, tree);
 	Ref(Binding *, bp, binding);
 
-	assert(gcblocked == 0);
+	assert(!gcisblocked());
 
 	while (tp != NULL) {
 		Ref(List *, list, NULL);
@@ -235,7 +235,7 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 	Ref(Tree *, tp, tree);
 	Ref(Binding *, bp, binding);
 
-	assert(gcblocked == 0);
+	assert(!gcisblocked());
 	assert(quotep != NULL);
 
 	/*

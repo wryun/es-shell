@@ -18,7 +18,7 @@ extern Tree *getherevar(void) {
 	int c;
 	char *s;
 	Buffer *buf = openbuffer(0);
-	while (!dnw[c = gchar()])
+	while (!dnw[c = GETC()])
 		buf = bufputc(buf, c);
 	s = sealcountedbuffer(buf);
 	if (buf->len == 0) {
@@ -26,7 +26,7 @@ extern Tree *getherevar(void) {
 		return NULL;
 	}
 	if (c != '^')
-		ugchar(c);
+		UNGETC(c);
 	return flatten(mk(nVar, mk(nWord, s)), " ");
 }
 
@@ -46,7 +46,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 	for (tree = NULL, tailp = &tree, buf = openbuffer(0);;) {
 		int c;
 		print_prompt2();
-		for (s = (unsigned char *) eof; (c = gchar()) == *s; s++)
+		for (s = (unsigned char *) eof; (c = GETC()) == *s; s++)
 			;
 		if (*s == '\0' && (c == '\n' || c == EOF)) {
 			if (buf->current == 0 && tree != NULL)
@@ -57,16 +57,16 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 		}
 		if (s != (unsigned char *) eof)
 			buf = bufncat(buf, eof, s - (unsigned char *) eof);
-		for (;; c = gchar()) {
+		for (;; c = GETC()) {
 			if (c == EOF) {
 				yyerror("incomplete here document");
 				freebuffer(buf);
 				disablehistory = FALSE;
 				return NULL;
 			}
-			if (c == '$' && !quoted && (c = gchar()) != '$') {
+			if (c == '$' && !quoted && (c = GETC()) != '$') {
 				Tree *var;
-				ugchar(c);
+				UNGETC(c);
 				if (buf->current == 0)
 					freebuffer(buf);
 				else {
@@ -118,10 +118,12 @@ extern Boolean queueheredoc(Tree *t) {
 
 	assert(hereq == NULL || hereq->marker->kind == nList);
 	assert(t->kind == nList);
-	assert(t->CAR->kind == nWord)
+	assert(t->CAR->kind == nWord);
+#if !REISER_CPP
 	assert(streq(t->CAR->u[0].s, "%heredoc"));
+#endif
 	t->CAR->u[0].s = "%here";
-	assert(t->CDR->kind == nList)
+	assert(t->CDR->kind == nList);
 	eof = t->CDR->CDR;
 	assert(eof->kind == nList);
 	if (eof->CAR->kind != nWord && eof->CAR->kind != nQword) {

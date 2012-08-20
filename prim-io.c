@@ -12,51 +12,54 @@ static int getnumber(const char *s) {
 	return result;
 }
 
-static List *redir(List *(*rop)(int fd, List *list), List *list, Boolean parent) {
-	int pid, fd;
-	if (parent && (pid = efork(parent, FALSE, FALSE)) != 0) {
-		int status;
-		status = ewaitfor(pid);
-		SIGCHK();
-		printstatus(0, status);
-		return mklist(mkterm(mkstatus(status), NULL), NULL);
+static List *redir(List *(*rop)(int *fd, List *list), List *list, Boolean parent) {
+	List *e;
+	Handler h;
+	int destfd, srcfd;
+	volatile int ticket = UNREGISTERED;
+
+	assert(list != NULL);
+	Ref(List *, lp, list);
+	destfd = getnumber(getstr(lp->term));
+	lp = (*rop)(&srcfd, lp->next);
+
+	if ((e = pushhandler(&h)) != NULL) {
+		undefer(ticket);
+		throw(e);
 	}
 
-	Ref(List *, lp, list);
-	assert(list != NULL);
-	fd = getnumber(getstr(lp->term));
-	releasefd(fd);
-	list = lp->next;
-	RefEnd(lp);
+	ticket = (srcfd == -1)
+			? defer_close(parent, destfd)
+			: defer_mvfd(parent, srcfd, destfd);
+	lp = eval(lp, NULL, parent, exitonfalse);
+	undefer(ticket);
+	pophandler(&h);
 
-	list = eval((*rop)(fd, list), NULL, FALSE, exitonfalse);
-	if (parent)
-		exit(exitstatus(list));
-	return list;
+	RefReturn(lp);
 }
 
-static List *simple(OpenKind o, int destfd, List *list) {
+static List *simple(OpenKind o, int *srcfdp, List *list) {
 	char *name;
-	int srcfd;
+	int fd;
 	assert(length(list) == 2);
 	Ref(List *, lp, list);
 	name = getstr(lp->term);
 	lp = lp->next;
-	srcfd = eopen(name, o);
-	if (srcfd == -1)
+	fd = eopen(name, o);
+	if (fd == -1)
 		fail("%s: %s", name, strerror(errno));
-	mvfd(srcfd, destfd);
+	*srcfdp = fd;
 	RefReturn(lp);
 }
 
-#define	REDIR(name)	static List *CONCAT(redir_, name)(int destfd, List *list)
+#define	REDIR(name)	static List *CONCAT(redir_,name)(int *srcfdp, List *list)
 
 static noreturn argcount(const char *s) {
 	fail("argument count: usage: %s (too many files in redirection)", s);
 }
 
 REDIR(open) {
-	return simple(oOpen, destfd, list);
+	return simple(oOpen, srcfdp, list);
 }
 
 PRIM(open) {
@@ -66,7 +69,7 @@ PRIM(open) {
 }
 
 REDIR(create) {
-	return simple(oCreate, destfd, list);
+	return simple(oCreate, srcfdp, list);
 }
 
 PRIM(create) {
@@ -76,7 +79,7 @@ PRIM(create) {
 }
 
 REDIR(append) {
-	return simple(oAppend, destfd, list);
+	return simple(oAppend, srcfdp, list);
 }
 
 PRIM(append) {
@@ -86,11 +89,13 @@ PRIM(append) {
 }
 
 REDIR(dup) {
-	int srcfd;
+	int fd;
 	assert(length(list) == 2);
 	Ref(List *, lp, list);
-	srcfd = getnumber(getstr(lp->term));
-	mvfd(srcfd, destfd);
+	fd = dup(fdmap(getnumber(getstr(lp->term))));
+	if (fd == -1)
+		fail("dup: %s", strerror(errno));
+	*srcfdp = fd;
 	lp = lp->next;
 	RefReturn(lp);
 }
@@ -102,7 +107,7 @@ PRIM(dup) {
 }
 
 REDIR(close) {
-	close(destfd);
+	*srcfdp = -1;
 	return list;
 }
 
@@ -110,6 +115,39 @@ PRIM(close) {
 	if (length(list) != 2)
 		argcount("%close fd cmd");
 	return redir(redir_close, list, parent);
+}
+
+/* pipefork -- create a pipe and fork */
+static int pipefork(int p[2], int *extra) {
+	int pid;
+	List *e;
+	Handler h;
+
+	if (pipe(p) == -1)
+		fail("pipe: %s", strerror(errno));
+
+	registerfd(&p[0], FALSE);
+	registerfd(&p[1], FALSE);
+	if (extra != NULL)
+		registerfd(extra, FALSE);
+
+	if ((e = pushhandler(&h)) != NULL) {
+		unregisterfd(&p[0]);
+		unregisterfd(&p[1]);
+		if (extra != NULL)
+			unregisterfd(extra);
+		throw(e);
+	}
+
+	pid = efork(TRUE, FALSE);
+	if (pid != 0)
+		pophandler(&h);
+
+	unregisterfd(&p[0]);
+	unregisterfd(&p[1]);
+	if (extra != NULL)
+		unregisterfd(extra);
+	return pid;
 }
 
 REDIR(here) {
@@ -122,17 +160,14 @@ REDIR(here) {
 	doc = (list == tail) ? NULL : list;
 	*tailp = NULL;
 
-	if (pipe(p) == -1)
-		fail("pipe: %s", strerror(errno));
-	pid = efork(TRUE, FALSE, FALSE);
-	if (pid == 0) {		/* child that writes to pipe */
+	if ((pid = pipefork(p, NULL)) == 0) {		/* child that writes to pipe */
 		close(p[0]);
 		fprint(p[1], "%L", doc, "");
 		exit(0);
 	}
 
 	close(p[1]);
-	mvfd(p[0], destfd);
+	*srcfdp = p[0];
 	return tail;
 }
 
@@ -160,10 +195,9 @@ PRIM(pipe) {
 
 	for (;; list = list->next) {
 		int p[2], pid;
-		if (list->next != NULL)
-			if (pipe(p) == -1)
-				fail("pipe: %s", strerror(errno));
-		pid = efork(TRUE, FALSE, FALSE);
+		
+		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork(p, &inpipe);
+
 		if (pid == 0) {		/* child */
 			if (inpipe != -1) {
 				assert(infd != -1);
@@ -226,13 +260,13 @@ PRIM(backquote) {
 	Ref(List *, lp, list);
 	Ref(char *, sep, getstr(lp->term));
 	lp = lp->next;
-	if (pipe(p) == -1)
-		fail("pipe: %s", strerror(errno));
-	if ((pid = efork(TRUE, FALSE, FALSE)) == 0) {
+
+	if ((pid = pipefork(p, NULL)) == 0) {
 		mvfd(p[1], 1);
 		close(p[0]);
 		exit(exitstatus(eval(lp, NULL, FALSE, exitonfalse)));
 	}
+
 	close(p[1]);
 	gcdisable(0);
 	lp = bqinput(sep, p[0]);
@@ -247,17 +281,9 @@ PRIM(backquote) {
 }
 
 PRIM(newfd) {
-	int fd;
 	if (list != NULL)
 		fail("usage: $&newfd");
-	fd = dup(3);
-	if (fd == -1) {
-		if (errno != EBADF)
-			fail("newfd: %s", strerror(errno));
-		return mklist(mkterm("3", NULL), NULL);
-	}
-	close(fd);
-	return mklist(mkterm(str("%d", fd), NULL), NULL);
+	return mklist(mkterm(str("%d", newfd()), NULL), NULL);
 }
 
 extern Dict *initprims_io(Dict *primdict) {

@@ -19,36 +19,6 @@ extern void uerror(char *s) {
 		eprint("%s\n", strerror(errno));
 }
 
-
-/*
- * file descriptor operations
- */
-
-/* mvfd -- duplicate a fd and close the old */
-extern int mvfd(int old, int new) {
-	if (old != new) {
-		int fd = dup2(old, new);
-		if (fd == -1)
-			fail("dup2: %s", strerror(errno));
-		assert(fd == new);
-		close(old);
-		return new;
-	}
-	return new;
-}
-
-/* cpfd -- duplicate a fd keeping the old one open */
-extern int cpfd(int old, int new) {
-	if (old != new) {
-		int fd = dup2(old, new);
-		if (fd == -1)
-			fail("dup2: %s", strerror(errno));
-		assert(fd == new);
-		return new;
-	}
-	return new;
-}
-
 /* isabsolute -- test to see if pathname begins with "/", "./", or "../" */
 extern Boolean isabsolute(char *path) {
 	return path[0] == '/'
@@ -75,7 +45,9 @@ extern void *ealloc(size_t n) {
 /* erealloc -- error checked realloc */
 extern void *erealloc(void *p, size_t n) {
 	extern void *realloc(void *, size_t);
-	p = p == NULL ? ealloc(n) : realloc(p, n);
+	if (p == NULL)
+		return ealloc(n);
+	p = realloc(p, n);
 	if (p == NULL) {
 		uerror("realloc");
 		exit(1);
@@ -90,12 +62,22 @@ extern void efree(void *p) {
 	free(p);
 }
 
+/* strdup -- copy a string into malloc space */
+extern char *strdup(const char *s) {
+	char *t;
+	size_t n = strlen(s);
+	t = ealloc(n);
+	memcpy(t, s, n);
+	t[n] = '\0';
+	return t;
+}
+
 
 /*
  * private interfaces to system calls
  */
 
-extern void ewrite(int fd, char *buf, size_t n) {
+extern void ewrite(int fd, const char *buf, size_t n) {
 	volatile long i, remain;
 	for (i = 0, remain = n; remain > 0; buf += i, remain -= i) {
 		interrupted = FALSE;

@@ -7,7 +7,7 @@
  * allocation and garbage collector support
  */
 
-static Tag ListTag;
+DefineTag(List, static);
 
 extern List *mklist(Term *term, List *next) {
 	gcdisable(0);
@@ -32,8 +32,6 @@ static size_t ListScan(void *p) {
 	return sizeof (List);
 }
 
-static DefineTag(List);
-
 
 /*
  * basic list manipulations
@@ -54,7 +52,7 @@ extern List *safereverse(List *list) {
 	for (lp = NULL; list != NULL; list = list->next)
 		lp = mklist(list->term, lp);
 
-	Ref(List*, result, lp);
+	Ref(List *, result, lp);
 	gcenable();
 	RefReturn(result);
 }

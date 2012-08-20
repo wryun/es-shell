@@ -16,7 +16,7 @@ static Proc *proclist = NULL;
 
 
 /* efork -- fork (if necessary) and clean up as appropriate */
-extern int efork(Boolean parent, Boolean continuing, Boolean background) {
+extern int efork(Boolean parent, Boolean background) {
 	if (parent) {
 		int pid = fork();
 		switch (pid) {
@@ -24,6 +24,7 @@ extern int efork(Boolean parent, Boolean continuing, Boolean background) {
 			Proc *proc = ealloc(sizeof (Proc));
 			proc->pid = pid;
 			proc->alive = TRUE;
+			proc->background = background;
 			proc->next = proclist;
 			proc->prev = NULL;
 			if (proclist != NULL)
@@ -39,10 +40,9 @@ extern int efork(Boolean parent, Boolean continuing, Boolean background) {
 			fail("fork: %s", strerror(errno));
 		}
 	}
-	if (!continuing) {
-		setsigdefaults(FALSE);
-		newchildcatcher();
-	}
+	closefds();
+	setsigdefaults(FALSE);
+	newchildcatcher();
 	return 0;
 }
 

@@ -5,24 +5,24 @@
 
 /* globals */
 Handler childhandler = { NULL, NULL };
-Handler *bottomhandler = NULL;
+Handler *tophandler = NULL;
 List *exception = NULL;
 
 /* pophandler -- remove a handler */
 extern void pophandler(Handler *handler) {
-	assert(bottomhandler == handler);
+	assert(tophandler == handler);
 	assert(handler->rootlist == rootlist);
-	bottomhandler = handler->up;
+	tophandler = handler->up;
 }
 
 /* throw -- raise an exception */
 extern noreturn throw(List *exc) {
-	Handler *handler = bottomhandler;
+	Handler *handler = tophandler;
 
-	assert(gcblocked == 0);
+	assert(!gcisblocked());
 	assert(exc != NULL);
 	assert(handler != NULL);
-	bottomhandler = handler->up;
+	tophandler = handler->up;
 	for (; rootlist != handler->rootlist; rootlist = rootlist->next)
 		assert(rootlist != NULL);
 	exception = exc;
@@ -41,13 +41,14 @@ extern noreturn fail VARARGS1(const char *, fmt) {
 	gcdisable(0);
 	Ref(List *, e, mklist(mkterm("error", NULL),
 			      mklist(mkterm(s, NULL), NULL)));
-	gcenable();
+	while (gcisblocked())
+		gcenable();
 	throw(e);
 	RefEnd(e);
 }
 
 /* newchildcatcher -- remove the current handler chain for a new child */
 extern void newchildcatcher(void) {
-	bottomhandler = &childhandler;
+	tophandler = &childhandler;
 	/* TODO: flush some of the rootlist? */
 }

@@ -22,12 +22,18 @@
 #include <sys/param.h>
 #endif
 
-#include <string.h>
-#if	USE_STDDEF
-#include <stddef.h>
-#else
+#if REQUIRE_STAT || REQUIRE_IOCTL
 #include <sys/types.h>
 #endif
+
+#include <string.h>
+
+#if ADOBE_SUNOS_HACK
+#define	ptrdiff_t	xxxptrdiff_t
+#define	size_t		xxxsize_t
+#endif
+
+#include <stddef.h>
 
 #if USE_STDARG
 #include <stdarg.h>
@@ -41,10 +47,6 @@
 
 #if REQUIRE_CTYPE
 #include <ctype.h>
-#endif
-
-#if (REQUIRE_STAT || REQUIRE_IOCTL) && USE_STDDEF
-#include <sys/types.h>
 #endif
 
 #if REQUIRE_IOCTL
@@ -153,11 +155,7 @@ typedef int sigresult;
 
 #else	/* !USE_STDARG */
 
-#ifdef __STDC__
-#define	VARARGS				, ...
-#else
 #define	VARARGS
-#endif
 #define	VARARGS1(t1, v1)		(v1, va_alist) t1 v1; va_dcl
 #define	VARARGS2(t1, v1, t2, v2)	(v1, v2, va_alist) t1 v1; t2 v2; va_dcl
 #define	VA_START(ap, var)		va_start(ap)
@@ -171,11 +169,13 @@ typedef int sigresult;
 
 #if ASSERTIONS
 #define	assert(expr) \
-	if (expr) ; else { \
-		eprint("%s:%d: assertion failed (%s)\n", \
-		       __FILE__, __LINE__, STRING(expr)); \
-		ABORT(); \
-	}
+	do \
+		if (!(expr)) { \
+			eprint("%s:%d: assertion failed (%s)\n", \
+				__FILE__, __LINE__, STRING(expr)); \
+			ABORT(); \
+		} \
+	while (0)
 #else
 #define	assert(ignore) do ; while (0)
 #endif
@@ -246,8 +246,10 @@ extern void *qsort(
 
 /* string */
 
-extern void *memcpy(void *dst, const void *src, size_t n);
-extern void *memset(void *dst, int c, size_t n);
+#if !__alpha && !__mips		/* FIX THIS DEFINITION: really ultrix hack */
+extern void memcpy(void *dst, const void *src, size_t n);
+extern void memset(void *dst, int c, size_t n);
+#endif
 
 /* setjmp */
 

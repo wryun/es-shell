@@ -7,7 +7,7 @@
  * Closure garbage collection support
  */
 
-static Tag ClosureTag;
+DefineTag(Closure, static);
 
 extern Closure *mkclosure(Tree *tree, Binding *binding) {
 	gcdisable(0);
@@ -30,8 +30,6 @@ static size_t ClosureScan(void *p) {
 	closure->binding = forward(closure->binding);
 	return sizeof (Closure);
 }
-
-static DefineTag(Closure);
 
 /* revtree -- destructively reverse a list stored in a tree */
 static Tree *revtree(Tree *tree) {
@@ -84,11 +82,13 @@ extern Closure *extractbindings(Tree *tp) {
 	if (tree->kind == nList && tree->u[1].p == NULL)
 		tree = tree->u[0].p; 
 
+
 	while (tree->kind == nClosure) {
 		bindings = extract(tree->u[0].p, bindings);
 		tree = tree->u[1].p;
 		if (tree->kind == nList && tree->u[1].p == NULL)
 			tree = tree->u[0].p; 
+
 	}
 	result = mkclosure(tree, bindings);
 	RefEnd2(bindings, tree);
@@ -100,7 +100,7 @@ extern Closure *extractbindings(Tree *tp) {
  * Binding garbage collection support
  */
 
-static Tag BindingTag;
+DefineTag(Binding, static);
 
 extern Binding *mkbinding(char *name, List *defn, Binding *next) {
 	assert(next == NULL || next->name != NULL);
@@ -126,5 +126,3 @@ static size_t BindingScan(void *p) {
 	binding->next = forward(binding->next);
 	return sizeof (Binding);
 }
-
-static DefineTag(Binding);

@@ -1,24 +1,43 @@
 /* input.h -- definitions for es lexical analyzer */
 
-/* token.c */
+#define	MAXUNGET	2		/* maximum 2 character pushback */
 
-extern const char dnw[];
-extern int lineno;
-extern int yylex(void);
-extern void inityy(void);
-extern char *locate(char *s);
-extern void scanerror(char *s);
-extern void print_prompt2(void);
+typedef struct Input Input;
+struct Input {
+	int (*fill)(Input *self), (*rfill)(Input *self);
+	void (*cleanup)(Input *self);
+
+	Input *prev;
+	const char *name;
+	unsigned char *buf, *bufend, *bufbegin, *rbuf;
+	int unget[MAXUNGET];
+	int ungot;
+	int lineno;
+	int fd;
+	size_t buflen;
+	Boolean interactive;
+};
+
+
+#define	GETC()		get(input)
+#define	UNGETC(c)	unget(input, c)
 
 
 /* input.c */
 
+extern Input *input;
+extern int get(Input *in);
+extern void unget(Input *in, int c);
 extern Boolean disablehistory;
-extern int last;
-extern int gchar(void);
-extern void ugchar(int);
-extern void flushu(void);
 extern void yyerror(char *s);
+
+
+/* token.c */
+
+extern const char dnw[];
+extern int yylex(void);
+extern void inityy(void);
+extern void print_prompt2(void);
 
 
 /* parse.y */

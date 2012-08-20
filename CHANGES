@@ -1,6 +1,68 @@
 CHANGES
 =======
 
+0.7 to 0.74
+-----------
+
+the builtin collect has been added to trigger a garbage collection.
+also, following discussions on the list, the memory allocation was
+tuned a bit, and the GCINFO flag turns on reporting of garbage
+collector data.
+
+the function which one must replace for spoofing the path-searching
+mechanism is now %pathsearch and not %whatis.  %pathsearch is called
+in more limited circumstances than %whatis was, because the old form
+was a bit of a performance drag and was too easy to screw up the shell
+with.  here's a bit of experimental code which does autoloading of
+shell functions:
+
+	autoload = ~/bin/es
+	let (search = $fn-%pathsearch)
+		fn %pathsearch prog {
+			if {/bin/test -f $autoload/$prog} {
+				. $autoload/$prog
+				if {!~ $#(fn-$prog) 0} {
+					return $(fn-$prog)
+				}
+			}
+			$search $prog
+		}
+
+the prompt is now '; ' and not ';; '.  rc users beware.
+
+on the suggestion of readers of the list, the meanings of let and local
+were switched;  that is, let now introduces a lexical binding and local
+a dynamic binding.  this is more consistent with scheme.
+
+the prompt function has been renamed %prompt to be consistent with other
+function invoked by es internals.
+
+the input scheme has been completely revised to support user-written
+read-eval-print loops.  see the function %read-eval-print in initial.es
+for details.
+
+DefineTag() has been redone to avoid some compiler bugs where a forward
+declaration for a static was not allowed. 
+
+
+es now works with editline; it probably works with readline but we haven't
+tested that yet. 
+
+
+we think we've gotten rid of all the problems with spaces around identifiers
+for those people with stone age vintage preprocessors. 
+
+
+redirections, closes, and dups do not automatically fork() now.  they are
+deferred until a fork() happens.  the main consequence of this is that
+builtins with redirections are now done in the context of the original
+shell.  [this change perturbed a lot of code in es, and may have introduced
+a lot of bugs.  please let us know right away if you think you've found a
+bug that is related to redirection, duping, or closing.]
+
+the makefile for the distribution was cleaned up and renamed Makefile.
+
+
 0.68 to 0.7
 -----------
 

@@ -19,6 +19,10 @@
  *		immediate crash.  it is equivalent to all 3 of GCALWAYS,
  *		GCPROTECT, and GCVERBOSE
  *
+ *	GCINFO
+ *		a terse version of GCVERBOSE, which prints a short message
+ *		for every collection.
+ *
  *	GCPROTECT
  *		makes the garbage collector disable access to pages that are
  *		in old space, making unforwarded references crasht the interpreter.
@@ -80,9 +84,6 @@
  *		header file.  if not, es will try to use <varargs.h>, but
  *		you may need to hack a bit to get that working.
  *
- *	USE_STDDEF
- *		define this if you have a <stddef.h>
- *
  *	USE_VOLATILE
  *		allow volatile declarations.  if your compiler supports 'em, use 'em.
  *
@@ -138,6 +139,10 @@
 #define	DEFAULT_GCDEBUG		0
 #endif
 
+#ifndef	DEFAULT_GCINFO
+#define	DEFAULT_GCINFO		0
+#endif
+
 #ifndef	DEFAULT_GCPROTECT
 #define	DEFAULT_GCPROTECT	0
 #endif
@@ -190,10 +195,6 @@
 #define	DEFAULT_USE_STDARG	1
 #endif
 
-#ifndef	DEFAULT_USE_STDDEF
-#define	DEFAULT_USE_STDDEF	1
-#endif
-
 #ifndef	DEFAULT_USE_VOLATILE
 #define	DEFAULT_USE_VOLATILE	1
 #endif
@@ -217,6 +218,10 @@
 
 #ifndef	GCDEBUG
 #define	GCDEBUG		DEFAULT_GCDEBUG
+#endif
+
+#ifndef	GCINFO
+#define	GCINFO		DEFAULT_GCINFO
 #endif
 
 #ifndef	GCPROTECT
@@ -271,10 +276,6 @@
 #define	USE_STDARG	DEFAULT_USE_STDARG
 #endif
 
-#ifndef	USE_STDDEF
-#define	USE_STDDEF	DEFAULT_USE_STDDEF
-#endif
-
 #ifndef	USE_VOLATILE
 #define	USE_VOLATILE	DEFAULT_USE_VOLATILE
 #endif
@@ -290,9 +291,11 @@
 
 #if	GCDEBUG
 #undef	GCALWAYS
+#undef	GCINFO
 #undef	GCPROTECT
 #undef	GCVERBOSE
 #define	GCALWAYS	1
+#define	GCINFO		1
 #define	GCPROTECT	1
 #define	GCVERBOSE	1
 #endif
