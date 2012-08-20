@@ -1,4 +1,4 @@
-/* input.c -- read input from files or strings */
+/* input.c -- read input from files or strings ($Revision: 1.6 $) */
 
 #include "es.h"
 #include "input.h"
@@ -42,7 +42,7 @@ extern void add_history(char *);
 
 /* locate -- identify where an error came from */
 static char *locate(Input *in, char *s) {
-	return in->interactive
+	return (in->runflags & run_interactive)
 		? s
 		: str("%s:%d: %s", in->name, in->lineno, s);
 }
@@ -150,7 +150,7 @@ static int fdfill(Input *in) {
 	assert(in->fd >= 0);
 
 #if READLINE
-	if (in->interactive) {
+	if (in->runflags & run_interactive) {
 		char *rlinebuf = callreadline(prompt);
 		if (rlinebuf == NULL)
 			nread = 0;
@@ -178,15 +178,15 @@ static int fdfill(Input *in) {
 		close(in->fd);
 		in->fd = -1;
 		in->fill = eoffill;
-		in->interactive = FALSE;
+		in->runflags &= ~run_interactive;
 		if (nread == -1)
-			fail("%s: %s", in->name == NULL ? "es" : in->name, strerror(errno));
+			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, strerror(errno));
 		return EOF;
 	}
 
-	if (in->echoinput)
+	if (in->runflags & run_echoinput)
 		ewrite(2, (char *) in->bufbegin, nread);
-	if (in->interactive)
+	if (in->runflags & run_interactive)
 		loghistory((char *) in->bufbegin, nread);
 
 	in->buf = in->bufbegin;
@@ -259,7 +259,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 #endif
 	prompt2 = pr2;
 
-	gcdisable(200 * sizeof (Tree));		/* TODO: find a good size */
+	gcdisable(300 * sizeof (Tree));
 	result = yyparse();
 	gcenable();
 
@@ -268,10 +268,10 @@ extern Tree *parse(char *pr1, char *pr2) {
 		assert(error != NULL);
 		e = error;
 		error = NULL;
-		fail(e);
+		fail("$&parse", e);
 	}
 #if LISPTREES
-	if (input->lisptrees)
+	if (input->runflags & run_lisptrees)
 		eprint("%B\n", parsetree);
 #endif
 	return parsetree;
@@ -288,20 +288,12 @@ extern List *runinput(Input *in, int flags) {
 		"fn-%noeval-print",
 	};
 
+	in->runflags = flags;
 	in->prev = input;
 	input = in;
 
-	if (flags & run_echoinput) {
-		in->echoinput = TRUE;
-		if (in->buf < in->bufend)
-			ewrite(2, (char *) in->buf, in->bufend - in->buf);
-	}
-	if (flags & run_interactive)
-		in->interactive = TRUE;
-#if LISPTREES
-	if (flags & run_lisptrees)
-		in->lisptrees = TRUE;
-#endif
+	if (flags & run_echoinput && in->buf < in->bufend)
+		ewrite(2, (char *) in->buf, in->bufend - in->buf);
 
 	if ((e = pushhandler(&h)) != NULL) {
 		(*input->cleanup)(input);
@@ -313,13 +305,15 @@ extern List *runinput(Input *in, int flags) {
 			  ((flags & run_printcmds) ? 1 : 0)
 			+ ((flags & run_noexec)    ? 2 : 0)
 		], NULL);
+	if (flags & eval_exitonfalse)
+		arg = mklist(mkterm("%exit-on-false", NULL), arg);
 	repl = varlookup((flags & run_interactive) ? "fn-%interactive-loop" : "fn-%batch-loop", NULL);
 	if (repl == NULL)
-		result = prim("batchloop", arg, TRUE, exitonfalse);
+		result = prim("batchloop", arg, 0);
 	else {
 		if (arg != NULL)
 			repl = append(repl, arg);
-		result = eval(repl, NULL, TRUE, exitonfalse);
+		result = eval(repl, NULL, flags & eval_inchild);
 	}
 
 	pophandler(&h);
@@ -416,7 +410,7 @@ extern Tree *parseinput(Input *in) {
 
 	result = parse(NULL, NULL);
 	if (get(in) != EOF)
-		fail("more than one value in term");
+		fail("$&parse", "more than one value in term");
 
 	pophandler(&h);
 	input = in->prev;
@@ -454,7 +448,7 @@ extern Tree *parsestring(const char *str) {
 
 /* isinteractive -- is the innermost input source interactive? */
 extern Boolean isinteractive(void) {
-	return input == NULL ? FALSE : input->interactive;
+	return input == NULL ? FALSE : ((input->runflags & run_interactive) != 0);
 }
 
 

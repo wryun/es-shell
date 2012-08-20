@@ -1,28 +1,38 @@
-This is the README file for es, version 0.79
+This is the README file for es, version 0.8
 
-For details on es, please see our Winter 1993 Usenix paper, ``Es: a shell
-with higher-order functions,'' available by anonymous ftp as
-	ftp.white.toronto.edu:/pub/es/usenix-w93.ps.Z
-The paper corresponds very closely to the version of the shell included
-here.  There should be a man page by now, but we've been remiss.  Consulting
-the paper, initial.es, the source, and the mailing list (probably in that
-order) is the best approximation we've got right now. 
-
-See the file CHANGES for recent changes to the shell.  See the file TODO for
-what we still think we have left to do, and roughly what time frame we
-expect to do it in. 
+Es is an extensible shell.  The language was derived from the Plan 9 shell,
+rc, and was influenced by functional programming languages, such as Scheme,
+and the Tcl embeddable programming language.  This implementation is
+derived from Byron Rakitzis's public domain implementation of rc.
 
 Please see config.h for any conditional flags you may have to set on the
-command like to make es compile.  The Makefile should just work; if it
-doesn't, please let us know.
+command line to make es compile.  The Makefile should just work; if it
+doesn't, please let us know.  An ANSI C compiler is practically required.
 
-Please report any problems to haahr@adobe.com and byron@netapp.com. 
+For details on es, please see the man page.  For some background into our
+motivation for writing es, see our Winter 1993 Usenix paper, ``Es: a
+shell with higher-order functions,'' available by anonymous ftp as
+	ftp.white.toronto.edu:/pub/es/usenix-w93.ps.Z
+The paper corresponds very closely to the version of the shell included
+here; see the file ERRATA for changes since the paper was published.
+
+See the file CHANGES for recent changes to the shell.  See the file
+TODO for what we still think we have left to do, and roughly what
+time frame we expect to do it in.
+
+Please report any problems to us at
+	haahr@adobe.com
+	byron@netapp.com
 
 There is a mailing list for discussing es.  Send mail to
-es-request@hawkwind.utcs.toronto.edu to join the list.  The list itself is
-es@hawkwind.utcs.toronto.edu
+	es-request@hawkwind.utcs.toronto.edu
+to join the list.  The list itself is
+	es@hawkwind.utcs.toronto.edu
+
+Es is in the public domain.  We hold no copyrights or patents on the
+source code, and do not place any restrictions on its distribution.
+We would appreciate it if any distributions do credit the authors.
 
 Enjoy! 
 
 -- Paul Haahr & Byron Rakitzis
-

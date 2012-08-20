@@ -1,18 +1,16 @@
-/* syntax.c -- abstract syntax tree re-writing rules */
+/* syntax.c -- abstract syntax tree re-writing rules ($Revision: 1.3 $) */
 
 #include "es.h"
 #include "input.h"
 #include "syntax.h"
 #include "token.h"
 
-Tree *ifs, *parsetree;
+Tree errornode;
+Tree *parsetree;
 
 /* initparse -- called at the dawn of time */
 extern void initparse(void) {
 	globalroot(&parsetree);
-	globalroot(&ifs);
-
-	ifs = mk(nVar, mk(nWord, "ifs"));
 }
 
 /* treecons -- create new tree list cell */
@@ -165,7 +163,7 @@ extern Tree *redirect(Tree *t) {
 	}
 	if (firstis(r, "%heredoc"))
 		if (!queueheredoc(r))
-			return NULL;
+			return &errornode;
 	p->CAR = thunkify(redirect(t));
 	return r;
 }

@@ -1,4 +1,4 @@
-/* prim-etc.c -- miscellaneous primitives */
+/* prim-etc.c -- miscellaneous primitives ($Revision: 1.11 $) */
 
 #define	REQUIRE_PWD	1
 
@@ -11,6 +11,10 @@ PRIM(true) {
 
 PRIM(false) {
 	return false;
+}
+
+PRIM(result) {
+	return list;
 }
 
 PRIM(echo) {
@@ -41,18 +45,10 @@ PRIM(count) {
 	return mklist(mkterm(str("%d", length(list)), NULL), NULL);
 }
 
-PRIM(noexport) {
+PRIM(setnoexport) {
 	Ref(List *, lp, list);
-	for (; lp != NULL; lp = lp->next)
-		noexport(getstr(lp->term));
-	RefEnd(lp);
-	return true;
-}
-
-PRIM(isnoexport) {
-	if (list == NULL || list->next != NULL)
-		fail("usage: $&isnoexport variable");
-	return isnoexport(getstr(list->term)) ? true : false;
+	setnoexport(lp);
+	RefReturn(lp);
 }
 
 PRIM(version) {
@@ -60,52 +56,47 @@ PRIM(version) {
 }
 
 PRIM(exec) {
-	return eval(list, NULL, FALSE, exitonfalse);
+	return eval(list, NULL, evalflags | eval_inchild);
 }
 
 PRIM(eval) {
-	return runstring(str("%L", list, " "), "<eval>", 0);
+	return runstring(str("%L", list, " "), "<eval>", evalflags);
 }
 
 PRIM(dot) {
-	int fd;
-	List *e;
-	Handler h;
-	volatile int runflags = 0;
+	int c, fd;
+	Push zero, star;
+	volatile int runflags = (evalflags & eval_inchild);
+	const char * const usage = ". [-invx] file [arg ...]";
 
-	/* TODO: allow -[xvnL] */
+	esoptbegin(list, "$&dot", usage);
+	while ((c = esopt("einvx")) != EOF)
+		switch (c) {
+		case 'e':	runflags |= eval_exitonfalse;	break;
+		case 'i':	runflags |= run_interactive;	break;
+		case 'n':	runflags |= run_noexec;		break;
+		case 'v':	runflags |= run_echoinput;	break;
+		case 'x':	runflags |= run_printcmds;	break;
+		}
 
 	Ref(List *, result, NULL);
-	Ref(List *, lp, list);
-	Ref(char *, file, NULL);
-	for (;;) {
-		if (lp == NULL)
-			fail("usage: . [-i] file");
-		file = getstr(lp->term);
-		lp = lp->next;
-		if ((runflags & run_interactive) || !streq(file, "-i"))
-			break;
-		runflags |= run_interactive;
-	}
+	Ref(List *, lp, esoptend());
+	if (lp == NULL)
+		fail("$&dot", "usage: %s", usage);
 
+	Ref(char *, file, getstr(lp->term));
+	lp = lp->next;
 	fd = eopen(file, oOpen);
 	if (fd == -1)
-		fail("%s: %s", file, strerror(errno));
+		fail("$&dot", "%s: %s", file, strerror(errno));
 
-	if ((e = pushhandler(&h)) != NULL) {
-		varpop("*");
-		varpop("0");
-		throw(e);
-	}
-
-	varpush("*", lp);
-	varpush("0", mklist(mkterm(file, NULL), NULL));
+	varpush(&star, "*", lp);
+	varpush(&zero, "0", mklist(mkterm(file, NULL), NULL));
 
 	result = runfd(fd, file, runflags);
 
-	pophandler(&h);
-	varpop("*");
-	varpop("0");
+	varpop(&zero);
+	varpop(&star);
 	RefEnd2(file, lp);
 	RefReturn(result);
 }
@@ -113,7 +104,7 @@ PRIM(dot) {
 PRIM(flatten) {
 	char *sep;
 	if (list == NULL)
-		fail("usage: $&flatten separator [args ...]");
+		fail("$&flatten", "usage: %flatten separator [args ...]");
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
 	lp = mklist(mkterm(str("%L", lp->next, sep), NULL), NULL);
@@ -121,32 +112,24 @@ PRIM(flatten) {
 }
 
 PRIM(whatis) {
+	/* the logic in here is duplicated in eval() */
 	if (list == NULL || list->next != NULL)
-		fail("usage: $&whatis program");
+		fail("$&whatis", "usage: $&whatis program");
 	Ref(Term *, term, list->term);
 	if (term->closure == NULL) {
 		Ref(char *, prog, term->str);
 		assert(prog != NULL);
-		if (isabsolute(prog) || (list = varlookup2("fn-", prog)) == NULL)
-			list = mklist(mkterm(which(prog), NULL), NULL);
+		if (!isabsolute(prog) && (list = varlookup2("fn-", prog)) == NULL)
+			list = pathsearch(term);
 		RefEnd(prog);
 	}
 	RefEnd(term);
 	return list;
 }
 
-PRIM(pathsearch) {
-	if (list == NULL || list->next != NULL)
-		fail("usage: $&pathsearch program");
-	if (list->term->closure != NULL)
-		fail("$&pathsearch must be applied to a string not a tree");
-	assert(list->term->str != NULL);
-	return mklist(mkterm(which(list->term->str), NULL), NULL);
-}
-
 PRIM(split) {
 	if (list == NULL)
-		fail("usage: $&split separator [args ...]");
+		fail("$&split", "usage: %split separator [args ...]");
 	Ref(List *, lp, list);
 	startsplit(getstr(lp->term), TRUE);
 	while ((lp = lp->next) != NULL) {
@@ -160,7 +143,7 @@ PRIM(split) {
 PRIM(fsplit) {
 	char *sep;
 	if (list == NULL)
-		fail("usage: $&split separator [args ...]");
+		fail("$&fsplit", "usage: %fsplit separator [args ...]");
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
 	lp = fsplit(sep, lp->next);
@@ -175,8 +158,8 @@ PRIM(var) {
 	Ref(char *, name, getstr(list->term));
 	Ref(List *, defn, varlookup(name, NULL));
 	if (defn == NULL)
-		fail("var: %s is undefined", name);
-	rest = prim_var(rest, parent, exitonfalse);
+		fail("$&var", "%s is undefined", name);
+	rest = prim_var(rest, evalflags);
 	term = mkterm(str("%S = %#L", name, defn, " "), NULL);
 	list = mklist(term, rest);
 	RefEnd3(defn, name, rest);
@@ -213,6 +196,10 @@ PRIM(parse) {
 	return result;
 }
 
+PRIM(exitonfalse) {
+	return eval(list, NULL, evalflags | eval_exitonfalse);
+}
+
 PRIM(batchloop) {
 	Handler h;
 	List *e;
@@ -225,13 +212,13 @@ PRIM(batchloop) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
 			cmd = (parser == NULL)
-					? prim("parse", NULL, TRUE, exitonfalse)
-					: eval(parser, NULL, TRUE, exitonfalse);
+					? prim("parse", NULL, 0)
+					: eval(parser, NULL, 0);
 			SIGCHK();
 			if (arg != NULL)
 				cmd = append(arg, cmd);
 			if (cmd != NULL) {
-				result = eval(cmd, NULL, TRUE, exitonfalse);
+				result = eval(cmd, NULL, evalflags);
 				SIGCHK();
 			}
 		}
@@ -252,9 +239,21 @@ PRIM(home) {
 	if (list == NULL)
 		return varlookup("home", NULL);
 	if (list->next != NULL)
-		fail("usage: %home [user]");
+		fail("$&home", "usage: %home [user]");
 	pw = getpwnam(getstr(list->term));
 	return (pw == NULL) ? NULL : mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
+}
+
+PRIM(vars) {
+	return listvars(FALSE);
+}
+
+PRIM(internals) {
+	return listvars(TRUE);
+}
+
+PRIM(isinteractive) {
+	return isinteractive() ? true : false;
 }
 
 
@@ -267,22 +266,25 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(false);
 	X(echo);
 	X(count);
-	X(noexport);
 	X(version);
 	X(exec);
 	X(eval);
 	X(dot);
 	X(flatten);
 	X(whatis);
-	X(pathsearch);
 	X(sethistory);
 	X(split);
 	X(fsplit);
-	X(isnoexport);
 	X(var);
 	X(parse);
 	X(batchloop);
 	X(collect);
 	X(home);
+	X(setnoexport);
+	X(vars);
+	X(internals);
+	X(result);
+	X(isinteractive);
+	X(exitonfalse);
 	return primdict;
 }

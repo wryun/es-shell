@@ -1,4 +1,4 @@
-/* gc.c -- copying garbage collector for es */
+/* gc.c -- copying garbage collector for es ($Revision: 1.5 $) */
 
 #define	GARBAGE_COLLECTOR	1	/* for es.h */
 
@@ -478,7 +478,8 @@ extern void *gcalloc(size_t nbytes, Tag *tag) {
  * strings
  */
 
-DefineTag(String,);
+#define notstatic
+DefineTag(String, notstatic);
 
 extern char *gcndup(const char *s, size_t n) {
 	char *ns;
@@ -599,6 +600,7 @@ static char *tree2name(NodeKind k) {
 }
 
 /* having these here violates every data hiding rule in the book */
+
 	typedef struct {
 		char *name;
 		void *value;
@@ -607,13 +609,8 @@ static char *tree2name(NodeKind k) {
 		int size, remain;
 		Assoc table[1];		/* variable length */
 	};
-	typedef struct Var Var;
-	struct Var {
-		List *defn;
-		char *env;
-		Var *next;
-		Boolean binder;
-	};
+
+#include "var.h"
 
 
 static size_t dump(Tag *t, void *p) {
@@ -657,8 +654,8 @@ static size_t dump(Tag *t, void *p) {
 
 	if (streq(s, "Var")) {
 		Var *v = p;
-		print("defn = %ux  env = %ux  next = %ux  binder = %s\n",
-		      v->defn, v->env, v->next, v->binder ? "TRUE" : "FALSE");
+		print("defn = %ux  env = %ux  flags = %d\n",
+		      v->defn, v->env, v->flags);
 		return sizeof (Var);
 	}
 

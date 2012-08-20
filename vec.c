@@ -1,4 +1,4 @@
-/* vec.c -- argv[] and envp[] vectors */
+/* vec.c -- argv[] and envp[] vectors ($Revision: 1.2 $) */
 
 #include "es.h"
 #include "gc.h"

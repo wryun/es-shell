@@ -1,22 +1,35 @@
-/* eval.c -- evaluation of lists and trees */
+/* eval.c -- evaluation of lists and trees ($Revision: 1.11 $) */
 
 #include "es.h"
 
+static noreturn failexec(char *file, List *args) {
+	List *fn;
+	assert(gcisblocked());
+	fn = varlookup("fn-%exec-failure", NULL);
+	if (fn != NULL) {
+		int olderror = errno;
+		Ref(List *, list, append(fn, mklist(mkterm(file, NULL), args)));
+		RefAdd(file);
+		gcenable();
+		RefRemove(file);
+		eval(list, NULL, 0);
+		RefEnd(list);
+		errno = olderror;
+	}
+	eprint("%s: %s\n", file, strerror(errno));
+	exit(1);
+}
+
 /* forkexec -- fork (if necessary) and exec */
-extern List *forkexec(char *file, List *list, Boolean parent) {
+static List *forkexec(char *file, List *list, Boolean inchild) {
 	int pid, status;
 	Vector *env;
 	gcdisable(0);
 	env = mkenv();
-	pid = efork(parent, FALSE);
+	pid = efork(!inchild, FALSE);
 	if (pid == 0) {
-#if PRINTCMDS
-		if (printcmds)
-			eprint("%L\n", list, " ");
-#endif
 		execve(file, vectorize(list)->vector, env->vector);
-		uerror(file);
-		exit(1);
+		failexec(file, list);
 	}
 	gcenable();
 	status = ewaitfor(pid);
@@ -60,20 +73,19 @@ static Binding *bindargs(Tree *params, List *args, Binding *binding) {
 	RefReturn(result);
 }
 
-/* pathsearch -- evaluate %pathsearch + some argument */
+/* pathsearch -- evaluate fn %pathsearch + some argument */
 extern List *pathsearch(Term *term) {
-	static Term *cmd = NULL;
-	if (cmd == NULL) {
-		globalroot(&cmd);
-		cmd = mkterm("%pathsearch", NULL);
-	}
-	Ref(List *, list, mklist(term, NULL));
-	list = eval(mklist(cmd, list), NULL, TRUE, FALSE);
-	RefReturn(list);
+	List *search, *list;
+	search = varlookup("fn-%pathsearch", NULL);
+	if (search == NULL)
+		fail("es:pathsearch", "%E: fn %%pathsearch undefined", term);
+	list = mklist(term, NULL);
+	list = eval(append(search, list), NULL, 0);
+	return list;
 }
 
 /* eval -- evaluate a list, producing a list */
-extern List *eval(List *list, Binding *binding0, Boolean parent, Boolean exitonfalse) {
+extern List *eval(List *list, Binding *binding0, int flags) {
 	Closure *cp;
 	List *fn;
 
@@ -93,17 +105,16 @@ restart:
 		switch (cp->tree->kind) {
 		case nPrim:
 			assert(cp->binding == NULL);
-			lp = prim(cp->tree->u[0].s, lp->next, parent, exitonfalse);
+			lp = prim(cp->tree->u[0].s, lp->next, flags);
 			break;
 		case nThunk:
-			lp = walk(cp->tree->u[0].p, cp->binding, parent, exitonfalse);
+			lp = walk(cp->tree->u[0].p, cp->binding, flags);
 			break;
 		case nLambda: {
-			Handler h;
+			Push p;
 			List *e;
+			Handler h;
 			if ((e = pushhandler(&h)) != NULL) {
-				if (funcname != NULL)
-					varpop("0");
 				if (e->term->str != NULL && streq(e->term->str, "return")) {
 					lp = e->next;
 					goto done;
@@ -113,10 +124,10 @@ restart:
 			Ref(Tree *, tree, cp->tree);
 			Ref(Binding *, context, bindargs(tree->u[0].p, lp->next, cp->binding));
 			if (funcname != NULL)
-				varpush("0", mklist(mkterm(funcname, NULL), NULL));
-			lp = walk(tree->u[1].p, context, parent, exitonfalse);
+				varpush(&p, "0", mklist(mkterm(funcname, NULL), NULL));
+			lp = walk(tree->u[1].p, context, flags);
 			if (funcname != NULL)
-				varpop("0");
+				varpop(&p);
 			RefEnd2(context, tree);
 			pophandler(&h);
 			break;
@@ -132,8 +143,10 @@ restart:
 		goto done;
 	}
 
+	/* the logic here is duplicated in $&whatis */
+
 	if (isabsolute(lp->term->str)) {
-		lp = forkexec(lp->term->str, lp, parent);
+		lp = forkexec(lp->term->str, lp, flags & eval_inchild);
 		goto done;
 	}
 
@@ -148,7 +161,7 @@ restart:
 	fn = pathsearch(lp->term);
 	if (fn != NULL && fn->next == NULL && fn->term->closure == NULL) {
 		char *name = fn->term->str;
-		lp = forkexec(name, lp, parent);
+		lp = forkexec(name, lp, flags & eval_inchild);
 		goto done;
 	}
 
@@ -157,7 +170,7 @@ restart:
 	goto restart;
 
 done:
-	if (exitonfalse && !istrue(lp))
+	if ((flags & eval_exitonfalse) && !istrue(lp))
 		exit(exitstatus(lp));
 	list = lp;
 	RefEnd3(binding, lp, funcname);
@@ -165,12 +178,47 @@ done:
 }
 
 /* eval1 -- evaluate a term, producing a list */
-extern List *eval1(Term *term, Boolean parent, Boolean exitonfalse) {
-	return eval(mklist(term, NULL), NULL, parent, exitonfalse);
+extern List *eval1(Term *term, int flags) {
+	return eval(mklist(term, NULL), NULL, flags);
 }
 
+/* local -- perform a single local assignment & recurse	or just dispatch a binding */
+static List *local(Tree *defn, Tree *body, Binding *binding, int evalflags) {
+	Push p;
+	char *name;
+	List *list;
+
+	for (;; defn = defn->u[1].p) {
+		if (defn == NULL)
+			return walk(body, binding, evalflags);
+		assert(defn->kind == nList);
+		if (defn->u[0].p != NULL)
+			break;
+	}
+
+	Ref(List *, result, NULL);
+	RefAdd3(defn, body, binding);
+	Ref(Tree *, assign, defn->u[0].p);
+	assert(assign->kind == nAssign);
+	Ref(char *, var, varname(glom(assign->u[0].p, binding, FALSE)));
+	list = glom(assign->u[1].p, binding, TRUE);
+	name = var;
+	RefEnd2(var, assign);
+
+	varpush(&p, name, list);
+	result = local(defn->u[1].p, body, binding, evalflags);
+	varpop(&p);
+
+	RefRemove3(binding, body, defn);
+	RefReturn(result);
+}
+
+
 /* walk -- walk through a tree, evaluating nodes */
-extern List *walk(Tree *tree, Binding *binding, Boolean parent, Boolean exitonfalse) {
+extern List *walk(Tree *tree0, Binding *binding0, int flags) {
+	Tree *volatile tree = tree0;
+	Binding *volatile binding = binding0;
+
 	SIGCHK();
 
 top:
@@ -186,7 +234,7 @@ top:
 		list = glom(tree, binding, TRUE);
 		binding = bp;
 		RefEnd(bp);
-		list = eval(list, binding, parent, exitonfalse);
+		list = eval(list, binding, flags);
 		return list;
 	}
 
@@ -198,10 +246,6 @@ top:
 		Ref(Tree *, tp, tree);
 		Ref(List *, subject, glom(tp->u[0].p, bp, TRUE));
 		pattern = glom2(tp->u[1].p, bp, &quote);
-#if PRINTCMDS
-		if (printcmds)
-			eprint("~ (%L) %L\n", subject, " ", pattern, " ");
-#endif
 		result = listmatch(subject, pattern, quote);
 		RefEnd3(subject, tp, bp);
 		return result ? true : false;
@@ -238,46 +282,15 @@ top:
 		goto top;
 	}
 
-	case nLocal: {
-		Handler h;
-		List *e;
-
-		Ref(List *, status, NULL);
-		Ref(Tree *, tp, tree);
-		Ref(Binding *, bp, binding);
-		Ref(StrList *, vars, NULL);
-		if ((e = pushhandler(&h)) != NULL) {
-			for (; vars != NULL; vars = vars->next)
-				varpop(vars->str);
-			throw(e);
-		}
-		Ref(Tree *, defn, tp->u[0].p);
-		for (; defn != NULL; defn = defn->u[1].p) {
-			assert(defn->kind == nList);
-			if (defn->u[0].p == NULL)
-				continue;
-			Ref(Tree *, assign, defn->u[0].p);
-			assert(assign->kind == nAssign);
-			Ref(char *, var, varname(glom(assign->u[0].p, bp, FALSE)));
-			varpush(var, glom(assign->u[1].p, bp, TRUE));
-			vars = mkstrlist(var, vars);
-			RefEnd2(var, assign);
-		}
-		RefEnd(defn);
-		status = walk(tp->u[1].p, bp, parent, exitonfalse);
-		for (; vars != NULL; vars = vars->next)
-			varpop(vars->str);
-		pophandler(&h);
-		RefEnd3(vars, bp, tp);
-		RefReturn(status);
-	}
+	case nLocal:
+		return local(tree->u[0].p, tree->u[1].p, binding, flags);
 
 	case nFor: {
 		Handler h;
 		List *e;
 
 		if ((e = pushhandler(&h)) != NULL) {
-			if (e->term->str != NULL && streq(e->term->str, "return"))
+			if (e->term->str != NULL && streq(e->term->str, "break"))
 				return e->next;
 			throw(e);
 		}
@@ -332,7 +345,7 @@ top:
 				RefPop(bp);
 				break;
 			}
-			result = walk(body, bp, TRUE, exitonfalse);
+			result = walk(body, bp, flags & eval_exitonfalse);
 			RefEnd(bp);
 			SIGCHK();
 		}
@@ -347,5 +360,5 @@ top:
 		panic("walk: bad node kind %d", tree->kind);
 
 	}
-	unreached(NULL);
+	NOTREACHED;
 }

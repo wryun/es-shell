@@ -1,4 +1,4 @@
-/* glob.c -- wildcard matching */
+/* glob.c -- wildcard matching ($Revision: 1.5 $) */
 
 #define	REQUIRE_STAT	1
 #define	REQUIRE_DIRENT	1
@@ -195,11 +195,11 @@ static char *expandhome(char *s, StrList *qp) {
 		list = mklist(mkterm(gcndup(s + 1, slash - 1), NULL), NULL);
 	RefRemove(fn);
 
-	list = eval(append(fn, list), NULL, FALSE, FALSE);
+	list = eval(append(fn, list), NULL, 0);
 
 	if (list != NULL) {
 		if (list->next != NULL)
-			fail("%%home returned more than one value");
+			fail("es:expandhome", "%%home returned more than one value");
 		Ref(char *, home, getstr(list->term));
 		if (c == '\0') {
 			string = home;
@@ -225,7 +225,7 @@ static char *expandhome(char *s, StrList *qp) {
 			else {
 				q = gcalloc(len + 1, &StringTag);
 				memset(q, 'q', homelen);
-				memcpy(&s[homelen], &quote->str[slash], pathlen - slash);
+				memcpy(&q[homelen], &quote->str[slash], pathlen - slash);
 				q[len] = '\0';
 			}
 			quote->str = q;

@@ -1,4 +1,4 @@
-/* input.h -- definitions for es lexical analyzer */
+/* input.h -- definitions for es lexical analyzer ($Revision: 1.3 $) */
 
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 
@@ -14,11 +14,7 @@ struct Input {
 	int ungot;
 	int lineno;
 	int fd;
-	Boolean interactive;
-	Boolean echoinput;
-#if LISPTREES
-	Boolean lisptrees;
-#endif
+	int runflags;
 };
 
 

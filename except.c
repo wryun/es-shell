@@ -1,12 +1,13 @@
-/* except.c -- exception mechanism */
+/* except.c -- exception mechanism ($Revision: 1.6 $) */
 
 #include "es.h"
 #include "print.h"
 
 /* globals */
-Handler childhandler = { NULL, NULL };
 Handler *tophandler = NULL;
+Handler *roothandler = NULL;
 List *exception = NULL;
+Push *pushlist = NULL;
 
 /* pophandler -- remove a handler */
 extern void pophandler(Handler *handler) {
@@ -16,21 +17,32 @@ extern void pophandler(Handler *handler) {
 }
 
 /* throw -- raise an exception */
-extern noreturn throw(List *exc) {
+extern noreturn throw(List *e) {
 	Handler *handler = tophandler;
 
 	assert(!gcisblocked());
-	assert(exc != NULL);
+	assert(e != NULL);
 	assert(handler != NULL);
 	tophandler = handler->up;
+	
+	while (pushlist != handler->pushlist) {
+		rootlist = &pushlist->defnroot;
+		varpop(pushlist);
+	}
+
+#if ASSERTIONS
 	for (; rootlist != handler->rootlist; rootlist = rootlist->next)
 		assert(rootlist != NULL);
-	exception = exc;
+#else
+	rootlist = handler->rootlist;
+#endif
+	exception = e;
 	longjmp(handler->label, 1);
+	NOTREACHED;
 }
 
 /* fail -- pass a user catchable error up the exception chain */
-extern noreturn fail VARARGS1(const char *, fmt) {
+extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
 	char *s;
 	va_list args;
 
@@ -40,7 +52,8 @@ extern noreturn fail VARARGS1(const char *, fmt) {
 
 	gcdisable(0);
 	Ref(List *, e, mklist(mkterm("error", NULL),
-			      mklist(mkterm(s, NULL), NULL)));
+			      mklist(mkterm((char *) from, NULL),
+				     mklist(mkterm(s, NULL), NULL))));
 	while (gcisblocked())
 		gcenable();
 	throw(e);
@@ -49,6 +62,5 @@ extern noreturn fail VARARGS1(const char *, fmt) {
 
 /* newchildcatcher -- remove the current handler chain for a new child */
 extern void newchildcatcher(void) {
-	tophandler = &childhandler;
-	/* TODO: flush some of the rootlist? */
+	tophandler = roothandler;
 }

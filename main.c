@@ -1,9 +1,6 @@
-/* main.c -- initialization for es */
+/* main.c -- initialization for es ($Revision: 1.7 $) */
 
 #include "es.h"
-
-Boolean loginshell	= FALSE;	/* -l or $0[0] == '-' */
-Boolean exitonfalse	= FALSE;	/* -e */
 
 #if GCVERBOSE
 Boolean gcverbose	= FALSE;	/* -G */
@@ -30,6 +27,22 @@ static void checkfd(int fd, OpenKind r) {
 		mvfd(new, fd);
 }
 
+/* initpath -- set $path based on the configuration default */
+static void initpath(void) {
+	int i;
+	static const char * const path[] = { INITIAL_PATH };
+	
+	Ref(List *, list, NULL);
+	for (i = arraysize(path); i-- > 0;)
+		list = mklist(mkterm((char *) path[i], NULL), list);
+	vardef("path", NULL, list);
+	RefEnd(list);
+}
+
+/* initpid -- set $pid for this shell */
+static void initpid(void) {
+	vardef("pid", NULL, mklist(mkterm(str("%d", getpid()), NULL), NULL));
+}
 
 /* usage -- print usage message and die */
 static noreturn usage(void) {
@@ -52,14 +65,15 @@ static noreturn usage(void) {
 
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
-	Handler h;
-	List *e;
 	int c;
+	List *e;
+	Handler h;
 
-	volatile int runflags = 0;		/* -[invxL] */
+	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */
 	volatile Boolean allowquit = FALSE;	/* -d */
 	volatile Boolean stdin = FALSE;		/* -s */
+	volatile Boolean loginshell = FALSE;	/* -l or $0[0] == '-' */
 	Boolean keepclosed = FALSE;		/* -o */
 	const char *volatile cmd = NULL;	/* -c */
 
@@ -72,6 +86,7 @@ int main(int argc, char **argv) {
 	while ((c = getopt(argc, argv, "eilxvnpodsc:?GIL")) != EOF)
 		switch (c) {
 		case 'c':	cmd = optarg;			break;
+		case 'e':	runflags |= eval_exitonfalse;	break;
 		case 'i':	runflags |= run_interactive;	break;
 		case 'n':	runflags |= run_noexec;		break;
 		case 'v':	runflags |= run_echoinput;	break;
@@ -79,7 +94,6 @@ int main(int argc, char **argv) {
 #if LISPTREES
 		case 'L':	runflags |= run_lisptrees;	break;
 #endif
-		case 'e':	exitonfalse = TRUE;		break;
 		case 'l':	loginshell = TRUE;		break;
 		case 'p':	protected = TRUE;		break;
 		case 'o':	keepclosed = TRUE;		break;
@@ -115,12 +129,10 @@ getopt_done:
 	)
 		runflags |= run_interactive;
 
-	if (
-		(setjmp(childhandler.label) && (e = exception) != NULL)
-	     || (e = pushhandler(&h)) != NULL
-	) {
+	roothandler = &h;
+	if ((e = pushhandler(&h)) != NULL) {
 		if (streq(getstr(e->term), "error"))
-			eprint("%L\n", e->next);
+			eprint("%L\n", e->next == NULL ? NULL : e->next->next, " ");
 		else if (!issilentsignal(e))
 			eprint("uncaught exception: %L\n", e, " ");
 		return 1;
@@ -128,7 +140,14 @@ getopt_done:
 
 	initinput();
 	initprims();
-	initvars(environ, protected);
+	initvars();
+
+	runinitial();
+
+	initpath();
+	initpid();
+	hidevariables();
+	initenv(environ, protected);
 	initsignals(allowquit);
 
 	if (loginshell) {

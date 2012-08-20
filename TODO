@@ -1,17 +1,14 @@
-0.8	write man page
-0.9	access builtin
+0.9	better yacc error handling
+0.9	clean up behavior of control-c
 0.9	clean up parse.y
 0.9	cut down amount of memory initialized in the parser
 0.9	externalize mutual recursion correctly
 0.9	figure out performance consequences of disabling gc
 0.9	hook for calls to wait()/ewaitfor()
-0.9	make Tconv more tail recursive
+0.9	make -x more like it is in sh and rc?
 0.9	multiple assignment
 0.9	openbuffer/sealbuffer directly into gc space
-0.9	stop pushing $0 from forcing an isdirty
 0.9	trip.es
-0.9	undump the initial memory state into the text segment
-0.9	use set- for umask?
 1.5	make user functions properly tail recursive
 1.5	meta-circular decompose operation
 1.8	librarification

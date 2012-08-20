@@ -1,7 +1,6 @@
-/* prim-sys.c -- system call primitives */
+/* prim-sys.c -- system call primitives ($Revision: 1.10 $) */
 
 #define	REQUIRE_IOCTL	1
-#define REQUIRE_CTYPE   1
 
 #include "es.h"
 #include "prim.h"
@@ -10,7 +9,7 @@
 PRIM(newpgrp) {
 	int pid;
 	if (list != NULL)
-		fail("usage: newpgrp");
+		fail("$&newpgrp", "usage: newpgrp");
 	pid = getpid();
 	setpgrp(pid, pid);
 #ifdef TIOCSPGRP
@@ -39,24 +38,21 @@ PRIM(background) {
 		setpgrp(0, getpid());
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
-		exit(exitstatus(eval(list, NULL, FALSE, exitonfalse)));
+		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	}
-	if (isinteractive())
-		eprint("%d\n", pid);
-	vardef("apid", NULL, mklist(mkterm(str("%d", pid), NULL), NULL));
-	return true;
+	return mklist(mkterm(str("%d", pid), NULL), NULL);
 }
 
 PRIM(exit) {
 	exit(exitstatus(list));
-	unreached(NULL);
+	NOTREACHED;
 }
 
 PRIM(fork) {
 	int pid, status;
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
-		exit(exitstatus(eval(list, NULL, FALSE, exitonfalse)));
+		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
 	SIGCHK();
 	printstatus(0, status);
@@ -76,70 +72,38 @@ PRIM(umask) {
 		s = getstr(list->term);
 		mask = strtol(s, &t, 8);
 		if (*t != '\0' || ((unsigned) mask) > 0777)
-			fail("bad umask: %s", s);
+			fail("$&umask", "bad umask: %s", s);
 		if (umask(mask) == -1)
-			fail("umask %04d: %s", mask, strerror(errno));
+			fail("$&umask", "umask %04d: %s", mask, strerror(errno));
 		return true;
 	}
-	fail("usage: umask [mask]");
-	unreached(NULL);
+	fail("$&umask", "usage: umask [mask]");
+	NOTREACHED;
 }
 
 PRIM(cd) {
+	char *dir;
+
 	if (list == NULL) {
-		char *dir;
-		List *home = varlookup("home", NULL);
-		if (home == NULL)
-			fail("cd: no home directory");
-		if (home->next != NULL)
-			fail("cd: $home must be 1 word long");
-		dir = getstr(home->term);
-		if (chdir(dir) == -1)
-			fail("chdir %s: %s", dir, strerror(errno));
-		return true;
-	}
-	if (list->next == NULL) {
-		char *name = getstr(list->term);
-		if (isabsolute(name) || streq(name, ".") || streq(name, ".."))
-			if (chdir(name) == -1)
-				fail("chdir %s: %s", name, strerror(errno));
-			else
-				return true;
-		else {
-			int len = strlen(name);
-			Ref(List *, path, varlookup("cdpath", NULL));
-			for (; path != NULL; path = path->next) {
-				static char *test;
-				static size_t testlen = 0;
-				
-				const char *dir = getstr(path->term);
-				size_t pathlen = strlen(dir) + len + 2;
-				
-				if (testlen < pathlen) {
-					testlen = pathlen;
-					test = erealloc(test, testlen);
-				}
-				if (*dir == '\0')
-					strcpy(test, name);
-				else {
-					strcpy(test, dir);
-					if (!streq(test, "/"))		/* "//" is special to POSIX */
-						strcat(test, "/");
-					strcat(test, name);
-				}
-				if (chdir(test) >= 0) {
-					if (isinteractive() && *dir != '\0' && !streq(dir, "."))
-						print("%s\n", test);
-					RefPop(path);
-					return true;
-				}
-			}
-			RefEnd(path);
-			fail("cd %s: directory not found", name);
-		}
-	}
-	fail("usage: cd [directory]");
-	unreached(NULL);
+		list = varlookup("home", NULL);
+		if (list == NULL)
+			fail("$&cd", "cd: no home directory");
+	} else if (list->next == NULL) {
+		List *search = varlookup("fn-%cdpathsearch", NULL);
+		if (search == NULL)
+			fail("$&cd", "%L: fn %%cdpathsearch undefined", list, " ");
+		list = eval(append(search, list), NULL, 0);
+		if (list == NULL)
+			fail("$&cd", "%%cdpathsearch must return a value");
+	} else
+		fail("$&cd", "usage: cd [directory]");
+
+	if (list->next != NULL)
+		fail("$&cd", "cd %L: directory must be one word long", list, " ");
+	dir = getstr(list->term);
+	if (chdir(dir) == -1)
+		fail("$&cd", "chdir %s: %s", dir, strerror(errno));
+	return true;
 }
 
 PRIM(setsignals) {
@@ -152,7 +116,7 @@ PRIM(setsignals) {
 	for (; lp != NULL; lp = lp->next) {
 		for (i = 1; !streq(getstr(lp->term), signals[i].name); )
 			if (++i == NUMOFSIGNALS)
-				fail("unknown signal: %s", getstr(lp->term));
+				fail("$&setsignals", "unknown signal: %s", getstr(lp->term));
 		sigs[i] = TRUE;
 	}
 	RefEnd(lp);
@@ -272,7 +236,7 @@ PRIM(limit) {
 		const char *name = getstr(lp->term);
 		for (;; lim++) {
 			if (lim->name == NULL)
-				fail("%s: no such limit", name);
+				fail("$&limit", "%s: no such limit", name);
 			if (streq(name, lim->name))
 				break;
 		}
@@ -284,13 +248,13 @@ PRIM(limit) {
 			struct rlimit rlim;
 			getrlimit(lim->flag, &rlim);
 			if ((n = parselimit(lim, getstr(lp->term))) < 0)
-				fail("%s: bad limit value", getstr(lp->term));
+				fail("$&limit", "%s: bad limit value", getstr(lp->term));
 			if (hard)
 				rlim.rlim_max = n;
 			else
 				rlim.rlim_cur = n;
 			if (setrlimit(lim->flag, &rlim) == -1)
-				fail("setrlimit: %s", strerror(errno));
+				fail("$&limit", "setrlimit: %s", strerror(errno));
 		}
 	}
 	RefEnd(lp);
@@ -308,7 +272,7 @@ PRIM(time) {
 	t0 = time(NULL);
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
-		exit(exitstatus(eval(lp, NULL, FALSE, exitonfalse)));
+		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	status = ewaitfor2(pid, &r);
 	t1 = time(NULL);
 	SIGCHK();
@@ -328,6 +292,70 @@ PRIM(time) {
 
 #endif	/* BSD_LIMITS */
 
+#if !KERNEL_POUNDBANG
+PRIM(execfailure) {
+	int fd, len, argc;
+	char header[1024], *args[10], *s, *end, *file;
+
+	gcdisable(0);
+	if (list == NULL)
+		fail("$&execfailure", "usage: %exec-failure name argv");
+
+	file = getstr(list->term);
+	fd = eopen(file, oOpen);
+	if (fd < 0) {
+		gcenable();
+		return NULL;
+	}
+	len = read(fd, header, sizeof header);
+	close(fd);
+	if (len <= 2 || header[0] != '#' || header[1] != '!') {
+		gcenable();
+		return NULL;
+	}
+
+	s = &header[2];
+	end = &header[len];
+	argc = 0;
+	while (argc < arraysize(args) - 1) {
+		int c;
+		while ((c = *s) == ' ' || c == '\t')
+			if (++s >= end) {
+				gcenable();
+				return NULL;
+			}
+		if (c == '\n' || c == '\r')
+			break;
+		args[argc++] = s;
+		do
+			if (++s >= end) {
+				gcenable();
+				return NULL;
+			}
+		while (s < end && (c = *s) != ' ' && c != '\t' && c != '\n' && c != '\r');
+		*s++ = '\0';
+		if (c == '\n' || c == '\r')
+			break;
+	}
+	if (argc == 0) {
+		gcenable();
+		return NULL;
+	}
+
+	list = list->next;
+	if (list != NULL)
+		list = list->next;
+	list = mklist(mkterm(file, NULL), list);
+	while (argc != 0)
+		list = mklist(mkterm(args[--argc], NULL), list);
+
+	Ref(List *, lp, list);
+	gcenable();
+	lp = eval(lp, NULL, eval_inchild);
+	RefReturn(lp);
+}
+#endif /* !KERNEL_POUNDBANG */
+
 extern Dict *initprims_sys(Dict *primdict) {
 	X(newpgrp);
 	X(background);
@@ -340,5 +368,8 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(limit);
 	X(time);
 #endif
+#if !KERNEL_POUNDBANG
+	X(execfailure);
+#endif /* !KERNEL_POUNDBANG */
 	return primdict;
 }

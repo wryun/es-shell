@@ -1,6 +1,142 @@
 CHANGES
 =======
 
+since 0.79
+----------
+
+there's now a man page.  i believe that it's up to date.
+
+a new hook function, %exec-failure, was added.  if a call to execve(2)
+fails, %exec-failure is called with the full path name of the program
+that couldn't be run and the full argv array (including argv[0], which
+might be identical to the first argument.)  if %exec-failure doesn't
+exist or returns, an error message is printed and the child process exits.
+for example, to emulate the behavior of old shells, one can use
+	fn %exec-failure file argv0 args {
+		exec /bin/sh $file $args
+	}
+a default %exec-failure is provided conditionally for machines which
+lack #!-support in their execve; see KERNEL_POUNDBANG for details.
+
+the retry builtin was removed.  the functionality is still there,
+just use ``throw retry.''  retrying is not a common enough case
+to waste the name of a command.
+
+$apid is not exported by default.
+
+-e and eval seem to work more reliably now.
+
+error exceptions now have an additional piece of information.
+the second word (the one after ``error'') is now the name of
+the primitive or other routine which caused the error.  there
+is no guarantee that this piece of information is correct,
+but it may be useful.
+
+i've sprinkled the NOTREACHED macro (see stdenv.h) through the source,
+which should shut off some warnings on some systems.
+
+Tconv (the format routine for %T) calls itself recursively less often
+than it used to.
+
+\x constants are now interpreted correctly.
+
+the $&background primitive now just backgrounds a process.  printing
+of the pid and setting $apid is now done in the function which calls
+the primitive, which is defined in initial.es.
+
+a new builtin, %is-interactive, was added.  it returns true if and
+only if the enclosing interpreter context is interactive.
+
+the initialization process has changed radically.  the shell script
+mkinitial used to turn initial.es into a string that was linked into
+the binary.  now, es is built with a two-phase process:  first, a
+special version of the interpreter (called esdump), which is lacking
+initial.es, is built.  esdump is used to translate initial.es into
+initial.c, which creates the same in-memory layout would have been
+obtained by running initial.es, except that most of the data is put
+into the text segment.  the downside:  the executable is large by
+about 10% and building es takes long.  the upside:  it starts up
+faster, it uses less memory (because many data structures no longer
+live in garbage collector space, which requires 2 copies of all data
+when collecting), and garbage collects faster (much less data has to
+be scanned).  this code may be less portable than the version that
+preceeded it, so let us know, especially if esdump panics.
+
+some definitions from var.c were pulled out into the new var.h header file.
+
+fixed a bug where a line consisting of () alone would cause the interpreter
+to raise an assertion failure.
+
+several crashing bugs (a spurious assertion failure in the splitting code
+following a control-c and an incorrect use of nprint("%L") in the top-level
+error catcher) were fixed.
+
+a new hook fn %cdpathsearch, analagous to %pathsearch, was added for cd.
+
+a new builtin, access, which is similar to test from other shells, was added.
+the name is different because the semantics are somewhat different.  access is
+now used to implement the default form of path searching built in to the shell.
+(the primitive $&pathsearch has been dropped; see initial.es or the forthcoming
+manual page for details.)  in addition, whatis now triggers calls to %pathsearch
+if need be.
+
+a new builtin, unwind-protect, was added for the most common case of exception
+handling:  required cleanup code.  standard use is
+	unwind-protect { body } { cleanup }
+where cleanup is executed when body finishes, regardless of it is by successful
+completion or because an exception was raised.  if body completes successfully,
+the exit status of the unwind-protect is the exit status of body; otherwise,
+the exception is passed through after the cleanup is run, unless cleanup itself
+causes an exception.
+
+a new builtin, result, was added.  effectively, it is the identity function:
+all it does is return its argument as its exit status.  result is similar to
+return, except it does not affect control flow.  (and does not use the exception
+mechanism.)
+
+>{} and <{} (aka %readfrom and %writeto) are now implemented using temporary
+files on systems that don't have /dev/fd.  /dev/fd will still work better and
+be cleaner on the systems that support it, but this should cover 99% of all
+the cases otherwise.
+
+wait is now interruptible by control-c.
+
+the mechanism for declaring a variable not exported has changed.  now, all
+the variables on the list $noexport are not exported.  also, a new space for
+variables, internal has been added.  internal variables are those defined in
+initial.es; they are not exported unless redefined, but do not appear on the
+$noexport list.  also, $&vars does not include internal definitions, though they
+can be found in $&internals.
+
+. now takes argument -e, -x, -v, and -n just like the shell itself.
+
+a getopt like mechanism, esopt(), was introduced.
+
+a new control-flow builtin ``forever'' was added.  this was not needed for
+completeness sake, and i still recommend the use of ``while {} body'' for
+most purposes.  however, the read-eval-print loop had the wrong behavior
+when the user typed ``break'' at the command line because it was implemented
+with a while loop.  forever completely ignores exceptions.  (a similar problem
+still exists when you pass a code fragment including a return to a function
+rather than to a primitive.  maybe the people who want first-class continuations
+or at least lexical scoping for break/return do have a point.)
+
+the use of the default exception handler by main has been cleaned up a bit.
+
+the implementation of dynamic variable binding has changed a bit, but this
+should not be a user-visible change.
+
+for loops now correctly catch the ``break'' exception.  they used to catch
+``return'' by mistake.
+
+a bug was fixed where slashes in some filenames that used ~ expansion
+were replaced with 'r'.
+
+the internal flags parent and exitonfalse were coalesced into
+one mask rather than the two separate Booleans, and parent was
+replaced by eval_inchild, which has the opposite sense.
+
+
 0.74 to 0.79
 ------------
 

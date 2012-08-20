@@ -1,4 +1,4 @@
-/* print.c -- formatted printing routines (Paul Haahr, 12/91) */
+/* print.c -- formatted printing routines ($Revision: 1.4 $) */
 
 #include "es.h"
 #include "print.h"
@@ -18,7 +18,7 @@ static Boolean name(Format *format) { \
 
 Flag(uconv,	FMT_unsigned)
 Flag(hconv,	FMT_short)
-Flag(lconv,	FMT_long)
+Flag(longconv,	FMT_long)
 Flag(altconv,	FMT_altform)
 Flag(leftconv,	FMT_leftside)
 Flag(dotconv,	FMT_f2set)
@@ -187,7 +187,7 @@ static void inittab(void) {
 
 	fmttab['u'] = uconv;
 	fmttab['h'] = hconv;
-	fmttab['l'] = lconv;
+	fmttab['l'] = longconv;
 	fmttab['#'] = altconv;
 	fmttab['-'] = leftconv;
 	fmttab['.'] = dotconv;

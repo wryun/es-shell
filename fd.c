@@ -1,4 +1,4 @@
-/* fd.c -- file descriptor manipulations */
+/* fd.c -- file descriptor manipulations ($Revision: 1.3 $) */
 
 #include "es.h"
 
@@ -8,7 +8,7 @@ extern void mvfd(int old, int new) {
 	if (old != new) {
 		int fd = dup2(old, new);
 		if (fd == -1)
-			fail("dup2: %s", strerror(errno));
+			fail("es:mvfd", "dup2: %s", strerror(errno));
 		assert(fd == new);
 		close(old);
 	}
@@ -186,7 +186,7 @@ extern void releasefd(int n) {
 			*fdp = dup(fd);
 			if (*fdp == -1) {
 				assert(errno != EBADF);
-				fail("%s", strerror(errno));
+				fail("es:releasefd", "%s", strerror(errno));
 			}
 			close(fd);
 		}
@@ -210,7 +210,7 @@ extern int newfd(void) {
 			int fd = dup(i);
 			if (fd == -1) {
 				if (errno != EBADF)
-					fail("newfd: %s", strerror(errno));
+					fail("$&newfd", "newfd: %s", strerror(errno));
 				return i;
 			} else if (isdeferred(fd)) {
 				int n = newfd();

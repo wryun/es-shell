@@ -1,4 +1,4 @@
-/* closure.c -- operations on bindings, closures, lambdas, and thunks */
+/* closure.c -- operations on bindings, closures, lambdas, and thunks ($Revision: 1.7 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -14,7 +14,6 @@ extern Closure *mkclosure(Tree *tree, Binding *binding) {
 	Ref(Closure *, closure, gcnew(Closure));
 	closure->tree = tree;
 	closure->binding = binding;
-	closure->mark = 0;
 	gcenable();
 	RefReturn(closure);
 }
@@ -80,17 +79,23 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 							(defn = defn->u[1].p) == NULL
 						     || defn->u[0].p->kind != nWord
 						     || (count = (atoi(defn->u[0].p->u[0].s))) < 0
-						)
-							fail("improper use of $&nestedbinding");
+						) {
+							fail("$&parse", "improper use of $&nestedbinding");
+							NOTREACHED;
+						}
 						for (cp = chain, i = 0;; cp = cp->next, i++) {
-							if (cp == NULL)
-								fail("bad count in $&nestedbinding: %d", count);
+							if (cp == NULL) {
+								fail("$&parse", "bad count in $&nestedbinding: %d", count);
+								NOTREACHED;
+							}
 							if (i == count)
 								break;
 						}
 						term = mkterm(NULL, cp->closure);
-					} else
-						fail("bad unquoted primitive in %%closure: $&%s", prim);
+					} else {
+						fail("$&parse", "bad unquoted primitive in %%closure: $&%s", prim);
+						NOTREACHED;
+					}
 				} else
 					term = mkterm(word->u[0].s, NULL);
 				list = mklist(term, list);
@@ -102,8 +107,9 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 	return bindings;
 }
 
-extern Closure *extractbindings(Tree *tree) {
+extern Closure *extractbindings(Tree *tree0) {
 	Chain me;
+	Tree *volatile tree = tree0;
 	Binding *volatile bindings = NULL;
 	List *e;
 	Handler h;

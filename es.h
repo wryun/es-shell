@@ -1,4 +1,4 @@
-/* es.h -- definitions for higher order shell */
+/* es.h -- definitions for higher order shell ($Revision: 1.11 $) */
 
 #include "config.h"
 #include "stdenv.h"
@@ -32,7 +32,6 @@ struct Binding {
 struct Closure {
 	Binding	*binding;
 	Tree *tree;
-	int mark;
 };
 
 
@@ -49,9 +48,9 @@ typedef enum {
 struct Tree {
 	NodeKind kind;
 	union {
-		int i;
-		char *s;
 		Tree *p;
+		char *s;
+		int i;
 	} u[2];
 };
 
@@ -79,16 +78,17 @@ typedef struct {
 
 /* main.c */
 
-extern Boolean loginshell;		/* -l or $0[0] == '-' */
-extern Boolean noexecute;		/* -n */
-extern Boolean exitonfalse;		/* -e */
-
 #if GCVERBOSE
 extern Boolean gcverbose;		/* -G */
 #endif
 #if GCINFO
 extern Boolean gcinfo;			/* -I */
 #endif
+
+
+/* initial.c (for es) or dump.c (for esdump) */
+
+extern void runinitial(void);
 
 
 /* fd.c */
@@ -142,9 +142,14 @@ extern Binding *mkbinding(char *name, List *defn, Binding *next);
 
 /* eval.c */
 
-extern List *walk(Tree *tree, Binding *binding, Boolean parent, Boolean exitonfalse);
-extern List *eval(List *list, Binding *binding, Boolean parent, Boolean exitonfalse);
-extern List *eval1(Term *term, Boolean parent, Boolean exitonfalse);
+extern List *walk(Tree *tree, Binding *binding, int flags);
+extern List *eval(List *list, Binding *binding, int flags);
+extern List *eval1(Term *term, int flags);
+extern List *pathsearch(Term *term);
+
+#define	eval_inchild		1
+#define	eval_exitonfalse	2
+#define	eval_flags		(eval_inchild|eval_exitonfalse)
 
 
 /* glom.c */
@@ -166,16 +171,22 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote);
 
 /* var.c */
 
-extern void initvars(char **envp, Boolean protected);
+extern void initvars(void);
+extern void initenv(char **envp, Boolean protected);
+extern void hidevariables(void);
 extern char *varname(List *);
 extern List *varlookup(const char *, Binding *);
 extern List *varlookup2(char *name1, char *name2);
 extern void vardef(char *, Binding *, List *);
-extern void varpush(char *, List *);
-extern void varpop(char *);
 extern Vector *mkenv(void);
-extern void noexport(char *name);
-extern Boolean isnoexport(const char *name);
+extern void setnoexport(List *list);
+extern void addtolist(void *arg, char *key, void *value);
+extern List *listvars(Boolean internal);
+
+typedef struct Push Push;
+extern Push *pushlist;
+extern void varpush(Push *, char *, List *);
+extern void varpop(Push *);
 
 
 /* status.c */
@@ -193,10 +204,6 @@ extern Boolean hasforked;
 extern int efork(Boolean parent, Boolean background);
 extern int ewaitfor2(int pid, void *rusage);
 #define	ewaitfor(pid)	ewaitfor2(pid, NULL)
-
-/* which.c */
-
-extern char *which(char *name);
 
 
 /* dict.c */
@@ -261,15 +268,25 @@ extern void initinput(void);
 extern List *runfd(int fd, const char *name, int flags);
 extern List *runstring(const char *str, const char *name, int flags);
 
-#define	run_interactive		 1	/* -i or $0[0] = '-' */
-#define	run_noexec		 2	/* -n */
-#define	run_echoinput		 4	/* -v */
-#define	run_printcmds		 8	/* -x */
-#define	run_lisptrees		16	/* -L and defined(LISPTREES) */
+/* eval_* flags are also understood as runflags */
+#define	run_interactive		 4	/* -i or $0[0] = '-' */
+#define	run_noexec		 8	/* -n */
+#define	run_echoinput		16	/* -v */
+#define	run_printcmds		32	/* -x */
+#define	run_lisptrees		64	/* -L and defined(LISPTREES) */
+
+
+/* opt.c */
+
+extern void esoptbegin(List *list, const char *caller, const char *usage);
+extern int esopt(const char *options);
+extern Term *esoptarg(void);
+extern List *esoptend(void);
+
 
 /* prim.c */
 
-extern List *prim(char *s, List *list, Boolean parent, Boolean exitonfalse);
+extern List *prim(char *s, List *list, int evalflags);
 extern void initprims(void);
 
 
@@ -373,7 +390,25 @@ extern Root *rootlist;
 #define	RefPop3(v1, v2, v3)	RefPop(v1); RefPop2(v2, v3)
 #define	RefPop4(v1, v2, v3, v4)	RefPop(v1); RefPop3(v2, v3, v4)
 
+#define	RefAdd2(v1, v2)		RefAdd(v1); RefAdd(v2)
+#define	RefAdd3(v1, v2, v3)	RefAdd(v1); RefAdd2(v2, v3)
+#define	RefAdd4(v1, v2, v3, v4)	RefAdd(v1); RefAdd3(v2, v3, v4)
+
+#define	RefRemove2(v1, v2)		RefRemove(v1); RefRemove(v2)
+#define	RefRemove3(v1, v2, v3)		RefRemove(v1); RefRemove2(v2, v3)
+#define	RefRemove4(v1, v2, v3, v4)	RefRemove(v1); RefRemove3(v2, v3, v4)
+
 extern void globalroot(void *addr);
+
+/* struct Push -- varpush() placeholder */
+
+struct Push {
+	Push *next;
+	char *name;
+	List *defn;
+	int flags;
+	Root nameroot, defnroot;
+};
 
 
 /*
@@ -393,23 +428,24 @@ extern void globalroot(void *addr);
  */
 
 typedef struct Handler Handler;
-
 struct Handler {
 	Handler *up;
 	Root *rootlist;
+	Push *pushlist;
 	jmp_buf label;
 };
 
-extern Handler childhandler, *tophandler;
+extern Handler *tophandler, *roothandler;
 extern List *exception;
 extern List *pushhandler(Handler *handler);	/* must be a macro */
 extern void pophandler(Handler *handler);
 extern noreturn throw(List *exc);
-extern noreturn fail(const char *name VARARGS);
+extern noreturn fail(const char *from, const char *name VARARGS);
 extern void newchildcatcher(void);
 
 #define	pushhandler(hp)	( \
 		((hp)->rootlist = rootlist), \
+		((hp)->pushlist = pushlist), \
 		((hp)->up = tophandler), \
 		(tophandler = (hp)), \
 		(setjmp((hp)->label) ? exception : NULL) \

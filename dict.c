@@ -1,4 +1,4 @@
-/* dict.c -- linked list based dictionaries */
+/* dict.c -- linked list based dictionaries ($Revision: 1.2 $) */
 
 #include "es.h"
 #include "gc.h"

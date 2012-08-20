@@ -1,4 +1,4 @@
-/* glom.c -- walk parse tree to produce list */
+/* glom.c -- walk parse tree to produce list ($Revision: 1.4 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -106,7 +106,7 @@ static List *subscript(List *list, List *subs) {
 		if (lo < 1) {
 			Ref(char *, bad, getstr(subs->term));
 			gcenable();
-			fail("bad subscript: %s", bad);
+			fail("es:subscript", "bad subscript: %s", bad);
 			RefEnd(bad);
 		}
 		subs = subs->next;
@@ -120,7 +120,7 @@ static List *subscript(List *list, List *subs) {
 				if (hi < 1) {
 					Ref(char *, bad, getstr(subs->term));
 					gcenable();
-					fail("bad subscript: %s", bad);
+					fail("es:subscript", "bad subscript: %s", bad);
 					RefEnd(bad);
 				}
 				if (hi > len)
@@ -194,7 +194,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 			RefEnd(sub);
 			break;
 		case nCall:
-			list = walk(tp->u[0].p, bp, TRUE, FALSE);
+			list = walk(tp->u[0].p, bp, 0);
 			tp = NULL;
 			break;
 		case nList:
@@ -209,7 +209,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 			RefEnd2(r, l);
 			break;
 		default:
-			fail("glom1: bad node kind %d", tree->kind);
+			fail("es:glom", "glom1: bad node kind %d", tree->kind);
 		}
 
 		if (list != NULL) {

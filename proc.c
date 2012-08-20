@@ -1,4 +1,4 @@
-/* proc.c -- process control system calls */
+/* proc.c -- process control system calls ($Revision: 1.5 $) */
 
 #include "es.h"
 
@@ -61,7 +61,7 @@ extern int efork(Boolean parent, Boolean background) {
 			hasforked = TRUE;
 			break;
 		case -1:
-			fail("fork: %s", strerror(errno));
+			fail("es:efork", "fork: %s", strerror(errno));
 		}
 	}
 	closefds();
@@ -123,8 +123,10 @@ top:
 				while ((deadpid = ewait(&proc->status)) != pid)
 					if (deadpid != -1)
 						reap(deadpid, proc->status);
-					else if (errno != EINTR)
-						fail("wait: %s", strerror(errno));
+					else if (errno == EINTR)
+						SIGCHK();
+					else
+						fail("es:ewaitfor2", "wait: %s", strerror(errno));
 				proc->alive = FALSE;
 #if BSD_LIMITS
 				proc->rusage = wait_rusage;
@@ -151,21 +153,21 @@ top:
 	if (pid == 0) {
 		int status;
 		while ((pid = ewait(&status)) == -1)
-			if (errno != EINTR)
-				fail("wait: %s", strerror(errno));
+			if (errno == EINTR)
+				SIGCHK();
+			else
+				fail("es:ewaitfor2", "wait: %s", strerror(errno));
 		reap(pid, status);
 		goto top;
 	}
-	fail("wait: %d is not a child of this shell", pid);
-	unreached(-1);
+	fail("es:ewaitfor2", "wait: %d is not a child of this shell", pid);
+	NOTREACHED;
 }
 
 #include "prim.h"
 
 PRIM(apids) {
 	Proc *p;
-	if (list != NULL)
-		fail("usage: apids");
 	Ref(List *, lp, NULL);
 	for (p = proclist; p != NULL; p = p->next)
 		if (p->background && p->alive) {
@@ -182,10 +184,14 @@ PRIM(wait) {
 		pid = 0;
 	else if (list->next == NULL) {
 		pid = atoi(getstr(list->term));
-		if (pid <= 0)
-			fail("wait: %d: bad pid", pid);
-	} else
-		fail("usage: wait [pid]");
+		if (pid <= 0) {
+			fail("$&wait", "wait: %d: bad pid", pid);
+			NOTREACHED;
+		}
+	} else {
+		fail("$&wait", "usage: wait [pid]");
+		NOTREACHED;
+	}
 	return mklist(mkterm(mkstatus(ewaitfor(pid)), NULL), NULL);
 }
 

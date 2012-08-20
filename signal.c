@@ -1,4 +1,4 @@
-/* signal.c -- signal handling */
+/* signal.c -- signal handling ($Revision: 1.4 $) */
 
 #include "es.h"
 #include "sigmsgs.h"
@@ -78,14 +78,14 @@ static sigresult sigint(int sig) {
 	while (gcisblocked())
 		gcenable();
 	throw(mklist(mkterm("signal", NULL), mklist(mkterm("sigint", NULL), NULL)));
-	unreached(SIGRESULT);
+	NOTREACHED;
 }
 
 static sigresult trapsig(int sig) {
 	while (gcisblocked())
 		gcenable();
 	throw(mklist(mkterm("signal", NULL), mklist(mkterm(signals[sig].name, NULL), NULL)));
-	unreached(SIGRESULT);
+	NOTREACHED;
 }
 
 static sigresult noop(int sig) {
@@ -98,7 +98,7 @@ extern void trapsignals(Boolean sigs[NUMOFSIGNALS]) {
 		if (sigs[sig]) {
 #if SPECIAL_SIGCLD
 			if (sig == SIGCLD)
-				fail("cannot trap SIGCLD");
+				fail("$&setsignals", "cannot trap SIGCLD");
 #endif
 			if (sighandlers[sig] != trapsig)
 				esignal(sig, trapsig);

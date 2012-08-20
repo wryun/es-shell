@@ -1,4 +1,4 @@
-/* str.c -- es string operations */
+/* str.c -- es string operations ($Revision: 1.2 $) */
 
 #include "es.h"
 #include "gc.h"

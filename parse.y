@@ -1,4 +1,4 @@
-/* parse.y -- grammar for es */
+/* parse.y -- grammar for es ($Revision: 1.3 $) */
 
 %{
 #include "es.h"
@@ -52,8 +52,8 @@ cmdsan	: cmdsa			{ $$ = $1; }
 	| cmd NL		{ $$ = $1; if (!readheredocs(FALSE)) YYABORT; }
 
 cmd	:		%prec LET		{ $$ = NULL; }
-	| simple				{ $$ = redirect($1); if ($$ == NULL) YYABORT; }
-	| redir cmd	%prec '!'		{ $$ = redirect(mk(nRedir, $1, $2)); if ($$ == NULL) YYABORT; }
+	| simple				{ $$ = redirect($1); if ($$ == &errornode) YYABORT; }
+	| redir cmd	%prec '!'		{ $$ = redirect(mk(nRedir, $1, $2)); if ($$ == &errornode) YYABORT; }
 	| first assign				{ $$ = mk(nAssign, $1, $2); }
 	| fn					{ $$ = $1; }
 	| binder nl '(' bindings ')' nl cmd	{ $$ = mk($1, $4, $7); }

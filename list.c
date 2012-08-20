@@ -1,4 +1,4 @@
-/* list.c -- operations on lists */
+/* list.c -- operations on lists ($Revision: 1.2 $) */
 
 #include "es.h"
 #include "gc.h"

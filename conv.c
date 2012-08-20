@@ -1,6 +1,4 @@
-/* conv.c -- convert between internal and external forms */
-
-#define	REQUIRE_CTYPE	1
+/* conv.c -- convert between internal and external forms ($Revision: 1.7 $) */
 
 #include "es.h"
 #include "print.h"
@@ -44,13 +42,21 @@ static void binding(Format *f, char *keyword, Tree *tree) {
 		fmtprint(f, "%s%#T=%T", sep, binding->u[0].p, binding->u[1].p);
 		sep = ";";
 	}
-	fmtprint(f, ")%T", tree->u[1].p);
+	fmtprint(f, ")");
 }
 
 /* %T -- print a tree */
 static Boolean Tconv(Format *f) {
 	Tree *n = va_arg(f->args, Tree *);
 	Boolean group = (f->flags & FMT_altform) != 0;
+
+
+#define	tailcall(tree, altform) \
+	do { \
+		n = (tree); \
+		group = (altform); \
+		goto top; \
+	} while (0)
 
 top:
 	if (n == NULL) {
@@ -61,20 +67,21 @@ top:
 
 	switch (n->kind) {
 
-	case nAssign:	fmtprint(f, "%#T=%T", n->u[0].p, n->u[1].p);	return FALSE;
-	case nCall:	fmtprint(f, "<>{%T}", n->u[0].p);		return FALSE;
-	case nConcat:	fmtprint(f, "%#T^%#T", n->u[0].p, n->u[1].p);	return FALSE;
-	case nMatch:	fmtprint(f, "~ %#T %T", n->u[0].p, n->u[1].p);	return FALSE;
-	case nPrim:	fmtprint(f, "$&%s", n->u[0].s);			return FALSE;
-	case nThunk:	fmtprint(f, "{%T}", n->u[0].p);			return FALSE;
-	case nVarsub:	fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p);	return FALSE;
-	case nWord:	fmtprint(f, "%s", n->u[0].s);			return FALSE;
-	case nQword:	fmtprint(f, "%#S", n->u[0].s);			return FALSE;
+	case nWord:	fmtprint(f, "%s", n->u[0].s);		return FALSE;
+	case nQword:	fmtprint(f, "%#S", n->u[0].s);		return FALSE;
+	case nPrim:	fmtprint(f, "$&%s", n->u[0].s);		return FALSE;
 
-	case nLocal:	binding(f, "local", n);		return FALSE;
-	case nLet:	binding(f, "let", n);		return FALSE;
-	case nFor:	binding(f, "for", n);		return FALSE;
-	case nClosure:	binding(f, "%closure", n);	return FALSE;
+	case nAssign:	fmtprint(f, "%#T=", n->u[0].p);		tailcall(n->u[1].p, FALSE);
+	case nCall:	fmtprint(f, "<>{%T}", n->u[0].p);	return FALSE;
+	case nConcat:	fmtprint(f, "%#T^", n->u[0].p);		tailcall(n->u[1].p, TRUE);
+	case nMatch:	fmtprint(f, "~ %#T ", n->u[0].p);	tailcall(n->u[1].p, FALSE);
+	case nThunk:	fmtprint(f, "{%T}", n->u[0].p);		return FALSE;
+	case nVarsub:	fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p); return FALSE;
+
+	case nLocal:	binding(f, "local", n);		tailcall(n->u[1].p, FALSE);
+	case nLet:	binding(f, "let", n);		tailcall(n->u[1].p, FALSE);
+	case nFor:	binding(f, "for", n);		tailcall(n->u[1].p, FALSE);
+	case nClosure:	binding(f, "%closure", n);	tailcall(n->u[1].p, FALSE);
 
 	case nVar:
 		fmtputc(f, '$');
@@ -121,7 +128,7 @@ top:
 		panic("bad node kind: %d", n->kind);
 
 	}
-	unreached(FALSE);
+	NOTREACHED;
 }
 
 /* enclose -- build up a closure */
@@ -142,27 +149,21 @@ static Chain *chain = NULL;
 
 /* %C -- print a closure */
 static Boolean Cconv(Format *f) {
-	Chain me;
 	Closure *closure = va_arg(f->args, Closure *);
 	Tree *tree = closure->tree;
 	Binding *binding = closure->binding;
 	Boolean altform = (f->flags & FMT_altform) != 0;
+	Chain me, *cp;
+	int i;
 
 	assert(tree->kind == nThunk || tree->kind == nLambda || tree->kind == nPrim);
 	assert(binding == NULL || tree->kind != nPrim);
 
-	if (closure->mark) {
-		int i;
-		Chain *cp;
-		for (cp = chain, i = 0; cp != NULL; cp = cp->next, i++)
-			if (cp->closure == closure) {
-				fmtprint(f, "%d $&nestedbinding", i);
-				return FALSE;
-			}
-		panic("marked closure not found in chain");
-	}
-
-	++closure->mark;
+	for (cp = chain, i = 0; cp != NULL; cp = cp->next, i++)
+		if (cp->closure == closure) {
+			fmtprint(f, "%d $&nestedbinding", i);
+			return FALSE;
+		}
 	me.closure = closure;
 	me.next = chain;
 	chain = &me;
@@ -178,8 +179,7 @@ static Boolean Cconv(Format *f) {
 		fmtprint(f, "%T", tree);
 	}
 
-	chain = chain->next;
-	--closure->mark;
+	chain = chain->next;	/* TODO: exception unwinding? */
 	return FALSE;
 }
 
@@ -273,7 +273,6 @@ static Boolean Zconv(Format *f) {
 
 /* %F -- protect an exported name from brain-dead shells */
 static Boolean Fconv(Format *f) {
-#if PROTECT_ENV
 	int c;
 	unsigned char *name, *s;
 	
@@ -285,17 +284,10 @@ static Boolean Fconv(Format *f) {
 		else
 			fmtprint(f, "__%02x", c);
 	return FALSE;
-#else
-	static Conv sconv = NULL;
-	if (sconv == NULL)
-		sconv = fmtinstall('s', NULL);
-	return (*sconv)(f);
-#endif
 }
 
 /* %N -- undo %F */
 static Boolean Nconv(Format *f) {
-#if PROTECT_ENV
 	int c;
 	unsigned char *s = va_arg(f->args, unsigned char *);
 
@@ -312,12 +304,6 @@ static Boolean Nconv(Format *f) {
 		fmtputc(f, c);
 	}
 	return FALSE;
-#else
-	static Conv sconv = NULL;
-	if (sconv == NULL)
-		sconv = fmtinstall('s', NULL);
-	return (*sconv)(f);
-#endif
 }
 
 #if LISPTREES

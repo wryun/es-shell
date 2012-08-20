@@ -1,5 +1,5 @@
 #!/bin/sh
-# generate rc's internal signal table from signal.h
+# mksignal -- generate es's internal signal table from signal.h ($Revision: 1.2 $)
 
 exec > sigmsgs.c
 

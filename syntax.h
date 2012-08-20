@@ -1,10 +1,12 @@
-/* syntax.h -- abstract syntax tree interface */
+/* syntax.h -- abstract syntax tree interface ($Revision: 1.3 $) */
 
 #define	CAR	u[0].p
 #define	CDR	u[1].p
 
 
 /* syntax.c */
+
+extern Tree errornode;
 
 extern Tree *treecons(Tree *car, Tree *cdr);
 extern Tree *treecons2(Tree *car, Tree *cdr);

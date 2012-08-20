@@ -1,0 +1,18 @@
+error exceptions now have an additional piece of information.
+the second word (the one after ``error'') is now the name of
+the routine which caused the error.  Thus, in the example
+below, the throw command has an extra ``in'' in it.
+
+The example at the top of the right-hand column on the fourth page
+(page 56 in the Usenix proceedings) uses an obsolete version of the
+fork builtin.  The in function should now be
+
+	fn in dir cmd {
+		if {~ $#dir 0} {
+			throw error in 'usage: in dir cmd'
+		}
+		fork {		# run in a subshell
+			cd $dir
+			$cmd
+		}
+	}

@@ -1,11 +1,8 @@
-/* split.c -- split strings based on separators */
+/* split.c -- split strings based on separators ($Revision: 1.3 $) */
 
 #include "es.h"
 #include "gc.h"
 
-#if ASSERTIONS
-static Boolean splitting = FALSE;
-#endif
 static Boolean coalesce;
 static Boolean splitchars;
 static Buffer *buffer;
@@ -21,15 +18,10 @@ extern void startsplit(const char *sep, Boolean coalescef) {
 		globalroot(&value);
 	}
 
-	assert(!splitting);
-#if ASSERTIONS
-	splitting = TRUE;
-#endif
-	assert(value == NULL);
-
+	value = NULL;
+	buffer = NULL;
 	coalesce = coalescef;
 	splitchars = !coalesce && *sep == '\0';
-	buffer = NULL;
 
 	if (!ifsvalid || !streq(sep, ifs)) {
 		int c;
@@ -47,8 +39,6 @@ extern void startsplit(const char *sep, Boolean coalescef) {
 extern void splitstring(char *in, size_t len, Boolean endword) {
 	Buffer *buf = buffer;
 	unsigned char *s = (unsigned char *) in, *inend = s + len;
-
-	assert(splitting);
 
 	if (splitchars) {
 		assert(buf == NULL);
@@ -83,11 +73,6 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 
 extern List *endsplit(void) {
 	List *result;
-
-	assert(splitting);
-#if ASSERTIONS
-	splitting = FALSE;
-#endif
 
 	if (buffer != NULL) {
 		Term *term = mkterm(sealcountedbuffer(buffer), NULL);

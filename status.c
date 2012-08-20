@@ -1,4 +1,4 @@
-/* status.c -- status manipulations */
+/* status.c -- status manipulations ($Revision: 1.2 $) */
 
 #include "es.h"
 #include "sigmsgs.h"

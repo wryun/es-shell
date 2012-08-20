@@ -1,4 +1,4 @@
-/* match.c: pattern matching routines */
+/* match.c -- pattern matching routines ($Revision: 1.3 $) */
 
 #include "es.h"
 

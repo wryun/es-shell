@@ -1,4 +1,4 @@
-/* stdenv.h -- set up an environment we can use */
+/* stdenv.h -- set up an environment we can use ($Revision: 1.7 $) */
 
 
 /*
@@ -27,12 +27,6 @@
 #endif
 
 #include <string.h>
-
-#if ADOBE_SUNOS_HACKERY
-#define	ptrdiff_t	xxxptrdiff_t
-#define	size_t		xxxsize_t
-#endif
-
 #include <stddef.h>
 
 #if USE_STDARG
@@ -44,10 +38,7 @@
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
-
-#if REQUIRE_CTYPE
 #include <ctype.h>
-#endif
 
 #if REQUIRE_STAT || REQUIRE_IOCTL
 #include <sys/types.h>
@@ -190,19 +181,8 @@ typedef int sigresult;
 #define	ABORT()	abort()
 #endif
 
-#if ASSERTIONS
-#define	unreached(result) \
-	do { \
-		eprint("%s:%d: unreachable code reached\n", \
-		       __FILE__, __LINE__, STRING(expr)); \
-		ABORT(); \
-		return result; \
-	} while (0)
-#elif __GNUC__ && USE_VOLATILE
-#define	unreached(result)	do ; while (0)
-#else
-#define	unreached(result)	return result
-#endif
+enum { UNREACHABLE = 0 };
+#define	NOTREACHED	do assert(UNREACHABLE); while (1)
 
 /*
  * system calls -- can we get these from some standard header uniformly?
@@ -253,14 +233,7 @@ extern void *qsort(
 	int (*compar)(const void *, const void *)
 );
 
-/* string */
-
-#if ADOBE_SUNOS_HACKERY
-extern void *memcpy(void *dst, const void *src, size_t n);
-extern void *memset(void *dst, int c, size_t n);
-#endif
-
 /* setjmp */
 
 extern int setjmp(jmp_buf env);
-extern void longjmp(jmp_buf env, int val);
+extern noreturn longjmp(jmp_buf env, int val);

@@ -1,4 +1,4 @@
-/* util.c -- the kitchen sink */
+/* util.c -- the kitchen sink ($Revision: 1.2 $) */
 
 #include "es.h"
 

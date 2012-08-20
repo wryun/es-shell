@@ -1,7 +1,17 @@
-/* config.h -- es(1) configuration parameters */
+/* config.h -- es(1) configuration parameters ($Revision: 1.4 $) */
 
 /*
  * Compile time options
+ *
+ *	These options are best set on the command line in the Makefile.
+ *	If the machine you use requires a different set of defaults than
+ *	is provided, please send mail to
+ *		haahr@adobe.com
+ *		byron@netapp.com
+ *	If you decide to add things to this file, add them before the
+ *	defaults and make sure that they can be overriden by command
+ *	line definitions.  (That is, remember to do the #ifndef dance.)
+ *
  *
  *	ASSERTIONS
  *		if this is on, asserts will be checked, raising errors on
@@ -48,6 +58,12 @@
  *		this is the default value for $path (and $PATH) when the shell
  *		starts up.  it is replaced by one from the environment if it
  *		exists.
+ *
+ *	KERNEL_POUNDBANG
+ *		this value should be true when the builtin version of execve(2)
+ *		understands #! headers.  if false, es provides a builtin for
+ *		running #! files.  the default is true; are there any real
+ *		systems still out there that don't support it?
  *
  *	JOB_PROTECT
  *		set this to true if you want es to perform backgrounding as if
@@ -109,226 +125,147 @@
 
 /*
  * platform specific options
- *	please send new configurations to haahr@adobe.com or byron@netapp.com
+ *	please send new configurations to haahr@adobe.com and byron@netapp.com
  */
 
 
 /* NeXT defaults -- paul haahr */
 
 #if NeXT
-#define	DEFAULT_USE_DIRENT	0
-#define	DEFAULT_USE_SIG_ATOMIC_T 1
-#define	DEFAULT_USE_UNISTD	0
+#ifndef	USE_DIRENT
+#define	USE_DIRENT	0
 #endif
+#ifndef	USE_SIG_ATOMIC_T
+#define	USE_SIG_ATOMIC_T 1
+#endif
+#ifndef	USE_UNISTD
+#define	USE_UNISTD	0
+#endif
+#endif	/* NeXT */
 
 
 /* Irix -- derived from rc 1.4 */
 
 #if sgi
-#define	DEFAULT_SYSV_SIGNALS	1
-#define	DEFAULT_SPECIAL_SIGCLD	1
-#define	DEFAULT_INITIAL_PATH	"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
+#ifndef	SYSV_SIGNALS
+#define	SYSV_SIGNALS	1
 #endif
+#ifndef	SPECIAL_SIGCLD
+#define	SPECIAL_SIGCLD	1
+#endif
+#ifndef	INITIAL_PATH
+#define	INITIAL_PATH	"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
+#endif
+#endif	/* sgi */
 
 
 /* SunOS -- derived from rc 1.4 */
 
 #if sun
-#define	DEFAULT_INITIAL_PATH	"/usr/ucb", "/usr/bin", ""
+#ifndef	INITIAL_PATH
+#define	INITIAL_PATH	"/usr/ucb", "/usr/bin", ""
 #endif
+#endif	/* sun */
 
 
 /*
- * default defaults -- edit this section, but carefully
- */
-
-#ifndef	DEFAULT_ASSERTIONS
-#define	DEFAULT_ASSERTIONS	1
-#endif
-
-#ifndef	DEFAULT_BSD_LIMITS
-#define	DEFAULT_BSD_LIMITS	1
-#endif
-
-#ifndef	DEFAULT_DEVFD
-#define	DEFAULT_DEVFD		0
-#endif
-
-#ifndef	DEFAULT_DEVFD_PATH
-#define	DEFAULT_DEVFD_PATH	"/dev/fd/%d"
-#endif
-
-#ifndef	DEFAULT_GCALWAYS
-#define	DEFAULT_GCALWAYS	0
-#endif
-
-#ifndef	DEFAULT_GCDEBUG
-#define	DEFAULT_GCDEBUG		0
-#endif
-
-#ifndef	DEFAULT_GCINFO
-#define	DEFAULT_GCINFO		0
-#endif
-
-#ifndef	DEFAULT_GCPROTECT
-#define	DEFAULT_GCPROTECT	0
-#endif
-
-#ifndef	DEFAULT_GCVERBOSE
-#define	DEFAULT_GCVERBOSE	0
-#endif
-
-#ifndef	DEFAULT_INITIAL_PATH
-#define	DEFAULT_INITIAL_PATH	"/usr/ucb", "/usr/bin", "/bin", ""
-#endif
-
-#ifndef	DEFAULT_JOB_PROTECT
-#define	DEFAULT_JOB_PROTECT	1
-#endif
-
-#ifndef	DEFAULT_PROTECT_ENV
-#define	DEFAULT_PROTECT_ENV	1
-#endif
-
-#ifndef	DEFAULT_READLINE
-#define	DEFAULT_READLINE	0
-#endif
-
-#ifndef	DEFAULT_REISER_CPP
-#define	DEFAULT_REISER_CPP	0
-#endif
-
-#ifndef	DEFAULT_SYSV_SIGNALS
-#define	DEFAULT_SYSV_SIGNALS	0
-#endif
-
-#ifndef	DEFAULT_SPECIAL_SIGCLD
-#define	DEFAULT_SPECIAL_SIGCLD	0
-#endif
-
-#ifndef	DEFAULT_USE_CONST
-#define	DEFAULT_USE_CONST	1
-#endif
-
-#ifndef	DEFAULT_USE_DIRENT
-#define	DEFAULT_USE_DIRENT	1
-#endif
-
-#ifndef	DEFAULT_USE_SIG_ATOMIC_T
-#define	DEFAULT_USE_SIG_ATOMIC_T 0
-#endif
-
-#ifndef	DEFAULT_USE_STDARG
-#define	DEFAULT_USE_STDARG	1
-#endif
-
-#ifndef	DEFAULT_USE_UNISTD
-#define	DEFAULT_USE_UNISTD	1
-#endif
-
-#ifndef	DEFAULT_USE_VOLATILE
-#define	DEFAULT_USE_VOLATILE	1
-#endif
-
-#ifndef	DEFAULT_VOID_SIGNALS
-#define	DEFAULT_VOID_SIGNALS	1
-#endif
-
-
-/*
- * actual configuration flags -- do not edit this section
+ * default defaults -- don't change this section
  */
 
 #ifndef	ASSERTIONS
-#define	ASSERTIONS	DEFAULT_ASSERTIONS
+#define	ASSERTIONS	1
 #endif
 
 #ifndef	BSD_LIMITS
-#define	BSD_LIMITS	DEFAULT_BSD_LIMITS
+#define	BSD_LIMITS	1
 #endif
 
 #ifndef	DEVFD
-#define	DEVFD		DEFAULT_DEVFD
+#define	DEVFD		0
 #endif
 
 #ifndef	DEVFD_PATH
-#define	DEVFD_PATH	DEFAULT_DEVFD_PATH
+#define	DEVFD_PATH	"/dev/fd/%d"
 #endif
 
 #ifndef	GCALWAYS
-#define	GCALWAYS	DEFAULT_GCALWAYS
+#define	GCALWAYS	0
 #endif
 
 #ifndef	GCDEBUG
-#define	GCDEBUG		DEFAULT_GCDEBUG
+#define	GCDEBUG		0
 #endif
 
 #ifndef	GCINFO
-#define	GCINFO		DEFAULT_GCINFO
+#define	GCINFO		0
 #endif
 
 #ifndef	GCPROTECT
-#define	GCPROTECT	DEFAULT_GCPROTECT
+#define	GCPROTECT	0
 #endif
 
 #ifndef	GCVERBOSE
-#define	GCVERBOSE	DEFAULT_GCVERBOSE
+#define	GCVERBOSE	0
 #endif
 
 #ifndef	INITIAL_PATH
-#define	INITIAL_PATH	DEFAULT_INITIAL_PATH
+#define	INITIAL_PATH	"/usr/ucb", "/usr/bin", "/bin", ""
+#endif
+
+#ifndef	KERNEL_POUNDBANG
+#define	KERNEL_POUNDBANG 1
 #endif
 
 #ifndef	JOB_PROTECT
-#define	JOB_PROTECT	DEFAULT_JOB_PROTECT
+#define	JOB_PROTECT	1
 #endif
 
 #ifndef	PROTECT_ENV
-#define	PROTECT_ENV	DEFAULT_PROTECT_ENV
+#define	PROTECT_ENV	1
 #endif
 
 #ifndef	READLINE
-#define	READLINE	DEFAULT_READLINE
+#define	READLINE	0
 #endif
 
 #ifndef	REISER_CPP
-#define	REISER_CPP	DEFAULT_REISER_CPP
+#define	REISER_CPP	0
 #endif
 
 #ifndef	SYSV_SIGNALS
-#define	SYSV_SIGNALS	DEFAULT_SYSV_SIGNALS
+#define	SYSV_SIGNALS	0
 #endif
 
 #ifndef	SPECIAL_SIGCLD
-#define	SPECIAL_SIGCLD	DEFAULT_SPECIAL_SIGCLD
+#define	SPECIAL_SIGCLD	0
 #endif
 
 #ifndef	USE_CONST
-#define	USE_CONST	DEFAULT_USE_CONST
+#define	USE_CONST	1
 #endif
 
 #ifndef	USE_DIRENT
-#define	USE_DIRENT	DEFAULT_USE_DIRENT
+#define	USE_DIRENT	1
 #endif
 
 #ifndef	USE_SIG_ATOMIC_T
-#define	USE_SIG_ATOMIC_T DEFAULT_USE_SIG_ATOMIC_T
+#define	USE_SIG_ATOMIC_T 0
 #endif
 
 #ifndef	USE_STDARG
-#define	USE_STDARG	DEFAULT_USE_STDARG
+#define	USE_STDARG	1
 #endif
 
 #ifndef	USE_UNISTD
-#define	USE_UNISTD	DEFAULT_USE_UNISTD
+#define	USE_UNISTD	1
 #endif
 
 #ifndef	USE_VOLATILE
-#define	USE_VOLATILE	DEFAULT_USE_VOLATILE
+#define	USE_VOLATILE	1
 #endif
 
 #ifndef	VOID_SIGNALS
-#define	VOID_SIGNALS	DEFAULT_VOID_SIGNALS
+#define	VOID_SIGNALS	1
 #endif
 
 

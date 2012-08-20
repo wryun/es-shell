@@ -1,6 +1,4 @@
-/* token.c -- lexical analyzer for es */
-
-#define	REQUIRE_CTYPE	1
+/* token.c -- lexical analyzer for es ($Revision: 1.5 $) */
 
 #include "es.h"
 #include "input.h"
@@ -73,7 +71,7 @@ extern void print_prompt2(void) {
 #if READLINE
 	prompt = prompt2;
 #else
-	if (input->interactive && prompt2 != NULL)
+	if ((input->runflags & run_interactive) && prompt2 != NULL)
 		eprint("%s", prompt2);
 #endif
 }
@@ -261,13 +259,14 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		case 'n':	*buf = '\n';	break;
 		case 'r':	*buf = '\r';	break;
 		case 't':	*buf = '\t';	break;
-		case 'x': {
+		case 'x': case 'X': {
 			int n = 0;
 			for (;;) {
 				c = GETC();
 				if (!isxdigit(c))
 					break;
-				n = (n << 4) | (c - (isdigit(c) ? '0' : islower(c) ? 'a' : 'A'));
+				n = (n << 4)
+				  | (c - (isdigit(c) ? '0' : ((islower(c) ? 'a' : 'A') - 0xA)));
 			}
 			if (n == 0)
 				goto badescape;
