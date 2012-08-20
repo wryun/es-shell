@@ -1,3 +1,5 @@
+# c
+*.o
 
 # http://www.gnu.org/software/autoconf
 
@@ -8,3 +10,22 @@
 /depcomp
 /install-sh
 /missing
+Makefile
+config.guess
+config.h
+config.log
+config.status
+config.sub
+ltmain.sh
+
+# yacc
+
+y.*
+
+# es
+
+initial.c
+sigmsgs.c
+token.h
+es
+esdump

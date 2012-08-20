@@ -338,7 +338,7 @@ PRIM(time) {
 		static clock_t ticks = 0;
 
 		if (ticks == 0)
-			ticks = CLK_TCK;
+			ticks = sysconf(_SC_CLK_TCK);
 
 		t0 = times(&tms);
 		pid = efork(TRUE, FALSE);

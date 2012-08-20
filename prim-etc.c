@@ -11,12 +11,13 @@ PRIM(result) {
 
 PRIM(echo) {
 	const char *eol = "\n";
-	if (list != NULL)
+	if (list != NULL) {
 		if (termeq(list->term, "-n")) {
 			eol = "";
 			list = list->next;
 		} else if (termeq(list->term, "--"))
 			list = list->next;
+	}
 	print("%L%s", list, " ", eol);
 	return true;
 }

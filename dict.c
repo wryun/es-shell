@@ -15,7 +15,7 @@
 static unsigned long strhash2(const char *str1, const char *str2) {
 
 #define	ADVANCE() { \
-		if ((c = *s++) == '\0') \
+		if ((c = *s++) == '\0') { \
 			if (str2 == NULL) \
 				break; \
 			else { \
@@ -24,6 +24,7 @@ static unsigned long strhash2(const char *str1, const char *str2) {
 				if ((c = *s++) == '\0') \
 					break; \
 			} \
+		} \
 	}
 
 	int c;

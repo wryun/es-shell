@@ -89,8 +89,6 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 	flags = format->flags;
 	if (flags & FMT_long)
 		n = va_arg(format->args, long);
-	else if (flags & FMT_short)
-		n = va_arg(format->args, short);
 	else
 		n = va_arg(format->args, int);
 

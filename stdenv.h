@@ -46,9 +46,10 @@
 #include <signal.h>
 #include <ctype.h>
 
-#if REQUIRE_STAT || REQUIRE_IOCTL
+/* #if REQUIRE_STAT || REQUIRE_IOCTL */
+/* We need sys/types.h for the prototype of gid_t on Linux */
 #include <sys/types.h>
-#endif
+/* #endif */
 
 #if REQUIRE_IOCTL
 #include <sys/ioctl.h>
@@ -91,7 +92,8 @@ typedef volatile void noreturn;
 typedef void noreturn;
 #endif
 
-#if STDC_HEADERS
+#if 0 /* STDC_HEADERS */
+/* This breaks on Linux, because input.c tries to redefine getenv */
 # include <stdlib.h>
 #else
 extern noreturn exit(int);
@@ -102,6 +104,8 @@ extern void *qsort(
 	int (*compar)(const void *, const void *)
 );
 #endif /* !STDC_HEADERS */
+
+#include <time.h>
 
 /*
  * things that should be defined by header files but might not have been
@@ -118,14 +122,15 @@ extern void *qsort(
 /* setjmp */
 
 #if HAVE_SIGSETJMP
-/* Some versions of linux are helpful by providing sigsetjmp as a macro
-   rather than as a function.  *arg* */
-# ifndef sigsetjmp
-
-#  define setjmp(buf) sigsetjmp(buf,1)
-#  define longjmp     siglongjmp
-#  define jmp_buf     sigjmp_buf
+/* under linux, sigsetjmp and setjmp are both macros 
+ * -- need to undef setjmp to avoid problems
+ */
+# ifdef setjmp
+#  undef setjmp
 # endif
+# define setjmp(buf) sigsetjmp(buf,1)
+# define longjmp(x,y)     siglongjmp(x,y)
+# define jmp_buf     sigjmp_buf
 #endif
 
 
@@ -268,7 +273,7 @@ extern int getgroups(int, int *);
 #ifdef HAVE_SETSID
 # define setpgrp(a, b)	setsid()
 #else
-#ifdef linux
+#if defined(linux) || defined(__GLIBC__)
 #include "unistd.h"
 #define setpgrp(a, b)	setpgid(a, b)
 #endif

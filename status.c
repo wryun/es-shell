@@ -72,10 +72,11 @@ extern void printstatus(int pid, int status) {
 			if (*msg == '\0')
 				tail += (sizeof "--") - 1;
 		}
-		if (*msg != '\0' || *tail != '\0')
+		if (*msg != '\0' || *tail != '\0') {
 			if (pid == 0)
 				eprint("%s%s\n", msg, tail);
 			else
 				eprint("%d: %s%s\n", pid, msg, tail);
+		}
 	}
 }

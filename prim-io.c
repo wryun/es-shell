@@ -288,7 +288,6 @@ PRIM(readfrom) {
 PRIM(writeto) {
 	int pid, p[2], status;
 	Push push;
-	Handler h;
 
 	caller = "$&writeto";
 	if (length(list) != 3)
@@ -318,7 +317,6 @@ PRIM(writeto) {
 		throw(e);
 	EndExceptionHandler
 
-	pophandler(&h);
 	close(p[1]);
 	status = ewaitfor(pid);
 	printstatus(0, status);
