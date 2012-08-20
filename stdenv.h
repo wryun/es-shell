@@ -1,4 +1,4 @@
-/* stdenv.h -- set up an environment we can use ($Revision: 1.17 $) */
+/* stdenv.h -- set up an environment we can use ($Revision: 1.22 $) */
 
 
 /*
@@ -61,9 +61,11 @@ typedef struct dirent Dirent;
 typedef struct direct Dirent;
 #endif
 /* prototypes for XXXdir functions. comment out if necessary */
+#if !HPUX
 extern DIR *opendir(const char *);
 extern Dirent *readdir(DIR *);
 /*extern int closedir(DIR *);*/
+#endif
 #endif
 
 #if REQUIRE_PWD
@@ -101,7 +103,13 @@ extern Dirent *readdir(DIR *);
 #define	memzero(dest, count)	memset(dest, 0, count)
 #define	atoi(s)			strtol(s, NULL, 0)
 
-#define	STMT(stmt)		do { stmt } while (0)
+#if SOLARIS
+#define	STMT(stmt)		if (1) { stmt; } else
+#define	NOP			if (1) ; else
+#else
+#define	STMT(stmt)		do { stmt; } while (0)
+#define	NOP			do ; while (0)
+#endif
 
 #if REISER_CPP
 #define CONCAT(a,b)	a/**/b
@@ -178,21 +186,15 @@ typedef int gidset_t;
 		if (!(expr)) { \
 			eprint("%s:%d: assertion failed (%s)\n", \
 				__FILE__, __LINE__, STRING(expr)); \
-			ABORT(); \
+			abort(); \
 		} \
 	)
 #else
-#define	assert(ignore) STMT(;)
-#endif
-
-#if NeXT
-#define	ABORT()	asm("trap #15")
-#else
-#define	ABORT()	abort()
+#define	assert(ignore)	NOP
 #endif
 
 enum { UNREACHABLE = 0 };
-#define	NOTREACHED	STMT(assert(UNREACHABLE);)
+#define	NOTREACHED	STMT(assert(UNREACHABLE))
 
 /*
  * system calls -- can we get these from some standard header uniformly?
@@ -239,6 +241,10 @@ extern int getgroups(int, int *);
 
 #if SOLARIS
 #define	setpgrp(a,b)	setsid();
+#endif
+
+#if HPUX
+#define	setpgrp(a,b)	setpgrp()
 #endif
 
 #if !HAS_LSTAT

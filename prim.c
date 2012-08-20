@@ -1,4 +1,4 @@
-/* prim.c -- primitives and primitive dispatching ($Revision: 1.8 $) */
+/* prim.c -- primitives and primitive dispatching ($Revision: 1.9 $) */
 
 #include "es.h"
 #include "prim.h"
@@ -7,7 +7,7 @@ static Dict *prims;
 
 extern List *prim(char *s, List *list, int evalflags) {
 	List *(*p)(List *list, int evalflags);
-	p = dictget(prims, s);
+	p = (List *(*)(List *, int)) dictget(prims, s);
 	if (p == NULL)
 		fail("es:prim", "unknown primitive: %s", s);
 	return (*p)(list, evalflags);

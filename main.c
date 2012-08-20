@@ -1,4 +1,4 @@
-/* main.c -- initialization for es ($Revision: 1.10 $) */
+/* main.c -- initialization for es ($Revision: 1.13 $) */
 
 #include "es.h"
 
@@ -9,7 +9,9 @@ Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
 #endif
 
+#if !HPUX
 extern int getopt (int argc, char **argv, const char *optstring);
+#endif
 extern int optind;
 extern char *optarg;
 
@@ -33,8 +35,10 @@ static void initpath(void) {
 	static const char * const path[] = { INITIAL_PATH };
 	
 	Ref(List *, list, NULL);
-	for (i = arraysize(path); i-- > 0;)
-		list = mklist(mkterm((char *) path[i], NULL), list);
+	for (i = arraysize(path); i-- > 0;) {
+		Term *t = mkterm((char *) path[i], NULL);
+		list = mklist(t, list);
+	}
 	vardef("path", NULL, list);
 	RefEnd(list);
 }
@@ -170,7 +174,7 @@ getopt_done:
 
 	if (cmd == NULL && !stdin && optind < ac) {
 		int fd;
-		Ref(char *, file, av[optind++]);
+		char *file = av[optind++];
 		if ((fd = eopen(file, oOpen)) == -1) {
 			eprint("%s: %s\n", file, strerror(errno));
 			return 1;
@@ -178,7 +182,6 @@ getopt_done:
 		vardef("*", NULL, listify(ac - optind, av + optind));
 		vardef("0", NULL, mklist(mkterm(file, NULL), NULL));
 		return exitstatus(runfd(fd, file, runflags));
-		RefEnd(file);
 	}
 
 	vardef("*", NULL, listify(ac - optind, av + optind));

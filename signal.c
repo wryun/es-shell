@@ -1,4 +1,4 @@
-/* signal.c -- signal handling ($Revision: 1.12 $) */
+/* signal.c -- signal handling ($Revision: 1.17 $) */
 
 #include "es.h"
 #include "sigmsgs.h"
@@ -13,7 +13,6 @@ Atomic interrupted = FALSE;
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
-static Sighandler defaulthandler[NSIG];
 
 #if USE_SIGACTION
 #ifndef	SA_NOCLDSTOP
@@ -34,9 +33,15 @@ static Sighandler defaulthandler[NSIG];
 
 extern int signumber(const char *name) {
 	int i;
+	char *suffix;
+	if (!hasprefix(name, "sig"))
+		return -1;
 	for (i = 0; i < nsignals; i++)
 		if (streq(signals[i].name, name))
 			return signals[i].sig;
+	i = strtol(name + 3, &suffix, 10);
+	if (0 < i && i < NSIG && (suffix == NULL || *suffix == '\0'))
+		return i;
 	return -1;
 }
 
@@ -114,14 +119,20 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 				return old;
 			}
 			break;
+		case sig_special:
+			if (sig != SIGINT) {
+				eprint("$&setsignals: special handler not defined for %s\n", signame(sig));
+				return old;
+			}
 		case sig_catch:
+		case sig_noop:
 			if (setsignal(sig, catcher) == SIG_ERR) {
 				eprint("$&setsignals: cannot catch %s\n", signame(sig));
 				return old;
 			}
 			break;
 		case sig_default:
-			setsignal(sig, defaulthandler[sig]);
+			setsignal(sig, SIG_DFL);
 			break;
 		default:
 			NOTREACHED;
@@ -146,11 +157,6 @@ extern void getsigeffects(Sigeffect effects[]) {
  * initialization
  */
 
-static void markspecial(int sig) {
-	defaulthandler[sig] = catcher;
-	setsignal(sig, catcher);
-}
-
 extern void initsignals(Boolean interactive, Boolean allowdumps) {
 	int sig;
 	Push settor;
@@ -162,8 +168,6 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 				signals[sig].name
 			);
 
-	for (sig = 1; sig < NSIG; sig++)
-		defaulthandler[sig] = SIG_DFL;
 	for (sig = 1; sig < NSIG; sig++) {
 		Sighandler h;
 #if USE_SIGACTION
@@ -189,12 +193,12 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 	}
 
 	if (interactive || sigeffect[SIGINT] == sig_default)
-		markspecial(SIGINT);
+		esignal(SIGINT, sig_special);
 	if (!allowdumps) {
 		if (interactive)
-			markspecial(SIGTERM);
+			esignal(SIGTERM, sig_noop);
 		if (interactive || sigeffect[SIGQUIT] == sig_default)
-			markspecial(SIGQUIT);
+			esignal(SIGQUIT, sig_noop);
 	}
 
 	/* here's the end-run around set-signals */
@@ -205,18 +209,11 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 
 extern void setsigdefaults(void) {
 	int sig;
-
 	for (sig = 1; sig < NSIG; sig++) {
 		Sigeffect e = sigeffect[sig];
-		if (e == sig_catch || (e == sig_default && defaulthandler[sig] != SIG_DFL)) {
-			defaulthandler[sig] = SIG_DFL;
+		if (e == sig_catch || e == sig_noop || e == sig_special)
 			esignal(sig, sig_default);
-		}
 	}
-
-	defaulthandler[SIGINT] = SIG_DFL;
-	defaulthandler[SIGQUIT] = SIG_DFL;
-	defaulthandler[SIGTERM] = SIG_DFL;
 }
 
 
@@ -235,20 +232,23 @@ extern List *mksiglist(void) {
 	Sigeffect effects[NSIG];
 	getsigeffects(effects);
 	Ref(List *, lp, NULL);
-	while (--sig > 0)
+	while (--sig > 0) {
+		int prefix;
 		switch (effects[sig]) {
-		case sig_default:
-			break;
-		case sig_catch:
-			lp = mklist(mkterm(signame(sig), NULL), lp);
-			break;
-		case sig_ignore:
-			lp = mklist(mkterm(str("-%s", signame(sig)), NULL), lp);
-			break;
-		default:
-			panic("mksiglist: getsigeffects returned bad value for %s: %d",
-			      signame(sig), effects[sig]);
+		default: panic("mksiglist: bad sigeffects for %s: %d", signame(sig), effects[sig]);
+		case sig_default:	continue;
+		case sig_catch:		prefix = '\0';	break;
+		case sig_ignore:	prefix = '-';	break;
+		case sig_noop:		prefix = '/';	break;
+		case sig_special:	prefix = '.';	break;
 		}
+		Ref(char *, name, signame(sig));
+		if (prefix != '\0')
+			name = str("%c%s", prefix, name);
+		Ref(Term *, term, mkterm(name, NULL));
+		lp = mklist(term, lp);
+		RefEnd2(term, name);
+	}
 	RefReturn(lp);
 }
 
@@ -300,20 +300,22 @@ extern void sigchk(void) {
 			gcenable();
 		throw(e);
 		NOTREACHED;
-	case sig_default:
-		if (sig == SIGINT) {
-			/* this is the newline you see when you hit ^C while typing a command */
-			if (sigint_newline)
-				eprint("\n");
-			sigint_newline = TRUE;
-			while (gcisblocked())
-				gcenable();
-			throw(e);
-			NOTREACHED;
-		}
+	case sig_special:
+		assert(sig == SIGINT);
+		/* this is the newline you see when you hit ^C while typing a command */
+		if (sigint_newline)
+			eprint("\n");
+		sigint_newline = TRUE;
+		while (gcisblocked())
+			gcenable();
+		throw(e);
+		NOTREACHED;
+		break;
+	case sig_noop:
 		break;
 	default:
-		/* panic("sigchk: caught %L with sigeffect %d", e, " ", sigeffect[sig]) */ ;
+		/* panic("sigchk: caught %L with sigeffect %d", e, " ", sigeffect[sig]); */
+		break;
 	}
 	RefEnd(e);
 }

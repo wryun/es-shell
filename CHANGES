@@ -1,6 +1,49 @@
 CHANGES
 =======
 
+0.83 to 0.84
+------------
+
+the primitives are now documented in es.1.
+
+thanks to suggestions from Noah Friedman, while is no longer a primitive
+and cdpath searching is now from es code rather than in $&cd.  (Similarly,
+%not, %and, and %or are now builtin functions, not primitives.)
+
+some of the usage messages in prim-*.c contained % rather than %% in
+strings that were passed to fail, causing panics.  fixed, thanks to
+Pete Ho.
+
+es should port easier to linux (thanks to Jeremy Fitzhardinge),
+HP/UX (thanks to Rich Salz and Ken Stone), and AIX (thanks to
+DaviD Sanderson).
+
+sig<n>, for 0 < n && n < NSIG is now accepted as a valid signal name.
+
+two new forms of values for $signals are now accepted:  /signal means
+ignore the signal in the current shell but don't propagate catching
+it to child processes and .signal means use ``special'' signal handling
+for that signal, where ``special'' means print an extra newline for
+sigint.  (the ``.'' prefix allowed on sigint only.)  note that now
+you should probably do things like
+	local (signals = $signals sigfoo -sigbar)
+		...
+rather than
+	local (signals = sigfoo -sigbar)
+		...
+or you will lose normal shell signal handling for sigint, sigquit, and
+sigterm.  (this set of changes was made solely to clean up signal.c and
+the extra functionality it implies is only incidental.)
+
+the var builtin now prints ``var = '' rather than ``var is undefined''
+for undefined variables.  the whatis builtin now prints a line for all
+of its arguments rather than raising an exception if one is not found.
+
+some garbage collector bugs that could have caused crashes were fixed.
+(i believe that some more may be lurking out there, but i am unable to
+reproduce them.)
+
+
 0.82 to 0.83
 ------------
 

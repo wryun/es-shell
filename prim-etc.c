@@ -1,4 +1,4 @@
-/* prim-etc.c -- miscellaneous primitives ($Revision: 1.15 $) */
+/* prim-etc.c -- miscellaneous primitives ($Revision: 1.18 $) */
 
 #define	REQUIRE_PWD	1
 
@@ -104,7 +104,7 @@ PRIM(dot) {
 PRIM(flatten) {
 	char *sep;
 	if (list == NULL)
-		fail("$&flatten", "usage: %flatten separator [args ...]");
+		fail("$&flatten", "usage: %%flatten separator [args ...]");
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
 	lp = mklist(mkterm(str("%L", lp->next, sep), NULL), NULL);
@@ -135,25 +135,22 @@ PRIM(whatis) {
 }
 
 PRIM(split) {
+	char *sep;
 	if (list == NULL)
-		fail("$&split", "usage: %split separator [args ...]");
+		fail("$&split", "usage: %%split separator [args ...]");
 	Ref(List *, lp, list);
-	startsplit(getstr(lp->term), TRUE);
-	while ((lp = lp->next) != NULL) {
-		char *s = getstr(lp->term);
-		splitstring(s, strlen(s), TRUE);
-	}
-	RefEnd(lp);
-	return endsplit();
+	sep = getstr(lp->term);
+	lp = fsplit(sep, lp->next, TRUE);
+	RefReturn(lp);
 }
 
 PRIM(fsplit) {
 	char *sep;
 	if (list == NULL)
-		fail("$&fsplit", "usage: %fsplit separator [args ...]");
+		fail("$&fsplit", "usage: %%fsplit separator [args ...]");
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
-	lp = fsplit(sep, lp->next);
+	lp = fsplit(sep, lp->next, FALSE);
 	RefReturn(lp);
 }
 
@@ -164,8 +161,6 @@ PRIM(var) {
 	Ref(List *, rest, list->next);
 	Ref(char *, name, getstr(list->term));
 	Ref(List *, defn, varlookup(name, NULL));
-	if (defn == NULL)
-		fail("$&var", "%s is undefined", name);
 	rest = prim_var(rest, evalflags);
 	term = mkterm(str("%S = %#L", name, defn, " "), NULL);
 	list = mklist(term, rest);
@@ -248,7 +243,7 @@ PRIM(home) {
 	if (list == NULL)
 		return varlookup("home", NULL);
 	if (list->next != NULL)
-		fail("$&home", "usage: %home [user]");
+		fail("$&home", "usage: %%home [user]");
 	pw = getpwnam(getstr(list->term));
 	return (pw == NULL) ? NULL : mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
 }

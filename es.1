@@ -1,4 +1,4 @@
-.\" es.1 -- es manual page ($Revision: 1.30 $)
+.\" es.1 -- es manual page ($Revision: 1.32 $)
 .\" macros stolen from rc.1
 .\"-------
 .\" Man page portability notes
@@ -1010,6 +1010,7 @@ Thus the following all produce the same output:
 .Cr "es -c { echo hello, world }"
 .Cr "x = { echo hello, world }; $x"
 .Cr "echo { echo hello, world } | es"
+.Cr "echo { echo hello, world } > foo; es < foo"
 .De
 .PP
 Since program fragments in the first position in a command are executed,
@@ -1309,11 +1310,9 @@ The list of primitives is returned as the result of running
 the primitive
 .Cr $&primitives .
 .PP
-The primitives are not documented explicitly in this manual,
-but most primitives are used to implement
-builtin commands and hook functions;
-for the semantics of a given primitive, see the appropriately
-named builtin, if one exists.
+For details on specific primitives, see the section entitled
+.B PRIMITIVES
+below.
 .SS Exceptions
 Exceptions in
 .I es
@@ -1556,7 +1555,7 @@ For example, to run some commands and make sure some cleanup routine
 is called even if the user interrupts or disconnects during the script,
 one can use the form:
 .Ds
-.Cr "local (signals = sighup sigint) {"
+.Cr "local (signals = $signals sighup sigint) {"
 .Cr "     catch @ e {"
 .Cr "          cleanup"
 .Cr "          throw $e"
@@ -1565,6 +1564,36 @@ one can use the form:
 .Cr "     }"
 .Cr "}"
 .De
+.TP
+\&
+A signal name prefixed by a hyphen
+.Rc ( - )
+causes that signal to be ignored by
+.I es
+and all of its child processes, unless one of them resets its handler.
+A signal prefixed by a slash
+.Rc ( / )
+is ignored in the current shell, but retains default behavior in
+child processes.
+In addition, the signal
+.Cr sigint
+may be preceeded by the prefix
+.Rc ( . )
+to indicate that normal shell interrupt processing
+(i.e., the printing of an extra newline)
+occurs.
+By default
+.I es
+starts up with the values
+.Ds
+.Cr ".sigint /sigquit /sigterm"
+.De
+.TP
+\&
+in
+.Cr $signals ;
+other values will be on the list if the shell starts up with
+some signals ignored.
 .PP
 The values of
 .Cr path ,
@@ -2427,6 +2456,163 @@ For each named variable,
 returns a string which, if interpreted by
 .I es
 would assign to the variable its current value.
+.SH PRIMITIVES
+Primitives exist in
+.I es
+so that, in the presence of spoofing and redefinitions,
+there is a way to refer to built-in behaviors.
+This ability is necessary for the shell to be able to unambiguously refer to itself,
+but is also useful for users who have otherwise made their
+environment unnecessary but don't want to kill the current shell.
+.PP
+Primitives are referenced with the
+.Ds
+.Cr "$&\fIname"
+.De
+.PP
+notation.
+In this section, the
+.Rc `` $& ''
+prefixes will be omitted when primitive names are mentioned.
+Note that, by convention, primitive names follow C identifier
+names where
+.I es
+variable and function names often contain
+.Rc `` % ''
+and
+.Rc `` - ''
+characters.
+.PP
+The following primitives directly implement the
+builtin functions with the same names:
+.ta 1.75i 3.5i
+.Ds
+.ft \*(Cf
+access	false	throw
+catch	forever	true
+echo	fork	umask
+eval	if	wait
+exec	newpgrp	
+exit	result	
+.ft R
+.De
+.PP
+In addition, the primitive
+.Cr unwindprotect
+implements the builtin function
+.Cr unwind-protect ,
+and the primitive
+.Cr dot
+implements the
+.Rc `` . ''
+builtin function.
+.PP
+The
+.Cr cd
+primitive is used in the implementation of the
+.Cr cd
+builtin, but does not search
+.Cr $cdpath
+or understand no arguments to imply
+.Cr $home .
+The
+.Cr vars
+and
+.Cr internals
+primitives are used by the implementation of the
+.Cr vars
+builtin.
+.PP
+The following primitives implement the hook functions
+of the same names, with
+.Rc `` % ''
+prefixes:
+.ta 1.75i 3.5i
+.Ds
+.ft \*(Cf
+apids	here	run
+backquote	home	seq
+close	newfd	split
+count	one	var
+dup	openfile	whatis
+flatten	parse
+fsplit	pipe
+.ft R
+.De
+.PP
+The following primitives implement the similar named hook functions,
+with
+.Rc `` % ''
+prefixes and internal hyphens:
+.ta 1.75i 3.5i
+.Ds
+.ft \*(Cf
+batchloop	exitonfalse	isinteractive
+.ft R
+.De
+.PP
+The
+.Cr background
+primitive is used to implement the
+.Cr %background
+hook function, but does not print the process ID of the
+background process or set
+.Cr $apid .
+.PP
+The following primitives implement the similarly named settor functions:
+.ta 1.75i 3.5i
+.Ds
+.ft \*(Cf
+sethistory	setnoexport	setsignals
+.ft R
+.De
+.PP
+Some primitives are included in
+.I es
+conditionally, based on compile-time configuration options.
+Those primitives, and the functions to which they are bound, are
+.ta 2i
+.Ds
+.ft \*(Cf
+execfailure	%exec-failure
+limit	limit
+readfrom	%readfrom
+time	time
+writeto	%writeto
+.ft R
+.De
+.PP
+Several primitives are not directly associated with other function.
+They are:
+.TP
+.Cr "$&collect"
+Invokes the garbage collector.
+The garbage collector in
+.I es
+runs rather frequently;
+there should be no reason for a user to issue this command.
+.TP
+.Cr "$&noreturn \fIlambda args ...\fP"
+Call the
+.IR lambda ,
+but in such a way that it does not catch the
+.Cr return
+exception.
+This primitive exists in order that some control-flow
+operations in
+.I es
+(e.g.,
+.Cr while
+and
+.Cr "&&" )
+can be implemented as lambdas rather than primitives.
+.TP
+.Cr "$&primitives"
+Returns a list of the names of es primitives.
+.TP
+.Cr "$&version"
+Returns the current version number and release date for
+.IR es .
 .SH OPTIONS
 .TP
 .Cr \-c
@@ -2506,6 +2692,9 @@ This is used for debugging.
 .Cr $home/.esrc ,
 .Cr /dev/null
 .SH BUGS
+Lexical scope which is shared by two variables (or closures) in a parent shell
+is split in child shells.
+.PP
 The interpreter should be properly tail recursive;
 that is, tail calls should not consume stack space.
 .PP

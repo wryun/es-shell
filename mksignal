@@ -1,5 +1,5 @@
 #! /bin/sh
-# mksignal -- generate es's internal signal table from signal.h ($Revision: 1.7 $)
+# mksignal -- generate es's internal signal table from signal.h ($Revision: 1.10 $)
 
 echo '#include "es.h"'
 echo '#include "sigmsgs.h"'
@@ -65,11 +65,9 @@ sed -n '
 		# these signals are dubious, but we may as well provide clean messages
 		# for them.  most of them occur on only one system, or, more likely,
 		# are duplicates of one of the previous messages.
-		#
-		# oh, and can anyone tell us what SIGDIL on HP/UX is?
 
 		mesg["SIGAIO"]		= "base lan I/O available"
-		mesg["SIGDANGER"]	= "system crash imminent"
+		mesg["SIGDANGER"]	= "danger - system page space full"
 		mesg["SIGEMSG"]		= "process received an emergency message"
 		mesg["SIGGRANT"]	= "HFT monitor mode granted"
 		mesg["SIGIOINT"]	= "printer to backend error"
@@ -79,6 +77,8 @@ sed -n '
 		mesg["SIGRETRACT"]	= "HFT monitor mode should be relinguished"
 		mesg["SIGSAK"]		= "secure attention key"
 		mesg["SIGSOUND"]	= "HFT sound control has completed"
+		mesg["SIGSTKFLT"]	= "stack fault"
+		mesg["SIGUNUSED"]	= "unused signal"
 		mesg["SIGVIRT"]		= "virtual time alarm"
 		mesg["SIGWINDOW"]	= "window size changed"
 
@@ -96,6 +96,7 @@ sed -n '
 		ignore["SIGARRAYSIZE"]	= 1
 		ignore["SIGCATCHALL"]	= 1
 		ignore["SIGDEFER"]	= 1
+		ignore["SIGDIL"]	= 1
 		ignore["SIGHOLD"]	= 1
 		ignore["SIGIGNORE"]	= 1
 		ignore["SIGMAX"]	= 1

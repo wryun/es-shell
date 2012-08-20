@@ -1,11 +1,13 @@
-# Makefile for es ($Revision: 1.10 $)
+# Makefile for es ($Revision: 1.16 $)
 
 # comment out the CFLAGS -Wall if you're not using gcc,
 # but i'd encourage you to compile with full warnings on.
 # let us know what warnings you get, though we don't promise
 # to shut them all up.  if you're using sun's SPARCcompiler
-# we recommend -Xc mode.  if you're using the native alpha
-# compile, we recommend -g3 -O -Olimit 1000.
+# we recommend -Xa mode.  if you're using the native alpha
+# compile, we recommend -g3 -O -Olimit 1000.  on recent
+# SGI Irix releases using the native compiler, you will
+# probably need -xansi.
 
 # see config.h for command-line -D flags you may want to use.
 # if you're using SunOS 5 (Solaris 2), be sure to include
@@ -14,15 +16,18 @@
 # seems to have screwed up and removed both getrusage() and
 # wait3() in Solaris 2, you should probably add -DBUILTIN_TIME=0
 # to the cflags.  if you're running an OSF1 derivative, try -DOSF1.
+# if you're using HP/UX do a -DHPUX.
 
 # also, please use whatever -D flags you need to in order
 # to get definitions of all signals from <sys/signal.h>.
-# _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones, but
-# use _INCLUDE_HPUX_SOURCE on HP/UX.
+# _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones.
 
+SHELL	= /bin/sh
 CC	= cc
 #CC	= gcc
 CFLAGS	= -g -O -Wall
+LDFLAGS	=
+LIBS	=
 
 HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h stdenv.h syntax.h var.h
 CFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c glob.c \
@@ -39,13 +44,16 @@ OTHER	= Makefile parse.y mksignal
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
 
 es	: ${OFILES} initial.o
-	${CC} -o es ${OFILES} initial.o
+	${CC} -o es ${LDFLAGS} ${OFILES} initial.o ${LIBS}
 
 esdump	: ${OFILES} dump.o
-	${CC} -o esdump ${OFILES} dump.o
+	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
 clean	:
 	rm -f es ${OFILES} ${GEN} dump.o initial.o
+
+trip	: es trip.es
+	./es < trip.es
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
@@ -61,6 +69,8 @@ initial.c : esdump initial.es
 
 sigmsgs.c : mksignal /usr/include/sys/signal.h
 	sh mksignal /usr/include/sys/signal.h > sigmsgs.c
+# for linux use:
+#	sh mksignal /usr/include/linux/signal.h /usr/include/signal.h > sigmsgs.c
 
 # --- dependencies ---
 

@@ -1,4 +1,4 @@
-/* conv.c -- convert between internal and external forms ($Revision: 1.11 $) */
+/* conv.c -- convert between internal and external forms ($Revision: 1.12 $) */
 
 #include "es.h"
 #include "print.h"
@@ -52,11 +52,7 @@ static Boolean Tconv(Format *f) {
 
 
 #define	tailcall(tree, altform) \
-	STMT ( \
-		n = (tree); \
-		group = (altform); \
-		goto top; \
-	)
+	STMT(n = (tree); group = (altform); goto top)
 
 top:
 	if (n == NULL) {

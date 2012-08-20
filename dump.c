@@ -1,4 +1,4 @@
-/* dump.c -- dump es's internal state as a c program ($Revision: 1.6 $) */
+/* dump.c -- dump es's internal state as a c program ($Revision: 1.8 $) */
 
 #include "es.h"
 #include "var.h"
@@ -49,7 +49,7 @@ static char *dumpstring(char *string) {
 	if (name == NULL) {
 		name = str("S_%F", string);
 		if (strlen(name) > MAXVARNAME)
-			name = str("X_%lx", string);
+			name = str("X_%ulx", string);
 		print("static const char %s[] = ", name);
 		if (allprintable(string))
 			print("\"%s\";\n", string);
@@ -106,7 +106,7 @@ static char *dumptree(Tree *tree) {
 	char *name;
 	if (tree == NULL)
 		return "NULL";
-	name = str("&T_%lx", tree);
+	name = str("&T_%ulx", tree);
 	if (dictget(cvars, name) == NULL) {
 		switch (tree->kind) {
 		default:
@@ -147,7 +147,7 @@ static char *dumpbinding(Binding *binding) {
 	char *name;
 	if (binding == NULL)
 		return "NULL";
-	name = str("&B_%lx", binding);
+	name = str("&B_%ulx", binding);
 	if (dictget(cvars, name) == NULL) {
 		print(
 			"static const Binding %s = { (char *) %s, (List *) %s, (Binding *) %s };\n",
@@ -165,7 +165,7 @@ static char *dumpclosure(Closure *closure) {
 	char *name;
 	if (closure == NULL)
 		return "NULL";
-	name = str("&C_%lx", closure);
+	name = str("&C_%ulx", closure);
 	if (dictget(cvars, name) == NULL) {
 		print(
 			"static const Closure %s = { (Binding *) %s, (Tree *) %s };\n",
@@ -182,7 +182,7 @@ static char *dumpterm(Term *term) {
 	char *name;
 	if (term == NULL)
 		return "NULL";
-	name = str("&E_%lx", term);
+	name = str("&E_%ulx", term);
 	if (dictget(cvars, name) == NULL) {
 		print(
 			"static const Term %s = { (char *) %s, (Closure *) %s };\n",
@@ -199,7 +199,7 @@ static char *dumplist(List *list) {
 	char *name;
 	if (list == NULL)
 		return "NULL";
-	name = str("&L_%lx", list);
+	name = str("&L_%ulx", list);
 	if (dictget(cvars, name) == NULL) {
 		print(
 			"static const List %s = { (Term *) %s, (List *) %s };\n",
@@ -219,7 +219,7 @@ static void dumpvar(void *ignore, char *key, void *value) {
 }
 
 static void dumpdef(char *name, Var *var) {
-	print("\t{ %s, %s },\n", dumpstring(name), dumplist(var->defn));
+	print("\t{ %s, (const List *) %s },\n", dumpstring(name), dumplist(var->defn));
 }
 
 static void dumpfunctions(void *ignore, char *key, void *value) {

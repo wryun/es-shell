@@ -1,4 +1,4 @@
-/* config.h -- es(1) configuration parameters ($Revision: 1.15 $) */
+/* config.h -- es(1) configuration parameters ($Revision: 1.19 $) */
 
 /*
  * Compile time options
@@ -149,9 +149,8 @@
  *
  *	USE_WAIT3
  *		this option should be on if your system supports the BSD-style
- *		wait3() system call.  by default, it is on, because most systems
- *		have wait3().  if this option is false and the BUILTIN_TIME
- *		is true, the getrusage() call must exist.
+ *		wait3(2) system call.  by default, it is on.  if this option is
+ *		false and the BUILTIN_TIME is true, the times(2) call must exist.
  *
  *	VOID_SIGNALS
  *		define this as true if signal handlers are declared with void
@@ -183,6 +182,9 @@
 /* AIX defaults -- DaviD W. Sanderson */
 
 #if _AIX
+#ifndef	GETGROUPS_USES_GID_T
+#define	GETGROUPS_USES_GID_T	1
+#endif
 #ifndef	SPECIAL_SIGCLD
 #define	SPECIAL_SIGCLD		1
 #endif
@@ -243,6 +245,21 @@
 #endif	/* SOLARIS */
 
 
+/* HP/UX 9.0.1 -- from rsalz@osf.org (Rich $alz) */
+
+#if HPUX
+#ifndef	BSD_LIMITS
+#define BSD_LIMITS		0
+#endif
+#ifndef	USE_DIRENT
+#define	USE_DIRENT		0
+#endif
+#ifndef	USE_WAIT3
+#define USE_WAIT3		0
+#endif
+#endif
+
+
 /* SCO Xenix -- from steveo@world.std.com (Steven W Orr) for SCO-ODT-1.1 */
 
 #if sco
@@ -280,18 +297,6 @@
 #define	USE_SIGACTION		1
 #endif
 #endif	/* OSF1 */
-
-
-/* POSIX -- not that you should never believe this */
-
-#if POSIX
-#ifndef	GETGROUPS_USES_GID_T
-#define	GETGROUPS_USES_GID_T	1
-#endif
-#ifndef	USE_SIGACTION
-#define	USE_SIGACTION		1
-#endif
-#endif
 
 
 /*

@@ -1,4 +1,4 @@
-/* var.c -- es variables ($Revision: 1.14 $) */
+/* var.c -- es variables ($Revision: 1.15 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -367,7 +367,7 @@ extern void initenv(char **envp, Boolean protected) {
 		buf[nlen] = '\0';
 		Ref(char *, name, str(ENV_DECODE, buf));
 		if (!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
-			List *defn = fsplit("\1", mklist(mkterm(eq + 1, NULL), NULL));
+			List *defn = fsplit("\1", mklist(mkterm(eq + 1, NULL), NULL), FALSE);
 			vardef(name, NULL, defn);
 		}
 		RefEnd(name);

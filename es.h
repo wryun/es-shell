@@ -1,4 +1,4 @@
-/* es.h -- definitions for higher order shell ($Revision: 1.22 $) */
+/* es.h -- definitions for higher order shell ($Revision: 1.24 $) */
 
 #include "config.h"
 #include "stdenv.h"
@@ -301,7 +301,7 @@ extern void initprims(void);
 extern void startsplit(const char *sep, Boolean coalesce);
 extern void splitstring(char *in, size_t len, Boolean endword);
 extern List *endsplit(void);
-extern List *fsplit(const char *sep, List *list);
+extern List *fsplit(const char *sep, List *list, Boolean coalesce);
 
 
 /* signal.c */
@@ -311,7 +311,9 @@ extern char *signame(int sig);
 extern char *sigmessage(int sig);
 
 #define	SIGCHK() sigchk()
-typedef enum { sig_nochange, sig_default, sig_ignore, sig_catch } Sigeffect;
+typedef enum {
+	sig_nochange, sig_catch, sig_default, sig_ignore, sig_noop, sig_special
+} Sigeffect;
 extern Sigeffect esignal(int sig, Sigeffect effect);
 extern void setsigeffects(const Sigeffect effects[]);
 extern void getsigeffects(Sigeffect effects[]);

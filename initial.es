@@ -1,4 +1,4 @@
-# initial.es -- set up initial interpreter state ($Revision: 1.38 $)
+# initial.es -- set up initial interpreter state ($Revision: 1.43 $)
 
 
 #
@@ -67,7 +67,6 @@ fn-.		= $&dot
 fn-access	= $&access
 fn-break	= $&break
 fn-catch	= $&catch
-fn-cd		= $&cd
 fn-echo		= $&echo
 fn-eval		= $&eval
 fn-exec		= $&exec
@@ -83,7 +82,6 @@ fn-true		= $&true
 fn-umask	= $&umask
 fn-unwind-protect = $&unwindprotect
 fn-wait		= $&wait
-fn-while	= $&while
 
 #	These functions just generate exceptions for control-flow
 #	constructions.  The for command and the while builtin both
@@ -114,10 +112,80 @@ fn-%whatis	= $&whatis
 
 #	These builtins are only around as a matter of convenience, so
 #	users don't have to type the infamous <= (nee <>) operator.
+#	Whatis also protects the used from exceptions raised by %whatis.
 
 fn apids	{ echo <=%apids }
 fn var		{ for (i = $*) echo <={%var $i} }
-fn whatis	{ for (i = $*) echo <={%whatis $i} }
+
+fn whatis {
+	let (result = ) {
+		for (i = $*) {
+			catch @ e from message {
+				if {!~ $e error} {
+					throw $e $from $message
+				}
+				echo >[1=2] $message
+				result = $result 1
+			} {
+				echo <={%whatis $i}
+				result = $result 0
+			}
+		}
+		result $result
+	}
+}
+
+#	The while function is implemented with the forever looping primitive.
+#	While uses $&noreturn to indicate that, while it is a lambda, it
+#	does not catch the return exception.  It does, however, catch break.
+
+fn-while = $&noreturn @ cond body {
+	catch @ e value {
+		if {!~ $e break} {
+			throw $e $value
+		}
+		result $value
+	} {
+		let (result = <=true)
+			forever {
+				if {!$cond} {
+					throw break $result
+				} {
+					result = <=$body
+				}
+			}
+	}
+}
+
+#	The cd builtin provides a friendlier veneer over the cd primitive:
+#	
+
+fn cd dir {
+	if {~ $#dir 0} {
+		if {!~ $#home 1} {
+			throw error cd <={
+				if {~ $#home 0} {
+					result 'cd: no home directory'
+				} {
+					result 'cd: home directory must be one word'
+				}
+			}
+		}
+		$&cd $home
+	} {~ $#dir 1} {
+		if {!%is-absolute $dir} {
+			let (old = $dir) {
+				dir = <={%cdpathsearch $dir}
+				if {!~ $dir $old} {
+					echo >[1=2] $dir
+				}
+			}
+		}
+		$&cd $dir
+	} {
+		throw error cd 'usage: cd [directory]'
+	}
+}
 
 #	The vars function is provided for cultural compatibility with
 #	rc's whatis when used without arguments.  The option parsing
@@ -224,12 +292,38 @@ fn-%flatten	= $&flatten
 #		cmd1 || cmd2		%or {cmd1} {cmd2}
 #
 #	Note that %seq is also used for newline-separated commands within
-#	braces.
+#	braces.  The logical operators are implemented in terms of if.
+#	(This was changed between versions 0.83 and 0.84.)  %and and %or
+#	are recursive, which is slightly inefficient given the current
+#	implementation of es -- it is not properly tail recursive -- but
+#	that can be fixed and it's still better to write more of the shell
+#	in es itself.
 
-fn-%and		= $&and
-fn-%not		= $&not
-fn-%or		= $&or
 fn-%seq		= $&seq
+
+fn-%not = $&noreturn @ cmd {
+	if {$cmd} {false} {true}
+}
+
+fn-%and = $&noreturn @ first rest {
+	if {~ $#first 0} {
+		true
+	} {$first} {
+		%and $rest
+	} {
+		false
+	}
+}
+
+fn-%or = $&noreturn @ first rest {
+	if {~ $#first 0} {
+		false
+	} {$first} {
+		true
+	} {
+		%or $rest
+	}
+}
 
 #	Background commands could use the $&background primitive directly,
 #	but some of the user-friendly semantics ($apid, printing of the
@@ -413,17 +507,16 @@ fn-%home	= $&home
 #	function means that they can be written easier in es.  They are
 #	not called for absolute path names or for functions.	
 
-fn %pathsearch name {
-	access -n $name -1e -xf $path
-}
+fn %pathsearch name { access -n $name -1e -xf $path }
+fn %cdpathsearch name {access -n $name -1e -d  $cdpath}
 
-fn %cdpathsearch name {
-	let (dir = <={access -n $name -1e -d  $cdpath}) {
-		if {!~ $dir $name} {
-			echo >[1=2] $dir
-		}
-		result $dir
-	}
+#	This function is used to determine if a pathname should be considered
+#	an absolute path name.  It is called by cd, and matches what is done
+#	in eval() before calling %pathsearch, but is not a hook for the eval
+#	call.
+
+fn %is-absolute path {
+	~ $path /* ./* ../*
 }
 
 #	The exec-failure hook is called in the child if an exec() fails.
@@ -580,10 +673,12 @@ prompt = '; ' ''
 #	noexport lists the variables that are not exported.  It is not
 #	exported, because none of the variables that it refers to are
 #	exported. (Obviously.)  apid is not exported because the apid value
-#	is for the parent process.  Signals are not exported, but are
-#	inherited, so $signals will be initialized properly in child shells.
+#	is for the parent process.  pid is not exported so that even if it
+#	is set explicitly, the one for a child shell will be correct.
+#	Signals are not exported, but are inherited, so $signals will be
+#	initialized properly in child shells.
 
-noexport = noexport apid signals
+noexport = noexport apid pid signals
 
 
 #

@@ -1,4 +1,4 @@
-/* input.h -- definitions for es lexical analyzer ($Revision: 1.4 $) */
+/* input.h -- definitions for es lexical analyzer ($Revision: 1.5 $) */
 
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 
@@ -26,7 +26,6 @@ struct Input {
 /* input.c */
 
 extern Input *input;
-extern int get(Input *in);
 extern void unget(Input *in, int c);
 extern Boolean disablehistory;
 extern void yyerror(char *s);

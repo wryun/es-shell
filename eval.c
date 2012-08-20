@@ -1,4 +1,4 @@
-/* eval.c -- evaluation of lists and trees ($Revision: 1.15 $) */
+/* eval.c -- evaluation of lists and trees ($Revision: 1.17 $) */
 
 #include "es.h"
 
@@ -133,7 +133,8 @@ restart:
 			break;
 		}
 		case nList: {
-			list = append(glom(cp->tree, cp->binding, TRUE), lp->next);
+			list = glom(cp->tree, cp->binding, TRUE);
+			list = append(list, lp->next);
 			RefPop2(binding, lp)
 			goto restart;
 		}
@@ -258,8 +259,9 @@ top:
 		Ref(Binding *, bp, binding);
 		Ref(Tree *, tp, tree);
 		Ref(char *, var, varname(glom(tp->u[0].p, bp, FALSE)));
-		vardef(var, bp, glom(tp->u[1].p, bp, TRUE));
-		RefEnd3(var, tp, bp);
+		Ref(List *, value, glom(tp->u[1].p, bp, TRUE));
+		vardef(var, bp, value);
+		RefEnd4(value, var, tp, bp);
 		return listcopy(true);
 	}
 

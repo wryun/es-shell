@@ -4,7 +4,7 @@
 0.9	figure out performance consequences of disabling gc
 0.9	hook for calls to wait()/ewaitfor()
 0.9	make -x more like it is in sh and rc?
-0.9	multiple assignment
+0.9	multiple assignment?
 0.9	openbuffer/sealbuffer directly into gc space
 0.9	splitting on strings?
 0.9	trip.es

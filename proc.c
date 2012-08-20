@@ -1,4 +1,4 @@
-/* proc.c -- process control system calls ($Revision: 1.9 $) */
+/* proc.c -- process control system calls ($Revision: 1.11 $) */
 
 #include "es.h"
 
@@ -81,9 +81,9 @@ static int dowait(int *statusp) {
 		slow = TRUE;
 		n = interrupted ? -2 :
 #if USE_WAIT3
-			wait3((union wait *) statusp, 0, &wait_rusage);
+			wait3((void *) statusp, 0, &wait_rusage);
 #else
-			wait((union wait *) statusp);
+			wait((void *) statusp);
 #endif
 	} else
 		n = -2;

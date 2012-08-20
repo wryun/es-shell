@@ -1,4 +1,4 @@
-/* glom.c -- walk parse tree to produce list ($Revision: 1.4 $) */
+/* glom.c -- walk parse tree to produce list ($Revision: 1.5 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -187,11 +187,12 @@ static List *glom1(Tree *tree, Binding *binding) {
 			break;
 		case nVarsub:
 			list = glom1(tp->u[0].p, bp);
-			list = varlookup(varname(list), bp);
+			Ref(char *, name, varname(list));
+			list = varlookup(name, bp);
 			Ref(List *, sub, glom1(tp->u[1].p, bp));
 			tp = NULL;
 			list = subscript(list, sub);
-			RefEnd(sub);
+			RefEnd2(sub, name);
 			break;
 		case nCall:
 			list = walk(tp->u[0].p, bp, 0);

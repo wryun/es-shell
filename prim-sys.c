@@ -1,4 +1,4 @@
-/* prim-sys.c -- system call primitives ($Revision: 1.28 $) */
+/* prim-sys.c -- system call primitives ($Revision: 1.32 $) */
 
 #define	REQUIRE_IOCTL	1
 
@@ -8,9 +8,9 @@
 #if BSD_LIMITS || BUILTIN_TIME
 #include <sys/time.h>
 #include <sys/resource.h>
-#if SOLARIS
-#include <sys/rusage.h>
-#define	tv_usec		tv_nsec/1000		/* HACK */
+#if !USE_WAIT3
+#include <sys/times.h>
+#include <limits.h>
 #endif
 #endif
 
@@ -97,27 +97,9 @@ PRIM(umask) {
 
 PRIM(cd) {
 	char *dir;
-
-	if (list == NULL) {
-		list = varlookup("home", NULL);
-		if (list == NULL)
-			fail("$&cd", "cd: no home directory");
-	} else if (list->next != NULL)
-		fail("$&cd", "usage: cd [directory]");
-
+	if (list == NULL || list->next != NULL)
+		fail("$&cd", "usage: $&cd directory");
 	dir = getstr(list->term);
-	if (!isabsolute(dir)) {
-		List *search = varlookup("fn-%cdpathsearch", NULL);
-		if (search == NULL)
-			fail("$&cd", "%L: fn %%cdpathsearch undefined", list, " ");
-		list = eval(append(search, list), NULL, 0);
-		if (list == NULL)
-			fail("$&cd", "%%cdpathsearch must return a value");
-		if (list->next != NULL)
-			fail("$&cd", "cd %L: directory must be one word long", list, " ");
-		dir = getstr(list->term);
-	}
-
 	if (chdir(dir) == -1)
 		fail("$&cd", "chdir %s: %s", dir, strerror(errno));
 	return listcopy(true);
@@ -133,9 +115,10 @@ PRIM(setsignals) {
 		int sig;
 		const char *s = getstr(lp->term);
 		Sigeffect effect = sig_catch;
-		if (*s == '-') {
-			++s;
-			effect = sig_ignore;
+		switch (*s) {
+		case '-':	effect = sig_ignore;	s++; break;
+		case '/':	effect = sig_noop;	s++; break;
+		case '.':	effect = sig_special;	s++; break;
 		}
 		sig = signumber(s);
 		if (sig < 0)
@@ -351,25 +334,31 @@ PRIM(time) {
 	gc();	/* do a garbage collection first to ensure reproducible results */
 	pid = efork(TRUE, FALSE);
 	if (pid == 0) {
-		time_t t0, t1;
-		struct rusage r;
+		clock_t t0, t1;
+		struct tms tms;
+		static clock_t ticks = 0;
 
-		t0 = time(NULL);
+		if (ticks == 0)
+			ticks = CLK_TCK;
+
+		t0 = times(&tms);
 		pid = efork(TRUE, FALSE);
 		if (pid == 0)
 			exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 
 		status = ewaitfor(pid);
-		t1 = time(NULL);
+		t1 = times(&tms);
 		SIGCHK();
 		printstatus(0, status);
-		getrusage(RUSAGE_CHILDREN, &r);
+
+		tms.tms_cutime += ticks / 20;
+		tms.tms_cstime += ticks / 20;
 
 		eprint(
 			"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
-			t1 - t0,
-			r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 100000),
-			r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 100000),
+			(t1 - t0 + ticks / 2) / ticks,
+			tms.tms_cutime / ticks, ((tms.tms_cutime * 10) / ticks) % 10,
+			tms.tms_cstime / ticks, ((tms.tms_cstime * 10) / ticks) % 10,
 			lp, " "
 		);
 		exit(status);
@@ -393,7 +382,7 @@ PRIM(execfailure) {
 
 	gcdisable(0);
 	if (list == NULL)
-		fail("$&execfailure", "usage: %exec-failure name argv");
+		fail("$&execfailure", "usage: %%exec-failure name argv");
 
 	file = getstr(list->term);
 	fd = eopen(file, oOpen);

@@ -1,4 +1,4 @@
-/* print.h -- interface to formatted printing routines ($Revision: 1.3 $) */
+/* print.h -- interface to formatted printing routines ($Revision: 1.4 $) */
 
 typedef struct Format Format;
 struct Format {
@@ -51,5 +51,5 @@ extern char *strv(const char *fmt, va_list args);	/* varargs interface to str() 
 	STMT( \
 		if ((f)->buf >= (f)->bufend) \
 			(*(f)->grow)((f), (size_t)1); \
-		*(f)->buf++ = (c); \
+		*(f)->buf++ = (c) \
 	)

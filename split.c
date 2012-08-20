@@ -1,4 +1,4 @@
-/* split.c -- split strings based on separators ($Revision: 1.3 $) */
+/* split.c -- split strings based on separators ($Revision: 1.5 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -42,8 +42,10 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 
 	if (splitchars) {
 		assert(buf == NULL);
-		while (s < inend)
-			value = mklist(mkterm(gcndup((char *) s++, 1), NULL), value);
+		while (s < inend) {
+			Term *term = mkterm(gcndup((char *) s++, 1), NULL);
+			value = mklist(term, value);
+		}
 		return;
 	}
 
@@ -84,9 +86,9 @@ extern List *endsplit(void) {
 	return result;
 }
 
-extern List *fsplit(const char *sep, List *list) {
+extern List *fsplit(const char *sep, List *list, Boolean coalesce) {
 	Ref(List *, lp, list);
-	startsplit(sep, FALSE);
+	startsplit(sep, coalesce);
 	for (; lp != NULL; lp = lp->next) {
 		char *s = getstr(lp->term);
 		splitstring(s, strlen(s), TRUE);

@@ -1,4 +1,4 @@
-/* gc.c -- copying garbage collector for es ($Revision: 1.7 $) */
+/* gc.c -- copying garbage collector for es ($Revision: 1.14 $) */
 
 #define	GARBAGE_COLLECTOR	1	/* for es.h */
 
@@ -18,6 +18,8 @@ struct Space {
 #define	SPACEUSED(sp)	(((sp)->current - (sp)->bot))
 #define	INSPACE(p, sp)	((sp)->bot <= (char *) (p) && (char *) (p) < (sp)->top)
 
+#define	MIN_minspace	10000
+
 #if GCPROTECT
 #define	NSPACES		10
 #endif
@@ -33,7 +35,7 @@ static Space *new, *old;
 static Space *spaces;
 #endif
 static Root *globalrootlist;
-static size_t minspace = 10000;		/* minimum number of bytes in a new space */
+static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
 
 
 /*
@@ -41,33 +43,36 @@ static size_t minspace = 10000;		/* minimum number of bytes in a new space */
  */
 
 #if GCVERBOSE
-#define	VERBOSE(p)	STMT(if (gcverbose) eprint p;)
+#define	VERBOSE(p)	STMT(if (gcverbose) eprint p)
 #else
-#define	VERBOSE(p)	STMT(;)
+#define	VERBOSE(p)	NOP
 #endif
 
-
-#if GCPROTECT
 
 /*
  * GCPROTECT
  *	to use the GCPROTECT option, you must provide the following functions
+ *		initmmu
  *		take
  *		release
  *		invalidate
  *		revalidate
- *		initmmu
  *	for your operating system
  */
 
+#if GCPROTECT
 #if __MACH__
 
-/* mach specific version, for mmu assertion checking */
+/* mach versions of mmu operations */
 
 #include <mach.h>
 #include <mach_error.h>
 
 #define	PAGEROUND(n)	((n) + vm_page_size - 1) &~ (vm_page_size - 1)
+
+/* initmmu -- initialization for memory management calls */
+static void initmmu(void) {
+}
 
 /* take -- allocate memory for a space */
 static void *take(size_t n) {
@@ -110,44 +115,60 @@ static void revalidate(void *p, size_t n) {
 	memset(p, 0x4F, n);
 }
 
-/* initmmu -- initialization for memory management calls */
-static void initmmu(void) {
-}
+#else /* !__MACH__ */
 
-#elif sun			/* TODO: sun mmu tweaking */
+/* sunos-derived mmap(2) version of mmu operations */
+
 #include <sys/mman.h>
-
-extern void mprotect(void *p, size_t nbytes, int flags);
 
 static int pagesize;
 #define	PAGEROUND(n)	((n) + pagesize - 1) &~ (pagesize - 1)
 
 /* take -- allocate memory for a space */
 static void *take(size_t n) {
-	/* TODO: sun take */
+	caddr_t addr;
+#ifdef MAP_ANONYMOUS
+	addr = mmap(0, n, PROT_READ|PROT_WRITE,	MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+#else
+	static int devzero = -1;
+	if (devzero == -1)
+		devzero = eopen("/dev/zero", oOpen);
+	addr = mmap(0, n, PROT_READ|PROT_WRITE, MAP_PRIVATE, devzero, 0);
+#endif
+	if (addr == (caddr_t) -1)
+		panic("mmap: %s", strerror(errno));
+	memset(addr, 0xA5, n);
+	return addr;
 }
 
-/* revalidate -- enable access to a range of memory */
+/* release -- deallocate a range of memory */
 static void release(void *p, size_t n) {
-	/* TODO: sun release */
+	if (munmap(p, n) == -1)
+		panic("munmap: %s", strerror(errno));
 }
 
 /* invalidate -- disable access to a range of memory */
 static void invalidate(void *p, size_t n) {
-	mprotect(p, n, PROT_NONE);
+	if (mprotect(p, n, PROT_NONE) == -1)
+		panic("mprotect(PROT_NONE): %s", strerror(errno));
 }
 
 /* revalidate -- enable access to a range of memory */
 static void revalidate(void *p, size_t n) {
-	mprotect(p, n, PROT_READ|PROT_WRITE);
+	if (mprotect(p, n, PROT_READ|PROT_WRITE) == -1)
+		panic("mprotect(PROT_READ|PROT_WRITE): %s", strerror(errno));
 }
 
 /* initmmu -- initialization for memory management calls */
 static void initmmu(void) {
+#if SOLARIS
+	pagesize = sysconf(_SC_PAGESIZE);
+#else
 	pagesize = getpagesize();
+#endif
 }
 
-#endif	/* sun */
+#endif	/* !__MACH__ */
 #endif	/* GCPROTECT */
 
 
@@ -424,7 +445,7 @@ extern void gc(void) {
 
 		if (minspace < livedata * 2)
 			minspace = livedata * 4;
-		else if (minspace > livedata * 12)
+		else if (minspace > livedata * 12 && minspace > (MIN_minspace * 2))
 			minspace /= 2;
 
 		--gcblocked;
