@@ -1,22 +1,35 @@
 /* var.c -- es variables */
 
+#define	REQUIRE_CTYPE	1
+
 #include "es.h"
 #include "gc.h"
-#include <ctype.h>
 
 typedef struct Var Var;
 struct Var {
 	List *defn;
 	char *env;
 	Var *next;
+	Boolean binder;
 };
 
 Dict *vars;
-static Vector *env;
-static int envcount, envmin;
+static Vector *env, *sortenv;
+static int envmin;
 static Tag VarTag;
-static Boolean isdirty;
+static Boolean isdirty = TRUE;
 static char notexported;
+
+#define	specialvar(name)	(streq(name, "*") || streq(name, "0"))
+
+static Boolean hasbindings(List *list) {
+	for (; list != NULL; list = list->next) {
+		Closure *closure = list->term->closure;
+		if (closure != NULL && closure->binding != NULL)
+			return TRUE;
+	}
+	return FALSE;
+}
 
 static Var *mkvar(List *defn, char *env, Var *next) {
 	Ref(Var *, var, NULL);
@@ -27,6 +40,7 @@ static Var *mkvar(List *defn, char *env, Var *next) {
 	var->defn = lp;
 	var->env = ep;
 	var->next = np;
+	var->binder = hasbindings(lp);
 	RefEnd3(np, ep, lp);
 	RefReturn(var);
 }
@@ -41,7 +55,7 @@ static size_t VarScan(void *p) {
 	Var *var = p;
 	var->defn = forward(var->defn);
 	var->next = forward(var->next);
-	var->env = forward(var->env);
+	var->env = (var->binder && rebound) ? NULL : forward(var->env);
 	return sizeof (Var);
 }
 
@@ -113,6 +127,7 @@ extern void vardef(char *name, Binding *bp, List *defn) {
 	for (; bp != NULL; bp = bp->next)
 		if (streq(name, bp->name)) {
 			bp->defn = defn;
+			nextgen();
 			return;
 		}
 
@@ -129,23 +144,24 @@ extern void vardef(char *name, Binding *bp, List *defn) {
 		Ref(List *, dp, defn);
 		Ref(List *, sf, setfunc);
 		varpush("0", mklist(mkterm(np, NULL), NULL));
-		defn = eval(append(sf, dp), NULL, TRUE);
+		defn = eval(append(sf, dp), NULL, TRUE, FALSE);
 		name = np;
 		RefEnd3(sf, dp, np);
 		pophandler(&h);
 	}
 
-	isdirty = TRUE;
+	if (!specialvar(name))
+		isdirty = TRUE;
 	var = dictget(vars, name);
 	if (var != NULL)
 		if (defn != NULL || var->next != NULL) {
 			var->defn = defn;
-			var->env = NULL;
+			var->env = specialvar(name) ? &notexported : NULL;
 		} else
 			vars = dictput(vars, name, NULL);
 	else if (defn != NULL) {
 		Ref(char *, np, name);
-		Ref(Var *, vp, mkvar(defn, NULL, NULL));
+		Ref(Var *, vp, mkvar(defn, specialvar(np) ? &notexported : NULL, NULL));
 		vars = dictput(vars, np, vp);
 		RefEnd2(vp, np);
 	}
@@ -168,19 +184,21 @@ extern void varpush(char *np, List *lp) {
 
 		Ref(List *, sf, setfunc);
 		varpush("0", mklist(mkterm(name, NULL), NULL));
-		defn = eval(append(sf, defn), NULL, TRUE);
+		defn = eval(append(sf, defn), NULL, TRUE, FALSE);
 		RefEnd(sf);
 		pophandler(&h);
 	}
 
-	isdirty = TRUE;
+	if (!specialvar(name))
+		isdirty = TRUE;
 	if (var == NULL) {
-		var = mkvar(defn, NULL, NULL);
+		var = mkvar(defn, specialvar(name) ? &notexported : NULL, NULL);
 		vars = dictput(vars, name, var);
 	} else {
 		var->next = mkvar(var->defn, var->env, var->next);
 		var->defn = defn;
-		var->env = NULL;
+		var->env = specialvar(name) ? &notexported : NULL;
+		var->binder = hasbindings(defn);
 	}
 
 	RefEnd3(var, defn, name);
@@ -189,7 +207,8 @@ extern void varpush(char *np, List *lp) {
 extern void varpop(char *name) {
 	List *setfunc;
 
-	isdirty = TRUE;
+	if (!specialvar(name))
+		isdirty = TRUE;
 	Ref(Var *, var, dictget(vars, name));
 	if (var == NULL) {
 		RefPop(var);
@@ -209,11 +228,11 @@ extern void varpop(char *name) {
 		Ref(char *, np, name);
 		Ref(List *, sf, setfunc);
 		varpush("0", mklist(mkterm(np, NULL), NULL));
-		Ref(List *, defn, eval(append(sf, next == NULL ? NULL : next->defn), NULL, TRUE));
+		Ref(List *, defn, eval(append(sf, next == NULL ? NULL : next->defn), NULL, TRUE, FALSE));
 		if (defn == NULL)
 			next = NULL;
 		else if (next == NULL)
-			next = mkvar(defn, NULL, NULL);
+			next = mkvar(defn, specialvar(np) ? &notexported : NULL, NULL);
 		else
 			next->defn = defn;
 		RefEnd(defn);
@@ -230,60 +249,44 @@ extern void varpop(char *name) {
 }
 
 static void mkenv0(void *dummy, char *key, void *value) {
-	if (value == NULL || ((Var *) value)->env == &notexported)
+	Var *var = value;
+	assert(gcblocked > 0);
+	if (var == NULL || var->env == &notexported)
 		return;
-	Ref(Var *, var, value);
-	if (var->env == NULL) {
+	if (var->env == NULL || (rebound && var->binder)) {
 		char *envstr = str("%F=%L", key, var->defn, "\001");
 		var->env = envstr;
 	}
-	assert(envcount < env->len);
-	env->vector[envcount++] = var->env;
-	RefEnd(var);
-	if (envcount == env->len) {
-		Vector *newenv = mkvector(env->len * 2);
-		memcpy(&newenv->vector[0], &env->vector[0], envcount * sizeof *env->vector);
+	assert(env->count < env->alloclen);
+	env->vector[env->count++] = var->env;
+	if (env->count == env->alloclen) {
+		Vector *newenv = mkvector(env->alloclen * 2);
+		newenv->count = env->count;
+		memcpy(newenv->vector, env->vector, env->count * sizeof *env->vector);
 		env = newenv;
 	}
 }
 	
 extern Vector *mkenv(void) {
-	envcount = envmin;
-	dictforall(vars, mkenv0, NULL);
-	env->vector[envcount] = NULL;
-	return env;
+	if (isdirty || rebound) {
+		env->count = envmin;
+		gcdisable(0);		/* TODO: make this a good guess */
+		dictforall(vars, mkenv0, NULL);
+		gcenable();
+		env->vector[env->count] = NULL;
+		isdirty = FALSE;
+		rebound = FALSE;
+		if (sortenv == NULL || env->count > sortenv->alloclen)
+			sortenv = mkvector(env->count * 2);
+		sortenv->count = env->count;
+		memcpy(sortenv->vector, env->vector, sizeof (char *) * (env->count + 1));
+		sortvector(sortenv);
+	}
+	return sortenv;
 }
 
 static void hide(void *dummy, char *key, void *value) {
 	((Var *) value)->env = &notexported;
-}
-
-static char *findleftsep(char *p) {
-	do
-		--p;
-	while (*p != '\0' && *p != '\001');
-	return p;
-}
-
-static List *mklistfromenv(char *envval) {
-	char *endp, *realend = strchr(envval, '\0');
-	char *sepp = findleftsep(realend);
-	Ref(List *, tailp, NULL);
-
-	endp = realend;
-
-	while (sepp >= envval) {
-		tailp = mklist(mkterm(gcdup(sepp+1), NULL), tailp);
-		if (endp != realend)
-			*endp = '\1';
-		endp = sepp;
-		sepp = findleftsep(sepp);
-		*endp = '\0';
-	}
-	tailp = mklist(mkterm(gcdup(envval), NULL), tailp);
-	if (endp != realend)
-		*endp = '\1';
-	RefReturn(tailp);
 }
 
 /* noexport -- make a variable as unexported */
@@ -299,12 +302,19 @@ extern void noexport(char *name) {
 	
 }
 
+/* isnoexport -- is a variable unexported? */
+extern Boolean isnoexport(const char *name) {
+	Var *var = dictget(vars, name);
+	return var != NULL && var->env == &notexported;
+}
+
+
 static void initpath(void) {
 	int i;
 	static const char * const path[] = { INITIAL_PATH };
 	
 	Ref(List *, list, NULL);
-	for (i = sizeof path / sizeof path[0]; i-- > 0;)
+	for (i = arraysize(path); i-- > 0;)
 		list = mklist(mkterm((char *) path[i], NULL), list);
 	vardef("path", NULL, list);
 	RefEnd(list);
@@ -314,21 +324,25 @@ static void initpid(void) {
 	vardef("pid", NULL, mklist(mkterm(str("%d", getpid()), NULL), NULL));
 }
 
-#define	hasprefix(s, p)	strneq(s, p, (sizeof p) - 1)
-
 extern void initvars(char **envp, const char *initial, Boolean protected) {
 	char *envstr;
 	Boolean save_printcmds = printcmds;
 	Boolean save_noexecute = noexecute;
+#if LISPTREES
+	Boolean save_lisptrees = lisptrees;
+#endif
 
 	printcmds = FALSE;
 	noexecute = FALSE;
+#if LISPTREES
+	lisptrees = FALSE;
+#endif
 
 	globalroot(&vars);
 	globalroot(&env);
+	globalroot(&sortenv);
 	vars = mkdict();
 	env = mkvector(10);
-	envcount = 0;
 
 	runstring(initial);
 	initpath();
@@ -338,26 +352,29 @@ extern void initvars(char **envp, const char *initial, Boolean protected) {
 	for (; (envstr = *envp) != NULL; envp++) {
 		char *eq = strchr(envstr, '=');
 		if (eq == NULL) {
-			env->vector[envcount++] = envstr;
-			if (envcount == env->len) {
-				Vector *newenv = mkvector(env->len * 2);
-				memcpy(&newenv->vector[0], &env->vector[0], envcount * sizeof (char *));
+			env->vector[env->count++] = envstr;
+			if (env->count == env->alloclen) {
+				Vector *newenv = mkvector(env->alloclen * 2);
+				newenv->count = env->count;
+				memcpy(newenv->vector, env->vector, env->count * sizeof *env->vector);
 				env = newenv;
 			}
 			continue;
 		}
 		*eq = '\0';
 		Ref(char *, name, str("%N", envstr));
+		*eq = '=';
 		if (!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
-			Ref(List *, defn, mklistfromenv(eq + 1)); /* needs *eq == '\0' */
-			*eq = '=';
+			List *defn = fsplit("\1", mklist(mkterm(eq + 1, NULL), NULL));
 			vardef(name, NULL, defn);
-			RefEnd(defn);
 		}
 		RefEnd(name);
 	}
 
-	envmin = envcount;
+	envmin = env->count;
 	printcmds = save_printcmds;
 	noexecute = save_noexecute;
+#if LISPTREES
+	lisptrees = save_lisptrees;
+#endif
 }

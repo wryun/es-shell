@@ -4,10 +4,6 @@
 
 Boolean hasforked = FALSE;
 
-extern int fork(void);
-extern int wait(int *statusp);
-
-
 typedef struct Proc Proc;
 struct Proc {
 	int pid;
@@ -104,4 +100,5 @@ extern int ewaitfor(int pid) {
 			return status;
 		}
 	fail("wait: %d is not a child of this shell", pid);
+	unreached(-1);
 }

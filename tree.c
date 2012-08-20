@@ -6,12 +6,12 @@
 static Tag Tree1Tag, Tree2Tag;
 
 /* mk -- make a new node; used to generate the parse tree */
-extern Tree *mk(NodeKind t, ...) {
+extern Tree *mk VARARGS1(NodeKind, t) {
 	va_list ap;
 	Tree *n;
 
 	gcdisable(0);
-	va_start(ap, t);
+	VA_START(ap, t);
 	switch (t) {
 	default:
 		panic("mk: bad node kind %d", t);
@@ -23,17 +23,22 @@ extern Tree *mk(NodeKind t, ...) {
 		n = gcalloc(offsetof(Tree, u[1]), &Tree1Tag);
 		n->u[0].p = va_arg(ap, Tree *);
 		break;
-	case nAssign:
-	case nConcat: case nFor: case nLambda: case nLet: case nList:
-	case nLocal: case nMatch: case nVarsub:
+	case nAssign:  case nConcat: case nClosure: case nFor:
+	case nLambda: case nLet: case nList:  case nLocal:
+	case nMatch: case nVarsub:
 		n = gcalloc(offsetof(Tree, u[2]), &Tree2Tag);
 		n->u[0].p = va_arg(ap, Tree *);
 		n->u[1].p = va_arg(ap, Tree *);
 		break;
-	case nRec:
-		n = gcalloc(offsetof(Tree, u[2]), &Tree2Tag);
-		n->u[0].i = va_arg(ap, int);
+ 	case nRedir:
+		n = gcalloc(offsetof(Tree, u[2]), NULL);
+		n->u[0].p = va_arg(ap, Tree *);
 		n->u[1].p = va_arg(ap, Tree *);
+		break;
+ 	case nPipe:
+		n = gcalloc(offsetof(Tree, u[2]), NULL);
+		n->u[0].i = va_arg(ap, int);
+		n->u[1].i = va_arg(ap, int);
 		break;
  	}
 	n->kind = t;
@@ -42,21 +47,6 @@ extern Tree *mk(NodeKind t, ...) {
 	Ref(Tree *, tree, n);
 	gcenable();
 	RefReturn(tree);
-}
-
-/* revtree -- destructively reverse a list stored in a tree */
-extern Tree *revtree(Tree *tree) {
-	Tree *prev, *next;
-	if (tree == NULL)
-		return NULL;
-	prev = NULL;
-	do {
-		assert(tree->kind == nList);
-		next = tree->u[1].p;
-		tree->u[1].p = prev;
-		prev = tree;
-	} while ((tree = next) != NULL);
-	return prev;
 }
 
 
@@ -96,12 +86,10 @@ static size_t Tree1Scan(void *p) {
 static size_t Tree2Scan(void *p) {
 	Tree *n = p;
 	switch (n->kind) {
-	case nAssign: case nConcat: case nFor: case nLambda: case nLet:
-	case nList: case nLocal: case nMatch: case nVarsub:
+	case nAssign:  case nConcat: case nClosure: case nFor:
+	case nLambda: case nLet: case nList:  case nLocal:
+	case nMatch: case nVarsub:
 		n->u[0].p = forward(n->u[0].p);
-		n->u[1].p = forward(n->u[1].p);
-		break;
-	case nRec:
 		n->u[1].p = forward(n->u[1].p);
 		break;
 	default:

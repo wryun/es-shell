@@ -1,14 +1,17 @@
 /* token.c -- lexical analyzer for es */
 
-#include <ctype.h>
+#define	REQUIRE_CTYPE	1
+
 #include "es.h"
+#include "input.h"
+#include "syntax.h"
 #include "token.h"
 
 #define	isodigit(c)	('0' <= (c) && (c) < '8')
 
 
-#define BUFSIZE	((size_t) 1000)	/*	malloc hates power of 2 buffers? */
-#define BUFMAX	(8 * BUFSIZE)	/* 	How big the buffer can get before we re-allocate the
+#define	BUFSIZE	((size_t) 1000)	/*	malloc hates power of 2 buffers? */
+#define	BUFMAX	(8 * BUFSIZE)	/* 	How big the buffer can get before we re-allocate the
 				 *	space at BUFSIZE again. Premature optimization? Maybe.
 				 */
 
@@ -19,30 +22,46 @@ typedef enum wordstates {
 int lineno;
 
 /*
- *	Special characters (i.e., "non-word") in rc:
- *		\t \n # ; & | ^ $ = ~ ` ' ! { } ( ) < > \
+ *	Special characters (i.e., "non-word") in es:
+ *		\t \n # ; & | ^ $ = ` ' ! { } ( ) < > \
  */
 
 const char nw[] = {
-	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0,
-	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,		/*   0 -  15 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/*  16 -  32 */
+	1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,		/* ' ' - '/' */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,		/* '0' - '?' */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* '@' - 'O' */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0,		/* 'P' - '_' */
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* '`' - 'o' */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0,		/* 'p' - DEL */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 128 - 143 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 144 - 159 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 160 - 175 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 176 - 191 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 192 - 207 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 208 - 223 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 224 - 239 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 240 - 255 */
 };
 
 const char dnw[] = {
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
-	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
-	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/*   0 -  15 */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/*  16 -  32 */
+	1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1,		/* ' ' - '/' */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,		/* '0' - '?' */
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* '@' - 'O' */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,		/* 'P' - '_' */
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* '`' - 'o' */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,		/* 'p' - DEL */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 128 - 143 */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 144 - 159 */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 160 - 175 */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 176 - 191 */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 192 - 207 */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 208 - 223 */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 224 - 239 */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/* 240 - 255 */
 };
 
 static size_t bufsize = BUFSIZE;
@@ -51,7 +70,7 @@ static Boolean newline = FALSE;
 static wordstates w = NW;
 static Boolean goterror = FALSE;
 
-#define checkfreecaret {if (w != NW) { w = NW; ugchar(c); return '^'; }}
+#define	checkfreecaret {if (w != NW) { w = NW; ugchar(c); return '^'; }}
 
 
 /* pr_error -- print error with line number on noninteractive shells (i.e., scripts) */
@@ -65,7 +84,7 @@ extern void pr_error(char *s) {
 
 
 /*
- * getredir
+ * getfds
  *	Scan in a pair of integers for redirections like >[2=1]. CLOSED represents
  *	a closed file descriptor (i.e., >[2=]).
  *
@@ -76,59 +95,53 @@ extern void pr_error(char *s) {
 #define	CLOSED	-1
 #define	DEFAULT	-2
 
-static Redir *getredir(int c, RedirKind k, int default0, int default1) {
-	Redir *redir;
+static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	int n;
-
-	redir = gcalloc(sizeof (Redir), NULL);		/* shouldn't live at collection time */
-	redir->kind = k;
-	redir->next = NULL;
-	redir->tree = NULL;
-	redir->fd[0] = default0;
-	redir->fd[1] = default1;
+	fd[0] = default0;
+	fd[1] = default1;
 
 	if (c != '[') {
 		ugchar(c);
-		return redir;
+		return TRUE;
 	}
 	if ((unsigned int) (n = gchar() - '0') > 9) {
 		scanerror("expected digit after '['");
-		return NULL;
+		return FALSE;
 	}
 
 	while ((unsigned int) (c = gchar() - '0') <= 9)
 		n = n * 10 + c;
-	redir->fd[0] = n;
+	fd[0] = n;
 
 	switch (c += '0') {
 	case '=':
 		if ((unsigned int) (n = gchar() - '0') > 9) {
 			if (n != ']' - '0') {
 				scanerror("expected digit or ']' after '='");
-				return NULL;
+				return FALSE;
 			}
-			redir->fd[1] = CLOSED;
+			fd[1] = CLOSED;
 		} else {
 			while ((unsigned int) (c = gchar() - '0') <= 9)
 				n = n * 10 + c;
 			if (c != ']' - '0') {
 				scanerror("expected ']' after digit");
-				return NULL;
+				return FALSE;
 			}
-			redir->fd[1] = n;
+			fd[1] = n;
 		}
 		break;
 	case ']':
 		break;
 	default:
 		scanerror("expected '=' or ']' after digit");
-		return NULL;
+		return FALSE;
 	}
-	return redir;
+	return TRUE;
 }
 
 /* print_prompt2 -- called before all continuation lines */
-extern void print_prompt2() {
+extern void print_prompt2(void) {
 	lineno++;
 #if READLINE
 	prompt = prompt2;
@@ -148,7 +161,7 @@ extern int yylex(void) {
 
 	if (goterror) {
 		goterror = FALSE;
-		return '\n';
+		return NL;
 	}
 
 	/* rc variable-names may contain only alnum, '*' and '_', so use dnw if we are scanning one. */
@@ -162,7 +175,7 @@ extern int yylex(void) {
 top:	while ((c = gchar()) == ' ' || c == '\t')
 		w = NW;
 	if (c == EOF)
-		return END;
+		return ENDFILE;
 	if (!meta[(unsigned char) c]) {	/* it's a word or keyword. */
 		checkfreecaret;
 		w = RW;
@@ -176,6 +189,7 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		buf[i] = '\0';
 		w = KW;
 		if (streq(buf, "@"))			return '@';
+		if (streq(buf, "~"))			return '~';
 		if (*buf == 'f') {
 			if (streq(buf + 1, "n"))	return FN;
 			if (streq(buf + 1, "or"))	return FOR;
@@ -184,15 +198,14 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 			if (streq(buf + 1, "ocal"))	return LOCAL;
 			if (streq(buf + 1, "et"))	return LET;
 		}
-		if (streq(buf, "case"))			return CASE;
-		if (streq(buf, "switch"))		return SWITCH;
+		if (streq(buf, "%closure"))		return CLOSURE;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;
 	}
-	if (c == '`' || c == '!' || c == '~' || c == '$' || c == '\'') {
+	if (c == '`' || c == '!' || c == '$' || c == '\'') {
 		checkfreecaret;
-		if (c == '!' || c == '~')
+		if (c == '!')
 			w = KW;
 	}
 	switch (c) {
@@ -201,8 +214,6 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		goto top;
 	case '!':
 		return '!';
-	case '~':
-		return '~';
 	case '`':
 		c = gchar();
 		if (c == '`')
@@ -297,19 +308,19 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 		buf[1] = 0;
 		y->str = gcdup(buf);
 		return QWORD;
-	case '(':
-		if (w == RW) /* SUB's happen only after real words, not keyowrds, so if () and while () work */
-			c = SUB;
-		w = NW;
-		return c;
 	case '#':
 		while ((c = gchar()) != '\n') /* skip comment until newline */
 			if (c == EOF)
-				return END;
+				return ENDFILE;
 		/* FALLTHROUGH */
 	case '\n':
 		lineno++;
 		newline = TRUE;
+		w = NW;
+		return NL;
+	case '(':
+		if (w == RW) /* SUB's happen only after real words, not keywords, so let and friends work */
+			c = SUB;
 		/* FALLTHROUGH */
 	case ';':
 	case '^':
@@ -325,54 +336,59 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 			return ANDAND;
 		ugchar(c);
 		return '&';
-	case '|':
+
+	case '|': {
+		int p[2];
 		w = NW;
 		c = gchar();
 		if (c == '|')
 			return OROR;
-		y->redir = getredir(c, rPipe, 1, 0);
-		if (y->redir == NULL)
+		if (!getfds(p, c, 1, 0))
 			return ERROR;
-		if (y->redir->fd[1] == CLOSED) {
+		if (p[1] == CLOSED) {
 			scanerror("expected digit after '='");		/* can't close a pipe */
 			return ERROR;
 		}
+		y->tree = mk(nPipe, p[0], p[1]);
 		return '|';
+	}
 
 	{
-		RedirKind kind;
-		int fd0;
+		char *cmd;
+		int fd[2];
 
 	case '<':
-		fd0 = 0;
+		fd[0] = 0;
 		if ((c = gchar()) == '>')
 			return BOX;
 		else if (c == '<')
 			if ((c = gchar()) == '<') {
 				c = gchar();
-				kind = rHerestring;
+				cmd = "%here";
 			} else
-				kind = rHeredoc;
+				cmd = "%heredoc";
 		else
-			kind = rOpen;
+			cmd = "%open";
 		goto redirection;
 	case '>':
-		fd0 = 1;
+		fd[0] = 1;
 		if ((c = gchar()) == '>') {
 			c = gchar();
-			kind = rAppend;
+			cmd = "%append";
 		} else
-			kind = rCreate;
+			cmd = "%create";
 		goto redirection;
 	redirection:
 		w = NW;
-		y->redir = getredir(c, kind, fd0, DEFAULT);
-		if (y->redir == NULL)
+		if (!getfds(fd, c, fd[0], DEFAULT))
 			return ERROR;
-		if (y->redir->fd[1] != DEFAULT) {
-			y->redir->kind = (y->redir->fd[1] == CLOSED) ? rClose : rDup;
+		if (fd[1] != DEFAULT) {
+			y->tree = (fd[1] == CLOSED)
+					? mkclose(fd[0])
+					: mkdup(fd[0], fd[1]);
 			return DUP;
 		}
+		y->tree = mkredircmd(cmd, fd[0]);
 		return REDIR;
 	}
 
@@ -385,7 +401,6 @@ top:	while ((c = gchar()) == ' ' || c == '\t')
 extern void inityy() {
 	newline = FALSE;
 	w = NW;
-	/* TODO: hq = NULL; */
 	/* return memory to the system if the buffer got too large */
 	if (bufsize > BUFMAX && realbuf != NULL) {
 		efree(realbuf);

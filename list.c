@@ -75,23 +75,29 @@ extern List *reverse(List *list) {
 }
 
 /* append -- merge two lists, non-destructively */
-extern List *append(List *head0, List *tail0) {
-	List **prevp;
+extern List *append(List *head, List *tail) {
+	List *lp, **prevp;
 #if 0	/* if you want this optimization, rewrite listcopy */
 	if (tail0 == NULL)
 		return head0;
 #endif
-	Ref(List *, lp, NULL);
-	Ref(List *, head, head0);
-	Ref(List *, tail, tail0);
+	Ref(List *, hp, head);
+	Ref(List *, tp, tail);
+	gcdisable(40 * sizeof (List));
+	head = hp;
+	tail = tp;
+	RefEnd2(tp, hp);
+
 	for (prevp = &lp; head != NULL; head = head->next) {
 		List *np = mklist(head->term, NULL);
 		*prevp = np;
 		prevp = &np->next;
 	}
 	*prevp = tail;
-	RefEnd2(tail, head);
-	RefReturn(lp);
+
+	Ref(List *, result, lp);
+	gcenable();
+	RefReturn(result);
 }
 
 /* listcopy */
@@ -125,4 +131,18 @@ extern Term *nth(List *list, int n) {
 			return list->term;
 	}
 	return NULL;
+}
+
+/* sortlist */
+extern List *sortlist(List *list) {
+	if (length(list) > 1) {
+		Vector *v = vectorize(list);
+		sortvector(v);
+		gcdisable(0);
+		Ref(List *, lp, listify(v->count, v->vector));
+		gcenable();
+		list = lp;
+		RefEnd(lp);
+	}
+	return list;
 }

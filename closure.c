@@ -33,18 +33,31 @@ static size_t ClosureScan(void *p) {
 
 static DefineTag(Closure);
 
-extern Closure *extractbindings(Tree *tp) {
-	Closure *result;
-	Ref(Tree *, tree, (tp->kind == nList && tp->u[1].p == NULL) ? tp->u[0].p : tp);
-	Ref(Binding *, binding, NULL);
-	if (tree->kind == nLambda) {
-		Ref(Tree *, cx, tree->u[0].p);
-		for (; cx != NULL; cx = cx->u[1].p) {
-			assert(cx->kind == nList);
-			if (cx->u[0].p->kind != nAssign)		/* TODO: nRec */
-				break;
-			Ref(Tree *, defn, cx->u[0].p);
+/* revtree -- destructively reverse a list stored in a tree */
+static Tree *revtree(Tree *tree) {
+	Tree *prev, *next;
+	if (tree == NULL)
+		return NULL;
+	prev = NULL;
+	do {
+		assert(tree->kind == nList);
+		next = tree->u[1].p;
+		tree->u[1].p = prev;
+		prev = tree;
+	} while ((tree = next) != NULL);
+	return prev;
+}
+
+static Binding *extract(Tree *tp, Binding *bp) {
+	Ref(Binding *, bindings, bp);
+	Ref(Tree *, tree, tp);
+
+	for (; tree != NULL; tree = tree->u[1].p) {
+		assert(tree->kind == nList);
+		Ref(Tree *, defn, tree->u[0].p);
+		if (defn != NULL) {
 			Ref(Tree *, name, defn->u[0].p);
+			assert(name->kind == nWord || name->kind == nQword);
 			Ref(List *, list, NULL);
 			defn = revtree(defn->u[1].p);
 			for (; defn != NULL; defn = defn->u[1].p) {
@@ -53,18 +66,32 @@ extern Closure *extractbindings(Tree *tp) {
 				assert(word->kind == nWord || word->kind == nQword);
 				list = mklist(mkterm(word->u[0].s, NULL), list);
 			}
-			assert(name->kind == nWord || name->kind == nQword);
-			binding = bind(name->u[0].s, list, binding);
-			RefEnd3(list, name, defn);
+			bindings = mkbinding(name->u[0].s, list, bindings);
+			RefEnd2(list, name);
 		}
-		if (cx != NULL)
-			tree->u[0].p = cx;
-		else
-			tree = mk(nThunk, tree->u[1].p);
-		RefEnd(cx);
+		RefEnd(defn);
 	}
-	result = mkclosure(tree, binding);
-	RefEnd2(binding, tree);
+
+	RefEnd(tree);
+	RefReturn(bindings);
+}
+
+extern Closure *extractbindings(Tree *tp) {
+	Closure *result;
+	Ref(Tree *, tree, tp);
+	Ref(Binding *, bindings, NULL);
+
+	if (tree->kind == nList && tree->u[1].p == NULL)
+		tree = tree->u[0].p; 
+
+	while (tree->kind == nClosure) {
+		bindings = extract(tree->u[0].p, bindings);
+		tree = tree->u[1].p;
+		if (tree->kind == nList && tree->u[1].p == NULL)
+			tree = tree->u[0].p; 
+	}
+	result = mkclosure(tree, bindings);
+	RefEnd2(bindings, tree);
 	return result;
 }
 
@@ -75,7 +102,8 @@ extern Closure *extractbindings(Tree *tp) {
 
 static Tag BindingTag;
 
-extern Binding *bind(char *name, List *defn, Binding *next) {
+extern Binding *mkbinding(char *name, List *defn, Binding *next) {
+	assert(next == NULL || next->name != NULL);
 	gcdisable(0);
 	Ref(Binding *, binding, gcnew(Binding));
 	binding->name = name;

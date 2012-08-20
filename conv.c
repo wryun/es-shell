@@ -3,7 +3,8 @@
  * variables and functions to external representations, and vice versa
  */
 
-#include <ctype.h>
+#define	REQUIRE_CTYPE	1
+
 #include "es.h"
 #include "print.h"
 
@@ -21,27 +22,6 @@ static Boolean Lconv(Format *f) {
 		fmtprint(f, fmt, getstr(lp->term), next == NULL ? "" : sep);
 	}
 	return FALSE;
-}
-
-/* %D -- convert a redirection to a printable form */
-static Boolean Dconv(Format *f) {
-	char *name = "?";
-	int n = va_arg(f->args, int);
-	switch (n) {
-	case rOpen:		name = "<";	break;
-	case rCreate:		name = ">";	break;
-	case rAppend:		name = ">>";	break;
-	case rHeredoc:		name = "<<";	break;
-	case rHerestring:	name = "<<<";	break;
-	default:		panic("Dconv: bad redirection type %d\n", n);
-	}
-	fmtcat(f, name);
-	return FALSE;
-}
-
-/* defaultfd -- return the default fd for a given redirection operation */
-extern int defaultfd(RedirKind op) {
-	return (op == rCreate || op == rAppend) ? 1 : 0;
 }
 
 /* treecount -- count the number of nodes in a flattened tree list */
@@ -70,9 +50,10 @@ static void binding(Format *f, char *keyword, Tree *tree) {
 	fmtprint(f, ")%T", tree->u[1].p);
 }
 
-static Boolean fmttree(Format *f, Tree *n) {
+/* %T -- print a tree */
+static Boolean Tconv(Format *f) {
+	Tree *n = va_arg(f->args, Tree *);
 	Boolean group = (f->flags & FMT_altform) != 0;
-	Boolean suppressat = (f->flags & FMT_leftside) != 0;
 
 top:
 	if (n == NULL) {
@@ -83,48 +64,34 @@ top:
 
 	switch (n->kind) {
 
-	case nAssign:	fmtprint(f, "%#T=%T", n->u[0].p, n->u[1].p);		break;
-	case nCall:	fmtprint(f, "<>{%T}", n->u[0].p);			break;
-	case nConcat:	fmtprint(f, "%#T^%#T", n->u[0].p, n->u[1].p);		break;
-	case nMatch:	fmtprint(f, "~ %#T %T", n->u[0].p, n->u[1].p);		break;
-	case nPrim:	fmtprint(f, "$&%s", n->u[0].s);				break;
-	case nThunk:	fmtprint(f, "{%T}", n->u[0].p);				break;
-	case nVar:	fmtprint(f, "$%#T", n->u[0].p);				break;
-	case nVarsub:	fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p);		break;
-	case nWord:	fmtprint(f, "%s", n->u[0].s);				break;
+	case nAssign:	fmtprint(f, "%#T=%T", n->u[0].p, n->u[1].p);	return FALSE;
+	case nCall:	fmtprint(f, "<>{%T}", n->u[0].p);		return FALSE;
+	case nConcat:	fmtprint(f, "%#T^%#T", n->u[0].p, n->u[1].p);	return FALSE;
+	case nMatch:	fmtprint(f, "~ %#T %T", n->u[0].p, n->u[1].p);	return FALSE;
+	case nPrim:	fmtprint(f, "$&%s", n->u[0].s);			return FALSE;
+	case nThunk:	fmtprint(f, "{%T}", n->u[0].p);			return FALSE;
+	case nVar:	fmtprint(f, "$%#T", n->u[0].p);			return FALSE;
+	case nVarsub:	fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p);	return FALSE;
+	case nWord:	fmtprint(f, "%s", n->u[0].s);			return FALSE;
 
-	case nLocal:	binding(f, "local", n);	break;
-	case nLet:	binding(f, "let", n);	break;
-	case nFor:	binding(f, "for", n);	break;
+	case nLocal:	binding(f, "local", n);		return FALSE;
+	case nLet:	binding(f, "let", n);		return FALSE;
+	case nFor:	binding(f, "for", n);		return FALSE;
+	case nClosure:	binding(f, "%closure", n);	return FALSE;
 
 	case nQword: {
-		char *s = n->u[0].s;
-		int c = *s;
-		if (!isprint(c) && s[1] == '\0')
-			switch (c) {
-			case '\033':	fmtprint(f, "\\e"); break;
-			case '\a':	fmtprint(f, "\\a"); break;
-			case '\b':	fmtprint(f, "\\b"); break;
-			case '\f':	fmtprint(f, "\\f"); break;
-			case '\n':	fmtprint(f, "\\n"); break;
-			case '\r':	fmtprint(f, "\\r"); break;
-			case '\t':	fmtprint(f, "\\t"); break;
-			default:	fmtprint(f, "\\%o", c); break;
-			}
-		else
-			fmtprint(f, "'%s'", s);
-		break;
+		fmtprint(f, "%#S", n->u[0].s);
+		return FALSE;
 	}
 
 	case nLambda:
-		if (!suppressat)
-			fmtprint(f, "@ ");
+		fmtprint(f, "@ ");
 		if (n->u[0].p == NULL)
 			fmtprint(f, "* ");
 		else
 			fmtprint(f, "%T", n->u[0].p);
 		fmtprint(f, "{%T}", n->u[1].p);
-		break;
+		return FALSE;
 
 	case nList:
 		if (!group) {
@@ -148,25 +115,20 @@ top:
 			}
 			fmtputc(f, ')');
 		}
-		break;
+		return FALSE;
 
-	case nRec: {
-		int c = n->u[0].i;
-		assert(c > 0);
-		fmtprint(f, "%#T", n->u[1].p);
-		while (--c >= 0)
-			fmtputc(f, '&');
-		break;
-	}
 	default:
-		panic("Tconv: bad node kind %d", n->kind);
- 	}
-	return FALSE;
+		panic("bad node kind: %d", n->kind);
+
+	}
+	unreached(FALSE);
 }
 
-/* %T -- print a tree */
-static Boolean Tconv(Format *f) {
-	return fmttree(f, va_arg(f->args, Tree *));
+static void enclose(Format *f, Binding *binding, const char *sep) {
+	if (binding != NULL) {
+		enclose(f, binding->next, ";");
+		fmtprint(f, "%S=%#L%s", binding->name, binding->defn, " ", sep);
+	}
 }
 
 /* %C -- print a closure */
@@ -176,19 +138,16 @@ static Boolean Cconv(Format *f) {
 	Binding *binding = closure->binding;
 
 	assert(tree->kind == nThunk || tree->kind == nLambda || tree->kind == nPrim);
+	assert(binding == NULL || tree->kind != nPrim);
 
-	if (binding == NULL) {
-		f->flags = 0;
-		return fmttree(f, tree);
+	/* TODO: recursion */
+
+	if (binding != NULL) {
+		fmtprint(f, "%%closure(");
+		enclose(f, binding, "");
+		fmtprint(f, ")");
 	}
-
-	/* TODO: deal with recursion */
-	fmtprint(f, "@ ");
-	for (; binding != NULL; binding = binding->next)
-		fmtprint(f, "%S=(%#L) ", binding->name, binding->defn, " ");
-
-	fmtprint(f, "%-T", tree);
-
+	fmtprint(f, "%T", tree);
 	return FALSE;
 }
 
@@ -197,8 +156,10 @@ static Boolean Sconv(Format *f) {
 	int c;
 	const char *s, *t;
 	extern const char nw[];
-	
+
 	s = va_arg(f->args, const char *);
+	if (f->flags & FMT_altform || *s == '\0')
+		goto quoteit;
 	for (t = s; (c = *t) != '\0'; t++)
 		if (nw[c])
 			goto quoteit;
@@ -206,8 +167,22 @@ static Boolean Sconv(Format *f) {
 	return FALSE;
 
 quoteit:
+	if ((c = *s) != '\0' && !isprint(c) && s[1] == '\0') {
+		switch (c) {
+		case '\033':	fmtprint(f, "\\e");	break;
+		case '\a':	fmtprint(f, "\\a");	break;
+		case '\b':	fmtprint(f, "\\b");	break;
+		case '\f':	fmtprint(f, "\\f");	break;
+		case '\n':	fmtprint(f, "\\n");	break;
+		case '\r':	fmtprint(f, "\\r");	break;
+		case '\t':	fmtprint(f, "\\t");	break;
+		default:	fmtprint(f, "\\%o", c);	break;
+		}
+		return FALSE;
+	}
+
 	fmtputc(f, '\'');
-	for (t = s; (c = *t) != '\0'; t++) {
+	for (t = s; c != '\0'; c = *++t) {
 		if (c == '\'')
 			fmtputc(f, '\'');
 		fmtputc(f, c);
@@ -280,14 +255,61 @@ static Boolean Nconv(Format *f) {
 #endif
 }
 
+#if LISPTREES
+static Boolean Bconv(Format *f) {
+	Tree *n = va_arg(f->args, Tree *);
+	if (n == NULL) {
+		fmtprint(f, "nil");
+		return FALSE;
+	}
+	switch (n->kind) {
+
+	case nWord:	fmtprint(f, "(word \"%s\")", n->u[0].s);		break;
+	case nQword:	fmtprint(f, "(qword \"%s\")", n->u[0].s);		break;
+	case nPrim:	fmtprint(f, "(prim %s)", n->u[0].s);			break;
+
+	case nCall:	fmtprint(f, "(call %B)", n->u[0].p);			break;
+	case nThunk:	fmtprint(f, "(thunk %B)", n->u[0].p);			break;
+	case nVar:	fmtprint(f, "(var %B)", n->u[0].p);			break;
+
+	case nAssign:	fmtprint(f, "(assign %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nConcat:	fmtprint(f, "(concat %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nClosure:	fmtprint(f, "(%%closure %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nFor:	fmtprint(f, "(for %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nLambda:	fmtprint(f, "(lambda %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nLet:	fmtprint(f, "(let %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nLocal:	fmtprint(f, "(local %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nMatch:	fmtprint(f, "(match %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nRedir:	fmtprint(f, "(redir %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nVarsub:	fmtprint(f, "(varsub %B %B)", n->u[0].p, n->u[1].p);	break;
+
+	case nPipe:	fmtprint(f, "(pipe %d %d)", n->u[0].i, n->u[1].i);	break;
+
+	case nList: {
+		fmtprint(f, "(list");
+		do {
+			assert(n->kind == nList);
+			fmtprint(f, " %B", n->u[0].p);
+		} while ((n = n->u[1].p) != NULL);
+		fmtprint(f, ")");
+		break;
+	}
+
+	}
+	return FALSE;
+}
+#endif
+
 /* install the conversion routines */
 void initconv(void) {
 	fmtinstall('C', Cconv);
-	fmtinstall('D', Dconv);
 	fmtinstall('F', Fconv);
 	fmtinstall('L', Lconv);
 	fmtinstall('N', Nconv);
 	fmtinstall('S', Sconv);
 	fmtinstall('T', Tconv);
 	fmtinstall('Z', Zconv);
+#if LISPTREES
+	fmtinstall('B', Bconv);
+#endif
 }

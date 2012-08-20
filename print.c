@@ -10,7 +10,7 @@
  *	true return -> flag changes only, not a conversion
  */
 
-#define Flag(name, flag) \
+#define	Flag(name, flag) \
 static Boolean name(Format *format) { \
 	format->flags |= flag; \
 	return TRUE; \
@@ -263,11 +263,11 @@ extern int printfmt(Format *format, const char *fmt) {
  * the public entry points
  */
 
-extern int fmtprint(Format *format, const char *fmt, ...) {
+extern int fmtprint VARARGS2(Format *, format, const char *, fmt) {
 	int n = -format->flushed;
 	va_list saveargs = format->args;
 
-	va_start(format->args, fmt);
+	VA_START(format->args, fmt);
 	n += printfmt(format, fmt);
 	va_end(format->args);
 	format->args = saveargs;
@@ -283,8 +283,9 @@ static void fprint_flush(Format *format, size_t more) {
 	format->buf = format->bufbegin;
 	while (n != 0) {
 		int written = write(format->u.n, buf, n);
-		if (written < 0) {
-			uerror("write");
+		if (written == -1) {
+			if (format->u.n != 2)
+				uerror("write");
 			exit(1);
 		}
 		n -= written;
@@ -307,46 +308,36 @@ static void fdprint(Format *format, int fd, const char *fmt) {
 	gcenable();
 }
 
-extern int fprint(int fd, const char *fmt, ...) {
+extern int fprint VARARGS2(int, fd, const char *, fmt) {
 	Format format;
-	va_start(format.args, fmt);
+	VA_START(format.args, fmt);
 	fdprint(&format, fd, fmt);
 	va_end(format.args);
 	return format.flushed;
 }
 
-extern int print(const char *fmt, ...) {
+extern int print VARARGS1(const char *, fmt) {
 	Format format;
-	va_start(format.args, fmt);
+	VA_START(format.args, fmt);
 	fdprint(&format, 1, fmt);
 	va_end(format.args);
 	return format.flushed;
 }
 
-extern int eprint(const char *fmt, ...) {
+extern int eprint VARARGS1(const char *, fmt) {
 	Format format;
-	va_start(format.args, fmt);
+	VA_START(format.args, fmt);
 	fdprint(&format, 2, fmt);
 	va_end(format.args);
 	return format.flushed;
 }
 
-extern noreturn panic(const char *fmt, ...) {
+extern noreturn panic VARARGS1(const char *, fmt) {
 	Format format;
 	gcdisable(0);
-	va_start(format.args, fmt);
+	VA_START(format.args, fmt);
 	fdprint(&format, 2, fmt);
 	va_end(format.args);
 	eprint("\n");
 	exit(1);
-}
-
-extern void debug(const char *fmt, ...) {
-	extern Boolean bugme;
-	if (bugme) {
-		Format format;
-		va_start(format.args, fmt);
-		fdprint(&format, 2, fmt);
-		va_end(format.args);
-	}
 }

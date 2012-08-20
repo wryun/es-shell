@@ -1,7 +1,7 @@
 /* input.c -- read input from files or strings */
 
 #include "es.h"
-#include "token.h"
+#include "input.h"
 
 /*
  * NOTE: character unget is supported for up to two characters, but NOT
@@ -16,7 +16,7 @@ typedef struct Input {
 	Boolean saved, eofread;
 } Input;
 
-#define BUFSIZE ((size_t) 256)
+#define	BUFSIZE ((size_t) 256)
 
 #if READLINE
 extern char *readline(char *);
@@ -26,6 +26,7 @@ static char *rlinebuf;
 
 char *prompt, *prompt2;
 Boolean esrc;
+Boolean disablehistory;
 
 static int dead(void);
 static int fdgchar(void);
@@ -81,10 +82,10 @@ static int stringgchar() {
 /* loghistory -- write last command out to a file */
 static void loghistory(void) {
 	size_t a;
-	if (!interactive || history == NULL)
+	if (!interactive || history == NULL || disablehistory)
 		return;
 	if (historyfd == -1) {
-		historyfd = eopen(history, rAppend);
+		historyfd = eopen(history, oAppend);
 		if (historyfd == -1) {
 			eprint("history(%s): %s\n", history, strerror(errno));
 			vardef("history", NULL, NULL);
@@ -134,7 +135,7 @@ static char *doreadline(char *prompt) {
 	return r;
 }
 #else
-#define doreadline readline
+#define	doreadline readline
 #endif	/* READLINE && !SVSIGS */
 
 /*
@@ -163,7 +164,7 @@ static int fdgchar() {
 #endif
 				{
 				long r = eread(istack->fd, inbuf + 2, BUFSIZE);
-				if (r < 0) {
+				if (r == -1) {
 					if (errno == EINTR)
 						continue; /* Suppose it was interrupted by a signal */
 					uerror("read");
@@ -214,20 +215,6 @@ static void pushfd(int fd) {
 	inbuf = ealloc(BUFSIZE + 2);
 	lineno = 1;
 }
-
-#if 0
-static void pushstring(char **a, Boolean save) {
-	pushcommon();
-	istack->t = iString;
-	save_lineno = lineno;
-	inbuf = mprint("..%A", a);
-	realgchar = stringgchar;
-	if (save_lineno)
-		lineno = 1;
-	else
-		--lineno;
-}
-#endif
 
 /* popinput -- remove an input source from the stack. restore the right kind of getchar (string,fd) etc. */
 static void popinput(void) {
@@ -281,6 +268,8 @@ static void callparse(void) {
 	int result;
 	assert(error == NULL);
 
+	emptyherequeue();
+
 	gcdisable(200 * sizeof (Tree));		/* TODO: find a good size */
 	result = yyparse();
 	gcenable();
@@ -292,6 +281,10 @@ static void callparse(void) {
 		fail(e);
 	}
 	assert(error == NULL);
+#if LISPTREES
+	if (lisptrees)
+		eprint("%B\n", parsetree);
+#endif
 }
 
 
@@ -321,7 +314,7 @@ static List *doit(Boolean execit) {
 		if (interactive) {
 			List *lp;
 			if (!noexecute && (lp = varlookup("fn-prompt", NULL)) != NULL)
-				eval(lp, NULL, TRUE);
+				eval(lp, NULL, TRUE, FALSE);
 #if !READLINE
 			if (prompt != NULL)
 				eprint("%s", prompt);
@@ -330,11 +323,13 @@ static List *doit(Boolean execit) {
 		inityy();
 		callparse();
 		eof = (last == EOF); /* "last" can be clobbered during a walk() */
-		if (parsetree != NULL)
-			if (execit)
-				result = walk(parsetree, NULL, TRUE);
-			else if (printcmds && noexecute)
+		if (parsetree != NULL && execit)
+			result = walk(parsetree, NULL, TRUE, exitonfalse);
+		else {
+			result = NULL;
+			if (printcmds && noexecute)
 				eprint("%T\n", parsetree);
+		}
 	}
 	popinput();
 	pophandler(&h);
@@ -413,15 +408,31 @@ extern List *runfd(int fd) {
 /* closefds -- close file descriptors after a fork() */
 extern void closefds(void) {
 	Input *i;
+	for (i = istack; i != itop; --i)	/* close open input sources */
+		if (i->t == iFd && i->fd >= 3) {
+			close(i->fd);
+			i->fd = -1;
+		}
 	if (historyfd != -1) {			/* Close an open history file */
 		close(historyfd);
 		historyfd = -1;
 	}
-	for (i = istack; i != itop; --i)	/* close open input sources */
-		if (i->t == iFd && i->fd > 2) {
-			close(i->fd);
-			i->fd = -1;
+}
+
+/* releasefd -- release a specific file descriptor from its es uses*/
+extern void releasefd(int fd) {
+	if (fd >= 3) {
+		Input *i;
+		for (i = istack; i != itop; --i)
+			if (i->t == iFd && i->fd == fd) {
+				i->fd = close(i->fd);
+				close(fd);
+			}
+		if (historyfd == fd) {
+			historyfd = dup(historyfd);
+			close(fd);
 		}
+	}
 }
 
 

@@ -2,8 +2,6 @@
 
 #include "es.h"
 
-extern int execve(char *name, char **argv, char **envp);
-
 /* forkexec -- fork (if necessary) and exec */
 extern List *forkexec(char *file, List *list, Boolean parent) {
 	int pid, status;
@@ -12,6 +10,8 @@ extern List *forkexec(char *file, List *list, Boolean parent) {
 	env = mkenv();
 	pid = efork(parent, FALSE, FALSE);
 	if (pid == 0) {
+		if (printcmds)
+			eprint("%L\n", list, " ");
 		execve(file, vectorize(list)->vector, env->vector);
 		uerror(file);
 		exit(1);
@@ -31,7 +31,7 @@ extern List *forkexec(char *file, List *list, Boolean parent) {
 /* bindargs -- bind an argument list to the parameters of a lambda */
 static Binding *bindargs(Tree *params, List *args, Binding *binding) {
 	if (params == NULL)
-		return bind("*", args, binding);
+		return mkbinding("*", args, binding);
 
 	gcdisable(0);
 
@@ -50,7 +50,7 @@ static Binding *bindargs(Tree *params, List *args, Binding *binding) {
 			value = mklist(args->term, NULL);
 			args = args->next;
 		}
-		binding = bind(param->u[0].s, value, binding);
+		binding = mkbinding(param->u[0].s, value, binding);
 	}
 
 	Ref(Binding *, result, binding);
@@ -58,16 +58,26 @@ static Binding *bindargs(Tree *params, List *args, Binding *binding) {
 	RefReturn(result);
 }
 
+/* whatis -- evaluate %whatis + some argument */
+extern List *whatis(Term *term) {
+	static Term *cmd = NULL;
+	if (cmd == NULL) {
+		globalroot(&cmd);
+		cmd = mkterm("%whatis", NULL);
+	}
+	Ref(List *, list, mklist(term, NULL));
+	list = eval(mklist(cmd, list), NULL, TRUE, FALSE);
+	RefReturn(list);
+}
+
 /* eval -- evaluate a list, producing a list */
-extern List *eval(List *list, Binding *binding0, Boolean parent) {
+extern List *eval(List *list, Binding *binding0, Boolean parent, Boolean exitonfalse) {
 	Closure *cp;
 	List *fn;
-	char *file;
 
 	Ref(char *, funcname, NULL);
 
 restart:
-	debug("<< eval : %L >>\n", list, " ");
 	if (list == NULL) {
 		RefPop(funcname);
 		return true;
@@ -81,10 +91,10 @@ restart:
 		switch (cp->tree->kind) {
 		case nPrim:
 			assert(cp->binding == NULL);
-			lp = prim(cp->tree->u[0].s, lp->next, parent);
+			lp = prim(cp->tree->u[0].s, lp->next, parent, exitonfalse);
 			break;
 		case nThunk:
-			lp = walk(cp->tree->u[0].p, cp->binding, parent);
+			lp = walk(cp->tree->u[0].p, cp->binding, parent, exitonfalse);
 			break;
 		case nLambda: {
 			Handler h;
@@ -102,7 +112,9 @@ restart:
 			Ref(Binding *, context, bindargs(tree->u[0].p, lp->next, cp->binding));
 			if (funcname != NULL)
 				varpush("0", mklist(mkterm(funcname, NULL), NULL));
-			lp = walk(tree->u[1].p, context, parent);
+			lp = walk(tree->u[1].p, context, parent, exitonfalse);
+			if (funcname != NULL)
+				varpop("0");
 			RefEnd2(context, tree);
 			pophandler(&h);
 			break;
@@ -126,44 +138,50 @@ restart:
 		goto restart;
 	}
 
-	file = which(lp->term->str, TRUE);
-	lp = (file == NULL) ? false : forkexec(file, lp, parent);
+	fn = whatis(lp->term);
+	assert(fn != NULL);
+	if (fn->next == NULL && fn->term->closure == NULL) {
+		char *name = fn->term->str;
+		lp = forkexec(name, lp, parent);
+		goto done;
+	}
+
+	list = append(fn, lp->next);
+	RefPop2(binding, lp);
+	goto restart;
 
 done:
+	if (exitonfalse && !istrue(lp))
+		exit(exitstatus(lp));
 	list = lp;
 	RefEnd3(binding, lp, funcname);
 	return list;
 }
 
 /* eval1 -- evaluate a term, producing a list */
-extern List *eval1(Term *term, Boolean parent) {
-	return eval(mklist(term, NULL), NULL, parent);
+extern List *eval1(Term *term, Boolean parent, Boolean exitonfalse) {
+	return eval(mklist(term, NULL), NULL, parent, exitonfalse);
 }
 
 /* walk -- walk through a tree, evaluating nodes */
-extern List *walk(Tree *tree, Binding *binding, Boolean parent) {
-
+extern List *walk(Tree *tree, Binding *binding, Boolean parent, Boolean exitonfalse) {
 	SIGCHK();
 
-	debug("<< walk : %T >>\n", tree);
-
 top:
-	if (tree == NULL) {
-		if (!parent)
-			exit(0);
+	if (tree == NULL)
 		return true;
-	}
 
 	switch (tree->kind) {
 
 	case nConcat: case nList: case nQword: case nVar: case nVarsub: case nWord:
-	case nThunk: case nLambda: case nCall: case nPrim: case nRec: {
+	case nThunk: case nLambda: case nCall: case nPrim: {
 		List *list;
 		Ref(Binding *, bp, binding);
 		list = glom(tree, binding, TRUE);
 		binding = bp;
 		RefEnd(bp);
-		return eval(list, binding, parent);
+		list = eval(list, binding, parent, exitonfalse);
+		return list;
 	}
 
 	case nMatch: {
@@ -174,6 +192,8 @@ top:
 		Ref(Tree *, tp, tree);
 		Ref(List *, subject, glom(tp->u[0].p, bp, TRUE));
 		pattern = glom2(tp->u[1].p, bp, &quote);
+		if (printcmds)
+			eprint("~ (%L) %L\n", subject, " ", pattern, " ");
 		result = listmatch(subject, pattern, quote);
 		RefEnd3(subject, tp, bp);
 		return result ? true : false;
@@ -188,7 +208,7 @@ top:
 		return true;
 	}
 
-	case nLocal: {
+	case nLocal: case nClosure: {
 		Ref(Binding *, bp, binding);
 		Ref(Tree *, body, tree->u[1].p);
 		Ref(Tree *, defn, tree->u[0].p);
@@ -200,7 +220,7 @@ top:
 			assert(assign->kind == nAssign);
 			Ref(char *, var, varname(glom(assign->u[0].p, bp, FALSE)));
 			Ref(List *, lp, glom(assign->u[1].p, bp, TRUE));
-			bp = bind(var, lp, bp);
+			bp = mkbinding(var, lp, bp);
 			RefEnd3(lp, var, assign);
 		}
 		RefEnd(defn);
@@ -236,7 +256,7 @@ top:
 			RefEnd2(var, assign);
 		}
 		RefEnd(defn);
-		status = walk(tp->u[1].p, bp, parent);
+		status = walk(tp->u[1].p, bp, parent, exitonfalse);
 		for (; vars != NULL; vars = vars->next)
 			varpop(vars->str);
 		pophandler(&h);
@@ -255,52 +275,69 @@ top:
 		}
 
 		Ref(List *, result, true);
+		Ref(Binding *, outer, binding);
 		Ref(Tree *, body, tree->u[1].p);
-		Ref(Binding *, context, binding);
 		Ref(Binding *, looping, NULL);
 		Ref(Tree *, defn, tree->u[0].p);
-		Ref(Binding *, oldbinding, binding);
-		
+
 		for (; defn != NULL; defn = defn->u[1].p) {
-			Term placeholder;
 			assert(defn->kind == nList);
 			if (defn->u[0].p == NULL)
 				continue;
 			Ref(Tree *, assign, defn->u[0].p);
 			assert(assign->kind == nAssign);
-			Ref(char *, var, varname(glom(assign->u[0].p, oldbinding, FALSE)));
-			Ref(List *, lp, glom(assign->u[1].p, oldbinding, TRUE));
-			looping = bind(var, lp, looping);
-			context = bind(var, mklist(&placeholder, NULL), context);
+			Ref(char *, var, varname(glom(assign->u[0].p, outer, FALSE)));
+			Ref(List *, lp, glom(assign->u[1].p, outer, TRUE));
+			looping = mkbinding(var, lp, looping);
 			RefEnd3(lp, var, assign);
+			SIGCHK();
 		}
-		RefEnd2(oldbinding, defn);
+		RefEnd(defn);
+
+		if (looping != NULL) {
+			Binding *prev, *next;
+			prev = NULL;
+			do {
+				next = looping->next;
+				looping->next = prev;
+				prev = looping;
+			} while ((looping = next) != NULL);
+			looping = prev;
+		}
 
 		for (;;) {
 			Boolean allnull = TRUE;
+			Ref(Binding *, bp, outer);
 			Ref(Binding *, lp, looping);
-			Ref(Binding *, bp, context);
-			for (; lp != NULL; lp = lp->next, bp = bp->next)
-				if (lp->defn == NULL)
-					bp->defn = NULL;
-				else {
-					bp->defn->term = lp->defn->term;
+			for (; lp != NULL; lp = lp->next) {
+				Ref(List *, defn, NULL);
+				if (lp->defn != NULL) {
+					defn = mklist(lp->defn->term, NULL);
 					lp->defn = lp->defn->next;
 					allnull = FALSE;
 				}
-			RefEnd2(bp, lp);
-			if (allnull)
+				bp = mkbinding(lp->name, defn, bp);
+				RefEnd(defn);
+			}
+			RefEnd(lp);
+			if (allnull) {
+				RefPop(bp);
 				break;
-			result = walk(body, context, TRUE);
+			}
+			result = walk(body, bp, TRUE, exitonfalse);
+			RefEnd(bp);
+			SIGCHK();
 		}
 
 		e = result;
-		RefEnd4(looping, context, body, result);
+		RefEnd4(looping, body, outer, result);
 		pophandler(&h);
 		return e;
 	}
-
+	
 	default:
 		panic("walk: bad node kind %d", tree->kind);
+
 	}
+	unreached(NULL);
 }

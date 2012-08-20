@@ -7,7 +7,7 @@ PRIM(seq) {
 	Ref(List *, result, true);
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next)
-		result = eval1(lp->term, lp->next == NULL ? parent : TRUE);
+		result = eval1(lp->term, lp->next == NULL ? parent : TRUE, exitonfalse);
 	RefEnd(lp);
 	RefReturn(result);
 }
@@ -15,14 +15,14 @@ PRIM(seq) {
 PRIM(if) {
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next) {
-		List *cond = eval1(lp->term, lp->next == NULL ? parent : TRUE);
+		List *cond = eval1(lp->term, lp->next == NULL ? parent : TRUE, FALSE);
 		lp = lp->next;
 		if (lp == NULL) {
 			RefPop(lp);
 			return cond;
 		}
 		if (istrue(cond)) {
-			List *result = eval1(lp->term, parent);
+			List *result = eval1(lp->term, parent, exitonfalse);
 			RefPop(lp);
 			return result;
 		}
@@ -35,7 +35,7 @@ PRIM(and) {
 	Ref(List *, cond, true);
 	Ref(List *, lp, list);
 	for (; istrue(cond) && lp != NULL; lp = lp->next)
-		cond = eval1(lp->term, lp->next == NULL ? parent : TRUE);
+		cond = eval1(lp->term, lp->next == NULL ? parent : TRUE, FALSE);
 	RefEnd(lp);
 	RefReturn(cond);
 }
@@ -44,13 +44,13 @@ PRIM(or) {
 	Ref(List *, cond, false);
 	Ref(List *, lp, list);
 	for (; !istrue(cond) && lp != NULL; lp = lp->next)
-		cond = eval1(lp->term, lp->next == NULL ? parent : TRUE);
+		cond = eval1(lp->term, lp->next == NULL ? parent : TRUE, FALSE);
 	RefEnd(lp);
 	RefReturn(cond);
 }
 
 PRIM(not) {
-	return istrue(eval(list, NULL, parent)) ? false : true;
+	return istrue(eval(list, NULL, parent, FALSE)) ? false : true;
 }
 
 PRIM(while) {
@@ -69,8 +69,8 @@ PRIM(while) {
 	Ref(List *, result, true);
 	Ref(Term *, cond, list->term);
 	Ref(List *, body, list->next);
-	while (istrue(eval1(cond, TRUE)))
-		result = eval(body, NULL, TRUE);
+	while (istrue(eval1(cond, TRUE, FALSE)))
+		result = eval(body, NULL, TRUE, exitonfalse);
 	e = result;
 	RefEnd3(body, cond, result);
 	pophandler(&h);
@@ -81,6 +81,7 @@ PRIM(throw) {
 	if (list == NULL)
 		fail("usage: throw exception [args ...]");
 	throw(list);
+	unreached(NULL);
 }
 
 PRIM(catch) {
@@ -93,14 +94,14 @@ PRIM(catch) {
 	Ref(List *, lp, list);
 	while ((e = pushhandler(&h)) != NULL)
 		if ((e2 = pushhandler(&h)) == NULL) {
-			list = eval(mklist(lp->term, e), NULL, TRUE);
+			list = eval(mklist(lp->term, e), NULL, TRUE, exitonfalse);
 			pophandler(&h);
 			RefPop(lp);
 			return list;
 		} else if (!streq(e2->term->str, "retry"))
 			throw(e2);
 
-	lp = eval(lp->next, NULL, TRUE);
+	lp = eval(lp->next, NULL, TRUE, exitonfalse);
 	pophandler(&h);
 	RefReturn(lp);
 }

@@ -1,43 +1,37 @@
 /* glob.c -- wildcard matching */
 
+#define	REQUIRE_STAT	1
+#define	REQUIRE_DIRENT	1
+#define	REQUIRE_PWD	1
+
 #include "es.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#if USE_DIRENT
-#include <dirent.h>
-typedef struct dirent Dirent;
-#else
-#include <sys/dir.h>
-typedef struct direct Dirent;
-#endif
-
-extern void *qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
-
-/* prototypes for XXXdir functions. comment out if necessary */
-extern DIR *opendir(const char *);
-extern Dirent *readdir(DIR *);
-/*extern int closedir(DIR *);*/
 
 char QUOTED[] = "QUOTED", UNQUOTED[] = "RAW";
 
-/* qstrcmp -- a strcmp wrapper for qsort */
-static int qstrcmp(const void *s1, const void *s2) {
-	return strcmp(*(const char **)s1, *(const char **)s2);
-}
-
-/* listsort */
-static List *listsort(List *list) {
-	if (length(list) > 1) {
-		Vector *v = vectorize(list);
-		qsort(v->vector, v->len, sizeof (char *), qstrcmp);
-		gcdisable(0);
-		Ref(List *, lp, listify(v->len, v->vector));
-		gcenable();
-		list = lp;
-		RefEnd(lp);
+/* hasmeta -- true iff some unquoted character is a meta character */
+static Boolean hasmeta(const char *s, const char *q) {
+	if (q == QUOTED)
+		return FALSE;
+	if (q == UNQUOTED) {
+		if (*s == '~')
+			return TRUE;
+		for (;;) {
+			int c = *s++;
+			if (c == '\0')
+				return FALSE;
+			if (c == '*' || c == '?' || c == '[')
+				return TRUE;
+		}
 	}
-	return list;
+	if (*s == '~' && *q == 'r')
+		return TRUE;
+	for (;;) {
+		int c = *s++, r = *q++;
+		if (c == '\0')
+			return FALSE;
+		if ((c == '*' || c == '?' || c == '[') && (r == 'r'))
+			return TRUE;
+	}
 }
 
 /* dirmatch -- match a pattern against the contents of directory */
@@ -47,12 +41,26 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 	static Dirent *dp;
 	static struct stat s;
 
-	/* TODO: optimize case where there are no meta chars */
+	if (!hasmeta(pattern, quote)) {
+		char *name = str("%s%s", prefix, pattern);
+		if (stat(name, &s) == -1)
+			return NULL;
+		return mklist(mkterm(name, NULL), NULL);
+	}
+
+	if (*pattern == '~' && *quote == 'r' && *prefix == '\0')
+		if (pattern[1] == '\0')
+			return listcopy(varlookup("home", NULL));
+		else {
+			struct passwd *pw = getpwnam(pattern + 1);
+			if (pw != NULL)
+				return mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
+		}
 
 	assert(gcblocked > 0);
 
 	/* opendir succeeds on regular files on some systems, so the stat() call is necessary (sigh) */
-	if (stat(dirname, &s) < 0 || (s.st_mode & S_IFMT) != S_IFDIR || (dirp = opendir(dirname)) == NULL)
+	if (stat(dirname, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR || (dirp = opendir(dirname)) == NULL)
 		return NULL;	
 	for (list = NULL, prevp = &list; (dp = readdir(dirp)) != NULL;)
 		if (match(dp->d_name, pattern, quote) && (*dp->d_name != '.' || *pattern == '.')) {
@@ -62,27 +70,6 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 		}
 	closedir(dirp);
 	return list;
-}
-
-/* hasmeta -- true iff some unquoted character is a meta character */
-static Boolean hasmeta(const char *s, const char *q) {
-	if (q == QUOTED)
-		return FALSE;
-	if (q == UNQUOTED)
-		for (;;) {
-			int c = *s++;
-			if (c == '\0')
-				return FALSE;
-			if (c == '*' || c == '?' || c == '[')
-				return TRUE;
-		}
-	for (;;) {
-		int c = *s++, r = *q++;
-		if (c == '\0')
-			return FALSE;
-		if ((c == '*' || c == '?' || c == '[') && (r == 'r'))
-			return TRUE;
-	}
 }
 
 /* listglob -- glob a directory plus a filename pattern into a list of names */
@@ -169,7 +156,31 @@ static List *glob1(const char *pattern, const char *quote) {
 			*p++ = *s++, *qp++ = *q++; /* get pat */
 		*p = '\0';
 		matched = listglob(matched, pat, qpat, slashcount);
-	} while (*s != '\0');
+	} while (*s != '\0' && matched != NULL);
+
+	if (matched == NULL && *pattern == '~' && (quote == UNQUOTED || *quote == 'r')) {
+		/* if we got here, we want to do a ~/file or ~user/file form, but no files match file */
+		List *lp;
+		s = strchr(pattern + 1, '/');
+		assert(s != NULL);
+		if (s == pattern + 1)
+			matched = listcopy(varlookup("home", NULL));
+		else {
+			size_t len = s - pattern - 1;
+			struct passwd *pw;
+			memcpy(pat, pattern + 1, len);
+			pat[len] = '\0';
+			pw = getpwnam(pat);
+			if (pw == NULL)
+				return NULL;
+			matched = mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
+		}
+		for (lp = matched; lp != NULL; lp = lp->next) {
+			assert(lp->term != NULL);
+			lp->term = mkterm(str("%s%s", getstr(lp->term), s), NULL);
+		}
+	}
+
 	return matched;
 }
 
@@ -186,7 +197,7 @@ static List *glob0(List *list, StrList *quote) {
 			*prevp = list;
 			prevp = &list->next;
 		} else {
-			*prevp = listsort(expand1);
+			*prevp = sortlist(expand1);
 			while (*prevp != NULL)
 				prevp = &(*prevp)->next;
 		}
@@ -197,9 +208,6 @@ static List *glob0(List *list, StrList *quote) {
 extern List *glob(List *list, StrList *quote) {
 	List *lp;
 	StrList *qp;
-
-	debug("<< glob : %L >>\n", list, " ");
-	debug("`` glob : %Z ''\n", quote, " ");
 
 	for (lp = list, qp = quote; lp != NULL; lp = lp->next, qp = qp->next)
 		if (qp->str != QUOTED) {

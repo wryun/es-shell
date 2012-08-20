@@ -212,7 +212,7 @@ static Boolean streq2(const char *s, const char *t1, const char *t2) {
 	while ((c = *t2++) != '\0')
 		if (c != *s++)
 			return FALSE;
-	return TRUE;
+	return *s == '\0';
 }
 
 /* dictget2 -- look up the catenation of two names (such a hack!) */

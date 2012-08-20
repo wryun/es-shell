@@ -17,12 +17,15 @@ fn-%flatten	= $&flatten
 fn-%fsplit	= $&fsplit
 fn-%here	= $&here
 fn-%not		= $&not
+fn-%newfd	= $&newfd
 fn-%one		= $&one
 fn-%open	= $&open
 fn-%or		= $&or
 fn-%pipe	= $&pipe
 fn-%seq		= $&seq
 fn-%split	= $&split
+fn-%var		= $&var
+fn-%whatis	= $&whatis
 
 #
 # primitive functions
@@ -37,13 +40,14 @@ fn-eval		= $&eval
 fn-exec		= $&exec
 fn-exit		= $&exit
 fn-false	= $&false
+fn-fork		= $&fork
 fn-if		= $&if
+fn-isnoexport	= $&isnoexport
 fn-newpgrp	= $&newpgrp
 fn-noexport	= $&noexport
 fn-throw	= $&throw
 fn-true		= $&true
 fn-umask	= $&umask
-fn-whatis	= $&whatis
 fn-while	= $&while
 
 #
@@ -51,7 +55,41 @@ fn-while	= $&while
 #
 
 fn-break	= throw break
+fn-retry	= throw retry
 fn-return	= throw return
+
+fn var		{ for (i = $*) echo <>{%var $i} }
+fn whatis	{ for (i = $*) echo <>{%whatis $i} }
+
+fn vars {
+	if {!~ $* -[vfs]}	{ * = $* -v }
+	if {!~ $* -[ep]}	{ * = $* -e }
+	for (i = $*) if {!~ $i -[vfsep]} 
+	local (
+		vars	= $&false
+		fns	= $&false
+		sets	= $&false
+		export	= $&false
+		priv	= $&false
+	) {
+		for (i = $*) if (
+			{~ $i -v}	{vars	= $&true}
+			{~ $i -f}	{fns	= $&true}
+			{~ $i -s}	{sets	= $&true}
+			{~ $i -e}	{export	= $&true}
+			{~ $i -p}	{priv	= $&true}
+			{throw error var: bad option: $i}
+		)
+		for (var = <>{$&vars})
+			if {isnoexport $var} $priv $export &&
+			if (
+				{~ $var fn-*}	$fns
+				{~ $var set-*}	$sets
+						$vars
+			) &&
+			var $var
+	}
+}
 
 #
 # settor functions
@@ -68,6 +106,7 @@ set-CDPATH = @ { let (set-cdpath = ) cdpath = <>{%fsplit : $*}; return $* }
 
 set-prompt = $&setprompt
 set-history = $&sethistory
+set-signals = $&setsignals
 
 #
 # predefined variables
@@ -76,3 +115,4 @@ set-history = $&sethistory
 ifs = ' ' \t \n
 prompt = ';; ' ''
 home = /		# so home definitely exists, even if wrong
+cdpath = ''

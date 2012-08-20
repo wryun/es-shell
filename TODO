@@ -1,20 +1,19 @@
-0.7	$&here
-0.7	$&readfrom (/dev/fd <{})
-0.7	$&writeto (/dev/fd >{})
-0.7	-e
-0.7	catch signals listed on $signal
-0.7	/dev/fd syntax (wrapper plus positional arg)
-0.7	heredoc syntax
-0.7	keep tree and string forms of terms up to date with each other
-0.7	make read-eval a user writable function
-0.7	make ungetchar a nondestructive operation
-0.7	test readline/editline support
+0.75	$&readfrom (/dev/fd <{})
+0.75	$&writeto (/dev/fd >{})
+0.75	/dev/fd syntax (wrapper plus positional arg)
+0.75	externalize recursion without looping forever
+0.75	make read-eval a user writable function
+0.75	make ungetchar a nondestructive operation
+0.75	redirections w/o forking from builtins?
+0.75	test readline/editline support
+0.75	write man page
+0.8	$apids equivalent
 0.8	add file names to error messages when possible
-0.8	add some form of switch to the language
-0.8	change esprompt to prompt
+0.8	add some form of switch to the language?
 0.8	clean up parse.y
 0.8	cut down amount of memory initialized in the parser
 0.8	do something with proc->background?
+0.8	don't export duplicates in closure list
 0.8	fix unthunkify
 0.8	inhibit history during heredocs
 0.8	limits (primitive command or settor function?)
@@ -22,7 +21,7 @@
 0.8	make all error procedures varargs
 0.8	multiple assignment
 0.8	revise input scheme
-0.8	write man page
+0.8	stop pushing $0 from forcing an isdirty
 0.9	figure out performance consequences of disabling gc
 0.9	openbuffer/sealbuffer directly into gc space
 0.9	trip.es

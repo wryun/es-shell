@@ -181,7 +181,9 @@ static List *glom1(Tree *tree, Binding *binding) {
 		case nVar:
 			list = glom1(tp->u[0].p, bp);
 			tp = NULL;
-			list = listcopy(varlookup(varname(list), bp));
+			Ref(char *, name, varname(list));
+			list = listcopy(varlookup(name, bp));
+			RefEnd(name);
 			break;
 		case nVarsub:
 			list = glom1(tp->u[0].p, bp);
@@ -192,7 +194,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 			RefEnd(sub);
 			break;
 		case nCall:
-			list = walk(tp->u[0].p, bp, TRUE);
+			list = walk(tp->u[0].p, bp, TRUE, FALSE);
 			tp = NULL;
 			break;
 		case nList:
@@ -300,8 +302,6 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 
 /* glom -- top level glom dispatching */
 extern List *glom(Tree *tree, Binding *binding, Boolean globit) {
-	debug("<< glom : %T >>\n", tree);
-
 	if (globit) {
 		Ref(List *, list, NULL);
 		Ref(StrList *, quote, NULL);

@@ -30,13 +30,13 @@ typedef Boolean (*Conv)(Format *);
 
 extern Conv fmtinstall(int, Conv);
 extern int printfmt(Format *, const char *);
-extern int fmtprint(Format *, const char *,...);
+extern int fmtprint(Format *, const char * VARARGS);
 extern void fmtappend(Format *, const char *, size_t);
 extern void fmtcat(Format *, const char *);
 
-extern int print(const char *fmt, ...);
-extern int eprint(const char *fmt, ...);
-extern int fprint(int fd, const char *fmt, ...);
+extern int print(const char *fmt VARARGS);
+extern int eprint(const char *fmt VARARGS);
+extern int fprint(int fd, const char *fmt VARARGS);
 
 extern char *strv(const char *fmt, va_list args);	/* varargs interface to str() */
 

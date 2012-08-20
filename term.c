@@ -3,6 +3,18 @@
 #include "es.h"
 #include "gc.h"
 
+Generation generation = 1;
+Boolean rebound = FALSE;
+
+extern Generation nextgen(void) {
+	rebound = TRUE;
+	if (++generation == 0) {
+		gc();
+		generation = 1;
+	}
+	return generation;
+}
+
 static Tag TermTag;
 
 extern Term *mkterm(char *str, Closure *closure) {
@@ -10,20 +22,24 @@ extern Term *mkterm(char *str, Closure *closure) {
 	Ref(Term *, term, gcnew(Term));
 	term->str = str;
 	term->closure = closure;
+	term->gen = 0;
 	gcenable();
 	RefReturn(term);
 }
 
 extern char *getstr(Term *term) {
-	assert(term != NULL);
-	Ref(Term *, tp, term);
-	if (tp->str == NULL) {
-		assert(tp->closure != NULL);
-		tp->str = str("%C", tp->closure);
+	char *s = term->str;
+	Closure *closure = term->closure;
+	assert(s != NULL || closure != NULL);
+	if (
+		s == NULL
+		|| (closure != NULL && closure->binding != NULL && term->gen != generation)
+	) {
+		assert(closure != NULL);
+		term->gen = generation;
+		return str("%C", closure);
 	}
-	term = tp;
-	RefEnd(tp);
-	return term->str;
+	return s;
 }
 
 extern Closure *getclosure(Term *term) {
@@ -33,6 +49,7 @@ extern Closure *getclosure(Term *term) {
 		if (
 			((*s == '{' || *s == '@') && s[strlen(s) - 1] == '}')
 			|| (*s == '$' && s[1] == '&')
+			|| hasprefix(s, "%closure")
 		) {
 			Ref(Term *, tp, term);
 			Ref(Tree *, np, parsestring(s));
@@ -41,6 +58,7 @@ extern Closure *getclosure(Term *term) {
 				return NULL;
 			}
 			tp->closure = extractbindings(np);
+			tp->gen = generation;
 			term = tp;
 			RefEnd2(np, tp);
 		}
@@ -71,8 +89,11 @@ static void *TermCopy(void *op) {
 
 static size_t TermScan(void *p) {
 	Term *term = p;
-	term->str = forward(term->str);
-	term->closure = forward(term->closure);
+	Closure *closure = forward(term->closure);
+	term->closure = closure;
+	term->str = (closure != NULL && closure->binding != NULL && term->gen != generation)
+			? NULL
+			: forward(term->str);
 	return sizeof (Term);
 }
 

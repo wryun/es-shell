@@ -6,24 +6,25 @@
 
 /* grow -- buffer grow function for str() */
 static void str_grow(Format *f, size_t more) {
-	Buffer buf;
-	buf = expandbuffer(more);
-	f->buf		= buf.str;
-	f->bufbegin	= buf.str;
-	f->bufend	= buf.str + buf.len;
+	Buffer *buf = expandbuffer(f->u.p, more);
+	f->u.p		= buf;
+	f->buf		= buf->str + (f->buf - f->bufbegin);
+	f->bufbegin	= buf->str;
+	f->bufend	= buf->str + buf->len;
 }
 
 /* strv -- print a formatted string into gc space */
 extern char *strv(const char *fmt, va_list args) {
-	Buffer buf;
+	Buffer *buf;
 	Format format;
 
 	gcdisable(0);
 	buf = openbuffer(0);
+	format.u.p	= buf;
 	format.args	= args;
-	format.buf	= buf.str;
-	format.bufbegin	= buf.str;
-	format.bufend	= buf.str + buf.len;
+	format.buf	= buf->str;
+	format.bufbegin	= buf->str;
+	format.bufend	= buf->str + buf->len;
 	format.grow	= str_grow;
 	format.flushed	= 0;
 
@@ -31,14 +32,14 @@ extern char *strv(const char *fmt, va_list args) {
 	fmtputc(&format, '\0');
 	gcenable();
 
-	return sealbuffer(format.buf);
+	return sealbuffer(format.u.p);
 }
 
 /* str -- create a string (in garbage collection space) by printing to it */
-extern char *str(const char *fmt, ...) {
+extern char *str VARARGS1(const char *, fmt) {
 	char *s;
 	va_list args;
-	va_start(args, fmt);
+	VA_START(args, fmt);
 	s = strv(fmt, args);
 	va_end(args);
 	return s;
@@ -61,10 +62,10 @@ static void mprint_grow(Format *format, size_t more) {
 }
 
 /* mprint -- create a string in ealloc space by printing to it */
-extern char *mprint(const char *fmt,...) {
+extern char *mprint VARARGS1(const char *, fmt) {
 	Format format;
 	format.u.n = 1;
-	va_start(format.args, fmt);
+	VA_START(format.args, fmt);
 
 	format.buf	= ealloc(PRINT_ALLOCSIZE);
 	format.bufbegin	= format.buf;

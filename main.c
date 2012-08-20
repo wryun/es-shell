@@ -7,9 +7,14 @@ Boolean loginshell	= FALSE;	/* -l or $0[0] == '-' */
 Boolean noexecute	= FALSE;	/* -n */
 Boolean verbose		= FALSE;	/* -v */
 Boolean printcmds	= FALSE;	/* -x */
+Boolean exitonfalse	= FALSE;	/* -e */
 
-Boolean bugme		= FALSE;	/* -B */
-Boolean gcdebug		= FALSE;	/* -G */
+#if GCVERBOSE
+Boolean gcverbose	= FALSE;	/* -G */
+#endif
+#if LISPTREES
+Boolean lisptrees	= FALSE;	/* -L */
+#endif
 
 static const char initial[] =
 #include "initial.h"
@@ -23,7 +28,7 @@ extern int isatty(int fd);
 
 
 /* checkfd -- open /dev/null on an fd if it is closed */
-static void checkfd(int fd, RedirKind r) {
+static void checkfd(int fd, OpenKind r) {
 	int new;
 	new = dup(fd);
 	if (new != -1)
@@ -35,7 +40,7 @@ static void checkfd(int fd, RedirKind r) {
 
 /* usage -- print usage message and die */
 static noreturn usage(void) {
-	fprint(2,
+	eprint(
 		"usage: es [-c command] [-silevxnpo] [file [args ...]]\n"
 		"	-c cmd	execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
@@ -58,10 +63,10 @@ int main(int argc, char **argv, char **envp) {
 	List *e;
 	int c;
 
-	const char *volatile cmd = NULL;	/* -c */
-	Boolean protected = FALSE;		/* -p */
 	Boolean keepclosed = FALSE;		/* -o */
-	Boolean allowquit = FALSE;		/* -d */
+	const char *volatile cmd = NULL;	/* -c */
+	volatile Boolean protected = FALSE;	/* -p */
+	volatile Boolean allowquit = FALSE;	/* -d */
 	volatile Boolean stdin = FALSE;		/* -s */
 
 	initgc();
@@ -70,9 +75,10 @@ int main(int argc, char **argv, char **envp) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	while ((c = getopt(argc, argv, "eilxvnpodsc:?DG")) != EOF)
+	while ((c = getopt(argc, argv, "eilxvnpodsc:?GL")) != EOF)
 		switch (c) {
 		case 'c':	cmd = optarg;		break;
+		case 'e':	exitonfalse = TRUE;	break;
 		case 'i':	interactive = TRUE;	break;
 		case 'l':	loginshell = TRUE;	break;
 		case 'v':	verbose = TRUE;		break;
@@ -81,6 +87,12 @@ int main(int argc, char **argv, char **envp) {
 		case 'p':	protected = TRUE;	break;
 		case 'o':	keepclosed = TRUE;	break;
 		case 'd':	allowquit = TRUE;	break;
+#if GCVERBOSE
+		case 'G':	gcverbose = TRUE;	break;
+#endif
+#if LISPTREES
+		case 'L':	lisptrees = TRUE;	break;
+#endif
 
 		case 's':
 			if (cmd != NULL) {
@@ -90,27 +102,19 @@ int main(int argc, char **argv, char **envp) {
 			stdin = TRUE;
 			goto getopt_done;
 
-		case 'e':
 		default:
 			usage();
-		case 'D':	bugme = TRUE;		break;
-		case 'G':	gcdebug = TRUE;		break;
 		}
 
 getopt_done:
 	if (!keepclosed) {
-		checkfd(0, rOpen);
-		checkfd(1, rCreate);
-		checkfd(2, rCreate);
+		checkfd(0, oOpen);
+		checkfd(1, oCreate);
+		checkfd(2, oCreate);
 	}
 
 	if (cmd == NULL && (optind == argc || stdin) && !interactive && isatty(0))
 		interactive = TRUE;
-
-	initinput();
-	initprims();
-	initvars(envp, initial, protected);
-	initsignals(allowquit);
 
 	if (
 		(setjmp(childhandler.label) && (e = exception) != NULL)
@@ -123,9 +127,14 @@ getopt_done:
 		return 1;
 	}
 
+	initinput();
+	initprims();
+	initvars(envp, initial, protected);
+	initsignals(allowquit);
+
 	if (loginshell) {
 		char *esrc = str("%L/.esrc", varlookup("home", NULL), "\001");
-		int fd = eopen(esrc, rOpen);
+		int fd = eopen(esrc, oOpen);
 		if (fd != -1) {
 			Boolean save_interactive = interactive;
 			interactive = FALSE;
@@ -136,20 +145,18 @@ getopt_done:
 
 	if (cmd == NULL && !stdin && optind < argc) {
 		char *file = argv[optind++];
-		int fd = eopen(file, rOpen);
+		int fd = eopen(file, oOpen);
 		if (fd == -1) {
 			eprint("%s: %s\n", file, strerror(errno));
 			return 1;
 		}
 		vardef("*", NULL, listify(argc - optind, argv + optind));
 		vardef("0", NULL, mklist(mkterm(file, NULL), NULL));
-		noexport("0");
 		return exitstatus(runfd(fd));
 	}
 
 	vardef("*", NULL, listify(argc - optind, argv + optind));
 	vardef("0", NULL, mklist(mkterm(argv[0], NULL), NULL));
-	noexport("0");
 	if (cmd != NULL)
 		return exitstatus(runstring(cmd));
 	return exitstatus(runfd(0));

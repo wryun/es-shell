@@ -7,32 +7,27 @@
  *		if this is on, asserts will be checked, raising errors on
  *		actual assertion failure.
  *
+ *	GCALWAYS
+ *		if this is on, the a collection is done after every allocation.
+ *		this stress-tests the garbage collector.  any missed Ref()
+ *		declarations should cause a crash or assertion failure very
+ *		quickly in this mode.
+ *
  *	GCDEBUG
  *		when this is on, the garbage collector is run in such a way
  *		that just about any coding error will lead to an almost
- *		immediate crash.  requires os/mmu support for enabling and
- *		disabling access to pages.
+ *		immediate crash.  it is equivalent to all 3 of GCALWAYS,
+ *		GCPROTECT, and GCVERBOSE
  *
- *	PROTECT_ENV
- *		if on, makes all variable names in the environment ``safe'':
- *		that is, makes sure no characters other than c identifier
- *		characters appear in them.
+ *	GCPROTECT
+ *		makes the garbage collector disable access to pages that are
+ *		in old space, making unforwarded references crasht the interpreter.
+ *		requires os/mmu support for enabling and disabling access to pages.
  *
- *	USE_DIRENT
- *		if on, <dirent.h> is used; if off, <sys/direct.h>.
- *
- *	READLINE
- *		true if es is being linked with editline or gnu readline.
- *
- *	SYSV_SIGNALS
- *		true if signal handling follows System V behavior; otherwise,
- *		berkeley signals are assumed.
- *
- *	SPECIAL_SIGCLD
- *		true if SIGCLD has System V semantics.  this is true at least
- *		for silicon graphics machines running Irix.  (according to
- *		Byron, ``if you trap SIGCLD on System V machines, weird things
- *		happen.'')
+ *	GCVERBOSE
+ *		if this is on, it is possible to run the garbage collector
+ *		in a mode where it explains what it is doing at all times.
+ *		implied by GCDEBUG.
  *
  *	INITIAL_PATH
  *		this is the default value for $path (and $PATH) when the shell
@@ -48,9 +43,52 @@
  *		in a v7 non-job-control fashion, the default for this option is on,
  *		even though it is ugly.
  *
+ *	PROTECT_ENV
+ *		if on, makes all variable names in the environment ``safe'':
+ *		that is, makes sure no characters other than c identifier
+ *		characters appear in them.
+ *
+ *	READLINE
+ *		true if es is being linked with editline or gnu readline.
+ *
+ *	REISER_CPP
+ *		true if es is being compiled with a reiser-style preprocessor.
+ *		if you have an ansi preprocessor, use it and turn this off.
+ *
+ *	SYSV_SIGNALS
+ *		true if signal handling follows System V behavior; otherwise,
+ *		berkeley signals are assumed.
+ *
+ *	SPECIAL_SIGCLD
+ *		true if SIGCLD has System V semantics.  this is true at least
+ *		for silicon graphics machines running Irix.  (according to
+ *		Byron, ``if you trap SIGCLD on System V machines, weird things
+ *		happen.'')
+ *
+ *	USE_CONST
+ *		allow const declarations.  if your compiler supports 'em, use 'em.
+ *
+ *	USE_DIRENT
+ *		if on, <dirent.h> is used; if off, <sys/direct.h>.
+ *
  *	USE_SIG_ATOMIC_T
  *		define this on a system which has its own typedef for
  *		sig_atomic_t.
+ *
+ *	USE_STDARG
+ *		define this if you have an ansi compiler and the <stdarg.h>
+ *		header file.  if not, es will try to use <varargs.h>, but
+ *		you may need to hack a bit to get that working.
+ *
+ *	USE_STDDEF
+ *		define this if you have a <stddef.h>
+ *
+ *	USE_VOLATILE
+ *		allow volatile declarations.  if your compiler supports 'em, use 'em.
+ *
+ *	VOID_SIGNALS
+ *		define this as true if signal handlers are declared with void
+ *		return type; otherwise es uses int for signal returns.
  */
 
 
@@ -64,23 +102,23 @@
 
 #if NeXT
 #define	DEFAULT_USE_DIRENT	0
-#define DEFAULT_USE_SIG_ATOMIC_T 1
+#define	DEFAULT_USE_SIG_ATOMIC_T 1
 #endif
 
 
 /* Irix -- derived from rc 1.4 */
 
-#ifdef sgi
+#if sgi
 #define	DEFAULT_SYSV_SIGNALS	1
 #define	DEFAULT_SPECIAL_SIGCLD	1
-#define DEFAULT_INITIAL_PATH	"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
+#define	DEFAULT_INITIAL_PATH	"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
 #endif
 
 
 /* SunOS -- derived from rc 1.4 */
 
-#ifdef sun
-#define DEFAULT_INITIAL_PATH	"/usr/ucb", "/usr/bin", ""
+#if sun
+#define	DEFAULT_INITIAL_PATH	"/usr/ucb", "/usr/bin", ""
 #endif
 
 
@@ -92,28 +130,20 @@
 #define	DEFAULT_ASSERTIONS	1
 #endif
 
+#ifndef	DEFAULT_GCALWAYS
+#define	DEFAULT_GCALWAYS	0
+#endif
+
 #ifndef	DEFAULT_GCDEBUG
 #define	DEFAULT_GCDEBUG		0
 #endif
 
-#ifndef	DEFAULT_PROTECT_ENV
-#define	DEFAULT_PROTECT_ENV	1
+#ifndef	DEFAULT_GCPROTECT
+#define	DEFAULT_GCPROTECT	0
 #endif
 
-#ifndef	DEFAULT_USE_DIRENT
-#define	DEFAULT_USE_DIRENT	1
-#endif
-
-#ifndef	DEFAULT_READLINE
-#define	DEFAULT_READLINE	0
-#endif
-
-#ifndef	DEFAULT_SYSV_SIGNALS
-#define	DEFAULT_SYSV_SIGNALS	0
-#endif
-
-#ifndef	DEFAULT_SPECIAL_SIGCLD
-#define	DEFAULT_SPECIAL_SIGCLD	0
+#ifndef	DEFAULT_GCVERBOSE
+#define	DEFAULT_GCVERBOSE	0
 #endif
 
 #ifndef	DEFAULT_INITIAL_PATH
@@ -124,9 +154,54 @@
 #define	DEFAULT_JOB_PROTECT	1
 #endif
 
-#ifndef DEFAULT_USE_SIG_ATOMIC_T
-#define DEFAULT_USE_SIG_ATOMIC_T 0
+#ifndef	DEFAULT_PROTECT_ENV
+#define	DEFAULT_PROTECT_ENV	1
 #endif
+
+#ifndef	DEFAULT_READLINE
+#define	DEFAULT_READLINE	0
+#endif
+
+#ifndef	DEFAULT_REISER_CPP
+#define	DEFAULT_REISER_CPP	0
+#endif
+
+#ifndef	DEFAULT_SYSV_SIGNALS
+#define	DEFAULT_SYSV_SIGNALS	0
+#endif
+
+#ifndef	DEFAULT_SPECIAL_SIGCLD
+#define	DEFAULT_SPECIAL_SIGCLD	0
+#endif
+
+#ifndef	DEFAULT_USE_CONST
+#define	DEFAULT_USE_CONST	1
+#endif
+
+#ifndef	DEFAULT_USE_DIRENT
+#define	DEFAULT_USE_DIRENT	1
+#endif
+
+#ifndef	DEFAULT_USE_SIG_ATOMIC_T
+#define	DEFAULT_USE_SIG_ATOMIC_T 0
+#endif
+
+#ifndef	DEFAULT_USE_STDARG
+#define	DEFAULT_USE_STDARG	1
+#endif
+
+#ifndef	DEFAULT_USE_STDDEF
+#define	DEFAULT_USE_STDDEF	1
+#endif
+
+#ifndef	DEFAULT_USE_VOLATILE
+#define	DEFAULT_USE_VOLATILE	1
+#endif
+
+#ifndef	DEFAULT_VOID_SIGNALS
+#define	DEFAULT_VOID_SIGNALS	1
+#endif
+
 
 /*
  * actual configuration flags -- do not edit this section
@@ -136,28 +211,20 @@
 #define	ASSERTIONS	DEFAULT_ASSERTIONS
 #endif
 
+#ifndef	GCALWAYS
+#define	GCALWAYS	DEFAULT_GCALWAYS
+#endif
+
 #ifndef	GCDEBUG
 #define	GCDEBUG		DEFAULT_GCDEBUG
 #endif
 
-#ifndef	PROTECT_ENV
-#define	PROTECT_ENV	DEFAULT_PROTECT_ENV
+#ifndef	GCPROTECT
+#define	GCPROTECT	DEFAULT_GCPROTECT
 #endif
 
-#ifndef	USE_DIRENT
-#define	USE_DIRENT	DEFAULT_USE_DIRENT
-#endif
-
-#ifndef	READLINE
-#define	READLINE	DEFAULT_READLINE
-#endif
-
-#ifndef	SYSV_SIGNALS
-#define	SYSV_SIGNALS	DEFAULT_SYSV_SIGNALS
-#endif
-
-#ifndef	SPECIAL_SIGCLD
-#define	SPECIAL_SIGCLD	DEFAULT_SPECIAL_SIGCLD
+#ifndef	GCVERBOSE
+#define	GCVERBOSE	DEFAULT_GCVERBOSE
 #endif
 
 #ifndef	INITIAL_PATH
@@ -168,6 +235,64 @@
 #define	JOB_PROTECT	DEFAULT_JOB_PROTECT
 #endif
 
-#ifndef USE_SIG_ATOMIC_T
-#define USE_SIG_ATOMIC_T DEFAULT_USE_SIG_ATOMIC_T
+#ifndef	PROTECT_ENV
+#define	PROTECT_ENV	DEFAULT_PROTECT_ENV
+#endif
+
+#ifndef	READLINE
+#define	READLINE	DEFAULT_READLINE
+#endif
+
+#ifndef	REISER_CPP
+#define	REISER_CPP	DEFAULT_REISER_CPP
+#endif
+
+#ifndef	SYSV_SIGNALS
+#define	SYSV_SIGNALS	DEFAULT_SYSV_SIGNALS
+#endif
+
+#ifndef	SPECIAL_SIGCLD
+#define	SPECIAL_SIGCLD	DEFAULT_SPECIAL_SIGCLD
+#endif
+
+#ifndef	USE_CONST
+#define	USE_CONST	DEFAULT_USE_CONST
+#endif
+
+#ifndef	USE_DIRENT
+#define	USE_DIRENT	DEFAULT_USE_DIRENT
+#endif
+
+#ifndef	USE_SIG_ATOMIC_T
+#define	USE_SIG_ATOMIC_T DEFAULT_USE_SIG_ATOMIC_T
+#endif
+
+#ifndef	USE_STDARG
+#define	USE_STDARG	DEFAULT_USE_STDARG
+#endif
+
+#ifndef	USE_STDDEF
+#define	USE_STDDEF	DEFAULT_USE_STDDEF
+#endif
+
+#ifndef	USE_VOLATILE
+#define	USE_VOLATILE	DEFAULT_USE_VOLATILE
+#endif
+
+#ifndef	VOID_SIGNALS
+#define	VOID_SIGNALS	DEFAULT_VOID_SIGNALS
+#endif
+
+
+/*
+ * enforcing choices that must be made
+ */
+
+#if	GCDEBUG
+#undef	GCALWAYS
+#undef	GCPROTECT
+#undef	GCVERBOSE
+#define	GCALWAYS	1
+#define	GCPROTECT	1
+#define	GCVERBOSE	1
 #endif

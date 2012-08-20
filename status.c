@@ -3,9 +3,6 @@
 #include "es.h"
 #include "sigmsgs.h"
 
-extern long strtol(const char *nptr, char **endptr, int base);
-
-
 static Term trueterm = { "0", NULL }, falseterm = { "1", NULL };
 static List truelist = { &trueterm, NULL }, falselist = { &falseterm, NULL };
 List *true = &truelist, *false = &falselist;

@@ -1,0 +1,162 @@
+CHANGES
+=======
+
+0.68 to 0.7
+-----------
+
+a bug where the garbage collector was just plain broken when lots of data
+was allocated between two collections has been fixed.  (there still may
+be a garbage collector bug related to large allocations, but i haven't
+been able to reproduce it.)
+
+there's now a trip.es (converted from a subset of trip.rc) which tests
+some of the shell's basic mechanisms.  we need a more sophisticated
+trip to test the parts of es that aren't in the rc subset.
+
+heredocs are now supported.
+
+following comments to the list, things are now safer if a file descriptor
+mentioned in a redirection, dup, close, or pipes is already in used by
+es.  the new primitive $&newfd (in es on an experimental basis only) returns
+as its exit status a file descriptor that is not currently in use.
+
+in prior versions, strings longer than 512 or 1536 bytes (depending on
+the underlying malloc implementation) were exported badly if at all.
+
+there is a new predefined function vars which is similar to rc's whatis
+without arguments.  it takes the following arguments:
+	-v	print variables other than fn- and set- prefixed ones
+	-f	print functions (variables with fn- prefixes)
+	-s	print settor functions (variables with set- prefixes)
+	-e	print exported variables
+	-p	print noexport variables
+if none of -v, -f, and -s are specified, -v is assumed.  if neither of
+-e or -p is specified, -e is specified.  note that vars does not print
+lexically scoped variables.
+
+there is a new predefined function var which prints function names in
+a manner suitable for re-entry into the shell, ala rc's whatis.  it is
+based on the primitive $&var.  (var does not work with lexically scoped
+variables.)
+
+the environment, along with the results of $&vars and $&primitives, are
+now sorted.
+
+isnoexport var (primitive $&isnoexport) returns true if the variable
+is marked noexport.
+
+the primitive $&vars returns all of the currently defined variables.
+(other than those which are lexically scoped.)
+
+the primitive $&primitives (which used to print its output) now returns
+as its exit status the names of all of the es primitives.  ($&version
+has been modified similarly.)
+
+-e and -x are now implemented, with the usual meanings that one expects
+for them in a shell.  (this is one place in the language where it's
+going to take some experience to tell if all the nits are out.  if you
+use -e or -x regularly with other shells, please start trying them here.)
+
+the old GCDEBUG compile time option has been split into three options.
+GCVERBOSE provides information on the operation of the garbage collector.
+GCALWAYS does a collection at every allocation.  GCPROTECT invalidates
+pages that do not contain live data; this option requires operating system
+support beyond what is needed for the rest of the shell.  GCDEBUG still
+turns on all three options.
+
+based on a suggestion from the list, %fsplit with '' as a separator
+string now splits between each character.
+
+the parser has been cleaned up.  it may be a little bit slower, in order
+to make some things clearer.  in particular, the rewriting of redirections
+has changed significantly.
+
+there are several new configuration options in config.h.  see that
+file and their uses for more details but do
+	-DUSE_CONST=0		if you don't have or like const
+	-DUSE_VOLATILE=0	if you don't have or like volatile
+	-DUSE_STDARG=0		if you want to try <varargs.h>
+	-DVOID_SIGNALS=0	if signal handlers should return int
+
+since include files seem to be a major issue with respect to
+portability, most includes of system files have moved to stdenv.h.
+if you need to rearrange things or add #ifdefs in here, please
+send us mail, and we will try to make things work better in the
+next release.  we're getting to a point where out-of-the-box
+portability is important.
+
+the path searching machinery is now available (and replacable)
+through the hook %whatis.  for example,
+	path-cache =
+	local (whatis = <>{%whatis %whatis})
+		fn %whatis prog {
+			local (what-it-is = <>{$whatis $prog}) {
+				if {!~ $prog (/* $path-cache) && ~ $what-it-is(1) /*} {
+					path-cache = $path-cache $prog
+					fn-$prog = $what-it-is
+				}
+				return $what-it-is
+			}
+		}
+	fn recache {
+		if {~ $#* 0} {
+			* = $path-cache
+			path-cache =
+		}
+		for (i = $*)
+			fn-$i =
+	}
+provides a cache for the search path, similar to that built in
+to many shells.  [warning:  if you do replace %whatis, ensure
+that the replacement code never calls an external program except
+by using an absolute pathname, or you will loop forever calling
+whatis.  powerful tools are often sharp.]
+
+signals listed on the variable $signals are now trapped:  when
+one is received by the shell it throws an exception of the name
+``signal <signame>'' that can be caught by the catch primitive.
+
+closures containing strings with single quotes are now exported
+properly.
+
+in earlier versions of es, closures bound variables improperly,
+capturing old values:  the first time a closure was turned into a
+string was also the last time, which was incorrect.  es now flushes
+the string forms all old closures whenever a lexically bound variable
+is modified.
+
+internal syntax for exporting closures changed.  the old syntax
+was a variation on lambda forms;  the new syntax uses a binding
+form %closure which is similar to local.
+
+for loop variables are now exported properly.
+
+~ and ~user are now recognized by the globber, bringing joy and
+new purpose into the lives former c-shell users.
+
+the syntax for closing files now works.  also, es is more robust
+in the presence of having some of its file descriptors closed.
+
+
+0.67 to 0.68
+------------
+
+verbose gc debugging
+
+conditional use of "sig_atomic_t", for non-ANSI environments
+
+conditional use of Reiser-cpp semantics for token pasting and
+string-izing
+
+fix for gc foward() of a vector (this fixes most, if not all,
+of the crashes that were reported)
+
+added GCDEBUG support for sun memory protection (via valloc & mprotect)
+
+fixed a couple of omissions in initial.es
+
+fix for a word consing bug in the parser
+
+fix for a redirection node bug in the parser
+
+initial.es now runs after exception handlers have been enabled

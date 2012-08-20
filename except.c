@@ -19,8 +19,6 @@ extern void pophandler(Handler *handler) {
 extern noreturn throw(List *exc) {
 	Handler *handler = bottomhandler;
 
-	debug("<< throwing from %ux : %L >>\n", &handler, exc, ", ");
-
 	assert(gcblocked == 0);
 	assert(exc != NULL);
 	assert(handler != NULL);
@@ -32,11 +30,11 @@ extern noreturn throw(List *exc) {
 }
 
 /* fail -- pass a user catchable error up the exception chain */
-extern noreturn fail(const char *fmt, ...) {
+extern noreturn fail VARARGS1(const char *, fmt) {
 	char *s;
 	va_list args;
 
-	va_start(args, fmt);
+	VA_START(args, fmt);
 	s = strv(fmt, args);
 	va_end(args);
 

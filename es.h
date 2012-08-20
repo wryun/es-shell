@@ -1,100 +1,7 @@
 /* es.h -- definitions for higher order shell */
 
-#include <stddef.h>
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
-#include <setjmp.h>
-#include <signal.h>
-
 #include "config.h"
-
-/*
- * augmentations to standard c environment
- */
-
-#undef FALSE
-#undef TRUE
-typedef enum { FALSE, TRUE } Boolean;
-
-#ifndef	offsetof
-#define	offsetof(t, m)	((size_t) (((char *) &((t *) 0)->m) - (char *)0))
-#endif
-
-#define	streq(s, t)		(strcmp(s, t) == 0)
-#define	strneq(s, t, n)		(strncmp(s, t, n) == 0)
-#define arraysize(a)		((int)(sizeof(a)/sizeof(*a)))
-#define	memzero(dest, count)	memset(dest, 0, count)
-
-#if __GNUC__
-typedef volatile void noreturn;
-#else
-typedef void noreturn;
-#endif
-
-#if GCDEBUG && NeXT
-#define	ABORT()	asm("trap #15")	/* (*(char *) 0 = 'c'); */
-#else
-#define	ABORT()	abort()
-#endif
-
-#if ASSERTIONS
-#define assert(expr) \
-	do { \
-		if (!(expr)) { \
-			eprint("%s:%d: assertion failed (%s)\n", \
-					__FILE__, __LINE__, #expr); \
-			ABORT(); \
-		} \
-	} while (0)
-#else
-#define assert(ignore) do ; while (0)
-#endif
-
-#ifndef	EOF
-#define	EOF	(-1)
-#endif
-
-#ifndef	NULL
-#define	NULL	((void *) 0)
-#endif
-
-extern noreturn abort(void);
-
-
-/*
- * system protos used; do something about this
- */
-
-/* stdlib */
-extern noreturn exit(int);
-extern long strtol(const char *num, char **end, int base);
-#define	atoi(s)	strtol(s, NULL, 0)
-
-/* string */
-extern void *memcpy(void *dst, const void *src, size_t n);
-extern void *memset(void *dst, int c, size_t n);
-
-/* syscalls */
-extern int read(int fd, void *buf, size_t n);
-extern int write(int fd, const void *buf, size_t n);
-extern int dup(int fd);
-extern int dup2(int srcfd, int dstfd);
-extern void close(int fd);
-extern int getpagesize(void);
-extern int pipe(int[2]);
-extern int getpid(void);
-
-
-/*
- * redirection types:  these would be in token.h, but they are also used for
- * eopen() from open.c
- */
-
-typedef enum {
-	rOpen, rCreate, rAppend, rDup, rClose, rPipe, rHeredoc, rHerestring
-} RedirKind;
-
+#include "stdenv.h"
 
 /*
  * the fundamental es data structures.  
@@ -105,10 +12,12 @@ typedef struct Term Term;
 typedef struct List List;
 typedef struct Binding Binding;
 typedef struct Closure Closure;
+typedef unsigned long Generation;
 
 struct Term {
 	char *str;
 	Closure *closure;
+	Generation gen;
 };
 
 struct List {
@@ -133,8 +42,9 @@ struct Closure {
  */
 
 typedef enum {
-	nAssign, nCall, nConcat, nFor, nLambda, nLet, nList, nLocal,
-	nMatch, nPrim, nQword, nRec, nThunk, nVar, nVarsub, nWord
+	nAssign, nCall, nClosure, nConcat, nFor, nLambda, nLet, nList, nLocal,
+	nMatch, nPrim, nQword, nThunk, nVar, nVarsub, nWord,
+	nRedir, nPipe		/* only appear during construction */
 } NodeKind;
 
 struct Tree {
@@ -158,7 +68,7 @@ struct StrList {
 };
 
 typedef struct {
-	int len;
+	int alloclen, count;
 	char *vector[1];
 } Vector;			/* environment or arguments */
 
@@ -174,13 +84,21 @@ extern Boolean loginshell;		/* -l or $0[0] == '-' */
 extern Boolean noexecute;		/* -n */
 extern Boolean verbose;			/* -v */
 extern Boolean printcmds;		/* -x */
+extern Boolean exitonfalse;		/* -e */
 
-extern Boolean gcdebug;			/* -G */
-extern Boolean bugme;			/* -B */
+#if GCVERBOSE
+extern Boolean gcverbose;		/* -G */
+#endif
+#if LISPTREES
+extern Boolean lisptrees;		/* -L */
+#endif
 
 
 /* term.c */
 
+extern Boolean rebound;
+extern Generation generation;
+extern Generation nextgen(void);
 extern Term *mkterm(char *str, Closure *closure);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
@@ -196,26 +114,26 @@ extern List *listcopy(List *list);
 extern int length(List *list);
 extern List *listify(int argc, char **argv);
 extern Term *nth(List *list, int n);
+extern List *sortlist(List *list);
 
 
 /* tree.c */
 
-extern Tree *mk(NodeKind, ...);
-extern Tree *revtree(Tree *tree);
+extern Tree *mk(NodeKind VARARGS);
 
 
 /* closure.c */
 
 extern Closure *mkclosure(Tree *tree, Binding *binding);
 extern Closure *extractbindings(Tree *tree);
-extern Binding *bind(char *name, List *defn, Binding *next);
+extern Binding *mkbinding(char *name, List *defn, Binding *next);
 
 
 /* eval.c */
 
-extern List *walk(Tree *tree, Binding *binding, Boolean parent);
-extern List *eval(List *list, Binding *binding, Boolean parent);
-extern List *eval1(Term *term, Boolean parent);
+extern List *walk(Tree *tree, Binding *binding, Boolean parent, Boolean exitonfalse);
+extern List *eval(List *list, Binding *binding, Boolean parent, Boolean exitonfalse);
+extern List *eval1(Term *term, Boolean parent, Boolean exitonfalse);
 
 
 /* glom.c */
@@ -246,6 +164,7 @@ extern void varpush(char *, List *);
 extern void varpop(char *);
 extern Vector *mkenv(void);
 extern void noexport(char *name);
+extern Boolean isnoexport(const char *name);
 
 
 /* status.c */
@@ -266,7 +185,7 @@ extern int ewaitfor(int pid);
 
 /* which.c */
 
-extern char *which(char *name, Boolean verbose);
+extern char *which(char *name);
 
 
 /* dict.c */
@@ -282,22 +201,20 @@ extern void *dictget2(Dict *dict, const char *name1, const char *name2);
 /* conv.c */
 
 extern void initconv(void);
-extern int defaultfd(RedirKind op);
 
 
 /* print.c -- see print.h for more */
 
-extern int print(const char *fmt,...);
-extern int eprint(const char *fmt,...);
-extern int fprint(int fd, const char *fmt,...);
-extern noreturn panic(const char *fmt, ...);
-extern void debug(const char *fmt, ...);
+extern int print(const char *fmt VARARGS);
+extern int eprint(const char *fmt VARARGS);
+extern int fprint(int fd, const char *fmt VARARGS);
+extern noreturn panic(const char *fmt VARARGS);
 
 
 /* str.c */
 
-extern char *str(const char *fmt, ...);		/* create a gc space string by printing */
-extern char *mprint(const char *fmt, ...);	/* create an ealloc space string by printing */
+extern char *str(const char *fmt VARARGS);		/* create a gc space string by printing */
+extern char *mprint(const char *fmt VARARGS);	/* create an ealloc space string by printing */
 extern StrList *mkstrlist(char *, StrList *);
 
 
@@ -305,6 +222,7 @@ extern StrList *mkstrlist(char *, StrList *);
 
 extern Vector *mkvector(int n);
 extern Vector *vectorize(List *list);
+extern void sortvector(Vector *v);
 
 
 /* util.c */
@@ -328,17 +246,18 @@ extern List *runstring(const char *str);
 extern Tree *parsestring(const char *str);
 extern List *runfd(int fd);
 extern void sethistory(char *file);
+extern void closefds(void);
+extern void releasefd(int fd);
 
 extern int gchar(void);
 extern void ugchar(int c);
 extern void flushu(void);
-extern void closefds(void);
 extern void initinput(void);
 
 
 /* prim.c */
 
-extern List *prim(char *s, List *list, Boolean parent);
+extern List *prim(char *s, List *list, Boolean parent, Boolean exitonfalse);
 extern void initprims(void);
 
 
@@ -347,31 +266,28 @@ extern void initprims(void);
 extern void startsplit(const char *sep, Boolean coalesce);
 extern void splitstring(char *in, size_t len, Boolean endword);
 extern List *endsplit(void);
+extern List *fsplit(const char *sep, List *list);
 
 
 /* signal.c */
 
-#if USE_SIG_ATOMIC_T
-#define SIG_ATOMIC_T sig_atomic_t
-#else
-#define SIG_ATOMIC_T int
-#endif
-
-#define SIGCHK() sigchk()
-extern volatile SIG_ATOMIC_T slow, interrupted;
+#define	SIGCHK() sigchk()
+extern Atomic slow, interrupted;
 extern jmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void catcher(int sig);
 extern void sigchk(void);
-extern void (*esignal(int sig, void (*h)(int)))(int);
+extern sigresult (*esignal(int sig, sigresult (*h)(int)))(int);
 extern void initsignals(Boolean allowdumps);
 extern Boolean issilentsignal(List *e);
 extern void setsigdefaults(Boolean background);
+extern void trapsignals(Boolean sigs[]);
 
 
 /* open.c */
 
-extern int eopen(char *name, RedirKind k);
+typedef enum { oOpen, oCreate, oAppend } OpenKind;
+extern int eopen(char *name, OpenKind k);
 
 
 /* version.c */
@@ -382,7 +298,7 @@ extern const char * const version;
 /* gc.c -- see gc.h for more */
 
 typedef struct Tag Tag;
-#define	gcnew(type)	((type *) gcalloc(sizeof (type), &type ## Tag))
+#define	gcnew(type)	((type *) gcalloc(sizeof (type), &(CONCAT(type, Tag))))
 
 extern void *gcalloc(size_t n, Tag *t);		/* allocate n with collection tag t */
 extern char *gcdup(const char *s);		/* copy a 0-terminated string into gc space */
@@ -394,7 +310,7 @@ extern void gcenable(void);			/* enable collections */
 extern void gcdisable(size_t);			/* disable collections, collect first if space needed */
 
 #ifndef GARBAGE_COLLECTOR
-extern int gcblocked;
+extern const int gcblocked;
 #endif
 
 
@@ -411,27 +327,27 @@ struct Root {
 extern Root *rootlist;
 
 #define	Ref(t, v, init) \
-	do { \
+	if (0) ; { \
 		t v = init; \
-		Root (__root__ ## v); \
-		(__root__ ## v).p = (void **) &v; \
-		(__root__ ## v).next = rootlist; \
-		rootlist = &(__root__ ## v)
+		Root (CONCAT(__root__, v)); \
+		(CONCAT(__root__, v)).p = (void **) &v; \
+		(CONCAT(__root__, v)).next = rootlist; \
+		rootlist = &(CONCAT(__root__, v))
 #define	RefPop(v) \
-		assert(rootlist == &(__root__ ## v)); \
+		assert(rootlist == &(CONCAT(__root__, v))); \
 		assert(rootlist->p == (void **) &v); \
 		rootlist = rootlist->next;
 #define RefEnd(v) \
-		assert(rootlist == &(__root__ ## v)); \
+		assert(rootlist == &(CONCAT(__root__, v))); \
 		assert(rootlist->p == (void **) &v); \
 		RefPop(v); \
-	} while (0)
+	}
 #define RefReturn(v)	/* { */	\
-		assert(rootlist == &(__root__ ## v)); \
+		assert(rootlist == &(CONCAT(__root__, v))); \
 		assert(rootlist->p == (void **) &v); \
 		RefPop(v); \
 		return v; \
-	} while (0)
+	}
 
 #define	RefEnd2(v1, v2)		RefEnd(v1); RefEnd(v2)
 #define	RefEnd3(v1, v2, v3)	RefEnd(v1); RefEnd2(v2, v3)
@@ -473,7 +389,7 @@ extern List *exception;
 extern List *pushhandler(Handler *handler);	/* must be a macro */
 extern void pophandler(Handler *handler);
 extern noreturn throw(List *exc);
-extern noreturn fail(const char *name, ...);
+extern noreturn fail(const char *name VARARGS);
 extern void newchildcatcher(void);
 
 #define	pushhandler(hp)	( \

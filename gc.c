@@ -10,7 +10,7 @@
 typedef struct Space Space;
 struct Space {
 	char *current, *bot, *top;
-	Space *prev;
+	Space *next;
 };
 
 #define	SPACESIZE(sp)	(((sp)->top - (sp)->bot))
@@ -18,7 +18,7 @@ struct Space {
 #define	SPACEUSED(sp)	(((sp)->current - (sp)->bot))
 #define	INSPACE(p, sp)	((sp)->bot <= (char *) (p) && (char *) (p) < (sp)->top)
 
-#if GCDEBUG
+#if GCPROTECT
 #define	NSPACES		10
 #endif
 
@@ -29,30 +29,29 @@ Tag StringTag;
 
 /* own variables */
 static Space *new, *old;
-#if GCDEBUG
+#if GCPROTECT
 static Space *spaces;
 #endif
 static Root *globalrootlist;
 static size_t minspace = 10000;		/* minimum number of bytes in a new space */
-static Buffer *buffer;
 
 
 /*
  * debugging
  */
 
-#if GCDEBUG
-#define	DEBUG(p)	if (!gcdebug) ; else eprint p ;
+#if GCVERBOSE
+#define	VERBOSE(p)	if (!gcverbose) ; else eprint p ;
 #else
-#define	DEBUG(p)	do {} while (0)
+#define	VERBOSE(p)	do {} while (0)
 #endif
 
 
-#if GCDEBUG
+#if GCPROTECT
 
 /*
- * GCDEBUG
- *	to use the GCDEBUG option, you must provide the following functions
+ * GCPROTECT
+ *	to use the GCPROTECT option, you must provide the following functions
  *		take
  *		release
  *		invalidate
@@ -149,17 +148,17 @@ static void initmmu(void) {
 }
 
 #endif	/* sun */
-#endif	/* GCDEBUG */
+#endif	/* GCPROTECT */
 
 
 /*
  * ``half'' space management
  */
 
-#if GCDEBUG
+#if GCPROTECT
 
 /* mkspace -- create a new ``half'' space in debugging mode */
-static Space *mkspace(Space *space, Space *prev) {
+static Space *mkspace(Space *space, Space *next) {
 	assert(space == NULL || (&spaces[0] <= space && space < &spaces[NSPACES]));
 
 	if (space != NULL) {
@@ -169,11 +168,11 @@ static Space *mkspace(Space *space, Space *prev) {
 		else if (SPACESIZE(space) < minspace)
 			sp = space;
 		else {
-			sp = space->prev;
+			sp = space->next;
 			revalidate(space->bot, SPACESIZE(space));
 		}
 		while (sp != NULL) {
-			Space *tail = sp->prev;
+			Space *tail = sp->next;
 			release(sp->bot, SPACESIZE(sp));
 			if (&spaces[0] <= space && space < &spaces[NSPACES])
 				sp->bot = NULL;
@@ -193,34 +192,34 @@ static Space *mkspace(Space *space, Space *prev) {
 		space->top = space->bot + n / (sizeof (*space->bot));
 	}
 
-	space->prev = prev;
+	space->next = next;
 	space->current = space->bot;
 
 	return space;
 }
-#define	newspace(prev)		mkspace(NULL, prev)
+#define	newspace(next)		mkspace(NULL, next)
 
-#else	/* !GCDEBUG */
+#else	/* !GCPROTECT */
 
 /* newspace -- create a new ``half'' space */
-static Space *newspace(Space *prev) {
+static Space *newspace(Space *next) {
 	size_t n = ALIGN(minspace);
 	Space *space = ealloc(sizeof (Space) + n);
 	space->bot = (void *) &space[1];
 	space->top = (void *) (((char *) space->bot) + n);
 	space->current = space->bot;
-	space->prev = prev;
+	space->next = next;
 	return space;
 }
 
-#endif	/* !GCDEBUG */
+#endif	/* !GCPROTECT */
 
 /* deprecate -- take a space and invalidate it */
 static void deprecate(Space *space) {
-#if GCDEBUG
+#if GCPROTECT
 	Space *base;
 	assert(space != NULL);
-	for (base = space; base->prev != NULL; base = base->prev)
+	for (base = space; base->next != NULL; base = base->next)
 		;
 	assert(&spaces[0] <= base && base < &spaces[NSPACES]);
 	for (;;) {
@@ -228,16 +227,16 @@ static void deprecate(Space *space) {
 		if (space == base)
 			break;
 		else {
-			Space *prev = space->prev;
-			space->prev = base->prev;
-			base->prev = space;
-			space = prev;
+			Space *next = space->next;
+			space->next = base->next;
+			base->next = space;
+			space = next;
 		}
 	}
 #else
 	while (space != NULL) {
 		Space *old = space;
-		space = space->prev;
+		space = space->next;
 		efree(old);
 	}
 
@@ -246,7 +245,7 @@ static void deprecate(Space *space) {
 
 /* isinspace -- does an object lie inside a given Space? */
 extern Boolean isinspace(Space *space, void *p) {
-	for (; space != NULL; space = space->prev)
+	for (; space != NULL; space = space->next)
 		if (INSPACE(p, space)) {
 		 	assert((char *) p < space->current);
 		 	return TRUE;
@@ -283,21 +282,23 @@ extern void *forward(void *p) {
 	Tag *tag;
 	void *np;
 
-	if (!isinspace(old, p))
+	if (!isinspace(old, p)) {
+		VERBOSE(("GC %8ux : <<not in old space>>\n", p));
 		return p;
+	}
 
-	DEBUG(("GC %8ux : ", p));
+	VERBOSE(("GC %8ux : ", p));
 
 	tag = TAG(p);
 	assert(tag != NULL);
 	if (FORWARDED(tag)) {
 		np = FOLLOW(tag);
 		assert(TAG(np)->magic == TAGMAGIC);
-		DEBUG(("%s	-> %8ux (followed)\n", TAG(np)->typename, np));
+		VERBOSE(("%s	-> %8ux (followed)\n", TAG(np)->typename, np));
 	} else {
 		assert(tag->magic == TAGMAGIC);
 		np = (*tag->copy)(p);
-		DEBUG(("%s	-> %8ux (forwarded)\n", tag->typename, np));
+		VERBOSE(("%s	-> %8ux (forwarded)\n", tag->typename, np));
 		TAG(p) = FOLLOWTO(np);
 	}
 	return np;
@@ -312,20 +313,24 @@ static void scanroots(Root *rootlist) {
 
 /* scanspace -- scan new space until it is up to date */
 static void scanspace(void) {
-	Space *sp, *nsp;
-	for (sp = new;; sp = nsp) {
-		char *scan = sp->bot;
-		while (scan < sp->current) {
-			Tag *tag = *(Tag **) scan;
-			assert(tag->magic == TAGMAGIC);
-			scan += sizeof (Tag *);
-			DEBUG(("GC %8ux : %s	scan\n", scan, tag->typename));
-			scan += ALIGN((*tag->scan)(scan));
+	Space *sp, *scanned;
+	for (scanned = NULL;;) {
+		Space *front = new;
+		for (sp = new; sp != scanned; sp = sp->next) {
+			char *scan;
+			assert(sp != NULL);
+			scan = sp->bot;
+			while (scan < sp->current) {
+				Tag *tag = *(Tag **) scan;
+				assert(tag->magic == TAGMAGIC);
+				scan += sizeof (Tag *);
+				VERBOSE(("GC %8ux : %s	scan\n", scan, tag->typename));
+				scan += ALIGN((*tag->scan)(scan));
+			}
 		}
-		if (sp == new)
+		if (new == front)
 			break;
-		for (nsp = new; nsp->prev != sp; nsp = nsp->prev)
-			assert(nsp->prev != NULL);
+		scanned = front;
 	}
 }
 
@@ -338,7 +343,7 @@ static void scanspace(void) {
 extern void gcenable(void) {
 	assert(gcblocked > 0);
 	--gcblocked;
-	if (!gcblocked && new->prev != NULL)
+	if (!gcblocked && new->next != NULL)
 		gc();
 }
 
@@ -367,8 +372,8 @@ extern void gc(void) {
 		assert(new != NULL);
 		assert(old == NULL);
 		old = new;
-#if GCDEBUG
-		for (; new->prev != NULL; new = new->prev)
+#if GCPROTECT
+		for (; new->next != NULL; new = new->next)
 			;
 		if (++new >= &spaces[NSPACES])
 			new = &spaces[0];
@@ -376,21 +381,24 @@ extern void gc(void) {
 #else
 		new = newspace(NULL);
 #endif
-		DEBUG(("\nGC collection starting\n"));
-		DEBUG(("GC old space = %ux ... %ux\n", old->bot, old->current));
-		DEBUG(("GC new space = %ux ... %ux\n", new->bot, new->current));
-		DEBUG(("GC scanning root list\n"));
+		VERBOSE(("\nGC collection starting\n"));
+#if GCVERBOSE
+		for (space = old; space != NULL; space = space->next)
+			VERBOSE(("GC old space = %ux ... %ux\n", space->bot, space->current));
+#endif
+		VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
+		VERBOSE(("GC scanning root list\n"));
 		scanroots(rootlist);
-		DEBUG(("GC scanning global root list\n"));
+		VERBOSE(("GC scanning global root list\n"));
 		scanroots(globalrootlist);
-		DEBUG(("GC scanning new space\n"));
+		VERBOSE(("GC scanning new space\n"));
 		scanspace();
-		DEBUG(("GC collection done\n\n"));
+		VERBOSE(("GC collection done\n\n"));
 
 		deprecate(old);
 		old = NULL;
 
-		for (livedata = 0, space = new; space != NULL; space = space->prev)
+		for (livedata = 0, space = new; space != NULL; space = space->next)
 			livedata += SPACEUSED(space);
 		if (minspace < livedata * 5)
 			minspace = livedata * 4;
@@ -398,12 +406,12 @@ extern void gc(void) {
 			minspace /= 2;
 
 		--gcblocked;
-	} while (new->prev != NULL);
+	} while (new->next != NULL);
 }
 
 /* initgc -- initialize the garbage collector */
 extern void initgc(void) {
-#if GCDEBUG
+#if GCPROTECT
 	initmmu();
 	spaces = ealloc(NSPACES * sizeof (Space));
 	memzero(spaces, NSPACES * sizeof (Space));
@@ -422,7 +430,7 @@ extern void initgc(void) {
 /* gcalloc -- allocate an object in new space */
 extern void *gcalloc(size_t nbytes, Tag *tag) {
 	size_t n = ALIGN(nbytes + sizeof (Tag *));
-#if GCDEBUG || GCALWAYS
+#if GCALWAYS
 	gc();
 #endif
 	assert(tag == NULL || tag->magic == TAGMAGIC);
@@ -482,38 +490,60 @@ DefineTag(String);
 
 /*
  * allocation of large, contiguous buffers for large object creation
- *	see the use of this in str().  note that this region may
- *	not contain pointers until after sealbuffer() has been called.
+ *	see the use of this in str().  note that this region may not
+ *	contain pointers or '\0' until after sealbuffer() has been called.
  */
 
-extern Buffer openbuffer(size_t minsize) {
-	Buffer *b;
-	if (minsize < 512)
-		minsize = 512;
-	b = ealloc(sizeof (Buffer) + minsize);
-	b->str = (void *) &b[1];
-	b->len = minsize;
-	b->prev = buffer;
-	buffer = b;
-	return *buffer;
+extern Buffer *openbuffer(size_t minsize) {
+	Buffer *buf;
+	if (minsize < 500)
+		minsize = 500;
+	buf = ealloc(offsetof(Buffer, str[minsize]));
+	buf->len = minsize;
+	buf->current = 0;
+	return buf;
 }
 
-extern Buffer expandbuffer(size_t minsize) {
-	buffer->len += (minsize < 1024) ? 1024 : minsize;
-	buffer = erealloc(buffer, sizeof (Buffer) + buffer->len);
-	return *buffer;
+extern Buffer *expandbuffer(Buffer *buf, size_t minsize) {
+	buf->len += (minsize > buf->len) ? minsize : buf->len;
+	buf = erealloc(buf, offsetof(Buffer, str[buf->len]));
+	return buf;
 }
 
-extern char *sealbuffer(char *p) {
-	Buffer *b = buffer;
-	char *result = gcdup(b->str);
-	buffer = b->prev;
-	efree(b);
-	return result;
+extern char *sealbuffer(Buffer *buf) {
+	char *s = gcdup(buf->str);
+	efree(buf);
+	return s;
+}
+
+extern char *sealcountedbuffer(Buffer *buf) {
+	char *s = gcndup(buf->str, buf->current);
+	efree(buf);
+	return s;
+}
+
+extern Buffer *bufncat(Buffer *buf, const char *s, size_t len) {
+	while (buf->current + len >= buf->len)
+		buf = expandbuffer(buf, buf->current + len - buf->len);
+	memcpy(buf->str + buf->current, s, len);
+	buf->current += len;
+	return buf;
+}
+
+extern Buffer *bufcat(Buffer *buf, const char *s) {
+	return bufncat(buf, s, strlen(s));
+}
+
+extern Buffer *bufputc(Buffer *buf, char c) {
+	return bufncat(buf, &c, 1);
+}
+
+extern void freebuffer(Buffer *buf) {
+	efree(buf);
 }
 
 
-#if GCDEBUG
+#if GCVERBOSE
 /*
  * memdump -- print out all of gc space, as best as possible
  */
@@ -535,69 +565,120 @@ static char *tree2name(NodeKind k) {
 	default:	panic("tree2name: bad node kind %d", k);
 	case nAssign:	return "Assign";
 	case nConcat:	return "Concat";
+	case nClosure:	return "Closure";
 	case nFor:	return "For";
 	case nLambda:	return "Lambda";
 	case nLet:	return "Let";
 	case nList:	return "List";
 	case nLocal:	return "Local";
 	case nMatch:	return "Match";
-	case nRec:	return "Rec";
 	case nVarsub:	return "Varsub";
 	}
 }
 
+/* having these here violates every data hiding rule in the book */
+	typedef struct {
+		char *name;
+		void *value;
+	} Assoc;
+	struct Dict {
+		int size, remain;
+		Assoc table[1];		/* variable length */
+	};
+	typedef struct Var Var;
+	struct Var {
+		List *defn;
+		char *env;
+		Var *next;
+		Boolean binder;
+	};
+
+
 static size_t dump(Tag *t, void *p) {
 	char *s = t->typename;
-	debug("%8ux %s\t", p, s);
+	print("%8ux %s\t", p, s);
 
 	if (streq(s, "String")) {
-		debug("%s\n", p);
+		print("%s\n", p);
 		return strlen(p) + 1;
 	}
 
 	if (streq(s, "Term")) {
 		Term *t = p;
-		debug("str = %ux  closure = %ux\n", t->str, t->closure);
+		print("str = %ux  closure = %ux\n", t->str, t->closure);
 		return sizeof (Term);
 	}
 
 	if (streq(s, "List")) {
 		List *l = p;
-		debug("term = %ux  next = %ux\n", l->term, l->next);
+		print("term = %ux  next = %ux\n", l->term, l->next);
 		return sizeof (List);
 	}
 
 	if (streq(s, "StrList")) {
 		StrList *l = p;
-		debug("str = %ux  next = %ux\n", l->str, l->next);
+		print("str = %ux  next = %ux\n", l->str, l->next);
 		return sizeof (StrList);
 	}
 
 	if (streq(s, "Closure")) {
 		Closure *c = p;
-		debug("tree = %ux  binding = %ux\n", c->tree, c->binding);
+		print("tree = %ux  binding = %ux\n", c->tree, c->binding);
 		return sizeof (Closure);
+	}
+
+	if (streq(s, "Binding")) {
+		Binding *b = p;
+		print("name = %ux  defn = %ux  next = %ux\n", b->name, b->defn, b->next);
+		return sizeof (Binding);
+	}
+
+	if (streq(s, "Var")) {
+		Var *v = p;
+		print("defn = %ux  env = %ux  next = %ux  binder = %s\n",
+		      v->defn, v->env, v->next, v->binder ? "TRUE" : "FALSE");
+		return sizeof (Var);
 	}
 
 	if (streq(s, "Tree1")) {
 		Tree *t = p;
-		debug("%s	%ux\n", tree1name(t->kind), t->u[0].p);
+		print("%s	%ux\n", tree1name(t->kind), t->u[0].p);
 		return offsetof(Tree, u[1]);
 	}
 
 	if (streq(s, "Tree2")) {
 		Tree *t = p;
-		debug("%s	%ux  %ux\n", tree2name(t->kind), t->u[0].p, t->u[1].p);
+		print("%s	%ux  %ux\n", tree2name(t->kind), t->u[0].p, t->u[1].p);
 		return offsetof(Tree, u[2]);
 	}
 
-	debug("<<unknown>>\n");
+	if (streq(s, "Vector")) {
+		Vector *v = p;
+		int i;
+		print("alloclen = %d  count = %d [", v->alloclen, v->count);
+		for (i = 0; i <= v->alloclen; i++)
+			print("%s%ux", i == 0 ? "" : " ", v->vector[i]);
+		print("]\n");
+		return offsetof(Vector, vector[v->alloclen + 1]);
+	}
+
+	if (streq(s, "Dict")) {
+		Dict *d = p;
+		int i;
+		print("size = %d  remain = %d\n", d->size, d->remain);
+		for (i = 0; i < d->size; i++)
+			print("\tname = %ux  value = %ux\n",
+			      d->table[i].name, d->table[i].value);
+		return offsetof(Dict, table[d->size]);
+	}
+
+	print("<<unknown>>\n");
 	return 0;
 }
 
 extern void memdump(void) {
-	Space *sp, *nsp;
-	for (sp = new;; sp = nsp) {
+	Space *sp;
+	for (sp = new; sp != NULL; sp = sp->next) {
 		char *scan = sp->bot;
 		while (scan < sp->current) {
 			Tag *tag = *(Tag **) scan;
@@ -605,10 +686,6 @@ extern void memdump(void) {
 			scan += sizeof (Tag *);
 			scan += ALIGN(dump(tag, scan));
 		}
-		if (sp == new)
-			break;
-		for (nsp = new; nsp->prev != sp; nsp = nsp->prev)
-			assert(nsp->prev != NULL);
 	}
 }
 #endif
