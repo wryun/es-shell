@@ -1,0 +1,81 @@
+This is the README for es-0.67.
+
+INTRO
+
+Almost as soon as rc became usable, Paul Haahr and I (Byron Rakitzis)
+started talking about what a "son of rc" would look like.
+
+Es ("extensible shell") represents our combined effort, on and off
+(mostly off), over the last year or so.
+
+We are presenting a paper on es at this Winter's Usenix. We'd naturally
+like this program to get some exposure from real users before we brag
+to the whole world about it.
+
+Since almost by definition members of the rc list are people who are
+willing to try something new, this is the first place I am posting.
+
+Chris Siebenmann (cks@hawkwind.utcs.toronto.edu) has kindly offered to
+put the es sources up for ftp (ftp.white.toronto.edu, in pub/es), as
+well as to maintain a separate es mailing list (send mail to Chris for
+information and subscription requests).
+
+MOTIVATION
+
+We wanted to create a shell that looked more like a "real" programming
+language, so that, e.g., it could be used well in an embedded
+application the way Tcl can. Hence lexical scoping, for example.
+
+We thought that by presenting rc's features (pipes, list manipulation,
+and so on) as a uniform interface, it would be possible to tailor es
+carefully to an application. The shell's syntax (which resembles rc's)
+is just syntactic sugar on top of this interface.
+
+We also wanted to try something new :-)
+
+HOW TO USE IT
+
+Superficially, es resembles rc. This can be used as a zeroth
+approximation for figuring things out in es. Some differences in syntax
+are unavoidable. For example, since just about everything has been
+reduced to a "builtin", control structures like "if" and "while" take
+both the test and the body in curly braces.
+
+Right now, I'm going to punt you to the abstract that we've written,
+as no user manual yet exists. Unfortunately, this means that you
+might have to explore the code itself to see what is going on,
+since the abstract does not tell the whole story. But it should
+be enough to whet your appetite, we hope. A sample .esrc is also
+provided.
+
+Things that are not documented in the abstract: the hook mechanism
+for variables of the form "set-foo". See "set-HOME" in initial.es
+for a use of this. There is a "catch" and a "throw" for implementing
+user-level exceptions in es.
+
+WHERE TO LOOK
+
+The source, initial.es (implements the builtins & syntactic sugar)
+Sample.esrc (Paul's .esrc), trip.es (not a complete trip test!), and
+the Usenix abstract. Have fun.
+
+BUGS
+
+Things are very new, and still somewhat incomplete, so all feedback
+(bug reports, and so on) is warmly appreciated. The file TODO lists
+incomplete tasks in release-number order. For any comments, please drop
+a note to
+
+	haahr@adobe.com
+or
+	byron@netapp.com
+
+The code has been run under SunOS4.1.1 and NeXTOS2.1 with gcc as the
+compiler, as well as on an RS6000 with AIX3.2 and the IBM compiler.
+Doubtless there are portability problems we don't know about yet.
+Please try to let us know about those also.
+
+Many thanks,
+
+Paul Haahr
+Byron Rakitzis

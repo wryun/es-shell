@@ -1,0 +1,332 @@
+Title
+
+Es: A Shell with Higher-Order Functions
+
+
+Authors
+
+Paul Haahr (contact author)	Byron Rakitzis
+Adobe Systems Incorporated	Network Appliance Corporation
+Mountain View, CA 94039		Mountain View, CA 94043
+haahr@adobe.com			netapp!byron@uunet.uu.net
+415-962-6056 (work)
+415-885-1047 (home)
+
+No special audio-video equipment is needed.
+Neither author is a student.
+
+
+Abstract
+
+In the Fall of 1990, one of us (Rakitzis) implemented the Plan 9 command
+interpreter, rc, for use as a Unix shell.  Experience with that shell led
+us to wonder whether a more general approach to the design of shells was
+possible, and this paper describes the result of that experimentation.
+We applied concepts from modern functional programming languages, such
+as Scheme and ML, to shells, which typically are more concerned with
+Unix features than language design.  Our shell is both simple and highly
+programmable.  By exposing many of the internals and adopting constructs
+from functional programming languages, we have have created a shell
+which supports new paradigms for programmers.
+
+
+Introduction
+
+Es, for ``extensible shell,'' is a command language which provides great
+control over the internals of the interpreter to its users, so that just
+about any piece of the shell can be replaced.  The fundamental
+characteristic of es is that program fragments may be passed around just
+like strings, without the worries of namespace collision, reparsing, or
+the baroque uses of quoting that often occur in shells.  Both internally
+and linguistically, es resembles Scheme or Lisp much more than it
+resembles a shell.  On the other hand, there is enough in the way of
+syntactic sugar to make es a comfortable shell for the naive user.  (In
+fact, with minor syntactic changes, all rc [Duff 90] programs should
+work in es.)
+
+To the novice shell user, es is indistinguishable from other shells. 
+For example, redirection, pipes, wildcard matching and background
+processes have the same syntax as in the Bourne shell.  For an rc user,
+even more is familiar: rules for quoting, backquote substitution,
+variable referencing and subscripting, lists, concatenation, as well the
+``feel'' of the language all come from rc.  The following are all valid
+es commands, with the expected meanings:
+
+	make && t < test.t >> log
+	tr -cs a-zA-Z '\012' < es.txt | sort | uniq -c | sort -nr | sed 25q
+	grep ellipsis `{afm Helvetica} 
+
+In traditional shells, there is great freedom to add new operations. 
+Most shells also allow a user to override---or ``spoof''---a subset of the
+built-in operations, such as cd, which syntactically appear to be
+conventional commands.  Es is novel in that almost all shell operations
+can be spoofed.  For example, redirections can be spoofed to trace when
+and which files are opened, the pipe operation can be redefined as a
+pipeline profiler, and the exec operation can be replaced with a
+function that looks for spare machines and runs commands remotely.  Even
+the shell's ``read-eval-print'' loop can be overridden by the user. 
+
+At its core, es is made up of three relatively simple pieces: a parser,
+an evaluation engine, and mechanism for binding values to variable and
+function names.  In addition there is a large set of primitive
+operations (which can be manipulated in exactly the same ways as
+user-defined functions) which provide access to traditional shell
+services: control flow, redirection, pipes, background processes, and
+the like. 
+
+
+Instructions as Data
+
+In es, a group of commands enclosed in braces ({}) are words, on equal
+footing with strings, but stored internally as parse trees.  They can be
+assigned to variables, passed to programs, etc.  When ``externalized''---that
+is, printed, exported into the environment, or passed in a program's
+argument vector by an execve(2) call---brace groups are unparsed into
+strings that will produce equivalent trees upon reparsing by a later es
+script.  Thus, es program fragments can be passed over arbitrary
+communication connections or handled by other Unix programs as uninterpreted
+strings; for example, rsh(1) or find(1) can be used as intermediaries for
+one es script to invoke another without resorting to bizarre quoting rules. 
+By contrast, such uses in the Bourne often shell often require multiple
+layers of quotes and backslashes. 
+
+Because program fragments can be treated as data, control flow
+operations no longer require special syntax.  The Bourne shell command
+
+
+	if test -s errors; then openfile errors; else rm -f errors; fi
+
+becomes
+
+	if {test -s errors} {openfile errors} {rm -f errors}
+
+Note that if is just a predefined function which takes two or three
+arguments.  The first argument is a command which is used a condition. 
+If the result of evaluating the condition is true, the second argument
+is evaluated, otherwise, the third argument (if present) is evaluated. 
+
+In the full paper, we will include more examples of using program
+fragments as data. 
+
+
+Functions
+
+Functions in es take named arguments.  The syntax for a function
+definition is
+
+	fn name arguments { body }
+
+where arguments is a series of zero or more variable names.  All but the
+last variable name listed bind, one-to-one, with the arguments to the
+function.  The last argument is bound to all remaining arguments:
+
+	; fn foo a b c { echo $c $a $b } 
+	; foo 1 2 3 4 
+	3 4 1 2 
+	; 
+
+Function definition via the ``fn'' keyword is syntactic sugar. 
+Functions are just variables with a prefix of ``fn-.'' Typically,
+functions include a special form of program fragment, introduced with
+the ``@'' keyword, which is similar to Scheme's lambda operator.  The
+definition:
+
+	fn foo a b c { echo $c $a $b }
+
+is equivalent to 
+
+	fn-foo = @ a b c { echo $c $a $b }
+
+The latter form matches how functions are externalized.  That functions
+are just variables is essential to the ability to spoof functions. 
+Thus, if statements may be traced with
+
+	local (orig-if = $fn-if)
+		fn if cond then else {
+		$orig-if $cond {
+			echo >[1=2] if: $cond was true
+			$then
+		} {
+			echo >[1=2] if: $cond was false
+			$else
+		}
+	}
+
+The full paper will include a deeper discussion of lambdas, and explain
+further how function definitions in es differ from those in other shells. 
+
+
+Exposing the Internals
+
+In order to allow spoofing of traditional shell services (pipes, etc.),
+most features of the syntax are actually just syntactic sugar for
+executing commands.  For example, the operations on the left are
+internally treated as the more regular forms on the right:
+
+	a ; b ; c		%seq {a} {b} {c}
+	cmd < in > out		%open 0 in {%create 1 out {cmd}}
+	x | y |[2] z		%pipe {x} 1 0 {y} 2 0 {z}
+
+The percent character (%) in the names of internal forms is just a
+convention used to establish a separate name space; these forms, with
+special internal definitions, are overridable, so, for example, a pipe
+profiler might be implemented as:
+
+	local (
+		origpipe = $fn-%pipe
+		fn flow {
+			local (tf = /tmp/flow.$pid) {
+				tee $tf
+				wc < $tf >[1=2]
+				rm -f $tf
+			}
+		}
+	)
+		fn %pipe first out in rest {
+			if {~ $#out 0} {
+				time $first
+			} {
+				$origpipe {time $first} $out 0 \
+					{flow} 1 $in {%pipe $rest}
+			}
+		}
+
+This definition times the components of the pipeline and counts the
+lines, words, and characters flowing between them. 
+
+
+Binding
+
+Es supports two forms of variable binding (in addition to global
+assignment), dynamic scoping and lexical scoping, where most shells only
+provide the former, and most programming languages the latter.  Dynamic
+binding, which in the Bourne shell is done with pre-assignment
+
+	var=value cmd
+
+uses the syntax
+
+	let (var = value) cmd
+
+Multiple assignments may appear, separated by newlines or semicolons,
+and function definitions may be used in place of assignments
+
+When a variable is bound lexically, any program fragment defined within
+scope of the binding ``captures'' the value of the lexically bound
+variable. 
+
+Functions bind their arguments lexically.  Lexical bindings can also be
+introduced with local, which has similar syntax to let.  The difference
+between the two forms is best shown with an example:
+
+	; x = foo 
+	; let (x = bar) { echo $x; fn dynamic { echo $x } }
+	bar
+	; dynamic 
+	foo 
+	; local (x = baz) { echo $x; fn lexical { echo $x } }
+	baz
+	; lexical 
+	baz 
+	; 
+
+In the final paper we will demonstrate why the ability to spoof built-in
+functions required the addition of lexical scoping to the language, and
+give more examples of the differences between the two forms of binding. 
+
+
+Implementation
+
+Our implementation of es is derived from Rakitzis's version of rc, and
+is relatively straight-forward with the exception of two important
+features.  The first was coming up with a mechanism for exporting
+program fragments with lexically bound data, which currently uses some
+undocumented syntax, and which we hope to improve before this paper is
+in final form. 
+
+The larger problem is that the existence of lexically scoped variables
+implies the ability to create cyclic (recursive) data structures. 
+Therefore, simple memory allocation and reclamation techniques are not
+sufficient for es, requiring the use of a garbage collector. 
+
+The implementation currently stands at 4500 lines of C and Yacc.
+
+
+Evaluation
+
+Currently, the two authors are the only users of this shell.  A
+prototype is operational, but we are not entirely happy with the syntax.
+(@-forms, for example, are ungainly to work with.) We intend to release
+a beta version (feature complete) of the shell to current users of rc at
+the end of July, but expect to change the language after that point if
+we can find better syntax. 
+
+What we can say about the shell right now is rather limited.  It feels
+clean, and using it has not lead to any unpleasant surprises.  We are
+just beginning to experiment with how es's treatment of program
+fragments as first class values affects our programming, but as time
+goes by, new uses appear.  Interestingly, we have found that most of
+what we're doing with the shell is in small ``programs'' entered at the
+command line rather than in large shell scripts. 
+
+Unix shells and Lisp interpreters are generally recognized as providing
+the best command-line features for interactive programming environments.
+We think that we have provided a good mixture of the two in es: an
+environment where almost all features may be redefined by the user and
+internal operations have been exposed, but which also provides
+convenient access to the Unix programming model with familiar shell
+syntax. 
+
+In the full paper, we will go into more detail on the language and its
+implementation, giving a complete description of the syntax and
+semantics, as well as explaining the reasons why the language had to be
+different from prior shells.  In addition, we will include more examples
+of uses for treating program fragments as values, and for spoofing the
+internals of the shell. 
+
+
+Prior and Related Work
+
+There are three major influences on es.  The first is rc [Duff 90],
+which provided a much improved syntax for a shell, while retaining the
+semantics of Bourne's sh.  [Bourne 78] It was through experimentation
+with rc's function exporting mechanism that we came to see how we could
+start passing program fragments around. 
+
+Tcl [Ousterhout 90] addresses similar issues in a slightly different
+context.  In fact, if ``cultural compatibility'' with existing shell
+syntaxes were not a goal of es, we would likely have stolen the syntax
+from Tcl.  Nevertheless, the mechanism in es for treating program
+fragments as first class types borrows liberally from Tcl. 
+
+When we realized that much of this shell could be implemented in itself,
+we started looking towards Scheme [Clinger & Rees 91] and other
+functional languages for help with scoping rules and other
+``completeness'' issues.  The let/local distinction, while independently
+invented, appeared first in [Brooks 88]. 
+
+
+References
+
+[Bentley 88]		Jon L. Bentley, ``More Programming Pearls,''
+			Addison-Welsey, 1988.
+
+[Bourne 78]		S. R. Bourne, ``The Unix Shell,'' Bell System Technical
+			Journal, Volume 57, Number 6, July/August 1978,
+			pp 1971-1990.
+
+[Brooks 88] 		Kenneth Brooks, ``A Two-View Document Editor with
+			User-Definable Document Structure,'' DEC SRC Research
+			Report 33, November 1988.
+
+[Clinger & Rees 91] 	William Clinger and Jonathan Rees (editors), ``The
+			Revised^4 Report on the Algorithmic Language Scheme.''
+
+[Duff 90] 		Tom Duff, ``Rc---A Shell for Plan 9 and Unix Systems,''
+			Proceedings of the Summer 1990 UKUUG Conference,
+			pp 21-33.
+
+[Ousterhout 90] 	John Ousterhout, ``Tcl:  An Embeddable Command
+			Language,'' Proceedings of the Winter 1990
+			Usenix Conference, pp 133-146.
+
