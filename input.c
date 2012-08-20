@@ -307,7 +307,6 @@ static int fdfill(Input *in) {
 			if (in->buflen < nread) {
 				while (in->buflen < nread)
 					in->buflen *= 2;
-				efree(in->bufbegin);
 				in->bufbegin = erealloc(in->bufbegin, in->buflen);
 			}
 			memcpy(in->bufbegin, rlinebuf, nread - 1);
