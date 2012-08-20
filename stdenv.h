@@ -121,7 +121,7 @@ extern void *qsort(
 
 /* setjmp */
 
-#if HAVE_SIGSETJMP
+#if defined sigsetjmp || HAVE_SIGSETJMP
 /* under linux, sigsetjmp and setjmp are both macros 
  * -- need to undef setjmp to avoid problems
  */
