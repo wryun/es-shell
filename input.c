@@ -311,6 +311,9 @@ static int fdfill(Input *in) {
 			}
 			memcpy(in->bufbegin, rlinebuf, nread - 1);
 			in->bufbegin[nread - 1] = '\n';
+#if LIBREADLINE
+			efree(rlinebuf);
+#endif
 		}
 	} else
 #endif
