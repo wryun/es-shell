@@ -302,7 +302,7 @@ extern void globalroot(void *addr) {
 
 /* not portable to word addressed machines */
 #define	TAG(p)		(((Tag **) p)[-1])
-#define	FORWARDED(tagp)	(((int) tagp) & 1)
+#define	FORWARDED(tagp)	(((size_t) tagp) & 1)
 #define	FOLLOWTO(p)	((Tag *) (((char *) p) + 1))
 #define	FOLLOW(tagp)	((void *) (((char *) tagp) - 1))
 
