@@ -2,7 +2,6 @@
 
 %{
 /* Some yaccs insist on including stdlib.h */
-#define _STDLIB_H
 #include "es.h"
 #include "input.h"
 #include "syntax.h"
