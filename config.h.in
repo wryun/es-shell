@@ -1,0 +1,144 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define to the type of elements in the array set by `getgroups'.
+   Usually this is either `int' or `gid_t'.  */
+#undef GETGROUPS_T
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef gid_t
+
+/* Define if you have a working `mmap' system call.  */
+#undef HAVE_MMAP
+
+/* Define if system calls automatically restart after interruption
+   by a signal.  */
+#undef HAVE_RESTARTABLE_SYSCALLS
+
+/* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
+#undef HAVE_SYS_WAIT_H
+
+/* Define if you have the wait3 system call.  */
+#undef HAVE_WAIT3
+
+/* Define as the return type of signal handlers (int or void).  */
+#undef RETSIGTYPE
+
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef size_t
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef uid_t
+
+/* Define if you have the getpagesize function.  */
+#undef HAVE_GETPAGESIZE
+
+/* Do you have a sysconf? */
+#undef HAVE_SYSCONF
+
+/* Define if you have the lstat function.  */
+#undef HAVE_LSTAT
+
+/* Define if you have the setrlimit function.  */
+#undef HAVE_SETRLIMIT
+
+/* Define if you have the strerror function.  */
+#undef HAVE_STRERROR
+
+/* Define if you have the strtol function.  */
+#undef HAVE_STRTOL
+
+/* Define if you have the valloc function.  */
+#undef HAVE_VALLOC
+
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <limits.h> header file.  */
+#undef HAVE_LIMITS_H
+
+/* Define if you have the <memory.h> header file.  */
+#undef HAVE_MEMORY_H
+
+/* Define if you have the <ndir.h> header file.  */
+#undef HAVE_NDIR_H
+
+/* Define if you have the <stdarg.h> header file.  */
+#undef HAVE_STDARG_H
+
+/* Define if you have the <sys/dir.h> header file.  */
+#undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/ioctl.h> header file.  */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define if you have the <sys/ndir.h> header file.  */
+#undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the editline library (-leditline).  */
+#undef HAVE_LIBEDITLINE
+
+/* Define if you have the readline library (-lreadline).  */
+#undef HAVE_LIBREADLINE
+
+/* Define if you have the sun library (-lsun).  */
+#undef HAVE_LIBSUN
+
+/* Define if you have the termcap library (-ltermcap).  */
+#undef HAVE_LIBTERMCAP
+
+/* Define if you have the terminfo library (-lterminfo).  */
+#undef HAVE_LIBTERMINFO
+
+/* Do you have a /dev/fd/ directory? */
+#undef HAVE_DEV_FD
+
+/* Do you have sighold? */
+#undef HAVE_SIGHOLD
+
+/* Do you have sigrelse? */
+#undef HAVE_SIGRELSE
+
+/* Do you have sigaction? */
+#undef HAVE_SIGACTION
+
+/* Does your kernel support #!? */
+#undef KERNEL_POUNDBANG
+
+/* What type are your signals? */
+#undef VOID_SIGNALS
+
+/* What type are your limits? */
+#undef LIMIT_T
+
+/* are we solaris? */
+#undef SOLARIS
+
+/* Is getenv called by crt*.o or getopt? */
+#undef ABUSED_GETENV
+
+/* Do you have setsid? */
+#undef HAVE_SETSID
+
+/* Do you have a new fnagled sys/cdefs.h? */
+#undef HAVE_SYS_CDEFS_H
+
+/* Can I assign to va_lists's */
+#undef NO_VA_LIST_ASSIGN
+
+/* does sigsetjmp exist? */
+#undef HAVE_SIGSETJMP

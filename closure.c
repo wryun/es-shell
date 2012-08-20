@@ -1,4 +1,4 @@
-/* closure.c -- operations on bindings, closures, lambdas, and thunks ($Revision: 1.7 $) */
+/* closure.c -- operations on bindings, closures, lambdas, and thunks ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -10,7 +10,7 @@
 DefineTag(Closure, static);
 
 extern Closure *mkclosure(Tree *tree, Binding *binding) {
-	gcdisable(0);
+	gcdisable();
 	Ref(Closure *, closure, gcnew(Closure));
 	closure->tree = tree;
 	closure->binding = binding;
@@ -97,7 +97,7 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 						NOTREACHED;
 					}
 				} else
-					term = mkterm(word->u[0].s, NULL);
+					term = mkstr(word->u[0].s);
 				list = mklist(term, list);
 			}
 			bindings = mkbinding(name->u[0].s, list, bindings);
@@ -111,10 +111,8 @@ extern Closure *extractbindings(Tree *tree0) {
 	Chain me;
 	Tree *volatile tree = tree0;
 	Binding *volatile bindings = NULL;
-	List *e;
-	Handler h;
 
-	gcdisable(0);
+	gcdisable();
 
 	if (tree->kind == nList && tree->u[1].p == NULL)
 		tree = tree->u[0].p; 
@@ -123,19 +121,22 @@ extern Closure *extractbindings(Tree *tree0) {
 	me.next = chain;
 	chain = &me;
 
-	if ((e = pushhandler(&h)) != NULL) {
+	ExceptionHandler
+
+		while (tree->kind == nClosure) {
+			bindings = extract(tree->u[0].p, bindings);
+			tree = tree->u[1].p;
+			if (tree->kind == nList && tree->u[1].p == NULL)
+				tree = tree->u[0].p; 
+		}
+
+	CatchException (e)
+	
 		chain = chain->next;
 		throw(e);
-	}
 
-	while (tree->kind == nClosure) {
-		bindings = extract(tree->u[0].p, bindings);
-		tree = tree->u[1].p;
-		if (tree->kind == nList && tree->u[1].p == NULL)
-			tree = tree->u[0].p; 
-	}
+	EndExceptionHandler
 
-	pophandler(&h);
 	chain = chain->next;
 
 	Ref(Closure *, result, me.closure);
@@ -154,13 +155,29 @@ DefineTag(Binding, static);
 
 extern Binding *mkbinding(char *name, List *defn, Binding *next) {
 	assert(next == NULL || next->name != NULL);
-	gcdisable(0);
+	validatevar(name);
+	gcdisable();
 	Ref(Binding *, binding, gcnew(Binding));
 	binding->name = name;
 	binding->defn = defn;
 	binding->next = next;
 	gcenable();
 	RefReturn(binding);
+}
+
+extern Binding *reversebindings(Binding *binding) {
+	if (binding == NULL)
+		return NULL;
+	else {
+		Binding *prev, *next;
+		prev = NULL;
+		do {
+			next = binding->next;
+			binding->next = prev;
+			prev = binding;
+		} while ((binding = next) != NULL);
+		return prev;
+	}
 }
 
 static void *BindingCopy(void *op) {

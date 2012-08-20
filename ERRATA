@@ -1,3 +1,8 @@
+The section named ``Return Values'' on page 56 introduces the <>
+operator for obtaining the return value of a command.  That operator
+has been renamed <= to avoid conflicting with the posix-compatible
+defintion of <> as ``open for reading and writing.''
+
 error exceptions now have an additional piece of information.
 the second word (the one after ``error'') is now the name of
 the routine which caused the error.  Thus, in the example
@@ -21,5 +26,4 @@ The pipe timing example from the paper may not work on your system.
 It depends on having a version of time(1) that understands es, either
 by building it in to es or having an external time use the SHELL
 environment variable.  Es will include a (minimal) time function if
-it is built with USE_WAIT3; note that Solaris systems, despite their
-BSD roots, seem not to support wait3().
+it is built with BUITIN_TIME.

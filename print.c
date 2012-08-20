@@ -1,4 +1,4 @@
-/* print.c -- formatted printing routines ($Revision: 1.4 $) */
+/* print.c -- formatted printing routines ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "print.h"
@@ -171,10 +171,12 @@ static Boolean badconv(Format *format) {
  * conversion table management
  */
 
-static Conv fmttab[MAXCONV];
+static Conv *fmttab;
 
 static void inittab(void) {
 	int i;
+
+	fmttab = ealloc(MAXCONV * sizeof (Conv));
 	for (i = 0; i < MAXCONV; i++)
 		fmttab[i] = badconv;
 
@@ -199,7 +201,7 @@ static void inittab(void) {
 
 Conv fmtinstall(int c, Conv f) {
 	Conv oldf;
-	if (fmttab[0] == NULL)
+	if (fmttab == NULL)
 		inittab();
 	c &= MAXCONV - 1;
 	oldf = fmttab[c];
@@ -265,7 +267,14 @@ extern int printfmt(Format *format, const char *fmt) {
 
 extern int fmtprint VARARGS2(Format *, format, const char *, fmt) {
 	int n = -format->flushed;
+#if NO_VA_LIST_ASSIGN
+	va_list saveargs;
+
+	memcpy(saveargs, format->args, sizeof(va_list));
+#else
 	va_list saveargs = format->args;
+#endif
+
 
 	VA_START(format->args, fmt);
 	n += printfmt(format, fmt);
@@ -302,7 +311,7 @@ static void fdprint(Format *format, int fd, const char *fmt) {
 	format->flushed	= 0;
 	format->u.n	= fdmap(fd);
 
-	gcdisable(0);
+	gcdisable();
 	printfmt(format, fmt);
 	fprint_flush(format, 0);
 	gcenable();
@@ -334,7 +343,7 @@ extern int eprint VARARGS1(const char *, fmt) {
 
 extern noreturn panic VARARGS1(const char *, fmt) {
 	Format format;
-	gcdisable(0);
+	gcdisable();
 	VA_START(format.args, fmt);
 	eprint("es panic: ");
 	fdprint(&format, 2, fmt);

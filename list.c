@@ -1,4 +1,4 @@
-/* list.c -- operations on lists ($Revision: 1.2 $) */
+/* list.c -- operations on lists ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -10,7 +10,7 @@
 DefineTag(List, static);
 
 extern List *mklist(Term *term, List *next) {
-	gcdisable(0);
+	gcdisable();
 	assert(term != NULL);
 	Ref(List *, list, gcnew(List));
 	list->term = term;
@@ -37,27 +37,6 @@ static size_t ListScan(void *p) {
  * basic list manipulations
  */
 
-#if 0
-/* safereverse -- reverse a list, non-destructively */
-extern List *safereverse(List *list) {
-	List *lp;
-
-	if (list == NULL)
-		return NULL;
-	if (list->next == NULL)
-		return list;
-
-	gcdisable(0);
-
-	for (lp = NULL; list != NULL; list = list->next)
-		lp = mklist(list->term, lp);
-
-	Ref(List *, result, lp);
-	gcenable();
-	RefReturn(result);
-}
-#endif
-
 /* reverse -- destructively reverse a list */
 extern List *reverse(List *list) {
 	List *prev, *next;
@@ -75,13 +54,10 @@ extern List *reverse(List *list) {
 /* append -- merge two lists, non-destructively */
 extern List *append(List *head, List *tail) {
 	List *lp, **prevp;
-#if 0	/* if you want this optimization, rewrite listcopy */
-	if (tail0 == NULL)
-		return head0;
-#endif
 	Ref(List *, hp, head);
 	Ref(List *, tp, tail);
-	gcdisable(40 * sizeof (List));
+	gcreserve(40 * sizeof (List));
+	gcdisable();
 	head = hp;
 	tail = tp;
 	RefEnd2(tp, hp);
@@ -98,11 +74,12 @@ extern List *append(List *head, List *tail) {
 	RefReturn(result);
 }
 
-/* listcopy */
+/* listcopy -- make a copy of a list */
 extern List *listcopy(List *list) {
 	return append(list, NULL);
 }
 
+/* length -- lenth of a list */
 extern int length(List *list) {
 	int len = 0;
 	for (; list != NULL; list = list->next)
@@ -114,7 +91,7 @@ extern int length(List *list) {
 extern List *listify(int argc, char **argv) {
 	Ref(List *, list, NULL);
 	while (argc > 0) {
-		Term *term = mkterm(argv[--argc], NULL);
+		Term *term = mkstr(argv[--argc]);
 		list = mklist(term, list);
 	}
 	RefReturn(list);
@@ -136,7 +113,7 @@ extern List *sortlist(List *list) {
 	if (length(list) > 1) {
 		Vector *v = vectorize(list);
 		sortvector(v);
-		gcdisable(0);
+		gcdisable();
 		Ref(List *, lp, listify(v->count, v->vector));
 		gcenable();
 		list = lp;

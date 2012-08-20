@@ -1,4 +1,4 @@
-/* gc.c -- copying garbage collector for es ($Revision: 1.14 $) */
+/* gc.c -- copying garbage collector for es ($Revision: 1.2 $) */
 
 #define	GARBAGE_COLLECTOR	1	/* for es.h */
 
@@ -23,6 +23,14 @@ struct Space {
 #if GCPROTECT
 #define	NSPACES		10
 #endif
+
+#if HAVE_SYSCONF
+# ifndef _SC_PAGESIZE
+#  undef HAVE_SYSCONF
+#  define HAVE_SYSCONF 0
+# endif
+#endif
+
 
 /* globals */
 Root *rootlist;
@@ -136,7 +144,7 @@ static void *take(size_t n) {
 	addr = mmap(0, n, PROT_READ|PROT_WRITE, MAP_PRIVATE, devzero, 0);
 #endif
 	if (addr == (caddr_t) -1)
-		panic("mmap: %s", strerror(errno));
+		panic("mmap: %s", esstrerror(errno));
 	memset(addr, 0xA5, n);
 	return addr;
 }
@@ -144,24 +152,24 @@ static void *take(size_t n) {
 /* release -- deallocate a range of memory */
 static void release(void *p, size_t n) {
 	if (munmap(p, n) == -1)
-		panic("munmap: %s", strerror(errno));
+		panic("munmap: %s", esstrerror(errno));
 }
 
 /* invalidate -- disable access to a range of memory */
 static void invalidate(void *p, size_t n) {
 	if (mprotect(p, n, PROT_NONE) == -1)
-		panic("mprotect(PROT_NONE): %s", strerror(errno));
+		panic("mprotect(PROT_NONE): %s", esstrerror(errno));
 }
 
 /* revalidate -- enable access to a range of memory */
 static void revalidate(void *p, size_t n) {
 	if (mprotect(p, n, PROT_READ|PROT_WRITE) == -1)
-		panic("mprotect(PROT_READ|PROT_WRITE): %s", strerror(errno));
+		panic("mprotect(PROT_READ|PROT_WRITE): %s", esstrerror(errno));
 }
 
 /* initmmu -- initialization for memory management calls */
 static void initmmu(void) {
-#if SOLARIS
+#if HAVE_SYSCONF
 	pagesize = sysconf(_SC_PAGESIZE);
 #else
 	pagesize = getpagesize();
@@ -328,8 +336,10 @@ extern void *forward(void *p) {
 /* scanroots -- scan a rootlist */
 static void scanroots(Root *rootlist) {
 	Root *root;
-	for (root = rootlist; root != NULL; root = root->next)
+	for (root = rootlist; root != NULL; root = root->next) {
+		VERBOSE(("GC root at %8lx: %8lx\n", root->p, *root->p));
 		*root->p = forward(*root->p);
+	}
 }
 
 /* scanspace -- scan new space until it is up to date */
@@ -368,15 +378,23 @@ extern void gcenable(void) {
 		gc();
 }
 
-/* gcdisable -- disable collections, collect first if space needed */
-extern void gcdisable(size_t minfree) {
+/* gcdisable -- disable collections */
+extern void gcdisable(void) {
 	assert(gcblocked >= 0);
-	if (!gcblocked && SPACEFREE(new) < minfree) {
+	++gcblocked;
+}
+
+/* gcreserve -- provoke a collection if there's not a certain amount of space around */
+extern void gcreserve(size_t minfree) {
+	if (SPACEFREE(new) < minfree) {
 		if (minspace < minfree)
 			minspace = minfree;
 		gc();
 	}
-	++gcblocked;
+#if GCALWAYS
+	else
+		gc();
+#endif
 }
 
 /* gcisblocked -- is collection disabled? */
@@ -505,7 +523,7 @@ DefineTag(String, notstatic);
 extern char *gcndup(const char *s, size_t n) {
 	char *ns;
 
-	gcdisable(0);
+	gcdisable();
 	ns = gcalloc((n + 1) * sizeof (char), &StringTag);
 	memcpy(ns, s, n);
 	ns[n] = '\0';
@@ -616,6 +634,7 @@ static char *tree2name(NodeKind k) {
 	case nList:	return "List";
 	case nLocal:	return "Local";
 	case nMatch:	return "Match";
+	case nExtract:	return "Extract";
 	case nVarsub:	return "Varsub";
 	}
 }
@@ -632,6 +651,7 @@ static char *tree2name(NodeKind k) {
 	};
 
 #include "var.h"
+#include "term.h"
 
 
 static size_t dump(Tag *t, void *p) {

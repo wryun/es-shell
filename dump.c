@@ -1,7 +1,8 @@
-/* dump.c -- dump es's internal state as a c program ($Revision: 1.8 $) */
+/* dump.c -- dump es's internal state as a c program ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "var.h"
+#include "term.h"
 
 #define	MAXVARNAME 20
 
@@ -93,6 +94,7 @@ static const char *nodename(NodeKind k) {
 	case nList:	return "List";
 	case nLocal:	return "Local";
 	case nMatch:	return "Match";
+	case nExtract:	return "Extract";
 	case nPrim:	return "Prim";
 	case nQword:	return "Qword";
 	case nThunk:	return "Thunk";
@@ -109,34 +111,21 @@ static char *dumptree(Tree *tree) {
 	name = str("&T_%ulx", tree);
 	if (dictget(cvars, name) == NULL) {
 		switch (tree->kind) {
-		default:
+		    default:
 			panic("dumptree: bad node kind %d", tree->kind);
-		case nWord: case nQword: case nPrim:
-			print(
-				"static const Tree_s %s = { n%s, { { (char *) %s } } };\n",
-				name + 1,
-				nodename(tree->kind),
-				dumpstring(tree->u[0].s)
-			);
+		    case nWord: case nQword: case nPrim:
+			print("static const Tree_s %s = { n%s, { { (char *) %s } } };\n",
+			      name + 1, nodename(tree->kind), dumpstring(tree->u[0].s));
 			break;
-		case nCall: case nThunk: case nVar:
-			print(
-				"static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n",
-				name + 1,
-				nodename(tree->kind),
-				dumptree(tree->u[0].p)
-			);
+		    case nCall: case nThunk: case nVar:
+			print("static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n",
+			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p));
 			break;
-		case nAssign:  case nConcat: case nClosure: case nFor:
-		case nLambda: case nLet: case nList:  case nLocal:
-		case nMatch: case nVarsub:
-			print(
-				"static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n",
-				name + 1,
-				nodename(tree->kind),
-				dumptree(tree->u[0].p),
-				dumptree(tree->u[1].p)
-			);
+		    case nAssign:  case nConcat: case nClosure: case nFor:
+		    case nLambda: case nLet: case nList:  case nLocal:
+		    case nVarsub: case nMatch: case nExtract:
+			print("static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n",
+			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p), dumptree(tree->u[1].p));
 		}
 		cvars = dictput(cvars, name, tree);
 	}
@@ -253,13 +242,14 @@ static void printheader(List *title) {
 	)
 		panic("dumpstate: Tree union sizes do not match struct sizes");
 
-	print("/* %L */\n\n#include \"es.h\"\n\n%s\n\n", title, " ", PPSTRING(TreeTypes));
+	print("/* %L */\n\n#include \"es.h\"\n#include \"term.h\"\n\n", title, " ");
+	print("%s\n\n", PPSTRING(TreeTypes));
 }
 
 extern void runinitial(void) {
 	List *title = runfd(0, "initial.es", 0);
 	
-	gcdisable(0);
+	gcdisable();
 
 	cvars = mkdict();
 	strings = mkdict();

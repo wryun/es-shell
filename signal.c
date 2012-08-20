@@ -1,4 +1,4 @@
-/* signal.c -- signal handling ($Revision: 1.17 $) */
+/* signal.c -- signal handling ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "sigmsgs.h"
@@ -14,7 +14,7 @@ static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
 
-#if USE_SIGACTION
+#if HAVE_SIGACTION
 #ifndef	SA_NOCLDSTOP
 #define	SA_NOCLDSTOP	0
 #endif
@@ -58,7 +58,7 @@ extern char *sigmessage(int sig) {
 	for (i = 0; i < nsignals; i++)
 		if (signals[i].sig == sig)
 			return (char *) signals[i].msg;
-	return str("unkown signal %d", sig);
+	return str("unknown signal %d", sig);
 }
 
 
@@ -68,20 +68,19 @@ extern char *sigmessage(int sig) {
 
 /* catcher -- catch (and defer) a signal from the kernel */
 static void catcher(int sig) {
-#if SYSV_SIGNALS /* only do this for unreliable signals */
+#if !SYSV_SIGNALS /* only do this for unreliable signals */
 	signal(sig, catcher);
 #endif
 	if (hasforked)
-		exit(1); /* exit unconditionally on a signal in a child process */
+		/* exit unconditionally on a signal in a child process */
+		exit(1);
 	if (caught[sig] == 0) {
 		caught[sig] = TRUE;
 		++sigcount;
 	}
 	interrupted = TRUE;
-#if !SYSV_SIGNALS
 	if (slow)
 		longjmp(slowlabel, 1);
-#endif
 }
 
 
@@ -90,7 +89,7 @@ static void catcher(int sig) {
  */
 
 static Sighandler setsignal(int sig, Sighandler handler) {
-#if USE_SIGACTION
+#if HAVE_SIGACTION
 	struct sigaction nsa, osa;
 	sigemptyset(&nsa.sa_mask);
 	nsa.sa_handler = handler;
@@ -98,13 +97,13 @@ static Sighandler setsignal(int sig, Sighandler handler) {
 	if (sigaction(sig, &nsa, &osa) == -1)
 		return SIG_ERR;
 	return osa.sa_handler;
-#else /* !USE_SIGACTION */
-#if SPECIAL_SIGCLD
+#else /* !HAVE_SIGACTION */
+#ifdef SIGCLD
 	if (sig == SIGCLD && handler != SIG_DFL)
 		return SIG_ERR;
 #endif
 	return signal(sig, handler);
-#endif /* !USE_SIGACTION */
+#endif /* !HAVE_SIGACTION */
 }
 
 extern Sigeffect esignal(int sig, Sigeffect effect) {
@@ -170,19 +169,19 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 
 	for (sig = 1; sig < NSIG; sig++) {
 		Sighandler h;
-#if USE_SIGACTION
+#if HAVE_SIGACTION
 		struct sigaction sa;
 		sigaction(sig, NULL, &sa);
 		h = sa.sa_handler;
 		if (h == SIG_IGN)
 			sigeffect[sig] = sig_ignore;
-#else /* !USE_SIGACTION */
+#else /* !HAVE_SIGACTION */
 		h = signal(sig, SIG_DFL);
 		if (h == SIG_IGN) {
 			setsignal(sig, SIG_IGN);
 			sigeffect[sig] = sig_ignore;
 		}
-#endif /* !USE_SIGACTION */
+#endif /* !HAVE_SIGACTION */
 		else if (h == SIG_DFL || h == SIG_ERR)
 			sigeffect[sig] = sig_default;
 		else
@@ -222,9 +221,9 @@ extern void setsigdefaults(void) {
  */
 
 extern Boolean issilentsignal(List *e) {
-	return streq(getstr(e->term), "signal")
+	return (termeq(e->term, "signal"))
 		&& e->next != NULL
-		&& streq(getstr(e->next->term), "sigint");
+		&& termeq(e->next->term, "sigint");
 }
 
 extern List *mksiglist(void) {
@@ -245,7 +244,7 @@ extern List *mksiglist(void) {
 		Ref(char *, name, signame(sig));
 		if (prefix != '\0')
 			name = str("%c%s", prefix, name);
-		Ref(Term *, term, mkterm(name, NULL));
+		Ref(Term *, term, mkstr(name));
 		lp = mklist(term, lp);
 		RefEnd2(term, name);
 	}
@@ -278,7 +277,8 @@ extern void sigchk(void) {
 	if (sigcount == 0 || blocked)
 		return;
 	if (hasforked)
-		exit(1);	/* exit unconditionally on a signal in a child process */
+		/* exit unconditionally on a signal in a child process */
+		exit(1);
 
 	for (sig = 0;; sig++) {
 		if (caught[sig] != 0) {
@@ -287,12 +287,13 @@ extern void sigchk(void) {
 			break;
 		}
 		if (sig >= NSIG) {
-			/* panic("all-zero sig vector with nonzero sigcount"); */
 			sigcount = 0;
 			return;
 		}
 	}
-	Ref(List *, e, mklist(mkterm("signal", NULL), mklist(mkterm(signame(sig), NULL), NULL)));
+	resetparser();
+	Ref(List *, e,
+	    mklist(mkstr("signal"), mklist(mkstr(signame(sig)), NULL)));
 
 	switch (sigeffect[sig]) {
 	case sig_catch:

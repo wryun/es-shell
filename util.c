@@ -1,22 +1,36 @@
-/* util.c -- the kitchen sink ($Revision: 1.4 $) */
+/* util.c -- the kitchen sink ($Revision: 1.2 $) */
 
 #include "es.h"
 
+#if !HAVE_STRERROR
 /* strerror -- turn an error code into a string */
-extern char *strerror(int n) {
+static char *strerror(int n) {
 	extern int sys_nerr;
 	extern char *sys_errlist[];
 	if (n > sys_nerr)
-		return "unknown error";
+	  return NULL;
 	return sys_errlist[n];
 }
+
+#endif
+
+/* esstrerror -- a wrapper around sterror(3) */
+extern char *esstrerror(int n) {
+  char *error = strerror(n);
+
+  if (error == NULL)
+    return "unknown error";
+  return error;
+}
+
+
 
 /* uerror -- print a unix error, our version of perror */
 extern void uerror(char *s) {
 	if (s != NULL)
-		eprint("%s: %s\n", s, strerror(errno));
+		eprint("%s: %s\n", s, esstrerror(errno));
 	else
-		eprint("%s\n", strerror(errno));
+		eprint("%s\n", esstrerror(errno));
 }
 
 /* isabsolute -- test to see if pathname begins with "/", "./", or "../" */
@@ -24,6 +38,19 @@ extern Boolean isabsolute(char *path) {
 	return path[0] == '/'
 	       || (path[0] == '.' && (path[1] == '/'
 				      || (path[1] == '.' && path[2] == '/')));
+}
+
+/* streq2 -- is a string equal to the concatenation of two strings? */
+extern Boolean streq2(const char *s, const char *t1, const char *t2) {
+	int c;
+	assert(s != NULL && t1 != NULL && t2 != NULL);
+	while ((c = *t1++) != '\0')
+		if (c != *s++)
+			return FALSE;
+	while ((c = *t2++) != '\0')
+		if (c != *s++)
+			return FALSE;
+	return *s == '\0';
 }
 
 

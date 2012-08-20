@@ -1,4 +1,4 @@
-/* glob.c -- wildcard matching ($Revision: 1.7 $) */
+/* glob.c -- wildcard matching ($Revision: 1.1.1.1 $) */
 
 #define	REQUIRE_STAT	1
 #define	REQUIRE_DIRENT	1
@@ -14,7 +14,7 @@ static Boolean hastilde(const char *s, const char *q) {
 }
 
 /* haswild -- true iff some unquoted character is a wildcard character */
-static Boolean haswild(const char *s, const char *q) {
+extern Boolean haswild(const char *s, const char *q) {
 	if (q == QUOTED)
 		return FALSE;
 	if (q == UNQUOTED)
@@ -50,21 +50,32 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 	static Dirent *dp;
 	static struct stat s;
 
+	/*
+	 * opendir succeeds on regular files on some systems, so the stat call
+	 * is necessary (sigh);  the check is done here instead of with the
+	 * opendir to handle a trailing slash.
+	 */
+	if (stat(dirname, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR)
+		return NULL;	
+
 	if (!haswild(pattern, quote)) {
 		char *name = str("%s%s", prefix, pattern);
 		if (lstat(name, &s) == -1)
 			return NULL;
-		return mklist(mkterm(name, NULL), NULL);
+		return mklist(mkstr(name), NULL);
 	}
 
 	assert(gcisblocked());
 
-	/* opendir succeeds on regular files on some systems, so the stat() call is necessary (sigh) */
-	if (stat(dirname, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR || (dirp = opendir(dirname)) == NULL)
+	dirp = opendir(dirname);
+	if (dirp == NULL)
 		return NULL;	
 	for (list = NULL, prevp = &list; (dp = readdir(dirp)) != NULL;)
-		if (match(dp->d_name, pattern, quote) && (!ishiddenfile(dp->d_name) || *pattern == '.')) {
-			List *lp = mklist(mkterm(str("%s%s", prefix, dp->d_name), NULL), NULL);
+		if (match(dp->d_name, pattern, quote)
+		    && (!ishiddenfile(dp->d_name) || *pattern == '.')) {
+			List *lp = mklist(mkstr(str("%s%s",
+						    prefix, dp->d_name)),
+					  NULL);
 			*prevp = lp;
 			prevp = &lp->next;
 		}
@@ -75,7 +86,7 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 /* listglob -- glob a directory plus a filename pattern into a list of names */
 static List *listglob(List *list, char *pattern, char *quote, size_t slashcount) {
 	List *result, **prevp;
-	
+
 	for (result = NULL, prevp = &result; list != NULL; list = list->next) {
 		const char *dir;
 		size_t dirlen;
@@ -83,9 +94,9 @@ static List *listglob(List *list, char *pattern, char *quote, size_t slashcount)
 		static size_t prefixlen = 0;
 
 		assert(list->term != NULL);
-		assert(list->term->str != NULL);
+		assert(!isclosure(list->term));
 		
-		dir = list->term->str;
+		dir = getstr(list->term);
 		dirlen = strlen(dir);
 		if (dirlen + slashcount + 1 >= prefixlen) {
 			prefixlen = dirlen + slashcount + 1;
@@ -145,7 +156,7 @@ static List *glob1(const char *pattern, const char *quote) {
 		return dirmatch("", ".", dir, qdir);
 
 	matched = (*pattern == '/')
-			? mklist(mkterm(dir, NULL), NULL)
+			? mklist(mkstr(dir), NULL)
 			: dirmatch("", ".", dir, qdir);
 	do {
 		size_t slashcount;
@@ -165,11 +176,12 @@ static List *glob1(const char *pattern, const char *quote) {
 static List *glob0(List *list, StrList *quote) {
 	List *result, **prevp, *expand1;
 	
-	for (result = NULL, prevp = &result; list != NULL; list = list->next, quote = quote->next)
+	for (result = NULL, prevp = &result; list != NULL; list = list->next, quote = quote->next) {
+		char *str;
 		if (
 			quote->str == QUOTED
-			|| !haswild(list->term->str, quote->str)
-			|| (expand1 = glob1(list->term->str, quote->str)) == NULL
+			|| !haswild(str = getstr(list->term), quote->str)
+			|| (expand1 = glob1(str, quote->str)) == NULL
 		) {
 			*prevp = list;
 			prevp = &list->next;
@@ -178,6 +190,7 @@ static List *glob0(List *list, StrList *quote) {
 			while (*prevp != NULL)
 				prevp = &(*prevp)->next;
 		}
+	}
 	return result;
 }
 
@@ -201,7 +214,7 @@ static char *expandhome(char *s, StrList *qp) {
 	Ref(List *, list, NULL);
 	RefAdd(fn);
 	if (slash > 1)
-		list = mklist(mkterm(gcndup(s + 1, slash - 1), NULL), NULL);
+		list = mklist(mkstr(gcndup(s + 1, slash - 1)), NULL);
 	RefRemove(fn);
 
 	list = eval(append(fn, list), NULL, 0);
@@ -253,27 +266,31 @@ extern List *glob(List *list, StrList *quote) {
 
 	for (lp = list, qp = quote; lp != NULL; lp = lp->next, qp = qp->next)
 		if (qp->str != QUOTED) {
-			assert(lp->term != NULL && lp->term->str != NULL);
-			assert(qp->str == UNQUOTED || strlen(qp->str) == strlen(lp->term->str));
-			if (hastilde(lp->term->str, qp->str)) {
+			assert(lp->term != NULL);
+			assert(!isclosure(lp->term));
+			Ref(char *, str, getstr(lp->term));
+			assert(qp->str == UNQUOTED || strlen(qp->str) == strlen(str));
+			if (hastilde(str, qp->str)) {
 				Ref(List *, l0, list);
 				Ref(List *, lr, lp);
 				Ref(StrList *, q0, quote);
 				Ref(StrList *, qr, qp);
-				lr->term->str = expandhome(lr->term->str, qp);
+				str = expandhome(str, qp);
+				lr->term = mkstr(str);
 				lp = lr;
 				qp = qr;
 				list = l0;
 				quote = q0;
 				RefEnd4(qr, q0, lr, l0);
 			}
-			if (haswild(lp->term->str, qp->str))
+			if (haswild(str, qp->str))
 				doglobbing = TRUE;
+			RefEnd(str);
 		}
 
 	if (!doglobbing)
 		return list;
-	gcdisable(0);
+	gcdisable();
 	list = glob0(list, quote);
 	Ref(List *, result, list);
 	gcenable();

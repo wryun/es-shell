@@ -1,0 +1,52 @@
+Basic Installation
+------------------
+
+   Es now uses the GNU configure system for configuration.  This
+means that on nearly all platforms, it should just build and work
+fine.  To do this, just type:
+
+   % ./configure
+   % make
+
+   Es needs an ANSI compiler (or at least a compiler that respects
+protoypes and provides large portions of the ANSI library).
+Otherwise it should build with the basic tools available on most UNIX
+platforms.
+
+   Es obeys the GNU configure convention of allowing you to build in
+a directory different from the source directory.  To do this, just
+execute configure with a path to the source.  For example:
+
+   % /path/to/configure
+
+   Also obeying the GNU configure convention, configure will take
+arguments specifying a variety of directories.  Currently the only
+relevant ones are the prefix directory (/usr/local by default); bindir,
+the directory in which `es' will reside ($prefix/bin by default); and
+mandir, the directory that will contain the manpage ($prefix/man by
+default).  These are given to configure by:
+
+   % ./configure --prefix=directory
+   % ./configure --bindir=directory --mandir=directory
+
+   Similarly, setting the `CC', `CFLAGS', and `LDFLAGS' environmental
+variables will cause those to be used in the Makefile.
+
+Es Options
+----------
+
+  Es can be built to link to two command line editting libraries:
+GNU readline and editline.  For information about obtaining these, see
+the README file.  These may used by providing, respectively, the
+--with-readline or --with-editline respectively.  
+
+
+
+Problems with building
+----------------------
+
+  The HP-UX yacc program seems to dislike the use of LOCAL in
+parse.y.  It is not clear to me why this is the case.  FSF's bison works
+fine.  This has not been `fixed' because it is not clear what is
+`broken'.  This may also be other dependencies that I do not
+understand.

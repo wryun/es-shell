@@ -1,5 +1,5 @@
 #! /bin/es -p
-# esdebug: a debugger for es scripts ($Revision: 1.4 $)
+# esdebug: a debugger for es scripts ($Revision: 1.1.1.1 $)
 
 # TODO
 #	catch signals (at least sigint) better

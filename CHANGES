@@ -1,5 +1,201 @@
-CHANGES
+CHANGES		-*- mode: indented-text -*- ($Revision: 1.4 $)
 =======
+
+0.9-alpha2 to 0.9beta
+---------------------
+
+Prototypes are only provided if they are not in the standard header
+files.  
+
+Es no longer provides its own strerror.  If there is a strerror, it is
+used.  If not, we try a hack with sys_errlist.  Hopefully one of these
+two will be there.
+
+Es now supports building in directories that are not the source
+directory.  This follows the standard GNU $(srcdir) conventions.
+
+The POSIX sigsetjmp problem appeared again in the form of a macro in
+some versions of linux.  Therefore, there is yet another little
+conditional around the setjmp and longjmp macros to make sure that all
+is ok.
+
+0.9-alpha1 to 0.9-alpha2
+-----------------------
+
+Es now uses GNU autoconf rather than the config.h/stdenv.h model.
+
+Another version of getenv.  Some libraries and operating systems do
+funny things with getenv, making the back mentioned below fail, dumping
+core in getopt (linux and GNU getopt) and before main(!) (FreeBSD 2.1.0)
+demonstrated this. 
+
+Variable argument lists for variable arity C functions are not lvalues.
+This occurs, at least, on the powerpc (see the GCC header files for an
+example of what it does).  This memcpy's those, and assigns the others.
+
+The type used for bsd limits is extracted from the header files.  This
+is necessary because FreeBSD (and likely other BSD 4.4 systems) use
+quad_t rather than long to represent the values in the rlimit
+structure.  This could, possibly, become a problem as more operating
+systems go `64 bit'
+
+POSIX systems provide sigsetjmp and siglongjmp.  These are exactly like
+setjmp and longjmp except that setjmp and longjmp do not restore
+signals.  On systems on which these functions are available, they are
+used. 
+
+There are a number of patches to fix `little' bugs.  
+
+
+0.84 to 0.9-alpha1
+------------------
+
+A version of getenv() that looks at the current environment now exists
+for readline, so it can get $HOME and $TERM accurately.  Interaction
+with readline has been somewhat improved, but there still appear to be
+bugs lurking.
+
+A large number of portability suggestions sent in by users were
+incorporated.  Still, the config.h/stdenv.h model is inadequate, and
+should be revisited.
+
+A new pattern extraction operator, ~~, has been added.  It's use is
+similar to ~, except that instead of returning true or false, for all
+subjects that match a pattern, the part of the subject that matches
+each wildcard in the pattern is returned.  This was added instead of
+the various regular expression or variable munging ideas;  it
+leverages off of the pattern matching es already does.  For example:
+
+     ; echo <={ ~~ (foo.c foo.x bar.h) *.[ch] }
+     foo c bar h
+     ; 
+
+A stripped-down $&read primtive has been added.  The %read builtin
+returns either the empty list (in the case of end-of-file) or a single
+element string with up to one line of data read from standard input
+(including possible redirections).  %read reads one character at a
+time in order to not read more data out of a pipe than it should.  The
+terminating newline (if present) is not included in the returned
+string.  (I had solicited opinions for other features, but let's see
+about the utility of the simple version first.)
+
+In addition to the traditional (some would say hackish) rules about
+putting ']' and '-' as literal characters in character ranges (put ']'
+at the beginning or '-' at either end to use them literally), quoting
+can be used to the same effect.  For example, where [a-z] matches a
+range, [a'-'z] matches the three characters 'a', '-', or 'z'.  (A few
+hard to hit bugs with pattern matching were fixed, as well.)
+
+The while builtin in 0.84 unintentionally blocked the return
+exception, making while difficult to use in loops.  This was fixed by
+changing catch to call the exception handling function without catching
+the return exception.
+
+The for loop now only catches the break exception in its body, not the
+definitons.  The old behavior was silly.
+
+The '=' character is now allowed in variables if PROTECT_ENV is on.
+
+The C version of the exception handling macros has been changed to
+something that is compatible with the restrictions on where setjmp may
+appear in ANSI C.  The macrology is also (probably) a bit easier to
+understand now.
+
+A trailing slash in a wildcard pattern now only matches directories
+portably.  It used to depend on what opendir() did if you passed it a
+non-directory, I think.
+
+Control-A can be safely exported and imported in environment
+variables.  It (and control-B) cannot be imported correctly from
+programs other than es.
+
+var and whatis now print error messages rather than throwing errors.
+
+limit now prints all its results on standard output instead of
+standard error.
+
+Assignment returns the values that were assigned, so multiple
+assignment statments to the same value can be chained with
+
+	x = <={ y = <={ z = foo bar } }
+
+path and home are now on the default noexport list, because you want to
+track any changes made to HOME and PATH made by other programs.
+
+The apids function is now gone.  Use <=%apids if you need it.
+
+true, false, eval, unwind-protect, and %one are now functions, not
+primitives.
+
+Printing from things like var has been much improved.
+
+Errors in a .esrc file don't cause the shell to exit anymore.
+
+Function names are now looked up first among the lexically scoped
+variables, bringing es all that much closer to Scheme.
+
+Function names that look like absolute path names are legal, so you
+can spoof something like /bin/rm if you want.  (Use with caution!)
+
+$&backquote now returns the exit status of its subprocess as its first
+argument.  %backquote puts this in the variable $bqstatus.
+
+The various $&open primitives have been replaced by one primitive,
+$&openfile, the first argument of which determines how the file should
+be opened.  See initial.es for details.
+
+$cdpath searching has moved out of initial.es into sample code.
+
+The variable max-eval-depth sets a limit on how deep recursion can go
+in es;  if the depth is exceeded, an error is thrown.
+
+Let and local now do parallel (or simultaneous) evaluation of the
+expressions on their right hand sides.  That is, all the right hand
+sides in such a statement are evaluated before any variables are
+bound.  (This is like Lisp's let instead of the old let* behavior.)
+
+Assignments, binding forms (let, local, for), and variable references
+now permit using multiple variables at once time.  For example:
+
+	; foo = a b
+	; $foo = 1 2 3 4
+	; echo $a
+	1
+	; echo $b
+	2 3 4
+	; echo $$foo
+	1 2 3 4
+	; let ((b a) = 9 8 7) echo $$foo
+	8 7 9
+	; echo $a
+	1
+	; 
+
+%and and %or now return the value of the last term they evaluated, as
+they did prior to version 0.84.
+
+Four-digit umask values are now legal, and error checking on umask
+syntax is a little more thorough.  Still no symbolic umasks.
+
+[implementation]  Assertions about the Ref*() constructs are now
+enabled separately from the rest of the assertions -- the Ref
+assertions enormously increase the size of the executable, but are
+effectively compile-time checks.
+
+[implementation]  Responsibility for making sure that lists are not
+clobbered by being shared when one is used destructively has been
+moved:  it is now the responsibility of anything that calls eval()
+to make sure that either the value is not modified or to make a
+copy itself.  See uses of listcopy() in the code for where we think
+that is.
+
+[implementation]  gcdisable() used to serve two purposes:  to turn off
+the garbage collector and to initiate a garbage collection if a certain
+amount of space was not available.  the function has now been split into
+two functions:  gcdisable() and gcreserve().
+
+some typos in strings and header comments were fixed, thanks to Derek Burns.
+
 
 0.83 to 0.84
 ------------

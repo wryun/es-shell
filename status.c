@@ -1,6 +1,7 @@
-/* status.c -- status manipulations ($Revision: 1.6 $) */
+/* status.c -- status manipulations ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
+#include "term.h"
 
 static const Term
 	trueterm	= { "0", NULL },

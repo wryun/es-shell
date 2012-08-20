@@ -1,4 +1,4 @@
-/* prim-ctl.c -- control flow primitives ($Revision: 1.10 $) */
+/* prim-ctl.c -- control flow primitives ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "prim.h"
@@ -9,8 +9,6 @@ PRIM(seq) {
 	for (; lp != NULL; lp = lp->next)
 		result = eval1(lp->term, evalflags &~ (lp->next == NULL ? 0 : eval_inchild));
 	RefEnd(lp);
-	if (result == true)
-		result = listcopy(true);
 	RefReturn(result);
 }
 
@@ -30,7 +28,7 @@ PRIM(if) {
 		}
 	}
 	RefEnd(lp);
-	return listcopy(true);
+	return true;
 }
 
 PRIM(forever) {
@@ -49,50 +47,43 @@ PRIM(throw) {
 }
 
 PRIM(catch) {
-	Handler h;
-	List *e, *e2;
+	Atomic retry;
 
 	if (list == NULL)
 		fail("$&catch", "usage: catch catcher body");
 
-	Ref(List *, lp, list);
-	while ((e = pushhandler(&h)) != NULL) {
-		blocksignals();
-		if ((e2 = pushhandler(&h)) == NULL) {
-			list = eval(mklist(lp->term, e), NULL, evalflags);
-			pophandler(&h);
-			RefPop(lp);
-			unblocksignals();
-			return list;
-		} else if (!streq(e2->term->str, "retry"))
-			throw(e2);
-		unblocksignals();
-	}
-
-	lp = eval(lp->next, NULL, evalflags);
-	pophandler(&h);
-	RefReturn(lp);
-}
-
-PRIM(unwindprotect) {
-	Handler h;
-
-	if (list == NULL || list->next == NULL || list->next->next != NULL)
-		fail("$&unwindprotect", "usage: unwind-protect body cleanup");
-
 	Ref(List *, result, NULL);
-	Ref(List *, e, NULL);
-	Ref(Term *, cleanup, list->next->term);
+	Ref(List *, lp, list);
 
-	if ((e = pushhandler(&h)) == NULL) {
-		result = eval1(list->term, 0);
-		pophandler(&h);
-	}
+	do {
+		retry = FALSE;
 
-	eval1(cleanup, evalflags);
-	if (e != NULL)
-		throw(e);
-	RefEnd2(cleanup, e);
+		ExceptionHandler
+
+			result = eval(lp->next, NULL, evalflags);
+
+		CatchException (frombody)
+
+			blocksignals();
+			ExceptionHandler
+				result
+				  = eval(mklist(mkstr("$&noreturn"),
+					        mklist(lp->term, frombody)),
+					 NULL,
+					 evalflags);
+				unblocksignals();
+			CatchException (fromcatcher)
+
+				if (termeq(fromcatcher->term, "retry")) {
+					retry = TRUE;
+					unblocksignals();
+				} else
+					throw(fromcatcher);
+			EndExceptionHandler
+
+		EndExceptionHandler
+	} while (retry);
+	RefEnd(lp);
 	RefReturn(result);
 }
 
@@ -102,6 +93,5 @@ extern Dict *initprims_controlflow(Dict *primdict) {
 	X(throw);
 	X(forever);
 	X(catch);
-	X(unwindprotect);
 	return primdict;
 }

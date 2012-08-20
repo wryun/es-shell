@@ -1,10 +1,10 @@
-/* proc.c -- process control system calls ($Revision: 1.11 $) */
+/* proc.c -- process control system calls ($Revision: 1.2 $) */
 
 #include "es.h"
 
 /* TODO: the rusage code for the time builtin really needs to be cleaned up */
 
-#if USE_WAIT3
+#if HAVE_WAIT3
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
@@ -17,7 +17,7 @@ struct Proc {
 	int status;
 	Boolean alive, background;
 	Proc *next, *prev;
-#if USE_WAIT3
+#if HAVE_WAIT3
 	struct rusage rusage;
 #endif
 };
@@ -60,7 +60,7 @@ extern int efork(Boolean parent, Boolean background) {
 			hasforked = TRUE;
 			break;
 		case -1:
-			fail("es:efork", "fork: %s", strerror(errno));
+			fail("es:efork", "fork: %s", esstrerror(errno));
 		}
 	}
 	closefds();
@@ -69,7 +69,7 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
-#if USE_WAIT3
+#if HAVE_WAIT3
 static struct rusage wait_rusage;
 #endif
 
@@ -80,7 +80,7 @@ static int dowait(int *statusp) {
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		n = interrupted ? -2 :
-#if USE_WAIT3
+#if HAVE_WAIT3
 			wait3((void *) statusp, 0, &wait_rusage);
 #else
 			wait((void *) statusp);
@@ -103,7 +103,7 @@ static void reap(int pid, int status) {
 			assert(proc->alive);
 			proc->alive = FALSE;
 			proc->status = status;
-#if USE_WAIT3
+#if HAVE_WAIT3
 			proc->rusage = wait_rusage;
 #endif
 			return;
@@ -123,11 +123,11 @@ top:
 					if (deadpid != -1)
 						reap(deadpid, proc->status);
 					else if (errno != EINTR)
-						fail("es:ewait", "wait: %s", strerror(errno));
+						fail("es:ewait", "wait: %s", esstrerror(errno));
 					else if (interruptible)
 						SIGCHK();
 				proc->alive = FALSE;
-#if USE_WAIT3
+#if HAVE_WAIT3
 				proc->rusage = wait_rusage;
 #endif
 			}
@@ -141,7 +141,7 @@ top:
 			if (proc->background)
 				printstatus(proc->pid, status);
 			efree(proc);
-#if USE_WAIT3
+#if HAVE_WAIT3
 			if (rusage != NULL)
 				memcpy(rusage, &proc->rusage, sizeof (struct rusage));
 #else
@@ -153,7 +153,7 @@ top:
 		int status;
 		while ((pid = dowait(&status)) == -1) {
 			if (errno != EINTR)
-				fail("es:ewait", "wait: %s", strerror(errno));
+				fail("es:ewait", "wait: %s", esstrerror(errno));
 			if (interruptible)
 				SIGCHK();
 		}
@@ -171,7 +171,7 @@ PRIM(apids) {
 	Ref(List *, lp, NULL);
 	for (p = proclist; p != NULL; p = p->next)
 		if (p->background && p->alive) {
-			Term *t = mkterm(str("%d", p->pid), NULL);
+			Term *t = mkstr(str("%d", p->pid));
 			lp = mklist(t, lp);
 		}
 	/* TODO: sort the return value, but by number? */
@@ -192,7 +192,7 @@ PRIM(wait) {
 		fail("$&wait", "usage: wait [pid]");
 		NOTREACHED;
 	}
-	return mklist(mkterm(mkstatus(ewait(pid, TRUE, NULL)), NULL), NULL);
+	return mklist(mkstr(mkstatus(ewait(pid, TRUE, NULL))), NULL);
 }
 
 extern Dict *initprims_proc(Dict *primdict) {

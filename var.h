@@ -1,4 +1,4 @@
-/* var.h -- es variables ($Revision: 1.2 $) */
+/* var.h -- es variables ($Revision: 1.1.1.1 $) */
 
 typedef struct Var Var;
 struct Var {

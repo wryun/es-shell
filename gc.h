@@ -1,4 +1,4 @@
-/* gc.h -- garbage collector interface for es ($Revision: 1.2 $) */
+/* gc.h -- garbage collector interface for es ($Revision: 1.1.1.1 $) */
 
 /* see also es.h for more generally applicable definitions */
 

@@ -1,17 +1,9 @@
-/* prim-etc.c -- miscellaneous primitives ($Revision: 1.18 $) */
+/* prim-etc.c -- miscellaneous primitives ($Revision: 1.2 $) */
 
 #define	REQUIRE_PWD	1
 
 #include "es.h"
 #include "prim.h"
-
-PRIM(true) {
-	return listcopy(true);
-}
-
-PRIM(false) {
-	return listcopy(false);
-}
 
 PRIM(result) {
 	return list;
@@ -19,30 +11,18 @@ PRIM(result) {
 
 PRIM(echo) {
 	const char *eol = "\n";
-	if (list != NULL) {
-		const char *opt;
-		assert(list->term != NULL);
-		opt = list->term->str;
-		if (opt != NULL && opt[0] == '-' && opt[2] == '\0') {
-			switch (opt[1]) {
-			case 'n':
-				eol = "";
-				list = list->next;
-				break;
-			case '-':
-				list = list->next;
-				break;
-			default:
-				break;
-			}
-		}
-	}
+	if (list != NULL)
+		if (termeq(list->term, "-n")) {
+			eol = "";
+			list = list->next;
+		} else if (termeq(list->term, "--"))
+			list = list->next;
 	print("%L%s", list, " ", eol);
-	return listcopy(true);
+	return true;
 }
 
 PRIM(count) {
-	return mklist(mkterm(str("%d", length(list)), NULL), NULL);
+	return mklist(mkstr(str("%d", length(list))), NULL);
 }
 
 PRIM(setnoexport) {
@@ -52,15 +32,11 @@ PRIM(setnoexport) {
 }
 
 PRIM(version) {
-	return mklist(mkterm((char *) version, NULL), NULL);
+	return mklist(mkstr((char *) version), NULL);
 }
 
 PRIM(exec) {
 	return eval(list, NULL, evalflags | eval_inchild);
-}
-
-PRIM(eval) {
-	return runstring(str("%L", list, " "), "<eval>", evalflags);
 }
 
 PRIM(dot) {
@@ -88,10 +64,10 @@ PRIM(dot) {
 	lp = lp->next;
 	fd = eopen(file, oOpen);
 	if (fd == -1)
-		fail("$&dot", "%s: %s", file, strerror(errno));
+		fail("$&dot", "%s: %s", file, esstrerror(errno));
 
 	varpush(&star, "*", lp);
-	varpush(&zero, "0", mklist(mkterm(file, NULL), NULL));
+	varpush(&zero, "0", mklist(mkstr(file), NULL));
 
 	result = runfd(fd, file, runflags);
 
@@ -107,7 +83,7 @@ PRIM(flatten) {
 		fail("$&flatten", "usage: %%flatten separator [args ...]");
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
-	lp = mklist(mkterm(str("%L", lp->next, sep), NULL), NULL);
+	lp = mklist(mkstr(str("%L", lp->next, sep)), NULL);
 	RefReturn(lp);
 }
 
@@ -116,16 +92,19 @@ PRIM(whatis) {
 	if (list == NULL || list->next != NULL)
 		fail("$&whatis", "usage: $&whatis program");
 	Ref(Term *, term, list->term);
-	if (term->closure == NULL) {
-		Ref(char *, prog, term->str);
+	if (getclosure(term) == NULL) {
+		List *fn;
+		Ref(char *, prog, getstr(term));
 		assert(prog != NULL);
-		if (isabsolute(prog)) {
-			char *error = checkexecutable(prog);
-			if (error != NULL)
-				fail("$&whatis", "%s: %s", prog, error);
-		} else {
-			list = varlookup2("fn-", prog);
-			if (list == NULL)
+		fn = varlookup2("fn-", prog, binding);
+		if (fn != NULL)
+			list = fn;
+		else {
+			if (isabsolute(prog)) {
+				char *error = checkexecutable(prog);
+				if (error != NULL)
+					fail("$&whatis", "%s: %s", prog, error);
+			} else
 				list = pathsearch(term);
 		}
 		RefEnd(prog);
@@ -161,8 +140,8 @@ PRIM(var) {
 	Ref(List *, rest, list->next);
 	Ref(char *, name, getstr(list->term));
 	Ref(List *, defn, varlookup(name, NULL));
-	rest = prim_var(rest, evalflags);
-	term = mkterm(str("%S = %#L", name, defn, " "), NULL);
+	rest = prim_var(rest, NULL, evalflags);
+	term = mkstr(str("%S = %#L", name, defn, " "));
 	list = mklist(term, rest);
 	RefEnd3(defn, name, rest);
 	return list;
@@ -192,8 +171,9 @@ PRIM(parse) {
 	RefEnd(lp);
 	tree = parse(prompt1, prompt2);
 	result = (tree == NULL)
-			? NULL
-			: mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
+		   ? NULL
+		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
+			    NULL);
 	RefEnd2(prompt2, prompt1);
 	return result;
 }
@@ -203,39 +183,44 @@ PRIM(exitonfalse) {
 }
 
 PRIM(batchloop) {
-	Handler h;
-	List *e;
 	Ref(List *, result, true);
-	Ref(List *, arg, list);
+	Ref(List *, dispatch, NULL);
 
 	SIGCHK();
-	if ((e = pushhandler(&h)) == NULL)
+
+	ExceptionHandler
+
 		for (;;) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
 			cmd = (parser == NULL)
-					? prim("parse", NULL, 0)
+					? prim("parse", NULL, NULL, 0)
 					: eval(parser, NULL, 0);
 			SIGCHK();
-			if (arg != NULL)
-				cmd = append(arg, cmd);
+			dispatch = varlookup("fn-%dispatch", NULL);
 			if (cmd != NULL) {
+				if (dispatch != NULL)
+					cmd = append(dispatch, cmd);
 				result = eval(cmd, NULL, evalflags);
 				SIGCHK();
 			}
 		}
 
-	if (e->term == NULL || e->term->str == NULL || !streq(e->term->str, "eof"))
-		throw(e);
-	RefEnd(arg);
-	if (result == true)
-		result = listcopy(true);
-	RefReturn(result);
+	CatchException (e)
+
+		if (!termeq(e->term, "eof"))
+			throw(e);
+		RefEnd(dispatch);
+		if (result == true)
+			result = true;
+		RefReturn(result);
+
+	EndExceptionHandler
 }
 
 PRIM(collect) {
 	gc();
-	return listcopy(true);
+	return true;
 }
 
 PRIM(home) {
@@ -245,7 +230,7 @@ PRIM(home) {
 	if (list->next != NULL)
 		fail("$&home", "usage: %%home [user]");
 	pw = getpwnam(getstr(list->term));
-	return (pw == NULL) ? NULL : mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
+	return (pw == NULL) ? NULL : mklist(mkstr(gcdup(pw->pw_dir)), NULL);
 }
 
 PRIM(vars) {
@@ -257,7 +242,7 @@ PRIM(internals) {
 }
 
 PRIM(isinteractive) {
-	return listcopy(isinteractive() ? true : false);
+	return isinteractive() ? true : false;
 }
 
 PRIM(noreturn) {
@@ -274,19 +259,42 @@ PRIM(noreturn) {
 	RefReturn(lp);
 }
 
+PRIM(setmaxevaldepth) {
+	char *s;
+	long n;
+	if (list == NULL) {
+		maxevaldepth = MAXmaxevaldepth;
+		return NULL;
+	}
+	if (list->next != NULL)
+		fail("$&setmaxevaldepth", "usage: $&setmaxevaldepth [limit]");
+	Ref(List *, lp, list);
+	n = strtol(getstr(lp->term), &s, 0);
+	if (n < 0 || (s != NULL && *s != '\0'))
+		fail("$&setmaxevaldepth", "max-eval-depth must be set to a positive integer");
+	if (n < MINmaxevaldepth)
+		n = (n == 0) ? MAXmaxevaldepth : MINmaxevaldepth;
+	maxevaldepth = n;
+	RefReturn(lp);
+}
+
+#if READLINE
+PRIM(resetterminal) {
+	resetterminal = TRUE;
+	return true;
+}
+#endif
+
 
 /*
  * initialization
  */
 
 extern Dict *initprims_etc(Dict *primdict) {
-	X(true);
-	X(false);
 	X(echo);
 	X(count);
 	X(version);
 	X(exec);
-	X(eval);
 	X(dot);
 	X(flatten);
 	X(whatis);
@@ -305,5 +313,9 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(isinteractive);
 	X(exitonfalse);
 	X(noreturn);
+	X(setmaxevaldepth);
+#if READLINE
+	X(resetterminal);
+#endif
 	return primdict;
 }

@@ -1,4 +1,4 @@
-/* glom.c -- walk parse tree to produce list ($Revision: 1.5 $) */
+/* glom.c -- walk parse tree to produce list ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -7,7 +7,7 @@
 extern List *concat(List *list1, List *list2) {
 	List **p, *result = NULL;
 
-	gcdisable(0);
+	gcdisable();
 	for (p = &result; list1 != NULL; list1 = list1->next) {
 		List *lp;
 		for (lp = list2; lp != NULL; lp = lp->next) {
@@ -62,7 +62,7 @@ static List *qconcat(List *list1, List *list2, StrList *ql1, StrList *ql2, StrLi
 	List **p, *result = NULL;
 	StrList **qp;
 
-	gcdisable(0);
+	gcdisable();
 	for (p = &result, qp = quotep; list1 != NULL; list1 = list1->next, ql1 = ql1->next) {
 		List *lp;
 		StrList *qlp;
@@ -88,7 +88,7 @@ static List *subscript(List *list, List *subs) {
 	int lo, hi, len, counter;
 	List *result, **prevp, *current;
 
-	gcdisable(0);
+	gcdisable();
 
 	result = NULL;
 	prevp = &result;
@@ -179,15 +179,29 @@ static List *glom1(Tree *tree, Binding *binding) {
 			tp = NULL;
 			break;
 		case nVar:
-			list = glom1(tp->u[0].p, bp);
+			Ref(List *, var, glom1(tp->u[0].p, bp));
 			tp = NULL;
-			Ref(char *, name, varname(list));
-			list = listcopy(varlookup(name, bp));
-			RefEnd(name);
+			for (; var != NULL; var = var->next) {
+				list = listcopy(varlookup(getstr(var->term), bp));
+				if (list != NULL) {
+					if (result == NULL)
+						tail = result = list;
+					else
+						tail->next = list;
+					for (; tail->next != NULL; tail = tail->next)
+						;
+				}
+				list = NULL;
+			}
+			RefEnd(var);
 			break;
 		case nVarsub:
 			list = glom1(tp->u[0].p, bp);
-			Ref(char *, name, varname(list));
+			if (list == NULL)
+				fail("es:glom", "null variable name in subscript");
+			if (list->next != NULL)
+				fail("es:glom", "multi-word variable name in subscript");
+			Ref(char *, name, getstr(list->term));
 			list = varlookup(name, bp);
 			Ref(List *, sub, glom1(tp->u[1].p, bp));
 			tp = NULL;
@@ -195,7 +209,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 			RefEnd2(sub, name);
 			break;
 		case nCall:
-			list = walk(tp->u[0].p, bp, 0);
+			list = listcopy(walk(tp->u[0].p, bp, 0));
 			tp = NULL;
 			break;
 		case nList:

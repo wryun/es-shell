@@ -1,14 +1,15 @@
-/* var.c -- es variables ($Revision: 1.15 $) */
+/* var.c -- es variables ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "gc.h"
 #include "var.h"
+#include "term.h"
 
 #if PROTECT_ENV
-#define	ENV_FORMAT	"%F=%L"
+#define	ENV_FORMAT	"%F=%W"
 #define	ENV_DECODE	"%N"
 #else
-#define	ENV_FORMAT	"%s=%L"
+#define	ENV_FORMAT	"%s=%W"
 #define	ENV_DECODE	"%s"
 #endif
 
@@ -27,11 +28,13 @@ static Boolean specialvar(const char *name) {
 }
 
 static Boolean hasbindings(List *list) {
-	for (; list != NULL; list = list->next) {
-		Closure *closure = list->term->closure;
-		if (closure != NULL && closure->binding != NULL)
-			return TRUE;
-	}
+	for (; list != NULL; list = list->next)
+		if (isclosure(list->term)) {
+			Closure *closure = getclosure(list->term);
+			assert(closure != NULL);
+			if (closure->binding != NULL)
+				return TRUE;
+		}
 	return FALSE;
 }
 
@@ -59,27 +62,6 @@ static size_t VarScan(void *p) {
 	return sizeof (Var);
 }
 
-
-/*
- * public entry points
- */
-
-/* varname -- validate a variable name */
-extern char *varname(List *list) {
-	char *var;
-	if (list == NULL)
-		fail("es:varname", "null variable name");
-	if (list->next != NULL)
-		fail("es:varname", "multi-word variable name");
-	var = getstr(list->term);
-	assert(var != NULL);
-	if (*var == '\0')
-		fail("es:varname", "zero-length variable name");
-	if (strchr(var, '=') != NULL)
-		fail("es:varname", "'=' in variable name");
-	return var;
-}
-
 /* iscounting -- is it a counter number, i.e., an integer > 0 */
 static Boolean iscounting(const char *name) {
 	int c;
@@ -89,7 +71,24 @@ static Boolean iscounting(const char *name) {
 			return FALSE;
 	if (streq(name, "0"))
 		return FALSE;
-	return TRUE;
+	return name[0] != '\0';
+}
+
+
+/*
+ * public entry points
+ */
+
+/* validatevar -- ensure that a variable name is valid */
+extern void validatevar(const char *var) {
+	if (*var == '\0')
+		fail("es:var", "zero-length variable name");
+	if (iscounting(var))
+		fail("es:var", "illegal variable name: %S", var);
+#if !PROTECT_ENV
+	if (strchr(var, '=') != NULL)
+		fail("es:var", "'=' in variable name: %S", var);
+#endif
 }
 
 /* isexported -- is a variable exported? */
@@ -108,7 +107,7 @@ extern void setnoexport(List *list) {
 		noexport = NULL;
 		return;
 	}
-	gcdisable(0);
+	gcdisable();
 	for (noexport = mkdict(); list != NULL; list = list->next)
 		noexport = dictput(noexport, getstr(list->term), (void *) setnoexport);
 	gcenable();
@@ -125,6 +124,7 @@ extern List *varlookup(const char *name, Binding *bp) {
 		return mklist(term, NULL);
 	}
 
+	validatevar(name);
 	for (; bp != NULL; bp = bp->next)
 		if (streq(name, bp->name))
 			return bp->defn;
@@ -135,8 +135,14 @@ extern List *varlookup(const char *name, Binding *bp) {
 	return var->defn;
 }
 
-extern List *varlookup2(char *name1, char *name2) {
-	Var *var = dictget2(vars, name1, name2);
+extern List *varlookup2(char *name1, char *name2, Binding *bp) {
+	Var *var;
+	
+	for (; bp != NULL; bp = bp->next)
+		if (streq2(bp->name, name1, name2))
+			return bp->defn;
+
+	var = dictget2(vars, name1, name2);
 	if (var == NULL)
 		return NULL;
 	return var->defn;
@@ -146,14 +152,14 @@ static List *callsettor(char *name, List *defn) {
 	Push p;
 	List *settor;
 
-	if (specialvar(name) || (settor = varlookup2("set-", name)) == NULL)
+	if (specialvar(name) || (settor = varlookup2("set-", name, NULL)) == NULL)
 		return defn;
 
 	Ref(List *, lp, defn);
 	Ref(List *, fn, settor);
-	varpush(&p, "0", mklist(mkterm(name, NULL), NULL));
+	varpush(&p, "0", mklist(mkstr(name), NULL));
 
-	lp = eval(append(fn, lp), NULL, 0);
+	lp = listcopy(eval(append(fn, lp), NULL, 0));
 
 	varpop(&p);
 	RefEnd(fn);
@@ -163,6 +169,7 @@ static List *callsettor(char *name, List *defn) {
 extern void vardef(char *name, Binding *binding, List *defn) {
 	Var *var;
 
+	validatevar(name);
 	for (; binding != NULL; binding = binding->next)
 		if (streq(name, binding->name)) {
 			binding->defn = defn;
@@ -193,6 +200,7 @@ extern void vardef(char *name, Binding *binding, List *defn) {
 extern void varpush(Push *push, char *name, List *defn) {
 	Var *var;
 
+	validatevar(name);
 	push->name = name;
 	push->nameroot.next = rootlist;
 	push->nameroot.p = (void **) &push->name;
@@ -265,7 +273,7 @@ static void mkenv0(void *dummy, char *key, void *value) {
 	)
 		return;
 	if (var->env == NULL || (rebound && (var->flags & var_hasbindings))) {
-		char *envstr = str(ENV_FORMAT, key, var->defn, "\001");
+		char *envstr = str(ENV_FORMAT, key, var->defn);
 		var->env = envstr;
 	}
 	assert(env->count < env->alloclen);
@@ -281,7 +289,7 @@ static void mkenv0(void *dummy, char *key, void *value) {
 extern Vector *mkenv(void) {
 	if (isdirty || rebound) {
 		env->count = envmin;
-		gcdisable(0);		/* TODO: make this a good guess */
+		gcdisable();		/* TODO: make this a good guess */
 		dictforall(vars, mkenv0, NULL);
 		gcenable();
 		env->vector[env->count] = NULL;
@@ -299,7 +307,7 @@ extern Vector *mkenv(void) {
 /* addtolist -- dictforall procedure to create a list */
 extern void addtolist(void *arg, char *key, void *value) {
 	List **listp = arg;
-	Term *term = mkterm(key, NULL);
+	Term *term = mkstr(key);
 	*listp = mklist(term, *listp);
 }
 
@@ -340,7 +348,66 @@ extern void initvars(void) {
 	vars = mkdict();
 	noexport = NULL;
 	env = mkvector(10);
+#if ABUSED_GETENV
+# if READLINE
+	initgetenv();
+# endif
+#endif
 }
+
+/* importvar -- import a single environment variable */
+static void importvar(char *name0, char *value) {
+	char sep[2] = { ENV_SEPARATOR, '\0' };
+
+	Ref(char *, name, name0);
+	Ref(List *, defn, NULL);
+	defn = fsplit(sep, mklist(mkstr(value + 1), NULL), FALSE);
+
+	if (strchr(value, ENV_ESCAPE) != NULL) {
+		List *list;
+		gcdisable();
+		for (list = defn; list != NULL; list = list->next) {
+			int offset = 0;
+			const char *word = list->term->str;
+			const char *escape;
+			while ((escape = strchr(word + offset, ENV_ESCAPE))
+			       != NULL) {
+				offset = escape - word + 1;
+				switch (escape[1]) {
+				    case '\0':
+					if (list->next != NULL) {
+						const char *str2
+						  = list->next->term->str;
+						char *str
+						  = gcalloc(offset
+							    + strlen(str2) + 1,
+							    &StringTag);
+						memcpy(str, word, offset - 1);
+						str[offset - 1]
+						  = ENV_SEPARATOR;
+						strcpy(str + offset, str2);
+						list->term->str = str;
+						list->next = list->next->next;
+					}
+					break;
+				    case ENV_ESCAPE: {
+					char *str
+					  = gcalloc(strlen(word), &StringTag);
+					memcpy(str, word, offset);
+					strcpy(str + offset, escape + 2);
+					list->term->str = str;
+					offset += 1;
+					break;
+				    }
+				}
+			}
+		}
+		gcenable();
+	}
+	vardef(name, NULL, defn);
+	RefEnd2(defn, name);
+}
+
 
 /* initenv -- load variables from the environment */
 extern void initenv(char **envp, Boolean protected) {
@@ -351,12 +418,14 @@ extern void initenv(char **envp, Boolean protected) {
 	for (; (envstr = *envp) != NULL; envp++) {
 		size_t nlen;
 		char *eq = strchr(envstr, '=');
+		char *name;
 		if (eq == NULL) {
 			env->vector[env->count++] = envstr;
 			if (env->count == env->alloclen) {
 				Vector *newenv = mkvector(env->alloclen * 2);
 				newenv->count = env->count;
-				memcpy(newenv->vector, env->vector, env->count * sizeof *env->vector);
+				memcpy(newenv->vector, env->vector,
+				       env->count * sizeof *env->vector);
 				env = newenv;
 			}
 			continue;
@@ -365,12 +434,10 @@ extern void initenv(char **envp, Boolean protected) {
 			buf = erealloc(buf, bufsize);
 		memcpy(buf, envstr, nlen);
 		buf[nlen] = '\0';
-		Ref(char *, name, str(ENV_DECODE, buf));
-		if (!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
-			List *defn = fsplit("\1", mklist(mkterm(eq + 1, NULL), NULL), FALSE);
-			vardef(name, NULL, defn);
-		}
-		RefEnd(name);
+		name = str(ENV_DECODE, buf);
+		if (!protected
+		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
+			importvar(name, eq);
 	}
 
 	envmin = env->count;

@@ -1,4 +1,4 @@
-/* token.c -- lexical analyzer for es ($Revision: 1.12 $) */
+/* token.c -- lexical analyzer for es ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "input.h"
@@ -190,7 +190,10 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		} else if (*buf == 'l') {
 			if (streq(buf + 1, "ocal"))	return LOCAL;
 			if (streq(buf + 1, "et"))	return LET;
-		} else if (streq(buf, "%closure"))	return CLOSURE;
+		} else if (streq(buf, "~~"))
+			return EXTRACT;
+		else if (streq(buf, "%closure"))
+			return CLOSURE;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;

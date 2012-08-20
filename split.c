@@ -1,4 +1,4 @@
-/* split.c -- split strings based on separators ($Revision: 1.5 $) */
+/* split.c -- split strings based on separators ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -43,7 +43,7 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 	if (splitchars) {
 		assert(buf == NULL);
 		while (s < inend) {
-			Term *term = mkterm(gcndup((char *) s++, 1), NULL);
+			Term *term = mkstr(gcndup((char *) s++, 1));
 			value = mklist(term, value);
 		}
 		return;
@@ -56,7 +56,7 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 		int c = *s++;
 		if (buf != NULL)
 			if (isifs[c]) {
-				Term *term = mkterm(sealcountedbuffer(buf), NULL);
+				Term *term = mkstr(sealcountedbuffer(buf));
 				value = mklist(term, value);
 				buf = coalesce ? NULL : openbuffer(0);
 			} else
@@ -66,7 +66,7 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 	}
 
 	if (endword && buf != NULL) {
-		Term *term = mkterm(sealcountedbuffer(buf), NULL);
+		Term *term = mkstr(sealcountedbuffer(buf));
 		value = mklist(term, value);
 		buf = NULL;
 	}
@@ -77,7 +77,7 @@ extern List *endsplit(void) {
 	List *result;
 
 	if (buffer != NULL) {
-		Term *term = mkterm(sealcountedbuffer(buffer), NULL);
+		Term *term = mkstr(sealcountedbuffer(buffer));
 		value = mklist(term, value);
 		buffer = NULL;
 	}

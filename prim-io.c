@@ -1,15 +1,8 @@
-/* prim-io.c -- input/output and redirection primitives ($Revision: 1.11 $) */
+/* prim-io.c -- input/output and redirection primitives ($Revision: 1.2 $) */
 
 #include "es.h"
+#include "gc.h"
 #include "prim.h"
-
-PRIM(one) {
-	if (list == NULL)
-		fail("$&one", "null filename in redirection");
-	if (list->next != NULL)
-		fail("$&one", "too many files in redirection");
-	return list;
-}
 
 static const char *caller;
 
@@ -23,9 +16,8 @@ static int getnumber(const char *s) {
 }
 
 static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags) {
-	List *e;
-	Handler h;
 	int destfd, srcfd;
+	volatile int inparent = (evalflags & eval_inchild) == 0;
 	volatile int ticket = UNREGISTERED;
 
 	assert(list != NULL);
@@ -33,17 +25,16 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 	destfd = getnumber(getstr(lp->term));
 	lp = (*rop)(&srcfd, lp->next);
 
-	if ((e = pushhandler(&h)) != NULL) {
+	ExceptionHandler
+		ticket = (srcfd == -1)
+			   ? defer_close(inparent, destfd)
+			   : defer_mvfd(inparent, srcfd, destfd);
+		lp = eval(lp, NULL, evalflags);
+		undefer(ticket);
+	CatchException (e)
 		undefer(ticket);
 		throw(e);
-	}
-
-	ticket = (srcfd == -1)
-			? defer_close((evalflags & eval_inchild) == 0, destfd)
-			: defer_mvfd((evalflags & eval_inchild) == 0, srcfd, destfd);
-	lp = eval(lp, NULL, evalflags);
-	undefer(ticket);
-	pophandler(&h);
+	EndExceptionHandler
 
 	RefReturn(lp);
 }
@@ -89,7 +80,7 @@ REDIR(openfile) {
 	lp = lp->next;
 	fd = eopen(name, kind);
 	if (fd == -1)
-		fail("$&openfile", "%s: %s", name, strerror(errno));
+		fail("$&openfile", "%s: %s", name, esstrerror(errno));
 	*srcfdp = fd;
 	RefReturn(lp);
 }
@@ -112,7 +103,7 @@ REDIR(dup) {
 	Ref(List *, lp, list);
 	fd = dup(fdmap(getnumber(getstr(lp->term))));
 	if (fd == -1)
-		fail("$&dup", "dup: %s", strerror(errno));
+		fail("$&dup", "dup: %s", esstrerror(errno));
 	*srcfdp = fd;
 	lp = lp->next;
 	RefReturn(lp);
@@ -139,29 +130,25 @@ PRIM(close) {
 
 /* pipefork -- create a pipe and fork */
 static int pipefork(int p[2], int *extra) {
-	int pid;
-	List *e;
-	Handler h;
+	volatile int pid = 0;
 
 	if (pipe(p) == -1)
-		fail(caller, "pipe: %s", strerror(errno));
+		fail(caller, "pipe: %s", esstrerror(errno));
 
 	registerfd(&p[0], FALSE);
 	registerfd(&p[1], FALSE);
 	if (extra != NULL)
 		registerfd(extra, FALSE);
 
-	if ((e = pushhandler(&h)) != NULL) {
+	ExceptionHandler
+		pid = efork(TRUE, FALSE);
+	CatchExceptionIf (pid != 0, e)
 		unregisterfd(&p[0]);
 		unregisterfd(&p[1]);
 		if (extra != NULL)
 			unregisterfd(extra);
 		throw(e);
-	}
-
-	pid = efork(TRUE, FALSE);
-	if (pid != 0)
-		pophandler(&h);
+	EndExceptionHandler;
 
 	unregisterfd(&p[0]);
 	unregisterfd(&p[1]);
@@ -249,7 +236,7 @@ PRIM(pipe) {
 		Term *t;
 		int status = ewaitfor(pids[--n]);
 		printstatus(0, status);
-		t = mkterm(mkstatus(status), NULL);
+		t = mkstr(mkstatus(status));
 		result = mklist(t, result);
 	} while (0 < n);
 	if (evalflags & eval_inchild)
@@ -257,11 +244,9 @@ PRIM(pipe) {
 	RefReturn(result);
 }
 
-#if DEVFD
+#if HAVE_DEV_FD
 PRIM(readfrom) {
 	int pid, p[2], status;
-	List *e;
-	Handler h;
 	Push push;
 
 	caller = "$&readfrom";
@@ -281,18 +266,17 @@ PRIM(readfrom) {
 	}
 
 	close(p[1]);
-	lp = mklist(mkterm(str(DEVFD_PATH, p[0]), NULL), NULL);
+	lp = mklist(mkstr(str(DEVFD_PATH, p[0])), NULL);
 	varpush(&push, var, lp);
 
-	if ((e = pushhandler(&h)) != NULL) {
+	ExceptionHandler
+		lp = eval1(cmd, evalflags);
+	CatchException (e)
 		close(p[0]);
 		ewaitfor(pid);
 		throw(e);
-	}
+	EndExceptionHandler
 
-	lp = eval1(cmd, evalflags);
-
-	pophandler(&h);
 	close(p[0]);
 	status = ewaitfor(pid);
 	printstatus(0, status);
@@ -303,9 +287,8 @@ PRIM(readfrom) {
 
 PRIM(writeto) {
 	int pid, p[2], status;
-	List *e;
-	Handler h;
 	Push push;
+	Handler h;
 
 	caller = "$&writeto";
 	if (length(list) != 3)
@@ -324,16 +307,16 @@ PRIM(writeto) {
 	}
 
 	close(p[0]);
-	lp = mklist(mkterm(str(DEVFD_PATH, p[1]), NULL), NULL);
+	lp = mklist(mkstr(str(DEVFD_PATH, p[1])), NULL);
 	varpush(&push, var, lp);
 
-	if ((e = pushhandler(&h)) != NULL) {
+	ExceptionHandler
+		lp = eval1(cmd, evalflags);
+	CatchException (e)
 		close(p[1]);
 		ewaitfor(pid);
 		throw(e);
-	}
-
-	lp = eval1(cmd, evalflags);
+	EndExceptionHandler
 
 	pophandler(&h);
 	close(p[1]);
@@ -360,7 +343,7 @@ restart:
 		if (errno == EINTR)
 			goto restart;
 		close(fd);
-		fail("$&backquote", "backquote read: %s", strerror(errno));
+		fail("$&backquote", "backquote read: %s", esstrerror(errno));
 	}
 	return endsplit();
 }
@@ -383,11 +366,12 @@ PRIM(backquote) {
 	}
 
 	close(p[1]);
-	gcdisable(0);
+	gcdisable();
 	lp = bqinput(sep, p[0]);
 	close(p[0]);
 	status = ewaitfor(pid);
 	printstatus(0, status);
+	lp = mklist(mkstr(mkstatus(status)), lp);
 	gcenable();
 	list = lp;
 	RefEnd2(sep, lp);
@@ -398,11 +382,46 @@ PRIM(backquote) {
 PRIM(newfd) {
 	if (list != NULL)
 		fail("$&newfd", "usage: $&newfd");
-	return mklist(mkterm(str("%d", newfd()), NULL), NULL);
+	return mklist(mkstr(str("%d", newfd())), NULL);
+}
+
+/* read1 -- read one byte */
+static int read1(int fd) {
+	int nread;
+	unsigned char buf;
+	do {
+		nread = eread(fd, (char *) &buf, 1);
+		SIGCHK();
+	} while (nread == -1 && errno == EINTR);
+	if (nread == -1)
+		fail("$&read", esstrerror(errno));
+	return nread == 0 ? EOF : buf;
+}
+
+PRIM(read) {
+	int c;
+	int fd = fdmap(0);
+
+	static Buffer *buffer = NULL;
+	if (buffer != NULL)
+		freebuffer(buffer);
+	buffer = openbuffer(0);
+
+	while ((c = read1(fd)) != EOF && c != '\n')
+		buffer = bufputc(buffer, c);
+
+	if (c == EOF && buffer->current == 0) {
+		freebuffer(buffer);
+		buffer = NULL;
+		return NULL;
+	} else {
+		List *result = mklist(mkstr(sealcountedbuffer(buffer)), NULL);
+		buffer = NULL;
+		return result;
+	}
 }
 
 extern Dict *initprims_io(Dict *primdict) {
-	X(one);
 	X(openfile);
 	X(close);
 	X(dup);
@@ -410,9 +429,10 @@ extern Dict *initprims_io(Dict *primdict) {
 	X(backquote);
 	X(newfd);
 	X(here);
-#if DEVFD
+#if HAVE_DEV_FD
 	X(readfrom);
 	X(writeto);
 #endif
+	X(read);
 	return primdict;
 }

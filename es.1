@@ -1,4 +1,4 @@
-.\" es.1 -- es manual page ($Revision: 1.32 $)
+.\" es.1 -- es manual page ($Revision: 1.1.1.1 $)
 .\" macros stolen from rc.1
 .\"-------
 .\" Man page portability notes
@@ -221,15 +221,18 @@ The first word is the command to be executed; the remaining
 words are passed as arguments to that command.
 If the first word is a string, it is a interpreted as the
 name of a program or shell function to run.
+If the name is the name of a shell function, that function
+is executed.
+Otherwise, the name is used as the name of an executable file.
 If the name begins with
 .Cr / ,
 .Cr ./ ,
 or
 .Cr ../ ,
-then the name is used as an absolute path
-name referring to an executable file.
-Otherwise, the name is searched for among the shell functions, and
-then as an executable file in the directories named by
+then it is used as the absolute path name of a file;
+if not,
+.I es
+looks for an executable file in the directories named by
 .Cr $path .
 .PP
 Commands are terminated by newline or semicolon
@@ -409,6 +412,40 @@ assigning the empty list to a variable:
 .Ic var =
 .De
 .PP
+Multiple variables may be assigned with a single assignment statment.
+The left hand side of the assignment operation consists of a list of
+variables which are assigned, one by one, to the values in the list
+on the right hand side.  If there are more variables than values in
+the list, the empty list is assigned to the remaining variables.
+If there are fewer variables than elements in the list, the last
+variable is bound to all the remaining list values.
+.PP
+For example,
+.Ds
+.Cr "(a b) = 1 2 3"
+.De
+.PP
+has the same effect as
+.Ds
+.Cr "a = 1"
+.Cr "b = 2 3"
+.Ds
+.PP
+and
+.Ds
+.Cr "(a b c) = 1 2"
+.De
+.PP
+is the same as
+.Ds
+.Cr "a = 1"
+.Cr "b = 2"
+.Cr "c ="
+.Ds
+.PP
+Note that when assigning values to more than one variable,
+the list of variables must be enclosed in parentheses.
+.PP
 For ``free careting'' (see below) to work correctly,
 .I es
 must make certain assumptions
@@ -449,6 +486,18 @@ prints
 .Cr "Bonjour"
 .De
 .PP
+Each element of the list in parentheses is treated as an
+independent variable and expanded separately.
+Thus, given the above definitions,
+.Ds
+.Cr "echo $(Guten Morgen)"
+.De
+.PP
+prints
+.Ds
+.Cr "Good Morning"
+.De
+.PP
 To count the number of elements in a variable, use
 .Ds
 .Ci $# var
@@ -483,11 +532,16 @@ prints
 .Cr "three three three"
 .De
 .PP
-If
-.I n
-references a nonexistent element, then
-.Ci $ var ( n )
-returns the empty list.
+Subscript indices which refer to nonexistent elements
+expand to the empty list.  Thus, given the definition above
+.Ds
+.Cr "echo $a(3 1 4 1 5 9 2 6 5)"
+.De
+.PP
+prints
+.Ds
+.Cr "three one one two"
+.De
 .PP
 Subscript ranges are of the form
 .Ic lo ... hi
@@ -728,6 +782,36 @@ For example:
 .De
 .PP
 is true.
+.SS "Pattern Extraction"
+The double-tilde
+.Rc ( ~~ )
+operator is used in
+.I es
+for extracting the parts of strings that match patterns.
+The command
+.Ds
+.Cr "~~ \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
+.De
+.PP
+returns the parts of each matching subject which correspond to the
+wildcards.
+.PP
+Each subject is checked in order against each pattern;  if it matches
+the pattern, the parts of the subject which matched each
+.Cr "*" ,
+.Cr "?" ,
+or
+.Cr "[]"
+character range are extracted, and processing moves on to the next
+subject.  If the subject does not match, the next pattern is tried.
+.PP
+For example, the result of the extraction operation
+.Ds
+.Cr "~~ (foo.c foo.x bar.h) *.[ch]"
+.De
+.PP
+is the list
+.Cr "(foo c bar h)" .
 .SS "Command Substitution"
 A list may be formed from the output of a command by using backquote
 substitution:
@@ -814,6 +898,8 @@ an extension of the normal shell conventions apply.
 If any element of a list is not equal to
 .Rc `` 0 ''
 (or the empty string), that list is considered false.
+.PP
+The return value of an assignment operation is the assigned value.
 .SS "Logical Operators"
 There are a number of operators in
 .I es
@@ -1414,22 +1500,6 @@ file being interpreted for the duration of a
 .Cr apid
 The process ID of the last process started in the background.
 .TP
-.Cr cdpath
-A list of directories to search for the target of a
-.Cr cd
-command.
-The empty string stands for the current directory.
-Note that if
-.Cr $cdpath
-does not contain the current directory, then the current
-directory will not be searched; this allows directory searching to
-begin in a directory other than the current directory.
-Note also that an assignment to
-.Cr cdpath
-causes an automatic assignment to
-.Cr CDPATH ,
-and vice-versa.
-.TP
 .Cr history
 The name of a file to which commands are appended as
 .I es
@@ -1459,9 +1529,9 @@ if
 .I es
 has been started up as a login shell.
 Like
-.Cr cdpath
+.Cr path
 and
-.Cr CDPATH ,
+.Cr PATH ,
 .Cr home
 and
 .Cr HOME
@@ -1484,14 +1554,11 @@ are exported.
 .Cr path
 This is a list of directories to search in for commands.
 The empty string stands for the current directory.
-Note that like
-.Cr cdpath
-and
-.Cr CDPATH ,
+Note also that an assignment to
 .Cr path
-and
-.Cr PATH
-are aliased to each other.
+causes an automatic assignment to
+.Cr PATH ,
+and vice-versa.
 If neither
 .Cr path
 nor
@@ -1596,22 +1663,18 @@ other values will be on the list if the shell starts up with
 some signals ignored.
 .PP
 The values of
-.Cr path ,
-.Cr cdpath ,
+.Cr path
 and
 .Cr home
 are derived from the environment values of
-.Cr PATH ,
-.Cr CDPATH ,
+.Cr PATH
 and
 .Cr HOME
 if those values are present.
 This is for compatibility with other Unix programs, such as
 .IR sh (1).
 .Cr $PATH
-and
-.Cr $CDPATH
-are assumed to be colon-separated lists.
+is assumed to be a colon-separated list.
 .SH "SYNTACTIC SUGAR"
 .I Es
 internally rewrites much of the syntax presented thus far
@@ -1771,10 +1834,6 @@ Is the file a socket?
 Is the file a named pipe (FIFO)?
 .IE
 .TP
-.Cr "apids"
-Prints the process IDs of all background processes that the shell
-has not yet waited for.
-.TP
 .Cr "break \fIvalue\fP"
 Exits the current loop.
 .I Value
@@ -1790,13 +1849,6 @@ is run and passed the exception as an argument.
 .Cr "cd \fR[\fP\fIdirectory\fP\fR]\fP"
 Changes the current directory to
 .IR directory .
-The list of directories in
-.Cr $cdpath
-is searched for possible locations of
-.IR directory ,
-analogous to the searching of
-.Cr $path
-for executable files.
 With no argument,
 .Cr cd
 changes the current directory to
@@ -2081,6 +2133,14 @@ Evaluates the
 and, if it is true, runs the
 .I body
 and repeats.
+.TP
+.Cr "%read"
+Reads from standard input and returns either the empty list (in the
+case of end-of-file) or a single element string with up to one line of
+data, including possible redirections.  This function reads one
+character at a time in order to not read more data out of a pipe than
+it should.  The terminating newline (if present) is not included in
+the returned string.
 .SS "Hook Functions"
 A subset of the
 .Cr % -named
@@ -2117,10 +2177,11 @@ standard output as a list, separated (with the same rules used in
 into elements according to
 .IR separator .
 .TP
-.Cr "%batch-loop \fIdispatch\fP"
+.Cr %batch-loop
 Parses commands from the current input source and
 passes the commands to the function
-.IR dispatch .
+.IR %dispatch ,
+which is usually a dynamically bound identifier.
 This function catches the exception
 .Cr eof
 which causes it to return.
@@ -2131,16 +2192,6 @@ and
 commands, when the input source is not interactive.
 (See also
 .Cr %interactive-loop .)
-.TP
-.Cr "%cdpathsearch \fIdirname\fP"
-Looks for a directory named
-.I dirname
-in the directories listed in
-.Cr $cdpath .
-If such a directory is found, it is returned;
-if one is not found, an
-.Cr error
-exception is raised.
 .TP
 .Cr "%close \fIfd cmd\fP"
 Runs the command with the given file descriptor closed.
@@ -2232,11 +2283,12 @@ Returns the home directory of the named user, or
 .Cr $home
 if there are no arguments.
 .TP
-.Cr "%interactive-loop \fIdispatch\fP"
+.Cr "%interactive-loop"
 Prompts,
 parses commands from the current input source and
 passes the commands to the function
-.IR dispatch .
+.IR %dispatch ,
+which is usually a dynamically bound identifier.
 This function catches the exception
 .Cr eof
 which causes it to return.
@@ -2414,6 +2466,10 @@ may be used by other builtin commands,
 and probably don't make much sense to replace,
 though that is always possible.
 .TP
+.Cr "%apids"
+Returns the process IDs of all background processes that the shell
+has not yet waited for.
+.TP
 .Cr "%fsplit \fIseparator \fR[\fIargs ...\fR]"
 Splits its arguments into separate strings at every occurrence
 of any of the characters in the string
@@ -2488,20 +2544,15 @@ builtin functions with the same names:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-access	false	throw
-catch	forever	true
-echo	fork	umask
-eval	if	wait
+access	forever	throw
+catch	fork	umask
+echo	if	wait
 exec	newpgrp	
 exit	result	
 .ft R
 .De
 .PP
 In addition, the primitive
-.Cr unwindprotect
-implements the builtin function
-.Cr unwind-protect ,
-and the primitive
 .Cr dot
 implements the
 .Rc `` . ''
@@ -2511,9 +2562,7 @@ The
 .Cr cd
 primitive is used in the implementation of the
 .Cr cd
-builtin, but does not search
-.Cr $cdpath
-or understand no arguments to imply
+builtin, but does not understand no arguments to imply
 .Cr $home .
 The
 .Cr vars
@@ -2530,13 +2579,12 @@ prefixes:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-apids	here	run
-backquote	home	seq
-close	newfd	split
-count	one	var
-dup	openfile	whatis
-flatten	parse
-fsplit	pipe
+apids	here	read
+close	home	run
+count	newfd	seq
+dup	openfile	split
+flatten	parse	var
+fsplit	pipe	whatis
 .ft R
 .De
 .PP
@@ -2558,6 +2606,14 @@ primitive is used to implement the
 hook function, but does not print the process ID of the
 background process or set
 .Cr $apid .
+The
+.Cr backquote
+primitive is used to implement the
+.Cr %backquote
+hook function, but returns the exit status of the child as the
+first value of its result instead of setting
+.Cr $bqstatus
+to it.
 .PP
 The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
@@ -2581,6 +2637,22 @@ time	time
 writeto	%writeto
 .ft R
 .De
+.PP
+The primitive
+.Cr resetterminal
+is if
+.I es
+is compiled with support for the
+.I readline
+or
+.I editline
+libraries.
+It is used in the implementation of settor functions of the
+.Cr TERM
+and
+.Cr TERMCAP
+variables to notify the line editing packages that the terminal
+configuration has changed.
 .PP
 Several primitives are not directly associated with other function.
 They are:
@@ -2702,6 +2774,10 @@ that is, tail calls should not consume stack space.
 and
 .Cr return
 should have lexical scope.
+.PP
+Woe betide the environment string set by some other program to
+contain either the character control-a or the sequence control-b
+followed by control-a or control-b.
 .PP
 .Cr \-x
 is not nearly as useful as it should be.

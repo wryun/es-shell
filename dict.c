@@ -1,4 +1,4 @@
-/* dict.c -- linked list based dictionaries ($Revision: 1.2 $) */
+/* dict.c -- hash-table based dictionaries ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -199,18 +199,6 @@ extern void dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg
 			(*proc)(argp, ap->name, ap->value);
 	}
 	RefEnd2(argp, dict);
-}
-
-static Boolean streq2(const char *s, const char *t1, const char *t2) {
-	int c;
-	assert(s != NULL && t1 != NULL && t2 != NULL);
-	while ((c = *t1++) != '\0')
-		if (c != *s++)
-			return FALSE;
-	while ((c = *t2++) != '\0')
-		if (c != *s++)
-			return FALSE;
-	return *s == '\0';
 }
 
 /* dictget2 -- look up the catenation of two names (such a hack!) */

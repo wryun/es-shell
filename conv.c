@@ -1,4 +1,4 @@
-/* conv.c -- convert between internal and external forms ($Revision: 1.12 $) */
+/* conv.c -- convert between internal and external forms ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "print.h"
@@ -63,20 +63,59 @@ top:
 
 	switch (n->kind) {
 
-	case nWord:	fmtprint(f, "%s", n->u[0].s);		return FALSE;
-	case nQword:	fmtprint(f, "%#S", n->u[0].s);		return FALSE;
-	case nPrim:	fmtprint(f, "$&%s", n->u[0].s);		return FALSE;
+	case nWord:
+		fmtprint(f, "%s", n->u[0].s);
+		return FALSE;
 
-	case nAssign:	fmtprint(f, "%#T=", n->u[0].p);		tailcall(n->u[1].p, FALSE);
-	case nConcat:	fmtprint(f, "%#T^", n->u[0].p);		tailcall(n->u[1].p, TRUE);
-	case nMatch:	fmtprint(f, "~ %#T ", n->u[0].p);	tailcall(n->u[1].p, FALSE);
-	case nThunk:	fmtprint(f, "{%T}", n->u[0].p);		return FALSE;
-	case nVarsub:	fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p); return FALSE;
+	case nQword:
+		fmtprint(f, "%#S", n->u[0].s);
+		return FALSE;
 
-	case nLocal:	binding(f, "local", n);		tailcall(n->u[1].p, FALSE);
-	case nLet:	binding(f, "let", n);		tailcall(n->u[1].p, FALSE);
-	case nFor:	binding(f, "for", n);		tailcall(n->u[1].p, FALSE);
-	case nClosure:	binding(f, "%closure", n);	tailcall(n->u[1].p, FALSE);
+	case nPrim:
+		fmtprint(f, "$&%s", n->u[0].s);
+		return FALSE;
+
+	case nAssign:
+		fmtprint(f, "%#T=", n->u[0].p);
+		tailcall(n->u[1].p, FALSE);
+
+	case nConcat:
+		fmtprint(f, "%#T^", n->u[0].p);
+		tailcall(n->u[1].p, TRUE);
+
+	case nMatch:
+		fmtprint(f, "~ %#T ", n->u[0].p);
+		tailcall(n->u[1].p, FALSE);
+
+	case nExtract:
+		fmtprint(f, "~~ %#T ", n->u[0].p);
+		tailcall(n->u[1].p, FALSE);
+
+	case nThunk:
+		fmtprint(f, "{%T}", n->u[0].p);
+		return FALSE;
+
+	case nVarsub:
+		fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p);
+		return FALSE;
+
+
+	case nLocal:
+		binding(f, "local", n);
+		tailcall(n->u[1].p, FALSE);
+
+	case nLet:
+		binding(f, "let", n);
+		tailcall(n->u[1].p, FALSE);
+
+	case nFor:
+		binding(f, "for", n);
+		tailcall(n->u[1].p, FALSE);
+
+	case nClosure:
+		binding(f, "%closure", n);
+		tailcall(n->u[1].p, FALSE);
+
 
 	case nCall: {
 		Tree *t = n->u[0].p;
@@ -144,12 +183,14 @@ static void enclose(Format *f, Binding *binding, const char *sep) {
 	}
 }
 
+#if 0
 typedef struct Chain Chain;
 struct Chain {
 	Closure *closure;
 	Chain *next;
 };
 static Chain *chain = NULL;
+#endif
 
 /* %C -- print a closure */
 static Boolean Cconv(Format *f) {
@@ -157,9 +198,10 @@ static Boolean Cconv(Format *f) {
 	Tree *tree = closure->tree;
 	Binding *binding = closure->binding;
 	Boolean altform = (f->flags & FMT_altform) != 0;
-	Chain me, *cp;
-	int i;
 
+#if 0
+	int i;
+	Chain me, *cp;
 	assert(tree->kind == nThunk || tree->kind == nLambda || tree->kind == nPrim);
 	assert(binding == NULL || tree->kind != nPrim);
 
@@ -171,6 +213,7 @@ static Boolean Cconv(Format *f) {
 	me.closure = closure;
 	me.next = chain;
 	chain = &me;
+#endif
 
 	if (altform)
 		fmtprint(f, "%S", str("%C", closure));
@@ -183,80 +226,80 @@ static Boolean Cconv(Format *f) {
 		fmtprint(f, "%T", tree);
 	}
 
+#if 0
 	chain = chain->next;	/* TODO: exception unwinding? */
+#endif
 	return FALSE;
 }
 
 /* %E -- print a term */
 static Boolean Econv(Format *f) {
 	Term *term = va_arg(f->args, Term *);
-	char *str = term->str;
-	Closure *closure = term->closure;
-	assert((str == NULL) != (closure == NULL));
+	Closure *closure = getclosure(term);
+
 	if (closure != NULL)
 		fmtprint(f, (f->flags & FMT_altform) ? "%#C" : "%C", closure);
 	else
-		fmtprint(f, (f->flags & FMT_altform) ? "%S" : "%s", str);
+		fmtprint(f, (f->flags & FMT_altform) ? "%S" : "%s", getstr(term));
 	return FALSE;
-}
-
-/* getstr -- use a term as a string, regardless of its internal form */
-extern char *getstr(Term *term) {
-	char *s = term->str;
-	Closure *closure = term->closure;
-	assert((s == NULL) != (closure == NULL));
-	if (s != NULL)
-		return s;
-
-#if 0	/* TODO: decide whether getstr() leaves term in closure or string form */
-	Ref(Term *, tp, term);
-	s = str("%C", closure);
-	tp->str = s;
-	tp->closure = NULL;
-	RefEnd(tp);
-	return s;
-#else
-	return str("%C", closure);
-#endif
 }
 
 /* %S -- print a string with conservative quoting rules */
 static Boolean Sconv(Format *f) {
 	int c;
-	const char *s, *t;
+	enum { Begin, Quoted, Unquoted } state = Begin;
+	const unsigned char *s, *t;
 	extern const char nw[];
 
-	s = va_arg(f->args, const char *);
+	s = va_arg(f->args, const unsigned char *);
 	if (f->flags & FMT_altform || *s == '\0')
 		goto quoteit;
 	for (t = s; (c = *t) != '\0'; t++)
-		if (nw[c])
+		if (nw[c] || c == '@')
 			goto quoteit;
 	fmtprint(f, "%s", s);
 	return FALSE;
 
 quoteit:
-	if ((c = *s) != '\0' && !isprint(c) && s[1] == '\0') {
-		switch (c) {
-		case '\033':	fmtprint(f, "\\e");	break;
-		case '\a':	fmtprint(f, "\\a");	break;
-		case '\b':	fmtprint(f, "\\b");	break;
-		case '\f':	fmtprint(f, "\\f");	break;
-		case '\n':	fmtprint(f, "\\n");	break;
-		case '\r':	fmtprint(f, "\\r");	break;
-		case '\t':	fmtprint(f, "\\t");	break;
-		default:	fmtprint(f, "\\%o", c);	break;
-		}
-		return FALSE;
-	}
 
-	fmtputc(f, '\'');
-	for (t = s; c != '\0'; c = *++t) {
-		if (c == '\'')
-			fmtputc(f, '\'');
-		fmtputc(f, c);
+	for (t = s; (c = *t); t++)
+		if (!isprint(c)) {
+			if (state == Quoted)
+				fmtputc(f, '\'');
+			if (state != Begin)
+				fmtputc(f, '^');
+			switch (c) {
+			    case '\a':	fmtprint(f, "\\a");	break;
+			    case '\b':	fmtprint(f, "\\b");	break;
+			    case '\f':	fmtprint(f, "\\f");	break;
+			    case '\n':	fmtprint(f, "\\n");	break;
+			    case '\r':	fmtprint(f, "\\r");	break;
+			    case '\t':	fmtprint(f, "\\t");	break;
+		            case '\33':	fmtprint(f, "\\e");	break;
+			    default:	fmtprint(f, "\\%o", c);	break;
+			}
+			state = Unquoted;
+		} else {
+			if (state == Unquoted)
+				fmtputc(f, '^');
+			if (state != Quoted)
+				fmtputc(f, '\'');
+			if (c == '\'')
+				fmtputc(f, '\'');
+			fmtputc(f, c);
+			state = Quoted;
+		}
+
+	switch (state) {
+	    case Begin:
+		fmtprint(f, "''");
+		break;
+	    case Quoted:
+		fmtputc(f, '\'');
+		break;
+	    case Unquoted:
+		break;
 	}
-	fmtputc(f, '\'');
 
 	return FALSE;
 }
@@ -283,7 +326,8 @@ static Boolean Fconv(Format *f) {
 	name = va_arg(f->args, unsigned char *);
 
 	for (s = name; (c = *s) != '\0'; s++)
-		if ((s == name ? isalpha(c) : isalnum(c)) || (c == '_' && s[1] != '_'))
+		if ((s == name ? isalpha(c) : isalnum(c))
+		    || (c == '_' && s[1] != '_'))
 			fmtputc(f, c);
 		else
 			fmtprint(f, "__%02x", c);
@@ -310,6 +354,26 @@ static Boolean Nconv(Format *f) {
 	return FALSE;
 }
 
+/* %W -- print a list for exporting to the environment, merging and quoting */
+static Boolean Wconv(Format *f) {
+	List *lp, *next;
+
+	for (lp = va_arg(f->args, List *); lp != NULL; lp = next) {
+		int c;
+		const char *s;
+		for (s = getstr(lp->term); (c = *s) != '\0'; s++) {
+			if (c == ENV_ESCAPE || c == ENV_SEPARATOR)
+				fmtputc(f, ENV_ESCAPE);
+			fmtputc(f, c);
+		}
+		next = lp->next;
+		if (next != NULL)
+			fmtputc(f, ENV_SEPARATOR);
+	}
+	return FALSE;
+}
+
+
 #if LISPTREES
 static Boolean Bconv(Format *f) {
 	Tree *n = va_arg(f->args, Tree *);
@@ -319,26 +383,77 @@ static Boolean Bconv(Format *f) {
 	}
 	switch (n->kind) {
 
-	case nWord:	fmtprint(f, "(word \"%s\")", n->u[0].s);		break;
-	case nQword:	fmtprint(f, "(qword \"%s\")", n->u[0].s);		break;
-	case nPrim:	fmtprint(f, "(prim %s)", n->u[0].s);			break;
+	case nWord:
+		fmtprint(f, "(word \"%s\")", n->u[0].s);
+		break;
 
-	case nCall:	fmtprint(f, "(call %B)", n->u[0].p);			break;
-	case nThunk:	fmtprint(f, "(thunk %B)", n->u[0].p);			break;
-	case nVar:	fmtprint(f, "(var %B)", n->u[0].p);			break;
+	case nQword:
+		fmtprint(f, "(qword \"%s\")", n->u[0].s);
+		break;
 
-	case nAssign:	fmtprint(f, "(assign %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nConcat:	fmtprint(f, "(concat %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nClosure:	fmtprint(f, "(%%closure %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nFor:	fmtprint(f, "(for %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nLambda:	fmtprint(f, "(lambda %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nLet:	fmtprint(f, "(let %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nLocal:	fmtprint(f, "(local %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nMatch:	fmtprint(f, "(match %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nRedir:	fmtprint(f, "(redir %B %B)", n->u[0].p, n->u[1].p);	break;
-	case nVarsub:	fmtprint(f, "(varsub %B %B)", n->u[0].p, n->u[1].p);	break;
+	case nPrim:
+		fmtprint(f, "(prim %s)", n->u[0].s);
+		break;
 
-	case nPipe:	fmtprint(f, "(pipe %d %d)", n->u[0].i, n->u[1].i);	break;
+	case nCall:
+		fmtprint(f, "(call %B)", n->u[0].p);
+		break;
+
+	case nThunk:
+		fmtprint(f, "(thunk %B)", n->u[0].p);
+		break;
+
+	case nVar:
+		fmtprint(f, "(var %B)", n->u[0].p);
+		break;
+
+	case nAssign:
+		fmtprint(f, "(assign %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nConcat:
+		fmtprint(f, "(concat %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nClosure:
+		fmtprint(f, "(%%closure %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nFor:
+		fmtprint(f, "(for %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nLambda:
+		fmtprint(f, "(lambda %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nLet:
+		fmtprint(f, "(let %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nLocal:
+		fmtprint(f, "(local %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nMatch:
+		fmtprint(f, "(match %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nMatch:
+		fmtprint(f, "(extract %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nRedir:
+		fmtprint(f, "(redir %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nVarsub:
+		fmtprint(f, "(varsub %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nPipe:
+		fmtprint(f, "(pipe %d %d)", n->u[0].i, n->u[1].i);
+		break;
 
 	case nList: {
 		fmtprint(f, "(list");
@@ -364,6 +479,7 @@ void initconv(void) {
 	fmtinstall('N', Nconv);
 	fmtinstall('S', Sconv);
 	fmtinstall('T', Tconv);
+	fmtinstall('W', Wconv);
 	fmtinstall('Z', Zconv);
 #if LISPTREES
 	fmtinstall('B', Bconv);

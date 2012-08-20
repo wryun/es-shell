@@ -1,4 +1,4 @@
-/* opt.c -- option parsing ($Revision: 1.3 $) */
+/* opt.c -- option parsing ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 
@@ -65,11 +65,13 @@ extern int esopt(const char *options) {
 	if (opt[1] == ':') {
 		if (args == NULL) {
 			const char *msg = usage;
-			fail(invoker, "option -%c expects an argument -- usage: %s", c, msg);
+			fail(invoker,
+			     "option -%c expects an argument -- usage: %s",
+			     c, msg);
 		}
 		termarg = (nextchar == 0)
 				? args->term
-				: mkterm(gcdup(arg + nextchar), NULL);
+				: mkstr(gcdup(arg + nextchar));
 		nextchar = 0;
 		args = args->next;
 	}

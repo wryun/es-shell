@@ -1,4 +1,5 @@
-/* input.c -- read input from files or strings ($Revision: 1.12 $) */
+/* input.c -- read input from files or strings ($Revision: 1.2 $) */
+/* stdgetenv is based on the FreeBSD getenv */
 
 #include "es.h"
 #include "input.h"
@@ -25,7 +26,8 @@
 Input *input;
 char *prompt, *prompt2;
 
-Boolean disablehistory;
+Boolean disablehistory = FALSE;
+Boolean resetterminal = FALSE;
 static char *history;
 static int historyfd = -1;
 
@@ -33,6 +35,15 @@ static int historyfd = -1;
 int rl_meta_chars;	/* for editline; ignored for gnu readline */
 extern char *readline(char *);
 extern void add_history(char *);
+extern void rl_reset_terminal(char *);
+extern char *rl_basic_word_break_characters;
+extern char *rl_completer_quote_characters;
+
+#if ABUSED_GETENV
+static char *stdgetenv(const char *);
+static char *esgetenv(const char *);
+static char *(*realgetenv)(const char *) = stdgetenv;
+#endif
 #endif
 
 
@@ -78,7 +89,7 @@ static void loghistory(const char *cmd, size_t len) {
 	if (historyfd == -1) {
 		historyfd = eopen(history, oAppend);
 		if (historyfd == -1) {
-			eprint("history(%s): %s\n", history, strerror(errno));
+			eprint("history(%s): %s\n", history, esstrerror(errno));
 			vardef("history", NULL, NULL);
 			return;
 		}
@@ -183,10 +194,16 @@ static int eoffill(Input *in) {
 	return EOF;
 }
 
-/* callreadline -- signal-safe readline wrapper */
-#if READLINE && !SYSV_SIGNALS
+#if READLINE
+/* callreadline -- readline wrapper */
 static char *callreadline(char *prompt) {
 	char *r;
+	if (prompt == NULL)
+		prompt = ""; /* bug fix for readline 2.0 */
+	if (resetterminal) {
+		rl_reset_terminal(NULL);
+		resetterminal = FALSE;
+	}
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
@@ -199,9 +216,77 @@ static char *callreadline(char *prompt) {
 	SIGCHK();
 	return r;
 }
-#else
-#define	callreadline readline
-#endif	/* READLINE && !SVSIGS */
+
+/* getenv -- fake version of getenv for readline (or other libraries) */
+static char *esgetenv(const char *name) {
+	List *value = varlookup(name, NULL);
+	if (value == NULL)
+		return NULL;
+	else { 
+		char *export;
+		static Dict *envdict;
+		static Boolean initialized = FALSE;
+		Ref(char *, string, NULL);
+
+		gcdisable();
+		if (!initialized) {
+			initialized = TRUE;
+			envdict = mkdict();
+			globalroot(&envdict);
+		}
+
+		string = dictget(envdict, name);
+		if (string != NULL)
+			efree(string);
+
+		export = str("%W", value);
+		string = ealloc(strlen(export) + 1);
+		strcpy(string, export);
+		envdict = dictput(envdict, (char *) name, string);
+
+		gcenable();
+		RefReturn(string);
+	}
+}
+
+#if ABUSED_GETENV
+
+static char *
+stdgetenv(name)
+	register const char *name;
+{
+	extern char **environ;
+	register int len;
+	register const char *np;
+	register char **p, *c;
+
+	if (name == NULL || environ == NULL)
+		return (NULL);
+	for (np = name; *np && *np != '='; ++np)
+		continue;
+	len = np - name;
+	for (p = environ; (c = *p) != NULL; ++p)
+		if (strncmp(c, name, len) == 0 && c[len] == '=') {
+			return (c + len + 1);
+		}
+	return (NULL);
+}
+
+char *
+getenv(char *name)
+{
+	return realgetenv(name);
+}
+
+extern void
+initgetenv(void)
+{
+	realgetenv = esgetenv;
+}
+
+#endif /* ABUSED_GETENV */
+
+#endif	/* READLINE */
 
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
@@ -210,9 +295,10 @@ static int fdfill(Input *in) {
 	assert(in->fd >= 0);
 
 #if READLINE
-	if (in->runflags & run_interactive) {
+	if (in->runflags & run_interactive && in->fd == 0) {
 		char *rlinebuf = callreadline(prompt);
 		if (rlinebuf == NULL)
+
 			nread = 0;
 		else {
 			if (*rlinebuf != '\0')
@@ -240,7 +326,7 @@ static int fdfill(Input *in) {
 		in->fill = eoffill;
 		in->runflags &= ~run_interactive;
 		if (nread == -1)
-			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, strerror(errno));
+			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
 		return EOF;
 	}
 
@@ -266,7 +352,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 	emptyherequeue();
 
 	if (ISEOF(input))
-		throw(mklist(mkterm("eof", NULL), NULL));
+		throw(mklist(mkstr("eof"), NULL));
 
 #if READLINE
 	prompt = (pr1 == NULL) ? "" : pr1;
@@ -276,7 +362,8 @@ extern Tree *parse(char *pr1, char *pr2) {
 #endif
 	prompt2 = pr2;
 
-	gcdisable(300 * sizeof (Tree));
+	gcreserve(300 * sizeof (Tree));
+	gcdisable();
 	result = yyparse();
 	gcenable();
 
@@ -294,10 +381,17 @@ extern Tree *parse(char *pr1, char *pr2) {
 	return parsetree;
 }
 
+/* resetparser -- clear parser errors in the signal handler */
+extern void resetparser(void) {
+	error = NULL;
+}
+
 /* runinput -- run from an input source */
-extern List *runinput(Input *in, int flags) {
-	Handler h;
-	List *e, *repl, *arg, *result;
+extern List *runinput(Input *in, int runflags) {
+	volatile int flags = runflags;
+	List * volatile result;
+	List *repl, *dispatch;
+	Push push;
 	const char *dispatcher[] = {
 		"fn-%eval-noprint",
 		"fn-%eval-print",
@@ -305,33 +399,40 @@ extern List *runinput(Input *in, int flags) {
 		"fn-%noeval-print",
 	};
 
-	in->get = (flags & run_echoinput) ? getverbose : get;
+	flags &= ~eval_inchild;
 	in->runflags = flags;
+	in->get = (flags & run_echoinput) ? getverbose : get;
 	in->prev = input;
 	input = in;
 
-	if ((e = pushhandler(&h)) != NULL) {
+	ExceptionHandler
+
+		dispatch
+	          = varlookup(dispatcher[((flags & run_printcmds) ? 1 : 0)
+					 + ((flags & run_noexec) ? 2 : 0)],
+			      NULL);
+		if (flags & eval_exitonfalse)
+			dispatch = mklist(mkstr("%exit-on-false"), dispatch);
+		varpush(&push, "fn-%dispatch", dispatch);
+	
+		repl = varlookup((flags & run_interactive)
+				   ? "fn-%interactive-loop"
+				   : "fn-%batch-loop",
+				 NULL);
+		result = (repl == NULL)
+				? prim("batchloop", NULL, NULL, flags)
+				: eval(repl, NULL, flags);
+	
+		varpop(&push);
+
+	CatchException (e)
+
 		(*input->cleanup)(input);
 		input = input->prev;
 		throw(e);
-	}
 
-	arg = varlookup(dispatcher[
-			  ((flags & run_printcmds) ? 1 : 0)
-			+ ((flags & run_noexec)    ? 2 : 0)
-		], NULL);
-	if (flags & eval_exitonfalse)
-		arg = mklist(mkterm("%exit-on-false", NULL), arg);
-	repl = varlookup((flags & run_interactive) ? "fn-%interactive-loop" : "fn-%batch-loop", NULL);
-	if (repl == NULL)
-		result = prim("batchloop", arg, flags &~ eval_inchild);
-	else {
-		if (arg != NULL)
-			repl = append(repl, arg);
-		result = eval(repl, NULL, flags &~ eval_inchild);
-	}
+	EndExceptionHandler
 
-	pophandler(&h);
 	input = in->prev;
 	(*in->cleanup)(in);
 	return result;
@@ -412,26 +513,23 @@ extern List *runstring(const char *str, const char *name, int flags) {
 
 /* parseinput -- turn an input source into a tree */
 extern Tree *parseinput(Input *in) {
-	Handler h;
-	List *e;
-	Tree *result;
+	Tree * volatile result;
 
 	in->prev = input;
 	in->runflags = 0;
 	in->get = get;
 	input = in;
 
-	if ((e = pushhandler(&h)) != NULL) {
+	ExceptionHandler
+		result = parse(NULL, NULL);
+		if (get(in) != EOF)
+			fail("$&parse", "more than one value in term");
+	CatchException (e)
 		(*input->cleanup)(input);
 		input = input->prev;
 		throw(e);
-	}
+	EndExceptionHandler
 
-	result = parse(NULL, NULL);
-	if (get(in) != EOF)
-		fail("$&parse", "more than one value in term");
-
-	pophandler(&h);
 	input = in->prev;
 	(*in->cleanup)(in);
 	return result;
@@ -493,5 +591,7 @@ extern void initinput(void) {
 
 #if READLINE
 	rl_meta_chars = 0;
+	rl_basic_word_break_characters=" \t\n\\'`$><=;|&{()}";
+		rl_completer_quote_characters="'";
 #endif
 }

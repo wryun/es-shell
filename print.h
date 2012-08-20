@@ -1,4 +1,4 @@
-/* print.h -- interface to formatted printing routines ($Revision: 1.4 $) */
+/* print.h -- interface to formatted printing routines ($Revision: 1.1.1.1 $) */
 
 typedef struct Format Format;
 struct Format {

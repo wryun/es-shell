@@ -1,7 +1,15 @@
-/* es.h -- definitions for higher order shell ($Revision: 1.24 $) */
+/* es.h -- definitions for higher order shell ($Revision: 1.2 $) */
 
 #include "config.h"
 #include "stdenv.h"
+
+/*
+ * meta-information for exported environment strings
+ */
+
+#define ENV_SEPARATOR	'\001'		/* control-A */
+#define	ENV_ESCAPE	'\002'		/* control-B */
+
 
 /*
  * the fundamental es data structures.
@@ -12,11 +20,6 @@ typedef struct Term Term;
 typedef struct List List;
 typedef struct Binding Binding;
 typedef struct Closure Closure;
-
-struct Term {
-	char *str;
-	Closure *closure;
-};
 
 struct List {
 	Term *term;
@@ -41,7 +44,7 @@ struct Closure {
 
 typedef enum {
 	nAssign, nCall, nClosure, nConcat, nFor, nLambda, nLet, nList, nLocal,
-	nMatch, nPrim, nQword, nThunk, nVar, nVarsub, nWord,
+	nMatch, nExtract, nPrim, nQword, nThunk, nVar, nVarsub, nWord,
 	nRedir, nPipe		/* only appear during construction */
 } NodeKind;
 
@@ -111,9 +114,12 @@ extern void undefer(int ticket);
 /* term.c */
 
 extern Term *mkterm(char *str, Closure *closure);
+extern Term *mkstr(char *str);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
 extern Term *termcat(Term *t1, Term *t2);
+extern Boolean termeq(Term *term, const char *s);
+extern Boolean isclosure(Term *term);
 
 
 /* list.c */
@@ -138,6 +144,7 @@ extern Tree *mk(NodeKind VARARGS);
 extern Closure *mkclosure(Tree *tree, Binding *binding);
 extern Closure *extractbindings(Tree *tree);
 extern Binding *mkbinding(char *name, List *defn, Binding *next);
+extern Binding *reversebindings(Binding *binding);
 
 
 /* eval.c */
@@ -148,6 +155,10 @@ extern List *walk(Tree *tree, Binding *binding, int flags);
 extern List *eval(List *list, Binding *binding, int flags);
 extern List *eval1(Term *term, int flags);
 extern List *pathsearch(Term *term);
+
+extern unsigned long evaldepth, maxevaldepth;
+#define	MINmaxevaldepth		100
+#define	MAXmaxevaldepth		0xffffffffU
 
 #define	eval_inchild		1
 #define	eval_exitonfalse	2
@@ -164,11 +175,13 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
 
 extern char QUOTED[], UNQUOTED[];
 extern List *glob(List *list, StrList *quote);
+extern Boolean haswild(const char *pattern, const char *quoting);
 
 
 /* match.c */
 extern Boolean match(const char *subject, const char *pattern, const char *quote);
 extern Boolean listmatch(List *subject, List *pattern, StrList *quote);
+extern List *extractmatches(List *subjects, List *patterns, StrList *quotes);
 
 
 /* var.c */
@@ -176,9 +189,9 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote);
 extern void initvars(void);
 extern void initenv(char **envp, Boolean protected);
 extern void hidevariables(void);
-extern char *varname(List *);
-extern List *varlookup(const char *, Binding *);
-extern List *varlookup2(char *name1, char *name2);
+extern void validatevar(const char *var);
+extern List *varlookup(const char *name, Binding *binding);
+extern List *varlookup2(char *name1, char *name2, Binding *binding);
 extern void vardef(char *, Binding *, List *);
 extern Vector *mkenv(void);
 extern void setnoexport(List *list);
@@ -252,7 +265,7 @@ extern void sortvector(Vector *v);
 
 /* util.c */
 
-extern char *strerror(int err);
+extern char *esstrerror(int err);
 extern void uerror(char *msg);
 extern void *ealloc(size_t n);
 extern void *erealloc(void *p, size_t n);
@@ -260,6 +273,7 @@ extern void efree(void *p);
 extern void ewrite(int fd, const char *s, size_t n);
 extern long eread(int fd, char *buf, size_t n);
 extern Boolean isabsolute(char *path);
+extern Boolean streq2(const char *s, const char *t1, const char *t2);
 
 
 /* input.c */
@@ -270,6 +284,7 @@ extern Tree *parsestring(const char *str);
 extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 extern void initinput(void);
+extern void resetparser(void);
 
 extern List *runfd(int fd, const char *name, int flags);
 extern List *runstring(const char *str, const char *name, int flags);
@@ -280,6 +295,10 @@ extern List *runstring(const char *str, const char *name, int flags);
 #define	run_echoinput		16	/* -v */
 #define	run_printcmds		32	/* -x */
 #define	run_lisptrees		64	/* -L and defined(LISPTREES) */
+
+#if READLINE
+extern Boolean resetterminal;
+#endif
 
 
 /* opt.c */
@@ -292,7 +311,7 @@ extern List *esoptend(void);
 
 /* prim.c */
 
-extern List *prim(char *s, List *list, int evalflags);
+extern List *prim(char *s, List *list, Binding *binding, int evalflags);
 extern void initprims(void);
 
 
@@ -351,8 +370,9 @@ extern char *gcndup(const char *s, size_t n);	/* copy a counted string into gc s
 
 extern void initgc(void);			/* must be called at the dawn of time */
 extern void gc(void);				/* provoke a collection, if enabled */
+extern void gcreserve(size_t nbytes);		/* provoke a collection, if enabled and not enough space */
 extern void gcenable(void);			/* enable collections */
-extern void gcdisable(size_t);			/* disable collections, collect first if space needed */
+extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked();			/* is collection disabled? */
 
 
@@ -368,6 +388,12 @@ struct Root {
 
 extern Root *rootlist;
 
+#if REF_ASSERTIONS
+#define	refassert(e)	assert(e)
+#else
+#define	refassert(e)	NOP
+#endif
+
 #define	Ref(t, v, init) \
 	if (0) ; else { \
 		t v = init; \
@@ -376,8 +402,8 @@ extern Root *rootlist;
 		(CONCAT(v,__root__)).next = rootlist; \
 		rootlist = &(CONCAT(v,__root__))
 #define	RefPop(v) \
-		assert(rootlist == &(CONCAT(v,__root__))); \
-		assert(rootlist->p == (void **) &v); \
+		refassert(rootlist == &(CONCAT(v,__root__))); \
+		refassert(rootlist->p == (void **) &v); \
 		rootlist = rootlist->next;
 #define RefEnd(v) \
 		RefPop(v); \
@@ -393,8 +419,8 @@ extern Root *rootlist;
 		__root__.next = rootlist; \
 		rootlist = &__root__
 #define	RefRemove(e) \
-		assert(rootlist == &__root__); \
-		assert(rootlist->p == (void **) &e); \
+		refassert(rootlist == &__root__); \
+		refassert(rootlist->p == (void **) &e); \
 		rootlist = rootlist->next; \
 	}
 
@@ -428,19 +454,14 @@ struct Push {
 
 
 /*
- * exceptions
- *	typical use is
- *		Handler h;
- *		List *e;
- *		while ((e = pushhandler(&h)) != NULL) {
- *			if (we want to pass e back)
- *				throw(e);
- *			if (we can return)
- *				return ...;
- *			// otherwise just retry
- *		}
- *		... // protected code
- *		pophandler(&h);
+ * exception handling
+ *
+ *	ExceptionHandler
+ *		... body ...
+ *	CatchException (e)
+ *		... catching code using e ...
+ *	EndExceptionHandler
+ *
  */
 
 typedef struct Handler Handler;
@@ -448,12 +469,12 @@ struct Handler {
 	Handler *up;
 	Root *rootlist;
 	Push *pushlist;
+	unsigned long evaldepth;
 	jmp_buf label;
 };
 
 extern Handler *tophandler, *roothandler;
 extern List *exception;
-extern List *pushhandler(Handler *handler);	/* must be a macro */
 extern void pophandler(Handler *handler);
 extern noreturn throw(List *exc);
 extern noreturn fail(const char *from, const char *name VARARGS);
@@ -465,10 +486,27 @@ extern List *raised(List *e);
 #define	raised(e)	(e)
 #endif
 
-#define	pushhandler(hp)	( \
-		((hp)->rootlist = rootlist), \
-		((hp)->pushlist = pushlist), \
-		((hp)->up = tophandler), \
-		(tophandler = (hp)), \
-		(setjmp((hp)->label) ? raised(exception) : NULL) \
-	)
+#define ExceptionHandler \
+	{ \
+		Handler _localhandler; \
+		_localhandler.rootlist = rootlist; \
+		_localhandler.pushlist = pushlist; \
+		_localhandler.evaldepth = evaldepth; \
+		_localhandler.up = tophandler; \
+		tophandler = &_localhandler; \
+		if (!setjmp(_localhandler.label)) {
+	
+#define CatchException(e) \
+			pophandler(&_localhandler); \
+		} else { \
+			List *e = raised(exception); \
+
+#define CatchExceptionIf(condition, e) \
+			if (condition) \
+				pophandler(&_localhandler); \
+		} else { \
+			List *e = raised(exception); \
+
+#define EndExceptionHandler \
+		} \
+	}

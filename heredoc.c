@@ -1,4 +1,4 @@
-/* heredoc.c -- in-line files (here documents) ($Revision: 1.2 $) */
+/* heredoc.c -- in-line files (here documents) ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "gc.h"

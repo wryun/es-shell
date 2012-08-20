@@ -1,4 +1,4 @@
-/* except.c -- exception mechanism ($Revision: 1.7 $) */
+/* except.c -- exception mechanism ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
 #include "print.h"
@@ -29,6 +29,7 @@ extern noreturn throw(List *e) {
 		rootlist = &pushlist->defnroot;
 		varpop(pushlist);
 	}
+	evaldepth = handler->evaldepth;
 
 #if ASSERTIONS
 	for (; rootlist != handler->rootlist; rootlist = rootlist->next)
@@ -50,10 +51,10 @@ extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
 	s = strv(fmt, args);
 	va_end(args);
 
-	gcdisable(0);
-	Ref(List *, e, mklist(mkterm("error", NULL),
-			      mklist(mkterm((char *) from, NULL),
-				     mklist(mkterm(s, NULL), NULL))));
+	gcdisable();
+	Ref(List *, e, mklist(mkstr("error"),
+			      mklist(mkstr((char *) from),
+				     mklist(mkstr(s), NULL))));
 	while (gcisblocked())
 		gcenable();
 	throw(e);

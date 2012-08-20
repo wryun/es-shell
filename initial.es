@@ -1,4 +1,4 @@
-# initial.es -- set up initial interpreter state ($Revision: 1.43 $)
+# initial.es -- set up initial interpreter state ($Revision: 1.1.1.1 $)
 
 
 #
@@ -68,28 +68,67 @@ fn-access	= $&access
 fn-break	= $&break
 fn-catch	= $&catch
 fn-echo		= $&echo
-fn-eval		= $&eval
 fn-exec		= $&exec
-fn-exit		= $&exit
-fn-false	= $&false
 fn-forever	= $&forever
 fn-fork		= $&fork
 fn-if		= $&if
 fn-newpgrp	= $&newpgrp
 fn-result	= $&result
 fn-throw	= $&throw
-fn-true		= $&true
 fn-umask	= $&umask
-fn-unwind-protect = $&unwindprotect
 fn-wait		= $&wait
+
+fn-%read	= $&read
+
+#	eval runs its arguments by turning them into a code fragment
+#	(in string form) and running that fragment.
+
+fn eval { '{' ^ $^* ^ '}' }
+
+#	Through version 0.84 of es, true and false were primitives,
+#	but, as many pointed out, they don't need to be.  These
+#	values are not very clear, but unix demands them.
+
+fn-true		= result 0
+fn-false	= result 1
 
 #	These functions just generate exceptions for control-flow
 #	constructions.  The for command and the while builtin both
 #	catch the break exception, and lambda-invocation catches
-#	return.
+#	return.  The interpreter main() routine (and nothing else)
+#	catches the exit exception.
 
 fn-break	= throw break
+fn-exit		= throw exit
 fn-return	= throw return
+
+#	unwind-protect is a simple wrapper around catch that is used
+#	to ensure that some cleanup code is run after running a code
+#	fragment.  This function must be written with care to make
+#	sure that the return value is correct.
+
+fn-unwind-protect = $&noreturn @ body cleanup {
+	if {!~ $#cleanup 1} {
+		throw error unwind-protect 'unwind-protect body cleanup'
+	}
+	let (exception = ) {
+		let (
+			result = <={
+				catch @ e {
+					exception = caught $e
+				} {
+					$body
+				}
+			}
+		) {
+			$cleanup
+			if {~ $exception(1) caught} {
+				throw $exception(2 ...)
+			}
+			result $result
+		}
+	}
+}
 
 #	These builtins are not provided on all systems, so we check
 #	if the accompanying primitives are defined and, if so, define
@@ -114,7 +153,6 @@ fn-%whatis	= $&whatis
 #	users don't have to type the infamous <= (nee <>) operator.
 #	Whatis also protects the used from exceptions raised by %whatis.
 
-fn apids	{ echo <=%apids }
 fn var		{ for (i = $*) echo <={%var $i} }
 
 fn whatis {
@@ -158,10 +196,14 @@ fn-while = $&noreturn @ cond body {
 }
 
 #	The cd builtin provides a friendlier veneer over the cd primitive:
-#	
+#	it knows about no arguments meaning ``cd $home'' and has friendlier
+#	error messages than the raw $&cd.  (It also used to search $cdpath,
+#	but that's been moved out of the shell.)
 
 fn cd dir {
-	if {~ $#dir 0} {
+	if {~ $#dir 1} {
+		$&cd $dir
+	} {~ $#dir 0} {
 		if {!~ $#home 1} {
 			throw error cd <={
 				if {~ $#home 0} {
@@ -172,16 +214,6 @@ fn cd dir {
 			}
 		}
 		$&cd $home
-	} {~ $#dir 1} {
-		if {!%is-absolute $dir} {
-			let (old = $dir) {
-				dir = <={%cdpathsearch $dir}
-				if {!~ $dir $old} {
-					echo >[1=2] $dir
-				}
-			}
-		}
-		$&cd $dir
 	} {
 		throw error cd 'usage: cd [directory]'
 	}
@@ -279,9 +311,19 @@ fn vars {
 #		`{cmd args}            <={%backquote <={%flatten '' $ifs} {cmd args}}
 #		``ifs {cmd args}       <={%backquote <={%flatten '' ifs} {cmd args}}
 
-fn-%backquote	= $&backquote
 fn-%count	= $&count
 fn-%flatten	= $&flatten
+
+#	Note that $&backquote returns the status of the child process
+#	as the first value of its result list.  The default %backquote
+#	puts that value in $bqstatus.
+
+fn %backquote {
+	let ((status output) = <={ $&backquote $* }) {
+		bqstatus = $status
+		result $output
+	}
+}
 
 #	The following syntax for control flow operations are rewritten
 #	using hook functions:
@@ -293,11 +335,11 @@ fn-%flatten	= $&flatten
 #
 #	Note that %seq is also used for newline-separated commands within
 #	braces.  The logical operators are implemented in terms of if.
-#	(This was changed between versions 0.83 and 0.84.)  %and and %or
-#	are recursive, which is slightly inefficient given the current
-#	implementation of es -- it is not properly tail recursive -- but
-#	that can be fixed and it's still better to write more of the shell
-#	in es itself.
+#
+#	%and and %or are recursive, which is slightly inefficient given
+#	the current implementation of es -- it is not properly tail recursive
+#	-- but that can be fixed and it's still better to write more of
+#	the shell in es itself.
 
 fn-%seq		= $&seq
 
@@ -306,22 +348,30 @@ fn-%not = $&noreturn @ cmd {
 }
 
 fn-%and = $&noreturn @ first rest {
-	if {~ $#first 0} {
-		true
-	} {$first} {
-		%and $rest
-	} {
-		false
+	let (result = <={$first}) {
+		if {~ $#rest 0} {
+			result $result
+		} {result $result} {
+			%and $rest
+		} {
+			result $result
+		}
 	}
 }
 
 fn-%or = $&noreturn @ first rest {
 	if {~ $#first 0} {
 		false
-	} {$first} {
-		true
 	} {
-		%or $rest
+		let (result = <={$first}) {
+			if {~ $#rest 0} {
+				result $result
+			} {!result $result} {
+				%or $rest
+			} {
+				result $result
+			}
+		}
 	}
 }
 
@@ -366,7 +416,19 @@ fn-%append	= %openfile a		# >> file
 fn-%open-write	= %openfile r+		# <> file
 fn-%open-create	= %openfile w+		# >< file
 fn-%open-append	= %openfile a+		# >>< file, <>> file
-fn-%one		= $&one
+
+fn %one {
+	if {!~ $#* 1} {
+		throw error %one <={
+			if {~ $#* 0} {
+				result 'null filename in redirection'
+			} {
+				result 'too many files in redirection: ' $*
+			}
+		}
+	}
+	result $*
+}
 
 #	Here documents and here strings are internally rewritten to the
 #	same form, the %here hook function.
@@ -503,21 +565,11 @@ if {~ <=$&primitives writeto} {
 
 fn-%home	= $&home
 
-#	The path searching functions used to be primitives, but the access
-#	function means that they can be written easier in es.  They are
-#	not called for absolute path names or for functions.	
+#	Path searching used to be a primitive, but the access function
+#	means that it can be written easier in es.  Is is not called for
+#	absolute path names or for functions.
 
 fn %pathsearch name { access -n $name -1e -xf $path }
-fn %cdpathsearch name {access -n $name -1e -d  $cdpath}
-
-#	This function is used to determine if a pathname should be considered
-#	an absolute path name.  It is called by cd, and matches what is done
-#	in eval() before calling %pathsearch, but is not a hook for the eval
-#	call.
-
-fn %is-absolute path {
-	~ $path /* ./* ../*
-}
 
 #	The exec-failure hook is called in the child if an exec() fails.
 #	A default version is provided (under conditional compilation) for
@@ -542,9 +594,7 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	The REPLs are invoked by the shell's main() routine or the . or
 #	eval builtins.  If the -i flag is used or the shell determimes that
 #	it's input is interactive, %interactive-loop is invoked; otherwise
-#	%batch-loop is used.  The argument to the REPL is known as the
-#	dispatch function, and is determined by the presence or absence
-#	of the -e, -n, and -x options.
+#	%batch-loop is used.
 #
 #	The function %parse can be used to call the parser, which returns
 #	an es command.  %parse takes two arguments, which are used as the
@@ -554,8 +604,12 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	that case, the complete command and not just one physical line is
 #	returned.
 #
-#	By convention, the REPL must pass commands to its dispatch argument,
+#	By convention, the REPL must pass commands to the fn %dispatch,
 #	which has the actual responsibility for executing the command.
+#	Whatever routine invokes the REPL (internal, for now) has
+#	the resposibility of setting up fn %dispatch appropriately;
+#	it is used for implementing the -e, -n, and -x options.
+#	Typically, fn %dispatch is locally bound.
 #
 #	The %parse function raises the eof exception when it encounters
 #	an end-of-file on input.  You can probably simulate the C shell's
@@ -574,14 +628,16 @@ fn-%parse	= $&parse
 fn-%batch-loop	= $&batchloop
 fn-%is-interactive = $&isinteractive
 
-fn %interactive-loop dispatch {
-	let (result = <=$&true) {
+fn %interactive-loop {
+	let (result = <=true) {
 		catch @ e type msg {
 			if {~ $e eof} {
 				return $result
+			} {~ $e exit} {
+				throw $e $type $msg
 			} {~ $e error} {
 				echo >[1=2] $msg
-				$dispatch false
+				$fn-%dispatch false
 			} {~ $e signal} {
 				if {!~ $type sigint sigterm sigquit} {
 					echo >[1=2] caught unexpected signal: $type
@@ -597,7 +653,7 @@ fn %interactive-loop dispatch {
 				}
 				let (code = <={%parse $prompt}) {
 					if {!~ $#code 0} {
-						result = <={$dispatch $code}
+						result = <={$fn-%dispatch $code}
 					}
 				}
 			}
@@ -605,8 +661,8 @@ fn %interactive-loop dispatch {
 	}
 }
 
-#	These functions are potentially passed to a REPL as the dispatch
-#	argument.  (For %eval-noprint, note that an empty list prepended
+#	These functions are potentially passed to a REPL as the %dispatch
+#	function.  (For %eval-noprint, note that an empty list prepended
 #	to a command just causes the command to be executed.)
 
 fn %eval-noprint				# <default>
@@ -629,11 +685,10 @@ fn-%exit-on-false = $&exitonfalse		# -e
 #	value.)
 
 #	These functions are used to alias the standard unix environment
-#	variables HOME, PATH, and CDPATH with their es equivalents, home,
-#	path, cdpath.  With path and cdpath aliasing, colon separated
-#	strings are split into lists for their es forms (using the %fsplit
-#	builtin) and are flattened with colon separators when going to the
-#	standard unix forms.
+#	variables HOME and PATH with their es equivalents, home and path.
+#	With path aliasing, colon separated strings are split into lists
+#	for their es form (using the %fsplit builtin) and are flattened
+#	with colon separators when going to the standard unix form.
 #
 #	These functions are pretty idiomatic.  set-home disables the set-HOME
 #	settor function for the duration of the actual assignment to HOME,
@@ -646,16 +701,22 @@ set-HOME = @ { local (set-home = ) home = $*; result $* }
 set-path = @ { local (set-PATH = ) PATH = <={%flatten : $*}; result $* }
 set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 
-set-cdpath = @ { local (set-CDPATH = ) CDPATH = <={%flatten : $*}; result $* }
-set-CDPATH = @ { local (set-cdpath = ) cdpath = <={%fsplit  : $*}; result $* }
-
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history	= $&sethistory
-set-signals	= $&setsignals
-set-noexport	= $&setnoexport
+set-history		= $&sethistory
+set-signals		= $&setsignals
+set-noexport		= $&setnoexport
+set-max-eval-depth	= $&setmaxevaldepth
 
+#	If the primitive $&resetterminal is defined (meaning that readline
+#	or editline is being used), setting the variables $TERM or $TERMCAP
+#	should notify the line editor library.
+
+if {~ <=$&primitives restterminal} {
+	set-TERM	= @ { $&resetterminal; result $* }
+	set-TERMCAP	= @ { $&resetterminal; result $* }
+}
 
 #
 # Variables
@@ -665,10 +726,10 @@ set-noexport	= $&setnoexport
 #	can run without problems even if the environment is not set up
 #	correctly.
 
-cdpath = ''
-home = /
-ifs = ' ' \t \n
-prompt = '; ' ''
+home		= /
+ifs		= ' ' \t \n
+prompt		= '; ' ''
+max-eval-depth	= 640
 
 #	noexport lists the variables that are not exported.  It is not
 #	exported, because none of the variables that it refers to are
@@ -676,9 +737,12 @@ prompt = '; ' ''
 #	is for the parent process.  pid is not exported so that even if it
 #	is set explicitly, the one for a child shell will be correct.
 #	Signals are not exported, but are inherited, so $signals will be
-#	initialized properly in child shells.
+#	initialized properly in child shells.  bqstatus is not exported
+#	because it's almost certainly unrelated to what a child process
+#	is does.  fn-%dispatch is really only important to the current
+#	interpreter loop.
 
-noexport = noexport apid pid signals
+noexport = noexport pid signals apid bqstatus fn-%dispatch path home
 
 
 #

@@ -1,16 +1,18 @@
-/* stdenv.h -- set up an environment we can use ($Revision: 1.22 $) */
+/* stdenv.h -- set up an environment we can use ($Revision: 1.3 $) */
 
+#include "esconfig.h"
+#ifdef HAVE_SYS_CDEFS_H
+# include <sys/cdefs.h>
+#endif
 
 /*
  * type qualifiers
  */
 
-#if !USE_CONST
-#define	const
-#endif
-
 #if !USE_VOLATILE
-#define	volatile
+# ifndef volatile
+#  define volatile
+# endif
 #endif
 
 
@@ -18,7 +20,7 @@
  * protect the rest of es source from the dance of the includes
  */
 
-#if USE_UNISTD
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
@@ -29,7 +31,11 @@
 #include <string.h>
 #include <stddef.h>
 
-#if USE_STDARG
+#if HAVE_MEMORY_H
+#include <memory.h>
+#endif
+
+#if HAVE_STDARG_H
 #include <stdarg.h>
 #else
 #include <varargs.h>
@@ -53,7 +59,7 @@
 #endif
 
 #if REQUIRE_DIRENT
-#if USE_DIRENT
+#if HAVE_DIRENT_H
 #include <dirent.h>
 typedef struct dirent Dirent;
 #else
@@ -78,6 +84,24 @@ extern Dirent *readdir(DIR *);
 
 #include <sys/wait.h>
 
+/* stdlib */
+#if __GNUC__
+typedef volatile void noreturn;
+#else
+typedef void noreturn;
+#endif
+
+#if STDC_HEADERS
+# include <stdlib.h>
+#else
+extern noreturn exit(int);
+extern noreturn abort(void);
+extern long strtol(const char *num, char **end, int base);
+extern void *qsort(
+	void *base, size_t nmemb, size_t size,
+	int (*compar)(const void *, const void *)
+);
+#endif /* !STDC_HEADERS */
 
 /*
  * things that should be defined by header files but might not have been
@@ -89,6 +113,19 @@ extern Dirent *readdir(DIR *);
 
 #ifndef	EOF
 #define	EOF	(-1)
+#endif
+
+/* setjmp */
+
+#if HAVE_SIGSETJMP
+/* Some versions of linux are helpful by providing sigsetjmp as a macro
+   rather than as a function.  *arg* */
+# ifndef sigsetjmp
+
+#  define setjmp(buf) sigsetjmp(buf,1)
+#  define longjmp     siglongjmp
+#  define jmp_buf     sigjmp_buf
+# endif
 #endif
 
 
@@ -128,11 +165,6 @@ extern Dirent *readdir(DIR *);
 #undef TRUE
 typedef enum { FALSE, TRUE } Boolean;
 
-#if __GNUC__
-typedef volatile void noreturn;
-#else
-typedef void noreturn;
-#endif
 
 #if USE_SIG_ATOMIC_T
 typedef volatile sig_atomic_t Atomic;
@@ -148,25 +180,21 @@ typedef int Sigresult;
 #define	SIGRESULT	0
 #endif
 
-#if GETGROUPS_USES_GID_T
-typedef gid_t gidset_t;
-#else
-typedef int gidset_t;
-#endif
+typedef GETGROUPS_T gidset_t;
 
 
 /*
  * variable argument lists
  */
 
-#if USE_STDARG
+#if HAVE_STDARG_H
 
 #define	VARARGS				, ...
 #define	VARARGS1(t1, v1)		(t1 v1, ...)
 #define	VARARGS2(t1, v1, t2, v2)	(t1 v1, t2 v2, ...)
 #define	VA_START(ap, v)			va_start(ap, v)
 
-#else	/* !USE_STDARG */
+#else	/* !HAVE_STDARG_H */
 
 #define	VARARGS
 #define	VARARGS1(t1, v1)		(v1, va_alist) t1 v1; va_dcl
@@ -194,13 +222,15 @@ typedef int gidset_t;
 #endif
 
 enum { UNREACHABLE = 0 };
+
+
 #define	NOTREACHED	STMT(assert(UNREACHABLE))
 
 /*
  * system calls -- can we get these from some standard header uniformly?
  */
 
-#if !USE_UNISTD
+#if !HAVE_UNISTD_H
 extern int chdir(const char *dirname);
 extern int close(int fd);
 extern int dup(int fd);
@@ -228,28 +258,34 @@ extern int stat(const char *, struct stat *);
 #ifdef NGROUPS
 extern int getgroups(int, int *);
 #endif
-#endif	/* !USE_UNISTD */
+#endif	/* !HAVE_UNISTD_H */
 
 
 /*
  * hacks to present a standard system call interface
  */
 
-#if sgi
-#define	setpgrp(a,b)	BSDsetpgrp(a,b)
+#ifdef HAVE_SETSID
+# define setpgrp(a, b)	setsid()
+#else
+#ifdef linux
+#include "unistd.h"
+#define setpgrp(a, b)	setpgid(a, b)
 #endif
 
-#if SOLARIS
-#define	setpgrp(a,b)	setsid();
+#if sgi
+#define	setpgrp(a, b)	BSDsetpgrp(a,b)
 #endif
 
 #if HPUX
-#define	setpgrp(a,b)	setpgrp()
+#define	setpgrp(a, b)	setpgrp()
+#endif
 #endif
 
-#if !HAS_LSTAT
+#if !HAVE_LSTAT
 #define	lstat	stat
 #endif
+
 
 
 /*
@@ -268,21 +304,3 @@ extern int getgroups(int, int *);
 #define	SEXITSTATUS(status)	(((status) >> 8) & 0xff)
 
 
-/*
- * the c library -- these should be in prototypes in standard headers
- */
-
-/* stdlib */
-
-extern noreturn exit(int);
-extern noreturn abort(void);
-extern long strtol(const char *num, char **end, int base);
-extern void *qsort(
-	void *base, size_t nmemb, size_t size,
-	int (*compar)(const void *, const void *)
-);
-
-/* setjmp */
-
-extern int setjmp(jmp_buf env);
-extern noreturn longjmp(jmp_buf env, int val);

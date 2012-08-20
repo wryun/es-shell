@@ -1,4 +1,4 @@
-/* access.c -- access testing and path searching ($Revision: 1.9 $) */
+/* access.c -- access testing and path searching ($Revision: 1.2 $) */
 
 #define	REQUIRE_STAT	1
 #define	REQUIRE_PARAM	1
@@ -103,7 +103,7 @@ PRIM(access) {
 	List *lp;
 	const char * const usage = "access [-n name] [-1e] [-rwx] [-fdcblsp] path ...";
 
-	gcdisable(0);
+	gcdisable();
 	esoptbegin(list, "$&access", usage);
 	while ((c = esopt("bcdefln:prswx1")) != EOF)
 		switch (c) {
@@ -144,26 +144,25 @@ PRIM(access) {
 		if (first) {
 			if (error == 0) {
 				Ref(List *, result,
-					mklist(
-						mkterm(
-							suffix == NULL ? name : gcdup(name),
-							NULL),
-						NULL)
-				);
+					mklist(mkstr(suffix == NULL
+							? name
+							: gcdup(name)),
+					       NULL));
 				gcenable();
 				RefReturn(result);
 			} else if (error != ENOENT)
 				estatus = error;
 		} else
-			lp = mklist(mkterm(error == 0 ? "0" : strerror(error), NULL), lp);
+			lp = mklist(mkstr(error == 0 ? "0" : esstrerror(error)),
+				    lp);
 	}
 
 	if (first && exception) {
 		gcenable();
 		if (suffix)
-			fail("$&access", "%s: %s", suffix, strerror(estatus));
+			fail("$&access", "%s: %s", suffix, esstrerror(estatus));
 		else
-			fail("$&access", "%s", strerror(estatus));
+			fail("$&access", "%s", esstrerror(estatus));
 	}
 
 	Ref(List *, result, reverse(lp));
@@ -178,5 +177,5 @@ extern Dict *initprims_access(Dict *primdict) {
 
 extern char *checkexecutable(char *file) {
 	int err = testfile(file, EXEC, S_IFREG);
-	return err == 0 ? NULL : strerror(err);
+	return err == 0 ? NULL : esstrerror(err);
 }
