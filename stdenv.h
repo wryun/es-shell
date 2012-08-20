@@ -46,7 +46,7 @@
 #include <signal.h>
 #include <ctype.h>
 
-#if REQUIRE_STAT || REQUIRE_IOCTL
+#if REQUIRE_STAT || REQUIRE_IOCTL || 1
 #include <sys/types.h>
 #endif
 
@@ -268,7 +268,7 @@ extern int getgroups(int, int *);
 #ifdef HAVE_SETSID
 # define setpgrp(a, b)	setsid()
 #else
-#ifdef linux
+#if defined(linux)
 #include "unistd.h"
 #define setpgrp(a, b)	setpgid(a, b)
 #endif
@@ -297,10 +297,12 @@ extern int getgroups(int, int *);
  *	terms of the W* forms.
  */
 
-#define	SIFSIGNALED(status)	(((status) & 0xff) != 0)
+#define SIFSTOPPED(status)      ((status) & 0x40)
+#define	SIFEXITED(status)	(!((status) & 0xff))
+#define	SIFSIGNALED(status)	(!SIFEXITED(status) && !SIFSTOPPED(status))
 #define	STERMSIG(status)	((status) & 0x7f)
 #define	SCOREDUMP(status)	((status) & 0x80)
-#define	SIFEXITED(status)	(!SIFSIGNALED(status))
 #define	SEXITSTATUS(status)	(((status) >> 8) & 0xff)
+
 
 

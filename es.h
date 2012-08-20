@@ -219,9 +219,15 @@ extern char *checkexecutable(char *file);
 
 
 /* proc.c */
-
 extern Boolean hasforked;
-extern int efork(Boolean parent, Boolean background);
+extern int assign_tty(int tty, int pgid);
+extern int has_job_control;
+extern int shell_tty;
+extern int shell_pgid;
+extern struct termios shell_tmodes;
+
+extern void chldwait(void);
+extern int efork(Boolean parent, Boolean background, int pgid, List *cmd);
 extern int ewait(int pid, Boolean interruptible, void *rusage);
 #define	ewaitfor(pid)	ewait(pid, FALSE, NULL)
 
@@ -346,6 +352,8 @@ extern Boolean issilentsignal(List *e);
 extern void setsigdefaults(void);
 extern void blocksignals(void);
 extern void unblocksignals(void);
+extern void block(int);
+extern void unblock(int);
 
 
 /* open.c */

@@ -1,6 +1,7 @@
 /* eval.c -- evaluation of lists and trees ($Revision: 1.2 $) */
 
 #include "es.h"
+#include "term.h"
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
 
@@ -28,20 +29,20 @@ extern List *forkexec(char *file, List *list, Boolean inchild) {
 	Vector *env;
 	gcdisable();
 	env = mkenv();
-	pid = efork(!inchild, FALSE);
+	pid = efork(!inchild, FALSE, 0, list);
 	if (pid == 0) {
 		execve(file, vectorize(list)->vector, env->vector);
 		failexec(file, list);
 	}
 	gcenable();
 	status = ewaitfor(pid);
-	if ((status & 0xff) == 0) {
+	if (SIFSIGNALED(status)) {
 		sigint_newline = FALSE;
 		SIGCHK();
 		sigint_newline = TRUE;
 	} else
 		SIGCHK();
-	printstatus(0, status);
+	printstatus(pid, status);
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
 }
 

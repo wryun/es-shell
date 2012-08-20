@@ -77,8 +77,12 @@ PRIM(catch) {
 				if (termeq(fromcatcher->term, "retry")) {
 					retry = TRUE;
 					unblocksignals();
-				} else
+				} else {
+		
+					unblocksignals();
 					throw(fromcatcher);
+				}
+	   
 			EndExceptionHandler
 
 		EndExceptionHandler

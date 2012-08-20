@@ -1,6 +1,9 @@
 
 # http://www.gnu.org/software/autoconf
 
+/config.sub
+/config.guess
+/MANIFEST
 /autom4te.cache
 /aclocal.m4
 /compile

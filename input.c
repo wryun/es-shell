@@ -29,15 +29,18 @@ char *prompt, *prompt2;
 Boolean disablehistory = FALSE;
 Boolean resetterminal = FALSE;
 static char *history;
-static int historyfd = -1;
+static int historyfd = -1; //fixme: outcomment for gnureadline
 
 #if READLINE
 int rl_meta_chars;	/* for editline; ignored for gnu readline */
 extern char *readline(char *);
 extern void add_history(char *);
+/* extern void clear_history(void); */
+extern char *rl_readline_name;
 extern void rl_reset_terminal(char *);
 extern char *rl_basic_word_break_characters;
 extern char *rl_completer_quote_characters;
+void readhistory(char* file);
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -82,7 +85,7 @@ static void warn(char *s) {
  */
 
 /* loghistory -- write the last command out to a file */
-static void loghistory(const char *cmd, size_t len) {
+static void loghistory(const char *cmd, size_t len) { //fixme: outcomment for gnureadline
 	const char *s, *end;
 	if (history == NULL || disablehistory)
 		return;
@@ -113,11 +116,15 @@ static void loghistory(const char *cmd, size_t len) {
 
 /* sethistory -- change the file for the history log */
 extern void sethistory(char *file) {
+	history = file;
+#if HAVE_LIBREADLINE
+        read_history(file);
+#else
 	if (historyfd != -1) {
 		close(historyfd);
 		historyfd = -1;
 	}
-	history = file;
+#endif
 }
 
 
@@ -273,7 +280,7 @@ stdgetenv(name)
 }
 
 char *
-getenv(char *name)
+getenv(const char *name) 
 {
 	return realgetenv(name);
 }
@@ -288,21 +295,69 @@ initgetenv(void)
 
 #endif	/* READLINE */
 
+/* fixme: delete */
+#if 0
+void readhistory(char* file) {
+#if READLINE
+        int fd;
+	char *line, buf[1024];
+	int lsz, rsz, l;
+	
+	if ((fd = eopen(file, oOpen)) < 0) {
+		return;
+	}
+	
+	line = ealloc(1024);
+	lsz = 1024;
+	
+	line[0] = '\0';
+	l = 0;
+	while ((rsz = read(fd, buf, 1024)) > 0) {
+		char *c = buf;
+		while (rsz-->0) {
+			line[l] = *(c++);
+			if (line[l] == '\n') {
+				line[l] = '\0';
+				add_history(line);
+				line[0] = '\0';
+				l = 0;
+				continue;
+			}
+			if (++l == lsz) { 
+				efree(line);
+				line = erealloc(line, lsz += 1024);
+			}
+		}
+	}
+	line[l] = '\0';
+	if (line[0] != '\0') {
+		add_history(line);
+	}
+	efree(line);
+	close(fd);
+#endif
+        return;
+}
+#endif 
+
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
 	long nread;
+#if READLINE
+	static char *lastinbuf = NULL;
+   	Boolean dolog;
+#endif
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
 
 #if READLINE
 	if (in->runflags & run_interactive && in->fd == 0) {
 		char *rlinebuf = callreadline(prompt);
+	   	dolog = FALSE;
 		if (rlinebuf == NULL)
 
 			nread = 0;
 		else {
-			if (*rlinebuf != '\0')
-				add_history(rlinebuf);
 			nread = strlen(rlinebuf) + 1;
 			if (in->buflen < nread) {
 				while (in->buflen < nread)
@@ -312,6 +367,17 @@ static int fdfill(Input *in) {
 			}
 			memcpy(in->bufbegin, rlinebuf, nread - 1);
 			in->bufbegin[nread - 1] = '\n';
+			dolog = *rlinebuf != '\0' && 
+                        	(lastinbuf == NULL || strcmp(rlinebuf, lastinbuf));
+#if HAVE_LIBREADLINE
+			free(lastinbuf); /* fixme: is rlinebuf reused by editline? */
+#else
+			dolog = TRUE;
+#endif
+			if (dolog) {
+				add_history(rlinebuf);
+			}
+			lastinbuf = rlinebuf;
 		}
 	} else
 #endif
@@ -330,8 +396,15 @@ static int fdfill(Input *in) {
 		return EOF;
 	}
 
-	if (in->runflags & run_interactive)
+	if (in->runflags & run_interactive) {
+#if READLINE
+                if (dolog) {
+                        append_history(1, history);
+                }
+#else
 		loghistory((char *) in->bufbegin, nread);
+#endif       
+        }
 
 	in->buf = in->bufbegin;
 	in->bufend = &in->buf[nread];
@@ -584,14 +657,16 @@ extern void initinput(void) {
 	globalroot(&prompt2);		/* secondary prompt */
 
 	/* mark the historyfd as a file descriptor to hold back from forked children */
-	registerfd(&historyfd, TRUE);
+	registerfd(&historyfd, TRUE); // fixme: delete for gnureadline
 
 	/* call the parser's initialization */
 	initparse();
 
 #if READLINE
 	rl_meta_chars = 0;
+	rl_readline_name = "es";
 	rl_basic_word_break_characters=" \t\n\\'`$><=;|&{()}";
-		rl_completer_quote_characters="'";
+        rl_completer_quote_characters="'";
+        using_history();
 #endif
 }

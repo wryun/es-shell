@@ -26,6 +26,12 @@ static Sigeffect sigeffect[NSIG];
 #endif
 #endif
 
+#include <termios.h>
+int has_job_control;
+int shell_pgid;
+int shell_tty;
+struct termios shell_tmodes;
+
 
 /*
  * name<->signal mappings
@@ -61,19 +67,25 @@ extern char *sigmessage(int sig) {
 	return str("unknown signal %d", sig);
 }
 
+static Sighandler setsignal(int sig, Sighandler handler);
 
 /*
  * the signal handler
  */
 
 /* catcher -- catch (and defer) a signal from the kernel */
-static void catcher(int sig) {
-#if !SYSV_SIGNALS /* only do this for unreliable signals */
-	signal(sig, catcher);
+extern void catcher(int sig) {
+	int errno_sav=errno;
+
+#if SYSV_SIGNALS /* only do this for unreliable signals */
+		signal(sig, catcher);
 #endif
-	if (hasforked)
+
+	if (hasforked) {
 		/* exit unconditionally on a signal in a child process */
 		exit(1);
+	}
+	
 	if (caught[sig] == 0) {
 		caught[sig] = TRUE;
 		++sigcount;
@@ -81,6 +93,8 @@ static void catcher(int sig) {
 	interrupted = TRUE;
 	if (slow)
 		longjmp(slowlabel, 1);
+
+	errno=errno_sav;
 }
 
 
@@ -153,6 +167,33 @@ extern void getsigeffects(Sigeffect effects[]) {
 
 
 /*
+ * internal signal blocking
+ */
+
+/* signal blocking stack */
+static sigset_t *sigbs=NULL, *sigbs_tos=NULL, *sigbs_end=NULL;
+
+/* internally blocks a signal */
+extern void block(int sig) {
+	static sigset_t ss, oss;
+	if (sigbs_tos == sigbs_end) {
+		int sz = sigbs_end-sigbs;
+		sigbs = (sigset_t *) erealloc(sigbs, (sz+10)*sizeof(sigbs));
+		sigbs_end = sigbs+sz+10;
+	}
+	sigemptyset(&ss);
+	sigaddset(&ss, sig); 
+	sigprocmask(SIG_BLOCK, &ss, sigbs_tos++);
+	
+}
+
+/* restores the previous sig block mask from the stack */
+extern void unblock(int sig) {  /* sig is only used as reminder */
+	assert(sigbs-sigbs_tos>0);
+	sigprocmask(SIG_SETMASK, --sigbs_tos, NULL);
+}
+
+/*
  * initialization
  */
 
@@ -200,6 +241,25 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 			esignal(SIGQUIT, sig_noop);
 	}
 
+	if (interactive) {
+		shell_tty=STDIN_FILENO;
+		shell_pgid=getpid();
+		if (setpgid(shell_pgid,shell_pgid)<0) {
+			has_job_control=0;
+			eprint("Couldn't put es-shell into it's own process group\n");
+		} else {
+			has_job_control=1;
+			assign_tty(shell_tty, shell_pgid);
+			tcgetattr(shell_tty, &shell_tmodes);
+			/* the SIG_DFT action for SIGCHLD is to ignore the signal.
+			 * SIG_IGN is treated special for SIGCHLD! */
+			esignal(SIGCHLD, sig_default);
+			esignal(SIGTTIN, sig_noop);
+			esignal(SIGTTOU, sig_noop);
+			esignal(SIGTSTP, sig_catch);
+		}
+	}	  
+  
 	/* here's the end-run around set-signals */
 	varpush(&settor, "set-signals", NULL);
 	vardef("signals", NULL, mksiglist());

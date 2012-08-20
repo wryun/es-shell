@@ -61,8 +61,12 @@ AC_CHECK_LIB(sun, getpwuid)
 
 if test "$use_readline" = yes || test "$use_editline" = yes
 then
-	AC_CHECK_LIB(terminfo, main)
-	AC_CHECK_LIB(termcap, main)
+	AC_CHECK_LIB(ncurses, main,,
+        	AC_CHECK_LIB(curses, main,,
+		 	AC_CHECK_LIB(terminfo, main)
+ 			AC_CHECK_LIB(termcap, main)
+		)
+	)
 	if test "$use_readline" = yes
 	then
 		AC_CHECK_LIB(readline, readline)

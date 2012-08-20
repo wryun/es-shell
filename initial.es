@@ -80,6 +80,7 @@ fn-wait		= $&wait
 
 fn-%read	= $&read
 
+
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.
 
@@ -754,3 +755,248 @@ noexport = noexport pid signals apid bqstatus fn-%dispatch path home
 #	wants to look at initial.c anyway.
 
 result es initial state built in `/bin/pwd on `/bin/date for <=$&version
+
+
+####################################################################
+#                             readline                             #
+####################################################################
+
+# truncate the history
+cp $home/.es_history $home/.es_history.old
+tail -n 1000 $home/.es_history.old > $home/.es_history
+rm -f $home/.es_history.old
+history = $home/.es_history
+
+
+
+####################################################################
+#                           job control                            #
+####################################################################
+
+
+########### convenience frontends to intenal functions #############
+
+# Remembers the last used job pid.
+apid = -1
+
+# Syntax:      %jobs
+# Description: Return a list of background child job pids.
+fn %jobs {$&apids -j}
+
+# Syntax:      jobs
+# Description: Print information on background jobs.
+fn jobs {
+    for (j = <=%jobs) {
+        if {~ $#j 0} {break} 
+        let (info = <={$&procinfo $j}) {
+            echo $j ^ \t ^ $info(7)
+        }
+    }
+}
+
+# Syntax:      jobtopid [pid | %n | substring]
+# Description: Return the pid of the background job which matches the given
+#              argument or fail otherwise. The argument can be a pid, a job
+#              number (as shown by jobs) or a substring of the command string
+#              of the job. If more than one job matches, only the pid of the
+#              first one (sorted by execution time) is returned.
+fn jobtopid arg { 
+    if {~ $#arg 0} {
+        if {!~ $apid <=%jobs} {
+            let (j = <=%jobs) {
+                if {~ $#j 0} { return } { return $j($#j) }
+            }
+        } {
+            return $apid 
+        }
+    } {~ $#arg 1} {
+	if {~ $arg <=%jobs} {
+	    return $arg
+	}
+        let (pid =; cmd =; info =) {
+            for (j = <={$&apids -j}) {
+                info = <={$&procinfo $j}
+		pid = $info(1)
+		cmd = $info(7)
+                if {eval '~' \'$cmd\' '*'^$arg^'*'} {
+                    return $pid
+                }
+	    }
+	    # no match found:
+            throw error jobtopid $arg 'is not a valid [pid | substring]'
+	}
+    } {
+        throw error jobtopid 'argument must be empty or [pid \| substring]'
+    }
+}
+
+# Syntax:      %jobargs [arg1 [arg2 [... argn]]]
+# Description: Transforms its argument list to a list of pids using jobtopid.
+#              Any argi which cannot be transformed to a job pid is retained
+#              verbatim in the list.
+fn %jobargs args {
+    let (newargs = ) {
+        for (arg = $args) {
+            newargs=$newargs <={
+                catch @ e ty msg {
+	            result $arg
+	        } {
+	            jobtopid $arg
+	        }
+	    }
+	}
+        return $newargs
+    }
+}
+    
+# Syntax:      kill [options] pid1 [pid2 [... pidn]]
+# Description: A wrapper to the systems kill command which understands jobs.
+fn kill args {
+    <={%pathsearch kill} <={%jobargs $args}
+}
+
+# Syntax:      nice [options] pid1 [pid2 [... pidn]]
+# Description: A wrapper to the systems nice command which understands jobs.
+fn nice args {
+    <={%pathsearch kill} <={%jobargs $args}
+}
+
+# Syntax:      fg [pid]
+# Description: Put pid or $apid into the forground and update $apid.
+fn fg arg {
+  apid = <={jobtopid $arg} 
+  if {~ $#apid 1} {$&fg $apid}
+}
+
+# Syntax:      bg [pid]
+# Description: Put pid or $apid into the background and update $apid.
+fn bg arg {
+  apid = <={jobtopid $arg}
+  if {~ $#apid 1} {$&bg $apid}
+}
+
+# Syntax:      apids [-j | -a]
+# Description: Print a list of child process. If the -j option is given, then 
+#              only the first member of each job will be reported. If -a is
+#              given, then all known childs, even dead ones will be reported.
+#              Under normal operation dead childs are removed automatically
+#              from the list of known processes whenever %interactive-loop
+#              asks for a new line of input. For a non-interactive shell this
+#              removal takes place, whenever th shell waits for the completion
+#              of an executable. It is save to remove dead processes with a
+#              call to $&procfree.
+fn apids arg {echo <={$&apids $args}}
+
+# Syntax:      procinfo [[pid | %n | substring] ...]
+# Description: Print a list with detailed information on the given processes.
+#              The list consists of the following eight entries:
+#
+#    index:     1   2     3       4         5        6       7      8
+#    type:     int int   bool    bool      bool     bool   string  int
+#    name:     pid pgid alive background stopped haschanged cmd   status,
+#
+#              where pid, pgid, alive, background, stopped and cmd have
+#              obvious meanings. haschanged gets set to true when the process
+#              dies, stops or goes into the background. It is reset to false 
+#              from the %interactive-loop. status is the returned status of
+#              the last call to the internal wait subroutine for this pid. If
+#              the process has not been waited for, status' value is
+#              unspecified.
+fn procinfo args { 
+    if {~ $#apid 1 && ~ $#args 0} {
+        echo <={$&procinfo <=jobtopid}
+    } {
+        for (pid = $args) {
+            echo <={$&procinfo <={jobtopid $pid}}
+	}
+    }
+}
+
+# Syntax:      procchange pid
+# Description: Toggel the haschanged status of a process. Used internally.
+# fn-procchange = $&procchange
+
+# Syntax:      procfree pid
+# Description: Free a process from the process list and return the allocated 
+#              memory to the malloc pool. You can shoot in your own foot, if
+#              you remove processes which are still alive -- be aware of zombies!
+#              Don't use unless you know what you are doing.
+# fn-procfree = $&procfree
+
+
+
+
+####################### job control aware REPL #########################
+
+# Syntax:      checkprocs
+# Description: Check for termination, stopping and backgrounding of processes
+#              and take appropriate actions upon: Print and update status
+#              information and free memory of died processes.
+fn checkprocs {
+    for (pid = <={$&apids -a}) {
+        let ((pid pgid alive backgnd stopped change cmd stat) = <={$&procinfo $pid}) {
+            if {!$alive && $backgnd} {
+	        $&procfree $pid 
+	        echo >[1=2] $pid terminated with $stat^:\t$cmd
+            } {!$alive} {
+	        $&procfree $pid
+	    } {$stopped && $change} {
+	        $&procchange $pid
+	        echo >[1=2] $pid stopped:\t$cmd
+	    }
+	}
+    }
+}
+
+# Syntx:        %interactive-loop
+# Description:  This incarnation of %interactive-loop adds only checkprocs in
+#               front of the prompting to the default %interactive-loop provided
+#               by initial.es. See therein for further documentation.
+fn %interactive-loop {
+	let (result = <=true; %exit2 = true) {
+		catch @ e type msg {
+			if {~ $e eof} {
+	                        echo >[1=2] EOF: Exiting ...
+                        	return $result
+                        } {~ $e exit} {
+                                if {$%exit2} {
+		                        echo >[1=2] Exiting ...
+                                        throw $e $type $msg
+                                }
+                                echo >[1=2] You have background jobs.
+                                %exit2 = true
+			} {~ $e error} {
+				echo >[1=2] $msg
+				$fn-%dispatch false
+			} {~ $e signal} {
+	                        if {~ $type sigtstp} {
+                                	# fixme: delete: echo >[1=2] interrupted by sigtstp
+                                } {~ $type sigint sigterm sigquit} {
+                                	# noop
+                                } {
+					echo >[1=2] caught unexpected signal: $type
+				}
+			} {
+				echo >[1=2] uncaught exception: $e $type $msg
+			}
+			throw retry # restart forever loop
+		} {
+			forever {
+				checkprocs
+				if {!~ $#fn-%prompt 0} {
+					%prompt
+				}
+				let (code = <={%parse $prompt}) {
+					if {!~ $#code 0} {
+						result = <={$fn-%dispatch $code}
+                                                $&donotwait
+                                                if {$&apids} {%exit2 = true} {%exit2 = false}
+					} {
+                                        	$&donotwait
+                                        }
+				}
+                        }
+		}
+	}
+}
+
