@@ -21,12 +21,16 @@ fn-%or		= $&or
 fn-%pipe	= $&pipe
 fn-%seq		= $&seq
 fn-%split	= $&split
+for (i = readfrom writeto) {
+	$&if {~ <>$&primitives $i} {fn-%$i = '$&'$i}
+}
 
 #
 # internal shell mechanisms (non-syntax hooks)
 #
 
 fn-%batch-loop	= $&batchloop
+fn-%home	= $&home
 fn-%newfd	= $&newfd
 fn-%parse	= $&parse
 fn-%pathsearch	= $&pathsearch
@@ -37,7 +41,7 @@ fn-%var		= $&var
 # the read-eval-print loop
 #
 
-fn %interactive-loop {
+fn %interactive-loop dispatch {
 	let (result = <>$&true) {
 		catch @ e msg {
 			if {~ $e eof} {
@@ -50,21 +54,29 @@ fn %interactive-loop {
 			throw retry
 		} {
 			while {} {
-				%prompt
-				result = <>{<>{%parse $prompt}}
+				if {!~ $#fn-%prompt 0} {
+					%prompt
+				}
+				result = <>{$dispatch <>{%parse $prompt}}
 			}
 		}
 	}
 }
 
-fn %prompt {}
 prompt = '; ' ''
 
+# the dispatch functions
+fn-%eval-noprint	=			# <default>
+fn %eval-print		{ echo $* >[1=2]; $* }	# -x
+fn %noeval-noprint	{ }			# -n
+fn %noeval-print	{ echo $* >[1=2] }	# -n -x
+
 #
-# primitive functions
+# builtins
 #
 
 fn-.		= $&dot
+fn-apids	= $&apids
 fn-break	= $&break
 fn-catch	= $&catch
 fn-cd		= $&cd
@@ -81,7 +93,11 @@ fn-noexport	= $&noexport
 fn-throw	= $&throw
 fn-true		= $&true
 fn-umask	= $&umask
+fn-wait		= $&wait
 fn-while	= $&while
+for (i = limit time) {
+	$&if {~ <>$&primitives $i} {fn-$i = '$&'$i}
+}
 
 #
 # predefined functions
@@ -102,7 +118,6 @@ fn vars {
 		if {!~ $* -[ep]}	{ * = $* -e }
 	}
 	for (i = $*) if {!~ $i -[vfsep]} 
-
 	let (
 		vars	= $&false
 		fns	= $&false

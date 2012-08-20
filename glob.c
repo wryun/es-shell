@@ -2,19 +2,22 @@
 
 #define	REQUIRE_STAT	1
 #define	REQUIRE_DIRENT	1
-#define	REQUIRE_PWD	1
 
 #include "es.h"
+#include "gc.h"
 
 char QUOTED[] = "QUOTED", UNQUOTED[] = "RAW";
 
-/* hasmeta -- true iff some unquoted character is a meta character */
-static Boolean hasmeta(const char *s, const char *q) {
+/* hastilde -- true iff the first character is a ~ and it is not quoted */
+static Boolean hastilde(const char *s, const char *q) {
+	return *s == '~' && (q == UNQUOTED || *q == 'r');
+}
+
+/* haswild -- true iff some unquoted character is a wildcard character */
+static Boolean haswild(const char *s, const char *q) {
 	if (q == QUOTED)
 		return FALSE;
-	if (q == UNQUOTED) {
-		if (*s == '~')
-			return TRUE;
+	if (q == UNQUOTED)
 		for (;;) {
 			int c = *s++;
 			if (c == '\0')
@@ -22,9 +25,6 @@ static Boolean hasmeta(const char *s, const char *q) {
 			if (c == '*' || c == '?' || c == '[')
 				return TRUE;
 		}
-	}
-	if (*s == '~' && *q == 'r')
-		return TRUE;
 	for (;;) {
 		int c = *s++, r = *q++;
 		if (c == '\0')
@@ -41,21 +41,12 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 	static Dirent *dp;
 	static struct stat s;
 
-	if (!hasmeta(pattern, quote)) {
+	if (!haswild(pattern, quote)) {
 		char *name = str("%s%s", prefix, pattern);
 		if (lstat(name, &s) == -1)
 			return NULL;
 		return mklist(mkterm(name, NULL), NULL);
 	}
-
-	if (*pattern == '~' && *quote == 'r' && *prefix == '\0')
-		if (pattern[1] == '\0')
-			return listcopy(varlookup("home", NULL));
-		else {
-			struct passwd *pw = getpwnam(pattern + 1);
-			if (pw != NULL)
-				return mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
-		}
 
 	assert(gcisblocked());
 
@@ -158,29 +149,6 @@ static List *glob1(const char *pattern, const char *quote) {
 		matched = listglob(matched, pat, qpat, slashcount);
 	} while (*s != '\0' && matched != NULL);
 
-	if (matched == NULL && *pattern == '~' && (quote == UNQUOTED || *quote == 'r')) {
-		/* if we got here, we want to do a ~/file or ~user/file form, but no files match file */
-		List *lp;
-		s = strchr(pattern + 1, '/');
-		assert(s != NULL);
-		if (s == pattern + 1)
-			matched = listcopy(varlookup("home", NULL));
-		else {
-			size_t len = s - pattern - 1;
-			struct passwd *pw;
-			memcpy(pat, pattern + 1, len);
-			pat[len] = '\0';
-			pw = getpwnam(pat);
-			if (pw == NULL)
-				return NULL;
-			matched = mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
-		}
-		for (lp = matched; lp != NULL; lp = lp->next) {
-			assert(lp->term != NULL);
-			lp->term = mkterm(str("%s%s", getstr(lp->term), s), NULL);
-		}
-	}
-
 	return matched;
 }
 
@@ -191,7 +159,7 @@ static List *glob0(List *list, StrList *quote) {
 	for (result = NULL, prevp = &result; list != NULL; list = list->next, quote = quote->next)
 		if (
 			quote->str == QUOTED
-			|| !hasmeta(list->term->str, quote->str)
+			|| !haswild(list->term->str, quote->str)
 			|| (expand1 = glob1(list->term->str, quote->str)) == NULL
 		) {
 			*prevp = list;
@@ -204,22 +172,101 @@ static List *glob0(List *list, StrList *quote) {
 	return result;
 }
 
-/* glob -- globbing prepass (glob if we need to) */
+/* expandhome -- do tilde expansion by calling fn %home */
+static char *expandhome(char *s, StrList *qp) {
+	int c;
+	size_t slash;
+	List *fn = varlookup("fn-%home", NULL);
+
+	assert(*s == '~');
+	assert(qp->str == UNQUOTED || *qp->str == 'r');
+
+	if (fn == NULL)
+		return s;
+
+	for (slash = 1; (c = s[slash]) != '/' && c != '\0'; slash++)
+		;
+
+	Ref(char *, string, s);
+	Ref(StrList *, quote, qp);
+	Ref(List *, list, NULL);
+	RefAdd(fn);
+	if (slash > 1)
+		list = mklist(mkterm(gcndup(s + 1, slash - 1), NULL), NULL);
+	RefRemove(fn);
+
+	list = eval(append(fn, list), NULL, FALSE, FALSE);
+
+	if (list != NULL) {
+		if (list->next != NULL)
+			fail("%%home returned more than one value");
+		Ref(char *, home, getstr(list->term));
+		if (c == '\0') {
+			string = home;
+			quote->str = QUOTED;
+		} else {
+			char *q;
+			size_t pathlen = strlen(string);
+			size_t homelen = strlen(home);
+			size_t len = pathlen - slash + homelen;
+			s = gcalloc(len + 1, &StringTag);
+			memcpy(s, home, homelen);
+			memcpy(&s[homelen], &string[slash], pathlen - slash);
+			s[len] = '\0';
+			string = s;
+			q = quote->str;
+			if (q == UNQUOTED) {
+				q = gcalloc(len + 1, &StringTag);
+				memset(q, 'q', homelen);
+				memset(&q[homelen], 'r', pathlen - slash);
+				q[len] = '\0';
+			} else if (strchr(q, 'r') == NULL)
+				q = QUOTED;
+			else {
+				q = gcalloc(len + 1, &StringTag);
+				memset(q, 'q', homelen);
+				memcpy(&s[homelen], &quote->str[slash], pathlen - slash);
+				q[len] = '\0';
+			}
+			quote->str = q;
+		}
+		RefEnd(home);
+	}
+	RefEnd2(list, quote);
+	RefReturn(string);
+}
+
+/* glob -- globbing prepass (glob if we need to, and dispatch for tilde expansion) */
 extern List *glob(List *list, StrList *quote) {
 	List *lp;
 	StrList *qp;
+	Boolean doglobbing = FALSE;
 
 	for (lp = list, qp = quote; lp != NULL; lp = lp->next, qp = qp->next)
 		if (qp->str != QUOTED) {
 			assert(lp->term != NULL && lp->term->str != NULL);
 			assert(qp->str == UNQUOTED || strlen(qp->str) == strlen(lp->term->str));
-			if (hasmeta(lp->term->str, qp->str)) {
-				gcdisable(0);
-				list = glob0(list, quote);
-				Ref(List *, result, list);
-				gcenable();
-				RefReturn(result);
+			if (hastilde(lp->term->str, qp->str)) {
+				Ref(List *, l0, list);
+				Ref(List *, lr, lp);
+				Ref(StrList *, q0, quote);
+				Ref(StrList *, qr, qp);
+				lr->term->str = expandhome(lr->term->str, qp);
+				lp = lr;
+				qp = qr;
+				list = l0;
+				quote = q0;
+				RefEnd4(qr, q0, lr, l0);
 			}
+			if (haswild(lp->term->str, qp->str))
+				doglobbing = TRUE;
 		}
-	return list;
+
+	if (!doglobbing)
+		return list;
+	gcdisable(0);
+	list = glob0(list, quote);
+	Ref(List *, result, list);
+	gcenable();
+	RefReturn(result);
 }

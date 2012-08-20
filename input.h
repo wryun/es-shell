@@ -6,16 +6,19 @@ typedef struct Input Input;
 struct Input {
 	int (*fill)(Input *self), (*rfill)(Input *self);
 	void (*cleanup)(Input *self);
-
 	Input *prev;
 	const char *name;
 	unsigned char *buf, *bufend, *bufbegin, *rbuf;
+	size_t buflen;
 	int unget[MAXUNGET];
 	int ungot;
 	int lineno;
 	int fd;
-	size_t buflen;
 	Boolean interactive;
+	Boolean echoinput;
+#if LISPTREES
+	Boolean lisptrees;
+#endif
 };
 
 

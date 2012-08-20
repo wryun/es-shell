@@ -63,13 +63,13 @@ extern void printstatus(int pid, int status) {
 	if (status & 0xff) {
 		char *msg = ((status & 0x7f) < NUMOFSIGNALS ? signals[status & 0x7f].msg : "");
 		if (pid != 0)
-			print("%d: ", pid);
+			eprint("%d: ", pid);
 		if (status & 0x80) {
 			if (*msg == '\0')
-				print("core dumped\n");
+				eprint("core dumped\n");
 			else
-				print("%s--core dumped\n", msg);
+				eprint("%s--core dumped\n", msg);
 		} else if (*msg != '\0')
-			print("%s\n", msg);
+			eprint("%s\n", msg);
 	}
 }

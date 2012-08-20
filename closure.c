@@ -14,6 +14,7 @@ extern Closure *mkclosure(Tree *tree, Binding *binding) {
 	Ref(Closure *, closure, gcnew(Closure));
 	closure->tree = tree;
 	closure->binding = binding;
+	closure->mark = 0;
 	gcenable();
 	RefReturn(closure);
 }
@@ -46,53 +47,96 @@ static Tree *revtree(Tree *tree) {
 	return prev;
 }
 
-static Binding *extract(Tree *tp, Binding *bp) {
-	Ref(Binding *, bindings, bp);
-	Ref(Tree *, tree, tp);
+typedef struct Chain Chain;
+struct Chain {
+	Closure *closure;
+	Chain *next;
+};
+static Chain *chain = NULL;
+
+static Binding *extract(Tree *tree, Binding *bindings) {
+	assert(gcisblocked());
 
 	for (; tree != NULL; tree = tree->u[1].p) {
+		Tree *defn = tree->u[0].p;
 		assert(tree->kind == nList);
-		Ref(Tree *, defn, tree->u[0].p);
 		if (defn != NULL) {
-			Ref(Tree *, name, defn->u[0].p);
+			List *list = NULL;
+			Tree *name = defn->u[0].p;
 			assert(name->kind == nWord || name->kind == nQword);
-			Ref(List *, list, NULL);
 			defn = revtree(defn->u[1].p);
 			for (; defn != NULL; defn = defn->u[1].p) {
+				Term *term;
 				Tree *word = defn->u[0].p;
+				NodeKind k = word->kind;
 				assert(defn->kind == nList);
-				assert(word->kind == nWord || word->kind == nQword);
-				list = mklist(mkterm(word->u[0].s, NULL), list);
+				assert(k == nWord || k == nQword || k == nPrim);
+				if (k == nPrim) {
+					char *prim = word->u[0].s;
+					if (streq(prim, "nestedbinding")) {
+						int i, count;
+						Chain *cp;
+						if (
+							(defn = defn->u[1].p) == NULL
+						     || defn->u[0].p->kind != nWord
+						     || (count = (atoi(defn->u[0].p->u[0].s))) < 0
+						)
+							fail("improper use of $&nestedbinding");
+						for (cp = chain, i = 0;; cp = cp->next, i++) {
+							if (cp == NULL)
+								fail("bad count in $&nestedbinding: %d", count);
+							if (i == count)
+								break;
+						}
+						term = mkterm(NULL, cp->closure);
+					} else
+						fail("bad unquoted primitive in %%closure: $&%s", prim);
+				} else
+					term = mkterm(word->u[0].s, NULL);
+				list = mklist(term, list);
 			}
 			bindings = mkbinding(name->u[0].s, list, bindings);
-			RefEnd2(list, name);
 		}
-		RefEnd(defn);
 	}
 
-	RefEnd(tree);
-	RefReturn(bindings);
+	return bindings;
 }
 
-extern Closure *extractbindings(Tree *tp) {
-	Closure *result;
-	Ref(Tree *, tree, tp);
-	Ref(Binding *, bindings, NULL);
+extern Closure *extractbindings(Tree *tree) {
+	Chain me;
+	Binding *volatile bindings = NULL;
+	List *e;
+	Handler h;
+
+	gcdisable(0);
 
 	if (tree->kind == nList && tree->u[1].p == NULL)
 		tree = tree->u[0].p; 
 
+	me.closure = mkclosure(NULL, NULL);
+	me.next = chain;
+	chain = &me;
+
+	if ((e = pushhandler(&h)) != NULL) {
+		chain = chain->next;
+		throw(e);
+	}
 
 	while (tree->kind == nClosure) {
 		bindings = extract(tree->u[0].p, bindings);
 		tree = tree->u[1].p;
 		if (tree->kind == nList && tree->u[1].p == NULL)
 			tree = tree->u[0].p; 
-
 	}
-	result = mkclosure(tree, bindings);
-	RefEnd2(bindings, tree);
-	return result;
+
+	pophandler(&h);
+	chain = chain->next;
+
+	Ref(Closure *, result, me.closure);
+	result->tree = tree;
+	result->binding = bindings;
+	gcenable();
+	RefReturn(result);
 }
 
 

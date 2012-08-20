@@ -1,5 +1,7 @@
 /* prim-etc.c -- miscellaneous primitives */
 
+#define	REQUIRE_PWD	1
+
 #include "es.h"
 #include "prim.h"
 
@@ -62,16 +64,16 @@ PRIM(exec) {
 }
 
 PRIM(eval) {
-	return runstring(str("%L", list, " "), "<eval>");
+	return runstring(str("%L", list, " "), "<eval>", 0);
 }
 
 PRIM(dot) {
 	int fd;
 	List *e;
 	Handler h;
-	volatile Boolean interactive = FALSE;
+	volatile int runflags = 0;
 
-	/* TODO: merge interactive into input state */
+	/* TODO: allow -[xvnL] */
 
 	Ref(List *, result, NULL);
 	Ref(List *, lp, list);
@@ -81,9 +83,9 @@ PRIM(dot) {
 			fail("usage: . [-i] file");
 		file = getstr(lp->term);
 		lp = lp->next;
-		if (interactive || !streq(file, "-i"))
+		if ((runflags & run_interactive) || !streq(file, "-i"))
 			break;
-		interactive = TRUE;
+		runflags |= run_interactive;
 	}
 
 	fd = eopen(file, oOpen);
@@ -99,7 +101,7 @@ PRIM(dot) {
 	varpush("*", lp);
 	varpush("0", mklist(mkterm(file, NULL), NULL));
 
-	result = runfd(fd, file, interactive);
+	result = runfd(fd, file, runflags);
 
 	pophandler(&h);
 	varpop("*");
@@ -215,6 +217,7 @@ PRIM(batchloop) {
 	Handler h;
 	List *e;
 	Ref(List *, result, true);
+	Ref(List *, arg, list);
 
 	SIGCHK();
 	if ((e = pushhandler(&h)) == NULL)
@@ -225,6 +228,8 @@ PRIM(batchloop) {
 					? prim("parse", NULL, TRUE, exitonfalse)
 					: eval(parser, NULL, TRUE, exitonfalse);
 			SIGCHK();
+			if (arg != NULL)
+				cmd = append(arg, cmd);
 			if (cmd != NULL) {
 				result = eval(cmd, NULL, TRUE, exitonfalse);
 				SIGCHK();
@@ -233,12 +238,23 @@ PRIM(batchloop) {
 
 	if (e->term == NULL || e->term->str == NULL || !streq(e->term->str, "eof"))
 		throw(e);
+	RefEnd(arg);
 	RefReturn(result);
 }
 
 PRIM(collect) {
 	gc();
 	return true;
+}
+
+PRIM(home) {
+	struct passwd *pw;
+	if (list == NULL)
+		return varlookup("home", NULL);
+	if (list->next != NULL)
+		fail("usage: %home [user]");
+	pw = getpwnam(getstr(list->term));
+	return (pw == NULL) ? NULL : mklist(mkterm(gcdup(pw->pw_dir), NULL), NULL);
 }
 
 
@@ -267,5 +283,6 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(parse);
 	X(batchloop);
 	X(collect);
+	X(home);
 	return primdict;
 }

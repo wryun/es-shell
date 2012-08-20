@@ -10,8 +10,10 @@ extern List *forkexec(char *file, List *list, Boolean parent) {
 	env = mkenv();
 	pid = efork(parent, FALSE);
 	if (pid == 0) {
+#if PRINTCMDS
 		if (printcmds)
 			eprint("%L\n", list, " ");
+#endif
 		execve(file, vectorize(list)->vector, env->vector);
 		uerror(file);
 		exit(1);
@@ -196,8 +198,10 @@ top:
 		Ref(Tree *, tp, tree);
 		Ref(List *, subject, glom(tp->u[0].p, bp, TRUE));
 		pattern = glom2(tp->u[1].p, bp, &quote);
+#if PRINTCMDS
 		if (printcmds)
 			eprint("~ (%L) %L\n", subject, " ", pattern, " ");
+#endif
 		result = listmatch(subject, pattern, quote);
 		RefEnd3(subject, tp, bp);
 		return result ? true : false;

@@ -1,13 +1,42 @@
 CHANGES
 =======
 
+0.74 to 0.79
+------------
+
+the >{} and <{} constructs are now supported (if your system has /dev/fd)
+by the builtins %readfrom and %writeto.  you must define the preprocessor
+variable DEVFD to turn on this feature.
+
+the limit builtin (ala csh and rc) and a time builtin were added.  to enable
+them, turn on the BSD_LIMITS flag.  for those you opposed to things like
+time in a shell, the reason it was included is that we wanted to be able
+to time es code fragments without doing the ``time es -c $x'' we used to
+do and without the extra overhead for a new invocation of the shell.
+see the pipeline timing example in our usenix paper for details.
+
+the bug with control-c from the interactive loop prompt was fixed.
+
+~ expansion now uses the builtin function %home, which is implemented by
+default by the primitive $&home but can be replaced.  it takes either zero
+(for current user) or one (named user) argument, and returns (not prints) the
+home directory, which must be a one element list.  $&home uses getpwnam(),
+but those of you who want to do something special here can now.
+
+the builtin command ``apids'' serves the purpose of the rc special variable
+$apids: it is a list of the current set of background jobs which have not
+yet completed.  note that the list is returned in the exit status not to
+standard out, so use
+	echo <>apids
+for the old rc form
+	echo $apids
+
+the builtin ``wait'' was added with similar semantics to the same command in
+rc and sh.
+
+
 0.7 to 0.74
 -----------
-
-the builtin collect has been added to trigger a garbage collection.
-also, following discussions on the list, the memory allocation was
-tuned a bit, and the GCINFO flag turns on reporting of garbage
-collector data.
 
 the function which one must replace for spoofing the path-searching
 mechanism is now %pathsearch and not %whatis.  %pathsearch is called
@@ -44,14 +73,11 @@ for details.
 DefineTag() has been redone to avoid some compiler bugs where a forward
 declaration for a static was not allowed. 
 
-
 es now works with editline; it probably works with readline but we haven't
 tested that yet. 
 
-
 we think we've gotten rid of all the problems with spaces around identifiers
 for those people with stone age vintage preprocessors. 
-
 
 redirections, closes, and dups do not automatically fork() now.  they are
 deferred until a fork() happens.  the main consequence of this is that

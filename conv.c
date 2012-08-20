@@ -1,7 +1,4 @@
-/*
- * conv.c -- a collection of functions to convert internal representations of
- * variables and functions to external representations, and vice versa
- */
+/* conv.c -- convert between internal and external forms */
 
 #define	REQUIRE_CTYPE	1
 
@@ -70,19 +67,22 @@ top:
 	case nMatch:	fmtprint(f, "~ %#T %T", n->u[0].p, n->u[1].p);	return FALSE;
 	case nPrim:	fmtprint(f, "$&%s", n->u[0].s);			return FALSE;
 	case nThunk:	fmtprint(f, "{%T}", n->u[0].p);			return FALSE;
-	case nVar:	fmtprint(f, "$(%#T)", n->u[0].p);		return FALSE;
 	case nVarsub:	fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p);	return FALSE;
 	case nWord:	fmtprint(f, "%s", n->u[0].s);			return FALSE;
+	case nQword:	fmtprint(f, "%#S", n->u[0].s);			return FALSE;
 
 	case nLocal:	binding(f, "local", n);		return FALSE;
 	case nLet:	binding(f, "let", n);		return FALSE;
 	case nFor:	binding(f, "for", n);		return FALSE;
 	case nClosure:	binding(f, "%closure", n);	return FALSE;
 
-	case nQword: {
-		fmtprint(f, "%#S", n->u[0].s);
+	case nVar:
+		fmtputc(f, '$');
+		n = n->u[0].p;
+		if (n == NULL || n->kind == nWord || n->kind == nQword)
+			goto top;
+		fmtprint(f, "(%#T)", n);
 		return FALSE;
-	}
 
 	case nLambda:
 		fmtprint(f, "@ ");
@@ -124,31 +124,96 @@ top:
 	unreached(FALSE);
 }
 
+/* enclose -- build up a closure */
 static void enclose(Format *f, Binding *binding, const char *sep) {
 	if (binding != NULL) {
-		enclose(f, binding->next, ";");
+		Binding *next = binding->next;
+		enclose(f, next, ";");
 		fmtprint(f, "%S=%#L%s", binding->name, binding->defn, " ", sep);
 	}
 }
 
+typedef struct Chain Chain;
+struct Chain {
+	Closure *closure;
+	Chain *next;
+};
+static Chain *chain = NULL;
+
 /* %C -- print a closure */
 static Boolean Cconv(Format *f) {
+	Chain me;
 	Closure *closure = va_arg(f->args, Closure *);
 	Tree *tree = closure->tree;
 	Binding *binding = closure->binding;
+	Boolean altform = (f->flags & FMT_altform) != 0;
 
 	assert(tree->kind == nThunk || tree->kind == nLambda || tree->kind == nPrim);
 	assert(binding == NULL || tree->kind != nPrim);
 
-	/* TODO: recursion */
-
-	if (binding != NULL) {
-		fmtprint(f, "%%closure(");
-		enclose(f, binding, "");
-		fmtprint(f, ")");
+	if (closure->mark) {
+		int i;
+		Chain *cp;
+		for (cp = chain, i = 0; cp != NULL; cp = cp->next, i++)
+			if (cp->closure == closure) {
+				fmtprint(f, "%d $&nestedbinding", i);
+				return FALSE;
+			}
+		panic("marked closure not found in chain");
 	}
-	fmtprint(f, "%T", tree);
+
+	++closure->mark;
+	me.closure = closure;
+	me.next = chain;
+	chain = &me;
+
+	if (altform)
+		fmtprint(f, "%S", str("%C", closure));
+	else {
+		if (binding != NULL) {
+			fmtprint(f, "%%closure(");
+			enclose(f, binding, "");
+			fmtprint(f, ")");
+		}
+		fmtprint(f, "%T", tree);
+	}
+
+	chain = chain->next;
+	--closure->mark;
 	return FALSE;
+}
+
+/* %E -- print a term */
+static Boolean Econv(Format *f) {
+	Term *term = va_arg(f->args, Term *);
+	char *str = term->str;
+	Closure *closure = term->closure;
+	assert((str == NULL) != (closure == NULL));
+	if (closure != NULL)
+		fmtprint(f, (f->flags & FMT_altform) ? "%#C" : "%C", closure);
+	else
+		fmtprint(f, (f->flags & FMT_altform) ? "%S" : "%s", str);
+	return FALSE;
+}
+
+/* getstr -- use a term as a string, regardless of its internal form */
+extern char *getstr(Term *term) {
+	char *s = term->str;
+	Closure *closure = term->closure;
+	assert((s == NULL) != (closure == NULL));
+	if (s != NULL)
+		return s;
+
+#if 0	/* TODO: decide whether getstr() leaves term in closure or string form */
+	Ref(Term *, tp, term);
+	s = str("%C", closure);
+	tp->str = s;
+	tp->closure = NULL;
+	RefEnd(tp);
+	return s;
+#else
+	return str("%C", closure);
+#endif
 }
 
 /* %S -- print a string with conservative quoting rules */
@@ -303,6 +368,7 @@ static Boolean Bconv(Format *f) {
 /* install the conversion routines */
 void initconv(void) {
 	fmtinstall('C', Cconv);
+	fmtinstall('E', Econv);
 	fmtinstall('F', Fconv);
 	fmtinstall('L', Lconv);
 	fmtinstall('N', Nconv);

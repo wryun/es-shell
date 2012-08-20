@@ -1,12 +1,11 @@
 /* prim-sys.c -- system call primitives */
 
 #define	REQUIRE_IOCTL	1
+#define REQUIRE_CTYPE   1
 
 #include "es.h"
 #include "prim.h"
 #include "sigmsgs.h"
-
-extern int umask(int mask);
 
 PRIM(newpgrp) {
 	int pid;
@@ -161,6 +160,174 @@ PRIM(setsignals) {
 	RefReturn(result);
 }
 
+/*
+ * limit builtin -- this is too much code for what it gives you
+ */
+
+#if BSD_LIMITS
+
+#include <sys/time.h>
+#include <sys/resource.h>
+extern int getrlimit(int, struct rlimit *);
+extern int setrlimit(int, struct rlimit *);
+
+typedef struct Suffix Suffix;
+struct Suffix {
+	const Suffix *next;
+	long amount;
+	const char *name;
+};
+
+static const Suffix
+	kbsuf = { NULL, 1024, "k" },
+	mbsuf = { &kbsuf, 1024*1024, "m" },
+	gbsuf = { &mbsuf, 1024*1024*1024, "g" },
+	stsuf = { NULL, 1, "s" },
+	mtsuf = { &stsuf, 60, "m" },
+	htsuf = { &mtsuf, 60*60, "h" };
+#define	SIZESUF &gbsuf
+#define	TIMESUF &htsuf
+#define	NOSUF ((Suffix *) NULL)  /* for RLIMIT_NOFILE on SunOS 4.1 */
+
+typedef struct {
+	char *name;
+	int flag;
+	const Suffix *suffix;
+} Limit;
+static const Limit limits[] = {
+	{ "cputime",		RLIMIT_CPU,	TIMESUF },
+	{ "filesize",		RLIMIT_FSIZE,	SIZESUF },
+	{ "datasize",		RLIMIT_DATA,	SIZESUF },
+	{ "stacksize",		RLIMIT_STACK,	SIZESUF },
+	{ "coredumpsize",	RLIMIT_CORE,	SIZESUF },
+#ifdef RLIMIT_RSS	/* SysVr4 does not have this */
+	{ "memoryuse",		RLIMIT_RSS,	SIZESUF },
+#endif
+#ifdef RLIMIT_VMEM	/* instead, they have this! */
+	{ "vmemory",		RLIMIT_VMEM,	SIZESUF },
+#endif
+#ifdef RLIMIT_NOFILE	/* SunOS 4.1 adds a limit on file descriptors */
+	{ "descriptors",	RLIMIT_NOFILE,	NOSUF },
+#endif
+	{ NULL, 0, NULL }
+};
+
+static void printlimit(const Limit *limit, Boolean hard) {
+	struct rlimit rlim;
+	long lim;
+	getrlimit(limit->flag, &rlim);
+	if (hard)
+		lim = rlim.rlim_max;
+	else
+		lim = rlim.rlim_cur;
+	if (lim == RLIM_INFINITY)
+		fprint(1, "%s \tunlimited\n", limit->name);
+	else {
+		const Suffix *suf;
+		for (suf = limit->suffix; suf != NULL; suf = suf->next)
+			if (lim % suf->amount == 0 && (lim != 0 || suf->amount > 1)) {
+				lim /= suf->amount;
+				break;
+			}
+		eprint("%-8s\t%d%s\n", limit->name, lim, (suf == NULL || lim == 0) ? "" : suf->name);
+	}
+}
+
+static long parselimit(const Limit *limit, const char *s) {
+	long lim;
+	int len = strlen(s);
+	const char *t;
+	const Suffix *suf = limit->suffix;
+	if (streq(s, "unlimited"))
+		lim = RLIM_INFINITY;
+	if (!isdigit(*s))
+		return -1;
+	if (suf == TIMESUF && (t = strchr(s, ':')) != NULL)
+		lim = 60 * atoi(s) + atoi(++t);
+	else {
+		for (lim = 1; suf != NULL; suf = suf->next)
+			if (streq(suf->name, s + len - strlen(suf->name))) {
+				lim = suf->amount;
+				break;
+			}
+		lim *= atoi(s);
+	}
+	return lim;
+}
+
+PRIM(limit) {
+	const Limit *lim = limits;
+	Boolean hard = FALSE;
+	Ref(List *, lp, list);
+
+	if (lp != NULL && streq(getstr(lp->term), "-h")) {
+		hard = TRUE;
+		lp = lp->next;
+	}
+
+	if (lp == NULL)
+		for (; lim->name != NULL; lim++)
+			printlimit(lim, hard);
+	else {
+		const char *name = getstr(lp->term);
+		for (;; lim++) {
+			if (lim->name == NULL)
+				fail("%s: no such limit", name);
+			if (streq(name, lim->name))
+				break;
+		}
+		lp = lp->next;
+		if (lp == NULL)
+			printlimit(lim, hard);
+		else {
+			long n;
+			struct rlimit rlim;
+			getrlimit(lim->flag, &rlim);
+			if ((n = parselimit(lim, getstr(lp->term))) < 0)
+				fail("%s: bad limit value", getstr(lp->term));
+			if (hard)
+				rlim.rlim_max = n;
+			else
+				rlim.rlim_cur = n;
+			if (setrlimit(lim->flag, &rlim) == -1)
+				fail("setrlimit: %s", strerror(errno));
+		}
+	}
+	RefEnd(lp);
+	return true;
+}
+
+PRIM(time) {
+	int pid, status;
+	time_t t0, t1;
+	struct rusage r;
+
+	Ref(List *, lp, list);
+
+	gc();	/* do a garbage collection first to ensure reproducible results */
+	t0 = time(NULL);
+	pid = efork(TRUE, FALSE);
+	if (pid == 0)
+		exit(exitstatus(eval(lp, NULL, FALSE, exitonfalse)));
+	status = ewaitfor2(pid, &r);
+	t1 = time(NULL);
+	SIGCHK();
+	printstatus(0, status);
+
+	eprint(
+		"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
+		t1 - t0,
+		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 100000),
+		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 100000),
+		lp, " "
+	);
+
+	RefEnd(lp);
+	return mklist(mkterm(mkstatus(status), NULL), NULL);
+}
+
+#endif	/* BSD_LIMITS */
+
 extern Dict *initprims_sys(Dict *primdict) {
 	X(newpgrp);
 	X(background);
@@ -169,5 +336,9 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(cd);
 	X(fork);
 	X(setsignals);
+#if BSD_LIMITS
+	X(limit);
+	X(time);
+#endif
 	return primdict;
 }

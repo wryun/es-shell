@@ -5,6 +5,8 @@
 #include "es.h"
 #include "gc.h"
 
+extern const char initial[];	/* from initial.c, generated from initial.es */
+
 typedef struct Var Var;
 struct Var {
 	List *defn;
@@ -17,11 +19,14 @@ Dict *vars;
 static Vector *env, *sortenv;
 static int envmin;
 static Boolean isdirty = TRUE;
+static Boolean rebound = TRUE;
 static char notexported;
 
-#define	specialvar(name)	(streq(name, "*") || streq(name, "0"))
-
 DefineTag(Var, static);
+
+static Boolean specialvar(const char *name) {
+	return (*name == '*' || *name == '0') && name[1] == '\0';
+}
 
 static Boolean hasbindings(List *list) {
 	for (; list != NULL; list = list->next) {
@@ -82,7 +87,7 @@ extern char *varname(List *list) {
 }
 
 /* iscounting -- is it a counter number, i.e., an integer > 0 */
-static Boolean iscounting(char *name) {
+static Boolean iscounting(const char *name) {
 	int c;
 	const char *s = name;
 	while ((c = *s++) != '\0')
@@ -93,7 +98,7 @@ static Boolean iscounting(char *name) {
 	return TRUE;
 }
 
-extern List *varlookup(char *name, Binding *bp) {
+extern List *varlookup(const char *name, Binding *bp) {
 	Var *var;
 
 	if (iscounting(name)) {
@@ -126,7 +131,7 @@ extern void vardef(char *name, Binding *bp, List *defn) {
 	for (; bp != NULL; bp = bp->next)
 		if (streq(name, bp->name)) {
 			bp->defn = defn;
-			nextgen();
+			rebound = TRUE;
 			return;
 		}
 
@@ -325,19 +330,8 @@ static void hide(void *dummy, char *key, void *value) {
 	((Var *) value)->env = &notexported;
 }
 
-extern void initvars(char **envp, const char *initial, Boolean protected) {
+extern void initvars(char **envp, Boolean protected) {
 	char *envstr;
-	Boolean save_printcmds = printcmds;
-	Boolean save_noexecute = noexecute;
-#if LISPTREES
-	Boolean save_lisptrees = lisptrees;
-#endif
-
-	printcmds = FALSE;
-	noexecute = FALSE;
-#if LISPTREES
-	lisptrees = FALSE;
-#endif
 
 	globalroot(&vars);
 	globalroot(&env);
@@ -345,7 +339,7 @@ extern void initvars(char **envp, const char *initial, Boolean protected) {
 	vars = mkdict();
 	env = mkvector(10);
 
-	runstring(initial, "initial.es");
+	runstring(initial, "initial.es", 0);
 	initpath();
 	initpid();
 	dictforall(vars, hide, NULL);
@@ -373,9 +367,4 @@ extern void initvars(char **envp, const char *initial, Boolean protected) {
 	}
 
 	envmin = env->count;
-	printcmds = save_printcmds;
-	noexecute = save_noexecute;
-#if LISPTREES
-	lisptrees = save_lisptrees;
-#endif
 }

@@ -372,8 +372,9 @@ extern void gc(void) {
 
 #if GCINFO
 		size_t olddata = 0;
-		for (space = new; space != NULL; space = space->next)
-			olddata += SPACEUSED(space);
+		if (gcinfo)
+			for (space = new; space != NULL; space = space->next)
+				olddata += SPACEUSED(space);
 #endif
 
 		assert(gcblocked >= 0);
@@ -414,10 +415,11 @@ extern void gc(void) {
 			livedata += SPACEUSED(space);
 
 #if GCINFO
-		eprint(
-			"[GC: old %8d  live %8d  min %8d  (pid %5d)]\n",
-			olddata, livedata, minspace, getpid()
-		);
+		if (gcinfo)
+			eprint(
+				"[GC: old %8d  live %8d  min %8d  (pid %5d)]\n",
+				olddata, livedata, minspace, getpid()
+			);
 #endif
 
 		if (minspace < livedata * 2)

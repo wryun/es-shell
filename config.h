@@ -7,6 +7,17 @@
  *		if this is on, asserts will be checked, raising errors on
  *		actual assertion failure.
  *
+ *	BSD_LIMITS
+ *		if this is on, the limit builtin (ala csh) is included.
+ *		also triggers inclusion of the time builtin.
+ *
+ *	DEVFD
+ *		turn this on if your system supports /dev/fd for >{} and <{}
+ *
+ *	DEVFD_PATH
+ *		(used only if DEVFD is on.)  a format string for print() to
+ *		a file path for opening file descriptor n.
+ *
  *	GCALWAYS
  *		if this is on, the a collection is done after every allocation.
  *		this stress-tests the garbage collector.  any missed Ref()
@@ -87,6 +98,9 @@
  *	USE_VOLATILE
  *		allow volatile declarations.  if your compiler supports 'em, use 'em.
  *
+ *	USE_UNISTD
+ *		define this if you have the include file <unistd.h>
+ *
  *	VOID_SIGNALS
  *		define this as true if signal handlers are declared with void
  *		return type; otherwise es uses int for signal returns.
@@ -104,6 +118,7 @@
 #if NeXT
 #define	DEFAULT_USE_DIRENT	0
 #define	DEFAULT_USE_SIG_ATOMIC_T 1
+#define	DEFAULT_USE_UNISTD	0
 #endif
 
 
@@ -129,6 +144,18 @@
 
 #ifndef	DEFAULT_ASSERTIONS
 #define	DEFAULT_ASSERTIONS	1
+#endif
+
+#ifndef	DEFAULT_BSD_LIMITS
+#define	DEFAULT_BSD_LIMITS	1
+#endif
+
+#ifndef	DEFAULT_DEVFD
+#define	DEFAULT_DEVFD		0
+#endif
+
+#ifndef	DEFAULT_DEVFD_PATH
+#define	DEFAULT_DEVFD_PATH	"/dev/fd/%d"
 #endif
 
 #ifndef	DEFAULT_GCALWAYS
@@ -195,6 +222,10 @@
 #define	DEFAULT_USE_STDARG	1
 #endif
 
+#ifndef	DEFAULT_USE_UNISTD
+#define	DEFAULT_USE_UNISTD	1
+#endif
+
 #ifndef	DEFAULT_USE_VOLATILE
 #define	DEFAULT_USE_VOLATILE	1
 #endif
@@ -210,6 +241,18 @@
 
 #ifndef	ASSERTIONS
 #define	ASSERTIONS	DEFAULT_ASSERTIONS
+#endif
+
+#ifndef	BSD_LIMITS
+#define	BSD_LIMITS	DEFAULT_BSD_LIMITS
+#endif
+
+#ifndef	DEVFD
+#define	DEVFD		DEFAULT_DEVFD
+#endif
+
+#ifndef	DEVFD_PATH
+#define	DEVFD_PATH	DEFAULT_DEVFD_PATH
 #endif
 
 #ifndef	GCALWAYS
@@ -274,6 +317,10 @@
 
 #ifndef	USE_STDARG
 #define	USE_STDARG	DEFAULT_USE_STDARG
+#endif
+
+#ifndef	USE_UNISTD
+#define	USE_UNISTD	DEFAULT_USE_UNISTD
 #endif
 
 #ifndef	USE_VOLATILE

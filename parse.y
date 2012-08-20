@@ -16,7 +16,6 @@
 %left	'!'
 %left	'|'
 %right	'$' 
-
 %left	SUB
 
 %union {

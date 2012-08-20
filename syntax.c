@@ -3,6 +3,7 @@
 #include "es.h"
 #include "input.h"
 #include "syntax.h"
+#include "token.h"
 
 Tree *ifs, *parsetree;
 
@@ -155,6 +156,9 @@ extern Tree *redirect(Tree *t) {
 	if (t->kind != nRedir)
 		return t;
 	r = t->CAR;
+	t = t->CDR;
+	for (; r->kind == nRedir; r = r->CDR)
+		t = treeappend(t, r->CAR);
 	for (p = r; p->CAR != &placeholder; p = p->CDR) {
 		assert(p != NULL);
 		assert(p->kind == nList);
@@ -162,7 +166,7 @@ extern Tree *redirect(Tree *t) {
 	if (firstis(r, "%heredoc"))
 		if (!queueheredoc(r))
 			return NULL;
-	p->CAR = thunkify(redirect(t->CDR));
+	p->CAR = thunkify(redirect(t));
 	return r;
 }
 
@@ -171,7 +175,36 @@ extern Tree *mkredircmd(char *cmd, int fd) {
 }
 
 extern Tree *mkredir(Tree *cmd, Tree *file) {
-	return treeappend(cmd, treecons(file, treecons(&placeholder, NULL)));
+	Tree *word = NULL;
+	if (file != NULL && file->kind == nThunk) {	/* /dev/fd operations */
+		char *op;
+		Tree *var;
+		static int id = 0;
+		if (firstis(cmd, "%open"))
+			op = "%readfrom";
+		else if (firstis(cmd, "%create"))
+			op = "%writeto";
+		else {
+			yyerror("bad /dev/fd redirection");
+			op = "";
+		}
+		var = mk(nWord, str("_devfd%d", id++));
+		cmd = treecons(
+			mk(nWord, op),
+			treecons(var, NULL)
+		);
+		word = treecons(mk(nVar, var), NULL);
+	}
+	cmd = treeappend(
+		cmd,
+		treecons(
+			file,
+			treecons(&placeholder, NULL)
+		)
+	);
+	if (word != NULL)
+		cmd = mk(nRedir, word, cmd);
+	return cmd;
 }
 
 /* mkclose -- make a %close node with a placeholder */
@@ -190,6 +223,8 @@ extern Tree *mkdup(int fd0, int fd1) {
 /* redirappend -- destructively add to the list of redirections, before any other nodes */
 extern Tree *redirappend(Tree *tree, Tree *r) {
 	Tree *t, **tp;
+	for (; r->kind == nRedir; r = r->CDR)
+		tree = treeappend(tree, r->CAR);
 	assert(r->kind == nList);
 	for (t = tree, tp = &tree; t != NULL && t->kind == nRedir; t = *(tp = &t->CDR))
 		;

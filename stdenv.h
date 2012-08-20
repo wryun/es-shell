@@ -18,17 +18,17 @@
  * protect the rest of es source from the dance of the includes
  */
 
+#if USE_UNISTD
+#include <unistd.h>
+#endif
+
 #if REQUIRE_PARAM
 #include <sys/param.h>
 #endif
 
-#if REQUIRE_STAT || REQUIRE_IOCTL
-#include <sys/types.h>
-#endif
-
 #include <string.h>
 
-#if ADOBE_SUNOS_HACK
+#if ADOBE_SUNOS_HACKERY
 #define	ptrdiff_t	xxxptrdiff_t
 #define	size_t		xxxsize_t
 #endif
@@ -47,6 +47,10 @@
 
 #if REQUIRE_CTYPE
 #include <ctype.h>
+#endif
+
+#if REQUIRE_STAT || REQUIRE_IOCTL
+#include <sys/types.h>
 #endif
 
 #if REQUIRE_IOCTL
@@ -204,6 +208,7 @@ typedef int sigresult;
  * system calls -- can we get these from some standard header uniformly?
  */
 
+#if !USE_UNISTD
 extern int chdir(const char *dirname);
 extern int close(int fd);
 extern int dup(int fd);
@@ -214,12 +219,15 @@ extern int getegid(void);
 extern int geteuid(void);
 extern int getpagesize(void);
 extern int getpid(void);
-extern int ioctl(int fd, int cmd, void *arg);
 extern int pipe(int p[2]);
 extern int read(int fd, void *buf, size_t n);
 extern int setpgrp(int pid, int pgrp);
-extern int wait(int *statusp);
+extern int umask(int mask);
 extern int write(int fd, const void *buf, size_t n);
+
+#if REQUIRE_IOCTL
+extern int ioctl(int fd, int cmd, void *arg);
+#endif
 
 #if REQUIRE_STAT
 extern int stat(const char *, struct stat *);
@@ -228,6 +236,7 @@ extern int stat(const char *, struct stat *);
 #ifdef NGROUPS
 extern int getgroups(int, int *);
 #endif
+#endif	/* !USE_UNISTD */
 
 
 /*
@@ -246,9 +255,9 @@ extern void *qsort(
 
 /* string */
 
-#if !__alpha && !__mips		/* FIX THIS DEFINITION: really ultrix hack */
-extern void memcpy(void *dst, const void *src, size_t n);
-extern void memset(void *dst, int c, size_t n);
+#if ADOBE_SUNOS_HACKERY
+extern void *memcpy(void *dst, const void *src, size_t n);
+extern void *memset(void *dst, int c, size_t n);
 #endif
 
 /* setjmp */

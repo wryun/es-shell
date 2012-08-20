@@ -235,6 +235,92 @@ PRIM(pipe) {
 	RefReturn(result);
 }
 
+#if DEVFD
+PRIM(readfrom) {
+	int pid, p[2], status;
+	List *e;
+	Handler h;
+
+	if (length(list) != 3)
+		argcount("%readfrom var input cmd");
+	Ref(List *, lp, list);
+	Ref(char *, var, getstr(lp->term));
+	lp = lp->next;
+	Ref(Term *, input, lp->term);
+	lp = lp->next;
+	Ref(Term *, cmd, lp->term);
+
+	if ((pid = pipefork(p, NULL)) == 0) {
+		close(p[0]);
+		mvfd(p[1], 1);
+		exit(exitstatus(eval1(input, FALSE, exitonfalse)));
+	}
+
+	close(p[1]);
+	lp = mklist(mkterm(str(DEVFD_PATH, p[0]), NULL), NULL);
+	varpush(var, lp);
+
+	if ((e = pushhandler(&h)) != NULL) {
+		close(p[0]);
+		varpop(var);
+		ewaitfor(pid);
+		throw(e);
+	}
+
+	lp = eval1(cmd, parent, exitonfalse);
+
+	pophandler(&h);
+	close(p[0]);
+	status = ewaitfor(pid);
+	printstatus(0, status);
+	varpop(var);
+	RefEnd3(cmd, input, var);
+	RefReturn(lp);
+}
+
+PRIM(writeto) {
+	int pid, p[2], status;
+	List *e;
+	Handler h;
+
+	if (length(list) != 3)
+		argcount("%writeto var output cmd");
+	Ref(List *, lp, list);
+	Ref(char *, var, getstr(lp->term));
+	lp = lp->next;
+	Ref(Term *, output, lp->term);
+	lp = lp->next;
+	Ref(Term *, cmd, lp->term);
+
+	if ((pid = pipefork(p, NULL)) == 0) {
+		close(p[1]);
+		mvfd(p[0], 0);
+		exit(exitstatus(eval1(output, FALSE, exitonfalse)));
+	}
+
+	close(p[0]);
+	lp = mklist(mkterm(str(DEVFD_PATH, p[1]), NULL), NULL);
+	varpush(var, lp);
+
+	if ((e = pushhandler(&h)) != NULL) {
+		close(p[1]);
+		varpop(var);
+		ewaitfor(pid);
+		throw(e);
+	}
+
+	lp = eval1(cmd, parent, exitonfalse);
+
+	pophandler(&h);
+	close(p[1]);
+	status = ewaitfor(pid);
+	printstatus(0, status);
+	varpop(var);
+	RefEnd3(cmd, output, var);
+	RefReturn(lp);
+}
+#endif
+
 #define	BUFSIZE	4096
 
 static List *bqinput(const char *sep, int fd) {
@@ -296,5 +382,9 @@ extern Dict *initprims_io(Dict *primdict) {
 	X(backquote);
 	X(newfd);
 	X(here);
+#if DEVFD
+	X(readfrom);
+	X(writeto);
+#endif
 	return primdict;
 }

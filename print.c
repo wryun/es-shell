@@ -41,8 +41,8 @@ static Boolean zeroconv(Format *format) {
 	return TRUE;
 }
 
-static void pad(Format *format, size_t len, int c) {
-	while (len-- != 0)
+static void pad(Format *format, long len, int c) {
+	while (len-- > 0)
 		fmtputc(format, c);
 }
 
@@ -336,6 +336,7 @@ extern noreturn panic VARARGS1(const char *, fmt) {
 	Format format;
 	gcdisable(0);
 	VA_START(format.args, fmt);
+	eprint("es panic: ");
 	fdprint(&format, 2, fmt);
 	va_end(format.args);
 	eprint("\n");

@@ -45,10 +45,6 @@ static char *locate(Input *in, char *s) {
 	return in->interactive
 		? s
 		: str("%s:%d: %s", in->name, in->lineno, s);
-#if 0
-w == NW ? last == EOF ? "end of file" : last == '\n' ? "end of line"
-: str((last < 32 || last > 126) ? "<ascii %d>" : "'%c'", last) : realbuf);
-#endif
 }
 
 static char *error = NULL;
@@ -173,9 +169,10 @@ static int fdfill(Input *in) {
 		}
 	} else
 #endif
-	do
-		nread = read(in->fd, in->bufbegin, in->buflen);
-	while (nread == -1 && errno == EINTR);
+	do {
+		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
+		SIGCHK();
+	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
 		close(in->fd);
@@ -187,6 +184,8 @@ static int fdfill(Input *in) {
 		return EOF;
 	}
 
+	if (in->echoinput)
+		ewrite(2, (char *) in->bufbegin, nread);
 	if (in->interactive)
 		loghistory((char *) in->bufbegin, nread);
 
@@ -264,27 +263,45 @@ extern Tree *parse(char *pr1, char *pr2) {
 	result = yyparse();
 	gcenable();
 
-	if (result) {
-		char *e = error;
+	if (result || error != NULL) {
+		char *e;
 		assert(error != NULL);
+		e = error;
 		error = NULL;
 		fail(e);
 	}
-	assert(error == NULL);
 #if LISPTREES
-	if (lisptrees)
+	if (input->lisptrees)
 		eprint("%B\n", parsetree);
 #endif
 	return parsetree;
 }
 
 /* runinput -- run from an input source */
-extern List *runinput(Input *in) {
+extern List *runinput(Input *in, int flags) {
 	Handler h;
-	List *e, *repl, *result;
+	List *e, *repl, *arg, *result;
+	const char *dispatcher[] = {
+		"fn-%eval-noprint",
+		"fn-%eval-print",
+		"fn-%noeval-noprint",
+		"fn-%noeval-print",
+	};
 
 	in->prev = input;
 	input = in;
+
+	if (flags & run_echoinput) {
+		in->echoinput = TRUE;
+		if (in->buf < in->bufend)
+			ewrite(2, (char *) in->buf, in->bufend - in->buf);
+	}
+	if (flags & run_interactive)
+		in->interactive = TRUE;
+#if LISPTREES
+	if (flags & run_lisptrees)
+		in->lisptrees = TRUE;
+#endif
 
 	if ((e = pushhandler(&h)) != NULL) {
 		(*input->cleanup)(input);
@@ -292,10 +309,18 @@ extern List *runinput(Input *in) {
 		throw(e);
 	}
 
-	repl = varlookup(in->interactive ? "fn-%interactive-loop" : "fn-%batch-loop", NULL);
-	result = (repl == NULL)
-			? prim("batchloop", NULL, TRUE, exitonfalse)
-			: eval(repl, NULL, TRUE, exitonfalse);
+	arg = varlookup(dispatcher[
+			  ((flags & run_printcmds) ? 1 : 0)
+			+ ((flags & run_noexec)    ? 2 : 0)
+		], NULL);
+	repl = varlookup((flags & run_interactive) ? "fn-%interactive-loop" : "fn-%batch-loop", NULL);
+	if (repl == NULL)
+		result = prim("batchloop", arg, TRUE, exitonfalse);
+	else {
+		if (arg != NULL)
+			repl = append(repl, arg);
+		result = eval(repl, NULL, TRUE, exitonfalse);
+	}
 
 	pophandler(&h);
 	input = in->prev;
@@ -316,7 +341,7 @@ static void fdcleanup(Input *in) {
 }
 
 /* runfd -- run commands from a file descriptor */
-extern List *runfd(int fd, const char *name, Boolean interactive) {
+extern List *runfd(int fd, const char *name, int flags) {
 	Input in;
 	List *result;
 
@@ -328,11 +353,10 @@ extern List *runfd(int fd, const char *name, Boolean interactive) {
 	in.buflen = BUFSIZE;
 	in.bufbegin = in.buf = ealloc(in.buflen);
 	in.bufend = in.bufbegin;
-	in.interactive = interactive;
 	in.name = (name == NULL) ? str("fd %d", fd) : name;
 
 	RefAdd(in.name);
-	result = runinput(&in);
+	result = runinput(&in, flags);
 	RefRemove(in.name);
 
 	return result;
@@ -350,7 +374,7 @@ static int stringfill(Input *in) {
 }
 
 /* runstring -- run commands from a string */
-extern List *runstring(const char *str, const char *name) {
+extern List *runstring(const char *str, const char *name, int flags) {
 	Input in;
 	List *result;
 	unsigned char *buf;
@@ -370,7 +394,7 @@ extern List *runstring(const char *str, const char *name) {
 	in.cleanup = stringcleanup;
 
 	RefAdd(in.name);
-	result = runinput(&in);
+	result = runinput(&in, flags);
 	RefRemove(in.name);
 	return result;
 }

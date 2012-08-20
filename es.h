@@ -12,12 +12,10 @@ typedef struct Term Term;
 typedef struct List List;
 typedef struct Binding Binding;
 typedef struct Closure Closure;
-typedef unsigned long Generation;
 
 struct Term {
 	char *str;
 	Closure *closure;
-	Generation gen;
 };
 
 struct List {
@@ -34,6 +32,7 @@ struct Binding {
 struct Closure {
 	Binding	*binding;
 	Tree *tree;
+	int mark;
 };
 
 
@@ -82,15 +81,13 @@ typedef struct {
 
 extern Boolean loginshell;		/* -l or $0[0] == '-' */
 extern Boolean noexecute;		/* -n */
-extern Boolean verbose;			/* -v */
-extern Boolean printcmds;		/* -x */
 extern Boolean exitonfalse;		/* -e */
 
 #if GCVERBOSE
 extern Boolean gcverbose;		/* -G */
 #endif
-#if LISPTREES
-extern Boolean lisptrees;		/* -L */
+#if GCINFO
+extern Boolean gcinfo;			/* -I */
 #endif
 
 
@@ -113,9 +110,6 @@ extern void undefer(int ticket);
 
 /* term.c */
 
-extern Boolean rebound;
-extern Generation generation;
-extern Generation nextgen(void);
 extern Term *mkterm(char *str, Closure *closure);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
@@ -172,9 +166,9 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote);
 
 /* var.c */
 
-extern void initvars(char **envp, const char *initial, Boolean protected);
+extern void initvars(char **envp, Boolean protected);
 extern char *varname(List *);
-extern List *varlookup(char *, Binding *);
+extern List *varlookup(const char *, Binding *);
 extern List *varlookup2(char *name1, char *name2);
 extern void vardef(char *, Binding *, List *);
 extern void varpush(char *, List *);
@@ -197,8 +191,8 @@ extern void printstatus(int pid, int status);
 
 extern Boolean hasforked;
 extern int efork(Boolean parent, Boolean background);
-extern int ewaitfor(int pid);
-
+extern int ewaitfor2(int pid, void *rusage);
+#define	ewaitfor(pid)	ewaitfor2(pid, NULL)
 
 /* which.c */
 
@@ -259,13 +253,19 @@ extern Boolean isabsolute(char *path);
 
 extern char *prompt, *prompt2;
 extern Tree *parse(char *esprompt1, char *esprompt2);
-extern List *runstring(const char *str, const char *name);
 extern Tree *parsestring(const char *str);
-extern List *runfd(int fd, const char *name, Boolean interactive);
 extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 extern void initinput(void);
 
+extern List *runfd(int fd, const char *name, int flags);
+extern List *runstring(const char *str, const char *name, int flags);
+
+#define	run_interactive		 1	/* -i or $0[0] = '-' */
+#define	run_noexec		 2	/* -n */
+#define	run_echoinput		 4	/* -v */
+#define	run_printcmds		 8	/* -x */
+#define	run_lisptrees		16	/* -L and defined(LISPTREES) */
 
 /* prim.c */
 
@@ -414,4 +414,3 @@ extern void newchildcatcher(void);
 		(tophandler = (hp)), \
 		(setjmp((hp)->label) ? exception : NULL) \
 	)
-

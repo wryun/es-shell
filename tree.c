@@ -81,7 +81,6 @@ static size_t Tree1Scan(void *p) {
 		n->u[0].p = forward(n->u[0].p);
 		break;
 	} 
-
 	return offsetof(Tree, u[1]);
 }
 
@@ -97,6 +96,5 @@ static size_t Tree2Scan(void *p) {
 	default:
 		panic("Tree2Scan: bad node kind %d", n->kind);
 	} 
-
 	return offsetof(Tree, u[2]);
 }
