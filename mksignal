@@ -141,7 +141,9 @@ sed -n '
 				lcname = lcname c
 			}
 			print "#ifdef", signal
+			print "#if ", signal, " < NSIG"
 			printf "\t{ %s,\t\"%s\",\t\"%s\" },\n", signal, lcname, mesg[signal]
+			print "#endif"
 			print "#endif"
 		}
 	}
