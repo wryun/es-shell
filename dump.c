@@ -1,4 +1,4 @@
-/* dump.c -- dump es's internal state as a c program ($Revision: 1.5 $) */
+/* dump.c -- dump es's internal state as a c program ($Revision: 1.6 $) */
 
 #include "es.h"
 #include "var.h"
@@ -113,7 +113,7 @@ static char *dumptree(Tree *tree) {
 			panic("dumptree: bad node kind %d", tree->kind);
 		case nWord: case nQword: case nPrim:
 			print(
-				"static const Tree_s %s = { n%s, { (char *) %s } };\n",
+				"static const Tree_s %s = { n%s, { { (char *) %s } } };\n",
 				name + 1,
 				nodename(tree->kind),
 				dumpstring(tree->u[0].s)
@@ -121,7 +121,7 @@ static char *dumptree(Tree *tree) {
 			break;
 		case nCall: case nThunk: case nVar:
 			print(
-				"static const Tree_p %s = { n%s, { (Tree *) %s } };\n",
+				"static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n",
 				name + 1,
 				nodename(tree->kind),
 				dumptree(tree->u[0].p)
@@ -131,7 +131,7 @@ static char *dumptree(Tree *tree) {
 		case nLambda: case nLet: case nList:  case nLocal:
 		case nMatch: case nVarsub:
 			print(
-				"static const Tree_pp %s = { n%s, { (Tree *) %s, (Tree *) %s } };\n",
+				"static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n",
 				name + 1,
 				nodename(tree->kind),
 				dumptree(tree->u[0].p),

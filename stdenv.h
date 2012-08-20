@@ -1,4 +1,4 @@
-/* stdenv.h -- set up an environment we can use ($Revision: 1.13 $) */
+/* stdenv.h -- set up an environment we can use ($Revision: 1.17 $) */
 
 
 /*
@@ -74,6 +74,8 @@ extern Dirent *readdir(DIR *);
 #include <fcntl.h>
 #endif
 
+#include <sys/wait.h>
+
 
 /*
  * things that should be defined by header files but might not have been
@@ -125,11 +127,7 @@ typedef void noreturn;
 #endif
 
 #if USE_SIG_ATOMIC_T
-#if !_AIX
 typedef volatile sig_atomic_t Atomic;
-#else
-typedef sig_atomic_t Atomic;
-#endif
 #else
 typedef volatile int Atomic;
 #endif
@@ -229,6 +227,39 @@ extern int stat(const char *, struct stat *);
 extern int getgroups(int, int *);
 #endif
 #endif	/* !USE_UNISTD */
+
+
+/*
+ * hacks to present a standard system call interface
+ */
+
+#if sgi
+#define	setpgrp(a,b)	BSDsetpgrp(a,b)
+#endif
+
+#if SOLARIS
+#define	setpgrp(a,b)	setsid();
+#endif
+
+#if !HAS_LSTAT
+#define	lstat	stat
+#endif
+
+
+/*
+ * macros for picking apart statuses
+ *	we should be able to use the W* forms from <sys/wait.h> but on
+ *	some machines they take a union wait (what a bad idea!) and on
+ *	others an integer.  we just renamed the first letter to s and
+ *	let things be.  on some systems these could just be defined in
+ *	terms of the W* forms.
+ */
+
+#define	SIFSIGNALED(status)	(((status) & 0xff) != 0)
+#define	STERMSIG(status)	((status) & 0x7f)
+#define	SCOREDUMP(status)	((status) & 0x80)
+#define	SIFEXITED(status)	(!SIFSIGNALED(status))
+#define	SEXITSTATUS(status)	(((status) >> 8) & 0xff)
 
 
 /*

@@ -1,13 +1,17 @@
-/* prim-sys.c -- system call primitives ($Revision: 1.23 $) */
+/* prim-sys.c -- system call primitives ($Revision: 1.28 $) */
 
 #define	REQUIRE_IOCTL	1
 
 #include "es.h"
 #include "prim.h"
-#include "sigmsgs.h"
 
-#if sgi
-#define	setpgrp(a,b)	BSDsetpgrp(a,b)
+#if BSD_LIMITS || BUILTIN_TIME
+#include <sys/time.h>
+#include <sys/resource.h>
+#if SOLARIS
+#include <sys/rusage.h>
+#define	tv_usec		tv_nsec/1000		/* HACK */
+#endif
 #endif
 
 PRIM(newpgrp) {
@@ -27,7 +31,7 @@ PRIM(newpgrp) {
 		esignal(SIGTTOU, sigttou);
 	}
 #endif
-	return true;
+	return listcopy(true);
 }
 
 PRIM(background) {
@@ -74,7 +78,7 @@ PRIM(umask) {
 		int mask = umask(0);
 		umask(mask);
 		print("%04o\n", mask);
-		return true;
+		return listcopy(true);
 	}
 	if (list->next == NULL) {
 		int mask;
@@ -85,7 +89,7 @@ PRIM(umask) {
 			fail("$&umask", "bad umask: %s", s);
 		if (umask(mask) == -1)
 			fail("$&umask", "umask %04d: %s", mask, strerror(errno));
-		return true;
+		return listcopy(true);
 	}
 	fail("$&umask", "usage: umask [mask]");
 	NOTREACHED;
@@ -116,26 +120,27 @@ PRIM(cd) {
 
 	if (chdir(dir) == -1)
 		fail("$&cd", "chdir %s: %s", dir, strerror(errno));
-	return true;
+	return listcopy(true);
 }
 
 PRIM(setsignals) {
 	int i;
-	Sigeffect effects[NUMOFSIGNALS];
-	for (i = 0; i < NUMOFSIGNALS; i++)
+	Sigeffect effects[NSIG];
+	for (i = 0; i < NSIG; i++)
 		effects[i] = sig_default;
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next) {
+		int sig;
 		const char *s = getstr(lp->term);
 		Sigeffect effect = sig_catch;
 		if (*s == '-') {
 			++s;
 			effect = sig_ignore;
 		}
-		for (i = 1; !streq(s, signals[i].name); )
-			if (++i == NUMOFSIGNALS)
-				fail("$&setsignals", "unknown signal: %s", s);
-		effects[i] = effect;
+		sig = signumber(s);
+		if (sig < 0)
+			fail("$&setsignals", "unknown signal: %s", s);
+		effects[sig] = effect;
 	}
 	RefEnd(lp);
 	blocksignals();
@@ -149,9 +154,6 @@ PRIM(setsignals) {
  */
 
 #if BSD_LIMITS
-
-#include <sys/time.h>
-#include <sys/resource.h>
 extern int getrlimit(int, struct rlimit *);
 extern int setrlimit(int, const struct rlimit *);
 
@@ -305,10 +307,15 @@ PRIM(limit) {
 		}
 	}
 	RefEnd(lp);
-	return true;
+	return listcopy(true);
 }
+#endif	/* BSD_LIMITS */
 
+#if BUILTIN_TIME
 PRIM(time) {
+
+#if USE_WAIT3
+
 	int pid, status;
 	time_t t0, t1;
 	struct rusage r;
@@ -335,9 +342,49 @@ PRIM(time) {
 
 	RefEnd(lp);
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
-}
 
-#endif	/* BSD_LIMITS */
+#else	/* !USE_WAIT3 */
+
+	int pid, status;
+	Ref(List *, lp, list);
+
+	gc();	/* do a garbage collection first to ensure reproducible results */
+	pid = efork(TRUE, FALSE);
+	if (pid == 0) {
+		time_t t0, t1;
+		struct rusage r;
+
+		t0 = time(NULL);
+		pid = efork(TRUE, FALSE);
+		if (pid == 0)
+			exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+
+		status = ewaitfor(pid);
+		t1 = time(NULL);
+		SIGCHK();
+		printstatus(0, status);
+		getrusage(RUSAGE_CHILDREN, &r);
+
+		eprint(
+			"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
+			t1 - t0,
+			r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 100000),
+			r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 100000),
+			lp, " "
+		);
+		exit(status);
+	}
+	status = ewaitfor(pid);
+	SIGCHK();
+	printstatus(0, status);
+
+	RefEnd(lp);
+	return mklist(mkterm(mkstatus(status), NULL), NULL);
+
+#endif	/* !USE_WAIT3 */
+
+}
+#endif	/* BUILTIN_TIME */
 
 #if !KERNEL_POUNDBANG
 PRIM(execfailure) {
@@ -414,6 +461,8 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(setsignals);
 #if BSD_LIMITS
 	X(limit);
+#endif
+#if BUILTIN_TIME
 	X(time);
 #endif
 #if !KERNEL_POUNDBANG

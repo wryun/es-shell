@@ -1,4 +1,4 @@
-/* token.c -- lexical analyzer for es ($Revision: 1.11 $) */
+/* token.c -- lexical analyzer for es ($Revision: 1.12 $) */
 
 #include "es.h"
 #include "input.h"
@@ -340,7 +340,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			return ERROR;
 		}
 		y->tree = mk(nPipe, p[0], p[1]);
-		return '|';
+		return PIPE;
 	}
 
 	{

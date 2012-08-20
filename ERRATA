@@ -16,3 +16,10 @@ fork builtin.  The in function should now be
 			$cmd
 		}
 	}
+
+The pipe timing example from the paper may not work on your system.
+It depends on having a version of time(1) that understands es, either
+by building it in to es or having an external time use the SHELL
+environment variable.  Es will include a (minimal) time function if
+it is built with USE_WAIT3; note that Solaris systems, despite their
+BSD roots, seem not to support wait3().

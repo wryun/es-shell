@@ -1,11 +1,16 @@
-/* status.c -- status manipulations ($Revision: 1.4 $) */
+/* status.c -- status manipulations ($Revision: 1.6 $) */
 
 #include "es.h"
-#include "sigmsgs.h"
 
-static Term trueterm = { "0", NULL }, falseterm = { "1", NULL };
-static List truelist = { &trueterm, NULL }, falselist = { &falseterm, NULL };
-List *true = &truelist, *false = &falselist;
+static const Term
+	trueterm	= { "0", NULL },
+	falseterm	= { "1", NULL };
+static const List
+	truelist	= { (Term *) &trueterm, NULL },
+	falselist	= { (Term *) &falseterm, NULL };
+List
+	*true		= (List *) &truelist,
+	*false		= (List *) &falselist;
 
 /* istrue -- is this status list true? */
 extern Boolean istrue(List *status) {
@@ -48,23 +53,20 @@ extern int exitstatus(List *status) {
 
 /* mkstatus -- turn a unix exit(2) status into a string */
 extern char *mkstatus(int status) {
-	if (status & 0xff) {
-		const char *core = (status & 0x80) ? "+core" : "";
-		int sig = (status & 0x7f);
-		return (sig < NUMOFSIGNALS && *signals[sig].name != '\0')
-			? str("%s%s", signals[sig].name, core)
-			: str("sig%d%s", sig, core);
+	if (SIFSIGNALED(status)) {
+		char *name = signame(STERMSIG(status));
+		if (SCOREDUMP(status))
+			name = str("%s+core", name);
+		return name;
 	}
-	return str("%d", (status >> 8) & 0xff);
+	return str("%d", SEXITSTATUS(status));
 }
 
 /* printstatus -- print the status if we should */
 extern void printstatus(int pid, int status) {
-	if (status & 0xff) {
-		const char *msg, *tail;
-		msg = ((status & 0x7f) < NUMOFSIGNALS ? signals[status & 0x7f].msg : "");
-		tail = "";
-		if (status & 0x80) {
+	if (SIFSIGNALED(status)) {
+		const char *msg = sigmessage(STERMSIG(status)), *tail = "";
+		if (SCOREDUMP(status)) {
 			tail = "--core dumped";
 			if (*msg == '\0')
 				tail += (sizeof "--") - 1;

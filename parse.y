@@ -1,4 +1,4 @@
-/* parse.y -- grammar for es ($Revision: 1.6 $) */
+/* parse.y -- grammar for es ($Revision: 1.7 $) */
 
 %{
 #include "es.h"
@@ -14,7 +14,7 @@
 %left	LOCAL LET FOR CLOSURE ')'
 %left	ANDAND OROR NL
 %left	'!'
-%left	'|'
+%left	PIPE
 %right	'$' 
 %left	SUB
 
@@ -25,7 +25,8 @@
 }
 
 %type <str>	WORD QWORD keyword
-%type <tree>	'|' DUP REDIR body cmd cmdsa cmdsan comword first fn line word param assign
+%type <tree>	REDIR PIPE DUP
+		body cmd cmdsa cmdsan comword first fn line word param assign
 		binding bindings params nlwords words simple redir sword
 %type <kind>	binder
 
@@ -59,7 +60,7 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| binder nl '(' bindings ')' nl cmd	{ $$ = mk($1, $4, $7); }
 	| cmd ANDAND nl cmd			{ $$ = mkseq("%and", $1, $4); }
 	| cmd OROR nl cmd			{ $$ = mkseq("%or", $1, $4); }
- 	| cmd '|' nl cmd			{ $$ = mkpipe($1, $2->u[0].i, $2->u[1].i, $4); }
+ 	| cmd PIPE nl cmd			{ $$ = mkpipe($1, $2->u[0].i, $2->u[1].i, $4); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 

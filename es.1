@@ -1,4 +1,4 @@
-.\" es.1 -- es manual page ($Revision: 1.27 $)
+.\" es.1 -- es manual page ($Revision: 1.30 $)
 .\" macros stolen from rc.1
 .\"-------
 .\" Man page portability notes
@@ -331,9 +331,9 @@ Parentheses are used to group lists.
 The empty list is represented by
 .Cr "()" .
 Lists have no hierarchical structure;
-a list inside another list is expanded so the
+a list inside another list is expanded so that the
 outer list contains all the elements of the inner list.
-Thus, the following are all equivalent
+Thus, the following are all equivalent:
 .Ds
 .Cr "one two three"
 .Cr "(one two three)"
@@ -393,8 +393,8 @@ Any variable which has not been assigned a value returns the empty list
 when referenced.
 In addition, multiple references are allowed:
 .Ds
-.Cr a=foo
-.Cr b=a
+.Cr "a = foo"
+.Cr "b = a"
 .Cr "echo $$b"
 .De
 .PP
@@ -486,7 +486,7 @@ prints
 If
 .I n
 references a nonexistent element, then
-.Ci $var( n )
+.Ci $ var ( n )
 returns the empty list.
 .PP
 Subscript ranges are of the form
@@ -598,7 +598,7 @@ will only perform pattern matching if a metacharacter occurs unquoted and
 literally in the input.
 Thus,
 .Ds
-.Cr "foo='*'"
+.Cr "foo = '*'"
 .Cr "echo $foo"
 .De
 .PP
@@ -715,7 +715,7 @@ Thus, the command
 .PP
 returns true if any of the files in the current directory have a
 single-character name.
-(Note that if the
+Note that if the
 .Cr ~
 command is given a list as its first
 argument, then a successful match against any of the elements of that
@@ -727,12 +727,12 @@ For example:
 .Cr "~ (foo goo zoo) z*"
 .De
 .PP
-is true.)
+is true.
 .SS "Command Substitution"
 A list may be formed from the output of a command by using backquote
 substitution:
 .Ds
-.Cr "\`{" " command " }
+.Ci "\`{" " command " }
 .De
 .PP
 returns a list formed from the standard output of the command in braces.
@@ -788,7 +788,7 @@ The return value of a command is obtained with the construct
 .De
 .PP
 The return value of an external program is its exit status
-(which in other shell can be found in special variables such as
+(which in other shells can be found in special variables such as
 .Cr $?
 or
 .Cr $status ),
@@ -831,13 +831,13 @@ the first command has a ``true'' return value.
 executes the first command and then executes the second command if and only if
 the first command has a ``false'' return value.
 .Ds
-.Cr ! command
+.Ci ! " command"
 .De
 .PP
 inverts the truth value of the exit status of a command.
 .SS "Input and output"
 .PP
-The standard output may be redirected to a file with
+The standard output of a command may be redirected to a file with
 .Ds
 .Cr "command > file"
 .De
@@ -957,7 +957,7 @@ use:
 .PP
 The exit status of a pipeline is considered true if and only if every
 command in the pipeline exits true.
-.SS "Input/Output Subsitution"
+.SS "Input/Output Substitution"
 Some commands, like
 .IR cmp (1)
 or
@@ -1014,7 +1014,7 @@ Thus the following all produce the same output:
 .PP
 Since program fragments in the first position in a command are executed,
 braces may be used as a grouping mechanism for commands.
-For example, to run several commands, with output from all redirected to
+For example, to run several commands, with output from all of them redirected to
 the same file, one can do
 .Ds
 .Cr "{ date; ps agux; who } > snapshot"
@@ -1067,7 +1067,7 @@ As a small example,
 is a complicated way of producing the output
 .Cr hi .
 The first word is a function which echoes its
-arguments, and the second word is the argument the function, the word
+arguments, and the second word is the argument to the function, the word
 .Cr hi .
 .PP
 Lambdas, like other program fragments, can appear anywhere in a list.
@@ -1082,7 +1082,7 @@ using its second argument, named
 .Cr arg ,
 as the argument for the first.
 The first argument of this function is another lambda,
-seen previously, and the third argument is the word
+seen previously, and the second argument is the word
 .Cr hi .
 .PP
 These lambda expressions
@@ -1116,11 +1116,11 @@ is a variable of the form
 If name for which the appropriate
 .Cr fn-
 variable exists is found in the first position of a command,
-the value of the variable is subsituted for the first word.
+the value of the variable is substituted for the first word.
 The above syntax for creating functions is equivalent to the
 variable assignment
 .Ds
-.Ci fn\- name =@ " parameters " "{ \fIcommands\fP }"
+.Ci fn\- name " = @" " parameters " "{ \fIcommands\fP }"
 .De
 .PP
 Functions may be deleted with the syntax
@@ -1141,7 +1141,7 @@ is bound (dynamically, see below) to the name of the function.
 Lambdas are just another form of code fragment, and, as such, can be
 exported in the environment, passed as arguments, etc.
 The central difference between the two forms is that lambdas bind their arguments,
-where simple brace-enclosed groups just ignore theirs.
+while simple brace-enclosed groups just ignore theirs.
 .SS "Local Variables"
 Variable assignments may be made local to a set of commands with the
 .Cr local
@@ -1263,6 +1263,8 @@ While the settor function is running,
 the variable
 .Cr $0
 is bound to the name of the variable being assigned.
+The result of the settor function is used as the actual value in
+the assignment.
 .PP
 For example, the following settor function is used to keep
 the shell variables
@@ -1340,7 +1342,7 @@ The return value of the loop is the argument to the exception.
 .Cr eof
 Raised by
 .Cr %parse
-when end of input is reached.
+when the end of input is reached.
 .TP
 .Cr "error \fIsource message\fP"
 A run-time error.
@@ -1368,7 +1370,7 @@ as the return value (exit status).
 Raised when the shell itself receives a signal,
 and the signal is listed in the variable
 .Cr signals .
-.I signame
+.I Signame
 is the name of the signal that was raised.
 .PP
 See the builtin commands
@@ -1380,7 +1382,7 @@ for details on how to manipulate exceptions.
 Several variables are known to
 .I es
 and are treated specially.
-Redefining these variable can change interpeter semantics.
+Redefining these variables can change interpreter semantics.
 Note that only dynamically bound (top-level or
 .Cr local -bound)
 variables are interpreted in this way;
@@ -1491,11 +1493,11 @@ and
 and
 .Cr PATH
 are aliased to each other.
-If
+If neither
 .Cr path
-or
+nor
 .Cr PATH
-is not set at startup time,
+are set at startup time,
 .Cr path
 assumes a default value suitable for your system.
 This is typically
@@ -1618,7 +1620,7 @@ rather than executing them.
 \fIcmd1\fP ; \fIcmd2\fP	%seq {\fIcmd1\fP} {\fIcmd2\fP}
 \fIcmd1\fP && \fIcmd2\fP	%and {\fIcmd1\fP} {\fIcmd2\fP}
 \fIcmd1\fP || \fIcmd2\fP	%or {\fIcmd1\fP} {\fIcmd2\fP}
-fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP=@ \fIargs\fP{\fIcmd\fP}
+fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Input/Output Commands"
@@ -1635,7 +1637,7 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP=@ \fIargs\fP{\fIcmd\fP}
 \fIcmd\fP >[\fIn\fP=]	%close \fIn\fP {\fIcmd\fP}
 \fIcmd\fP >[\fIm\fP=\fIn\fP]	%dup \fIm\fP \fIn\fP {\fIcmd\fP}
 \fIcmd\fP << tag \fIinput\fP tag	%here 0 \fIinput\fP {\fIcmd\fP}
-\fIcmd\fP <<< string	%here 0 string {\fIcmd\fP}
+\fIcmd\fP <<< \fIstring\fP	%here 0 \fIstring\fP {\fIcmd\fP}
 \fIcmd1\fP | \fIcmd2\fP	%pipe {\fIcmd1\fP} 1 0 {\fIcmd2\fP}
 \fIcmd1\fP |[\fIm\fP=\fIn\fP] \fIcmd2\fP	%pipe {\fIcmd1\fP} \fIm\fP \fIn\fP {\fIcmd2\fP}
 \fIcmd1\fP >{ \fIcmd2\fP }	%writeto \fIvar\fP {\fIcmd2\fP} {\fIcmd1\fP $\fIvar\fP}
@@ -1647,8 +1649,8 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP=@ \fIargs\fP{\fIcmd\fP}
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
 $^\fIvar\fP	<={%flatten ' ' $\fIvar\fP}
-`{\fIcmd args\fP}	<={%backquote <={%flatten '' $ifs} {\fIcmd args\fP}}
-``\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
+\`{\fIcmd args\fP}	<={%backquote <={%flatten '' $ifs} {\fIcmd args\fP}}
+\`\`\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
 .ft R
 .De
 .SH BUILTINS
@@ -1661,15 +1663,15 @@ Many builtins are implemented with primitives (see above).
 Some builtin functions have names that begin with a percent character
 .Rc ( % ).
 These are commands with some special meaning to the shell,
-or meant for use only by users customizing the shell.
-(This disctinction is somewhat fuzzy, and the decisions about which functions have
+or are meant for use only by users customizing the shell.
+(This distinction is somewhat fuzzy, and the decisions about which functions have
 .Cr % -names
-are somewhat arbititary.)
+are somewhat arbitrary.)
 .PP
 All builtins can be redefined and extended by the user.
 .SS "Builtin Commands"
 .TP
-.Cr ". \fR[\fP-einvx\fR]\fP \fI file [args ...]\fP"
+.Cr ". \fR[\fP-einvx\fR]\fP \fI file \fR[\fPargs ...\fR]\fP"
 Reads
 .I file
 as input to
@@ -1677,7 +1679,7 @@ as input to
 and executes its contents.
 The options are a subset of the invocation options for the shell (see below).
 .TP
-.Cr "access \fR[\fP-n \fIsuffix\fP\fR]\fP \fR[\fP-1e\fR]\fP \fR[\fP-rwx\fR]\fP  \fR[\fP-fdcblsp\fR]\fP \fIpath ...\fP"
+.Cr "access \fR[\fP-n \fIname\fP\fR]\fP \fR[\fP-1e\fR]\fP \fR[\fP-rwx\fR]\fP  \fR[\fP-fdcblsp\fR]\fP \fIpath ...\fP"
 Tests if the named paths are accessible according to the options presented.
 Normally,
 .Cr access
@@ -1700,9 +1702,9 @@ If the
 option is used, the pathname arguments are treated as a list of
 directories, and the
 .I name
-option argument is used as a file in those directories.
-.Rc ( \-n
-is used for path searching.)
+option argument is used as a file in those directories
+.Rc "(i.e., " \-n
+is used for path searching).
 .sp 1v
 The default test is whether a file exists.
 These options change the test:
@@ -1746,7 +1748,7 @@ has not yet waited for.
 .TP
 .Cr "break \fIvalue\fP"
 Exits the current loop.
-.I value
+.I Value
 is used as the return value for the loop command.
 .TP
 .Cr "catch \fIcatcher body\fP"
@@ -1767,7 +1769,7 @@ analogous to the searching of
 .Cr $path
 for executable files.
 With no argument,
-.B cd
+.Cr cd
 changes the current directory to
 .Cr "$home" .
 .TP
@@ -1793,7 +1795,9 @@ the interpreter for rescanning and execution.
 Replaces
 .I es
 with the given command.
-If the exec contains only redirections,
+If the
+.Cr exec
+contains only redirections,
 then these redirections apply to the current shell
 and the shell does not exit.
 For example,
@@ -1814,6 +1818,8 @@ be enclosed in a program fragment.
 Causes the current shell to exit with the given exit
 .IR status .
 If no argument is given, zero (true) is used.
+(This is different from other shells, that often use the status of
+the last command executed.)
 .TP
 .Cr "false"
 Always returns a false (non-zero) return value.
@@ -1917,7 +1923,7 @@ For time limits,
 (minutes), and
 .Cr h
 (hours) are known;
-in additons, times of the for
+in addition, times of the form
 .Cr "\fIhh\fP:\fImm\fP:\fIss\fP"
 and
 .Cr "\fImm\fP:\fIss\fP"
@@ -1980,8 +1986,8 @@ Prints definitions of the named variables,
 suitable for being used as input to the shell.
 .TP
 .Cr "vars \fR[\fP-vfs\fR]\fP \fR[\fP-epi\fR]\fP"
-Prints all shell variables, functionsm, and settor functions,
-(in a form suitable for use as shell input)
+Prints all shell variables, functions, and settor functions
+(in a form suitable for use as shell input),
 which match the criteria specified by the options.
 .IS
 .TP
@@ -2003,6 +2009,10 @@ private (not exported) values
 .TP
 .Cr \-i
 internal (predefined and builtin) values
+.sp .7v
+.TP
+.Cr \-a
+all of the above
 .IE
 .TP
 \&
@@ -2033,7 +2043,7 @@ is specified, waits for any child process to exit.
 .Cr "whatis \fIprogam ...\fP"
 For each named 
 .IR program ,
-returns the pathname, primitive, lambda, or code fragment which
+prints the pathname, primitive, lambda, or code fragment which
 would be run if the program appeared as the first word of a command.
 .TP
 .Cr "while \fItest body\fP"
@@ -2047,7 +2057,7 @@ A subset of the
 .Cr % -named
 functions are known as ``hook functions.''
 The hook functions are called to implement some internal
-shell operation, and are available as functions in order
+shell operations, and are available as functions in order
 that their values can be changed.
 Typically, a call to a hook function is from code generated by
 the syntactic sugar rewritings.
@@ -2072,7 +2082,7 @@ which is printed if the shell is interactive (according to
 .Cr %is-interactive ).
 .TP
 .Cr "%backquote \fIseparator cmd\fP"
-Run the command in a child process and return its
+Runs the command in a child process and returns its
 standard output as a list, separated (with the same rules used in
 .Cr %split )
 into elements according to
@@ -2104,7 +2114,7 @@ if one is not found, an
 exception is raised.
 .TP
 .Cr "%close \fIfd cmd\fP"
-The command is run with the given file descriptor closed.
+Runs the command with the given file descriptor closed.
 .TP
 .Cr "%count \fIlist\fP"
 Returns the number of arguments to the primitive.
@@ -2116,7 +2126,7 @@ set up to write to the
 .IR file .
 .TP
 .Cr "%dup \fInewfd oldfd cmd\fP"
-Runs the command with the file descritor
+Runs the command with the file descriptor
 .I oldfd
 copied (via
 .IR dup (2))
@@ -2233,6 +2243,16 @@ options are used.)
 Runs the command and returns false if its exit status was true,
 otherwise returns true.
 .TP
+.Cr "%one \fIlist\fP"
+If
+.I list
+is one element long,
+.Cr %one
+returns its value;
+otherwise it raises an exception.
+.Cr %one
+is used to ensure that redirection operations get passed exactly one filename.
+.TP
 .Cr "%open \fIfd file cmd\fP"
 Runs the command with
 .I file
@@ -2327,6 +2347,10 @@ Called by
 .Cr %interactive-loop
 before every call to
 .Cr %parse .
+This function allows the user to provide any actions that he or she may
+wish to have executed before being prompted (e.g., updating the value of the
+.Cr prompt
+variable to contain all or part of the current working directory).
 .TP
 .Cr "%readfrom \fIvar input cmd\fP"
 Runs
@@ -2339,7 +2363,7 @@ the command
 .IR input .
 .TP
 .Cr "%seq \fIcmd ...\fP"
-Run the commands, in order.
+Runs the commands, in order.
 .TP
 .Cr "%whatis \fIprogram ...\fP"
 For each named 
@@ -2347,7 +2371,7 @@ For each named
 returns the pathname, primitive, lambda, or code fragment which
 would be run if the program appeared as the first word of a command.
 .TP
-.Cr "%writeto \fIvar input cmd\fP"
+.Cr "%writeto \fIvar output cmd\fP"
 Runs
 .I cmd
 with the variable
@@ -2362,7 +2386,7 @@ and probably don't make much sense to replace,
 though that is always possible.
 .TP
 .Cr "%fsplit \fIseparator \fR[\fIargs ...\fR]"
-Splits its arguments into separate strings at every occurance
+Splits its arguments into separate strings at every occurrence
 of any of the characters in the string
 .IR separator .
 Repeated instances of separator characters cause null strings to
@@ -2385,18 +2409,18 @@ Returns a file descriptor that the shell thinks is not currently in use.
 .Cr "%run \fIprogram argv0 args ...\fP"
 Run the named program, which is not searched for in
 .Cr $path ,
-with the argument vector set to the remaing arguments.
+with the argument vector set to the remaining arguments.
 This builtin can be used to set
 .Cr argv[0]
 (by convention, the name of the program)
 to something other than file name.
 .TP
 .Cr "%split \fIseparator \fR[\fPargs ...\fR]"
-Splits its arguments into separate strings at every occurance
+Splits its arguments into separate strings at every occurrence
 of any of the characters in the string
 .IR separator .
 Repeated instances of separator characters are coalesced.
-Backquote substition splits with the same rules.
+Backquote substitution splits with the same rules.
 .TP
 .Cr "%var \fIvar ...\fP"
 For each named variable,
@@ -2458,7 +2482,7 @@ This can be used for checking the syntax of scripts.
 When combined with
 .Cr \-x ,
 .I es
-prints the typed command based on the internal (parsed) representation.
+prints the entered command based on the internal (parsed) representation.
 .TP
 .Cr \-p
 Don't initialize functions from the environment.
@@ -2501,7 +2525,7 @@ Too many creatures have fept in.
 Please send bug reports to
 .Cr "haahr@adobe.com"
 and
-.Cr "byron@archone.tamu.edu" .
+.Cr "byron@netapp.com" .
 .SH "SEE ALSO"
 .IR history (1),
 .IR rc (1),

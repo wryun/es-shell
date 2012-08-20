@@ -1,11 +1,10 @@
-/* proc.c -- process control system calls ($Revision: 1.7 $) */
+/* proc.c -- process control system calls ($Revision: 1.9 $) */
 
 #include "es.h"
 
 /* TODO: the rusage code for the time builtin really needs to be cleaned up */
 
-#include <sys/wait.h>
-#if BSD_LIMITS
+#if USE_WAIT3
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
@@ -18,7 +17,7 @@ struct Proc {
 	int status;
 	Boolean alive, background;
 	Proc *next, *prev;
-#if BSD_LIMITS
+#if USE_WAIT3
 	struct rusage rusage;
 #endif
 };
@@ -70,7 +69,7 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
-#if BSD_LIMITS
+#if USE_WAIT3
 static struct rusage wait_rusage;
 #endif
 
@@ -81,7 +80,7 @@ static int dowait(int *statusp) {
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		n = interrupted ? -2 :
-#if BSD_LIMITS
+#if USE_WAIT3
 			wait3((union wait *) statusp, 0, &wait_rusage);
 #else
 			wait((union wait *) statusp);
@@ -104,7 +103,7 @@ static void reap(int pid, int status) {
 			assert(proc->alive);
 			proc->alive = FALSE;
 			proc->status = status;
-#if BSD_LIMITS
+#if USE_WAIT3
 			proc->rusage = wait_rusage;
 #endif
 			return;
@@ -128,7 +127,7 @@ top:
 					else if (interruptible)
 						SIGCHK();
 				proc->alive = FALSE;
-#if BSD_LIMITS
+#if USE_WAIT3
 				proc->rusage = wait_rusage;
 #endif
 			}
@@ -142,7 +141,7 @@ top:
 			if (proc->background)
 				printstatus(proc->pid, status);
 			efree(proc);
-#if BSD_LIMITS
+#if USE_WAIT3
 			if (rusage != NULL)
 				memcpy(rusage, &proc->rusage, sizeof (struct rusage));
 #else

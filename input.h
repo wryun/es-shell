@@ -1,9 +1,10 @@
-/* input.h -- definitions for es lexical analyzer ($Revision: 1.3 $) */
+/* input.h -- definitions for es lexical analyzer ($Revision: 1.4 $) */
 
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 
 typedef struct Input Input;
 struct Input {
+	int (*get)(Input *self);
 	int (*fill)(Input *self), (*rfill)(Input *self);
 	void (*cleanup)(Input *self);
 	Input *prev;
@@ -18,7 +19,7 @@ struct Input {
 };
 
 
-#define	GETC()		get(input)
+#define	GETC()		(*input->get)(input)
 #define	UNGETC(c)	unget(input, c)
 
 

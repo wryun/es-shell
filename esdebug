@@ -1,0 +1,357 @@
+#! /bin/es -p
+# esdebug: a debugger for es scripts ($Revision: 1.4 $)
+
+# TODO
+#	catch signals (at least sigint) better
+#	clean up the output
+#	write a man page (ha!)
+
+fn usage {
+	throw error esdebug 'usage: esdebug [-x] program arg ...'
+}
+
+trapall = false
+
+while {~ $1 -*} {
+	if {~ $1 -x} {
+		trapall = true
+		* = $*(2 ...)
+	} {
+		usage
+	}
+}
+if {~ $#* 0} {
+	usage
+}
+
+_program = $1
+if {!~ $_program /* ./* ../*} {
+	_program = <={ access -n $_program -1e -xf $path }
+}
+* = $*(2 ...)
+
+exec {<>[3] /dev/tty}
+
+fn _print {
+	echo >[1=3] '>>>' $*
+}
+
+fn _get {
+	$&seq {echo >[1=3] -n $*} {return `{line <[0=3]}}
+}
+
+_prompt = '(esdebug) '
+usage =
+
+
+#
+# debugger functions
+#
+
+#	These are written in a funny, stylized way to avoid calls to the functions
+#	%seq, if, and while, because those are trapped by the debugging code.
+
+_debug-!		= eval
+_debug-continue	= $&seq {_stepping = false} {throw break}
+_debug-step	= $&seq {_stepping = true} {throw break}
+_debug-quit	= { exit 0 }
+_debug-echo	= eval echo
+_debug-retry	= throw retry
+_debug-return	= throw return
+_debug-throw	= throw break throw
+
+_debug-trace	= @ functions {
+	for (func = $functions) {
+		let (old = $(fn-$func)) {
+			$&if {!~ $#(_untraced-$func) 0} {
+				_print $func: already traced
+			} {~ $#old 0} {
+				_print $func: undefined
+			} {
+				$&seq {
+					_untraced-$func = $old
+				} {
+					noexport = $noexport _untraced-$func
+				} {
+					fn $func args {  
+						$&seq {
+							_print $func $args
+						} {
+							catch @ e {
+								_print $func raised exception: $e
+							} {
+								let (result = <={$old $args}) {
+									$&seq {
+										_print $func '->' $result
+									} {
+										result $result
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+_debug-untrace	= @ functions {
+	for (func = $functions) {
+		let (old = $(_untraced-$func)) {
+			$&if {~ $#old 0} {
+				_print $func: not traced
+			} {
+				fn-$func = $old
+			}
+		}
+	}
+}
+
+_debug-break	= @ functions {
+	for (func = $functions) {
+		let (old = $(fn-$func)) {
+			$&if {!~ $#(_unbroken-$func) 0} {
+				_print $func: already broken
+			} {~ $#old 0} {
+				_print $func: undefined
+			} {
+				$&seq {
+					_unbroken-$func = $old
+				} {
+					noexport = $noexport _unbroken-$func
+				} {
+					fn $func args {  
+						$&seq {
+							_print break in $func $args
+						} {
+							local (* = $args)
+								_debug break
+						} {
+							catch @ e {
+								$&seq {
+									_print $func raised exception: $e
+								} {
+									_debug break
+								}
+							} {
+								let (result = <={$old $args}) {
+									$&seq {
+										_print $func '->' $result
+									} {
+										_debug break
+									} {
+										result $result
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+_debug-unbreak	= @ functions {
+	for (func = $functions) {
+		let (old = $(_unbroken-$func)) {
+			$&if {~ $#old 0} {
+				_print $func: not broken
+			} {
+				fn-$func = $old
+			}
+		}
+	}
+}
+
+_debug-watch	= @ vars {
+	for (var = $vars) {
+		set-$var = @ {
+			$&seq {
+				_print old $var '=' $$var
+			} {
+				_print new $var '=' $*
+			} {
+				return $*
+			}
+		}
+	}
+}
+
+_debug-unwatch	= @ vars {
+	for (var = $vars) {
+		set-$var =
+	}
+}
+
+_debug-trap	= @ vars {
+	for (var = $vars) {
+		set-$var = @ {
+			$&seq {
+				_print old $var '=' $$var
+			} {
+				_print new $var '=' $*
+			} {
+				local (old = $$var; new = $*)
+					_debug break
+			} {
+				return $*
+			}
+		}
+	}
+}
+
+_debug-untrap	= @ vars {
+	for (var = $vars) {
+		set-$var =
+	}
+}
+
+_debug-help	= @ {
+	cat << 'END-OF-HELP'
+command		description (abbreviations)
+
+break f		set a breakpoint on entry to and exit from function f (b)
+continue	continue execution (c, cont, r, run)
+echo expr ...	echo the es expression (print, p)
+quit		exit esdebug (q)
+throw e ...	throw exception e
+trace f		trace calls to function f
+trap v		break on assignments to variable v
+retry		retry last statement, after catching exceptions only
+return expr ...	return expression from current function
+unbreak f	cancel breakpoint on f
+untrace f	cancel tracing of f
+untrap v	cancel trap of v
+unwatch v	cancel watch of v
+watch v		trace assignments to variable v
+! cmd		run es command cmd
+
+an empty command is equivalent to step
+END-OF-HELP
+}
+
+_debug-b	= $_debug-break
+_debug-c	= $_debug-continue
+_debug-cont	= $_debug-continue
+_debug-p	= $_debug-echo
+_debug-print	= $_debug-echo
+_debug-q	= $_debug-quit
+_debug-r	= $_debug-continue
+_debug-run	= $_debug-continue
+_debug-s	= $_debug-step
+_debug-?	= $_debug-help
+
+
+let (commands =) {
+	for (i = <=$&vars) {
+		if {~ $i _debug-*} {
+			commands = $commands $i
+		}
+	}
+	noexport = $noexport $commands
+}
+
+
+#
+# the main debugger loop
+#
+
+fn-_debug = $&noreturn @ {
+	$&if {~ $1 break || $_stepping} {
+		<= {
+			$&while {
+				let (cmd = <={_get $_prompt}) {
+					$&seq {
+						$&while {~ $cmd(1) $_prompt} {
+							cmd = $cmd(2 ...)
+						}
+					} {
+						$&if {~ $#cmd 0} {
+							cmd = step
+						}
+					} {
+						$&if {~ $#(_debug-$cmd(1)) 0} {
+							_print unknown command: $cmd(1)
+						} {
+							$(_debug-$cmd(1)) $cmd(2 ...)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+#
+# the (debugging) interactive loop
+#
+
+history =
+fn %interactive-loop dispatch {
+	let (result = <= true) {
+		catch @ e type msg {
+			$&if {~ $e eof} {
+				$&seq {
+					_print exiting with exit status $result
+				} {
+					_debug break
+				} {
+					return $result
+				}
+			} {
+				$&seq {
+					_print exception: $e $type $msg
+				} {
+					_debug break
+				} {
+					throw retry
+				}
+			}
+		} {
+			forever {
+				let (cmd = ) {
+					$&seq {
+						_print parsing input from $_program:
+					} {
+						$&while {~ $#cmd 0} {
+							cmd = <={%parse}
+						}
+					} {
+						_debug
+					} {
+						catch @ e {
+							$&seq {
+								_print exception: $e
+							} {
+								_debug
+							}
+						} {
+							result = <={$dispatch $cmd}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+noexport = (
+	$noexport
+	fn-^(_print _get _debug)
+	_prompt _program _stepping
+	%interactive-loop
+)
+_stepping = true
+
+if ($trapall) {
+	fn-%seq = $&noreturn @ {
+		for (i = $*) {
+			$&seq {_print %seq $i} {_debug} $i
+		}
+	}
+	noexport = $noexport %seq if while
+}
+
+. -i -v $_program $*

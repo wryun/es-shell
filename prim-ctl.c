@@ -1,4 +1,4 @@
-/* prim-ctl.c -- control flow primitives ($Revision: 1.8 $) */
+/* prim-ctl.c -- control flow primitives ($Revision: 1.9 $) */
 
 #include "es.h"
 #include "prim.h"
@@ -9,6 +9,8 @@ PRIM(seq) {
 	for (; lp != NULL; lp = lp->next)
 		result = eval1(lp->term, evalflags &~ (lp->next == NULL ? 0 : eval_inchild));
 	RefEnd(lp);
+	if (result == true)
+		result = listcopy(true);
 	RefReturn(result);
 }
 
@@ -28,7 +30,7 @@ PRIM(if) {
 		}
 	}
 	RefEnd(lp);
-	return true;
+	return listcopy(true);
 }
 
 PRIM(and) {
@@ -37,6 +39,8 @@ PRIM(and) {
 	for (; istrue(cond) && lp != NULL; lp = lp->next)
 		cond = eval1(lp->term, evalflags & (lp->next == NULL ? eval_inchild : 0));
 	RefEnd(lp);
+	if (cond == true)
+		cond = listcopy(true);
 	RefReturn(cond);
 }
 
@@ -46,6 +50,8 @@ PRIM(or) {
 	for (; !istrue(cond) && lp != NULL; lp = lp->next)
 		cond = eval1(lp->term, evalflags & (lp->next == NULL ? eval_inchild : 0));
 	RefEnd(lp);
+	if (cond == false)
+		cond = listcopy(false);
 	RefReturn(cond);
 }
 
@@ -71,7 +77,7 @@ PRIM(while) {
 	Ref(List *, body, list->next);
 	while (istrue(eval1(cond, 0)))
 		result = eval(body, NULL, evalflags & eval_exitonfalse);
-	e = result;
+	e = (result == true) ? listcopy(true) : result;
 	RefEnd3(body, cond, result);
 	pophandler(&h);
 	return e;

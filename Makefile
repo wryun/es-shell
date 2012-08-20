@@ -1,14 +1,30 @@
-# Makefile for es ($Revision: 1.6 $)
+# Makefile for es ($Revision: 1.10 $)
 
 # comment out the CFLAGS -Wall if you're not using gcc,
 # but i'd encourage you to compile with full warnings on.
 # let us know what warnings you get, though we don't promise
-# to shut them all up.
+# to shut them all up.  if you're using sun's SPARCcompiler
+# we recommend -Xc mode.  if you're using the native alpha
+# compile, we recommend -g3 -O -Olimit 1000.
 
-CC	= gcc
+# see config.h for command-line -D flags you may want to use.
+# if you're using SunOS 5 (Solaris 2), be sure to include
+# -DSOLARIS in the CFLAGS, since sun made it difficult to
+# detect which system you're running.  also, since sun really
+# seems to have screwed up and removed both getrusage() and
+# wait3() in Solaris 2, you should probably add -DBUILTIN_TIME=0
+# to the cflags.  if you're running an OSF1 derivative, try -DOSF1.
+
+# also, please use whatever -D flags you need to in order
+# to get definitions of all signals from <sys/signal.h>.
+# _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones, but
+# use _INCLUDE_HPUX_SOURCE on HP/UX.
+
+CC	= cc
+#CC	= gcc
 CFLAGS	= -g -O -Wall
 
-HFILES	= config.h es.h gc.h input.h prim.h print.h stdenv.h syntax.h var.h
+HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h stdenv.h syntax.h var.h
 CFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c glob.c \
 	  glom.c input.c heredoc.c list.c main.c match.c open.c opt.c \
 	  prim-ctl.c prim-etc.c prim-io.c prim-sys.c prim.c print.c proc.c \
@@ -20,7 +36,7 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o
 OTHER	= Makefile parse.y mksignal
-GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c sigmsgs.h initial.c
+GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
 
 es	: ${OFILES} initial.o
 	${CC} -o es ${OFILES} initial.o
@@ -43,8 +59,8 @@ token.h : y.tab.h
 initial.c : esdump initial.es
 	./esdump < initial.es > initial.c
 
-sigmsgs.c sigmsgs.h : mksignal /usr/include/sys/signal.h
-	sh mksignal /usr/include/sys/signal.h
+sigmsgs.c : mksignal /usr/include/sys/signal.h
+	sh mksignal /usr/include/sys/signal.h > sigmsgs.c
 
 # --- dependencies ---
 
@@ -69,12 +85,12 @@ prim.o : prim.c es.h config.h stdenv.h prim.h
 prim-ctl.o : prim-ctl.c es.h config.h stdenv.h prim.h 
 prim-etc.o : prim-etc.c es.h config.h stdenv.h prim.h 
 prim-io.o : prim-io.c es.h config.h stdenv.h prim.h 
-prim-sys.o : prim-sys.c es.h config.h stdenv.h prim.h sigmsgs.h 
+prim-sys.o : prim-sys.c es.h config.h stdenv.h prim.h 
 print.o : print.c es.h config.h stdenv.h print.h 
 proc.o : proc.c es.h config.h stdenv.h prim.h 
 signal.o : signal.c es.h config.h stdenv.h sigmsgs.h 
 split.o : split.c es.h config.h stdenv.h gc.h 
-status.o : status.c es.h config.h stdenv.h sigmsgs.h 
+status.o : status.c es.h config.h stdenv.h 
 str.o : str.c es.h config.h stdenv.h gc.h print.h 
 syntax.o : syntax.c es.h config.h stdenv.h input.h syntax.h token.h 
 term.o : term.c es.h config.h stdenv.h gc.h 

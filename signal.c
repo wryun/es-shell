@@ -1,4 +1,4 @@
-/* signal.c -- signal handling ($Revision: 1.11 $) */
+/* signal.c -- signal handling ($Revision: 1.12 $) */
 
 #include "es.h"
 #include "sigmsgs.h"
@@ -11,9 +11,9 @@ jmp_buf slowlabel;
 Atomic slow = FALSE;
 Atomic interrupted = FALSE;
 static Atomic sigcount;
-static Atomic caught[NUMOFSIGNALS];
-static Sigeffect sigeffect[NUMOFSIGNALS];
-static Sighandler defaulthandler[NUMOFSIGNALS];
+static Atomic caught[NSIG];
+static Sigeffect sigeffect[NSIG];
+static Sighandler defaulthandler[NSIG];
 
 #if USE_SIGACTION
 #ifndef	SA_NOCLDSTOP
@@ -26,6 +26,35 @@ static Sighandler defaulthandler[NUMOFSIGNALS];
 #define	SA_INTERRUPT	0
 #endif
 #endif
+
+
+/*
+ * name<->signal mappings
+ */
+
+extern int signumber(const char *name) {
+	int i;
+	for (i = 0; i < nsignals; i++)
+		if (streq(signals[i].name, name))
+			return signals[i].sig;
+	return -1;
+}
+
+extern char *signame(int sig) {
+	int i;
+	for (i = 0; i < nsignals; i++)
+		if (signals[i].sig == sig)
+			return (char *) signals[i].name;
+	return str("sig%d", sig);
+}
+
+extern char *sigmessage(int sig) {
+	int i;
+	for (i = 0; i < nsignals; i++)
+		if (signals[i].sig == sig)
+			return (char *) signals[i].msg;
+	return str("unkown signal %d", sig);
+}
 
 
 /*
@@ -75,19 +104,19 @@ static Sighandler setsignal(int sig, Sighandler handler) {
 
 extern Sigeffect esignal(int sig, Sigeffect effect) {
 	Sigeffect old;
-	assert(0 < sig && sig <= NUMOFSIGNALS);
+	assert(0 < sig && sig <= NSIG);
 	old = sigeffect[sig];
 	if (effect != sig_nochange && effect != old) {
 		switch (effect) {
 		case sig_ignore:
 			if (setsignal(sig, SIG_IGN) == SIG_ERR) {
-				eprint("$&setsignals: cannot ignore %s\n", signals[sig].name);
+				eprint("$&setsignals: cannot ignore %s\n", signame(sig));
 				return old;
 			}
 			break;
 		case sig_catch:
 			if (setsignal(sig, catcher) == SIG_ERR) {
-				eprint("$&setsignals: cannot catch %s\n", signals[sig].name);
+				eprint("$&setsignals: cannot catch %s\n", signame(sig));
 				return old;
 			}
 			break;
@@ -104,7 +133,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 
 extern void setsigeffects(const Sigeffect effects[]) {
 	int sig;
-	for (sig = 1; sig < NUMOFSIGNALS; sig++)
+	for (sig = 1; sig < NSIG; sig++)
 		esignal(sig, effects[sig]);
 }
 
@@ -126,9 +155,16 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 	int sig;
 	Push settor;
 
-	for (sig = 1; sig < NUMOFSIGNALS; sig++)
+	for (sig = 0; sig < nsignals; sig++)
+		if (signals[sig].sig < 1 || NSIG <= signals[sig].sig)
+			panic(
+				"initsignals: bad signal in sigmsgs.c: %s (see mksignal)",
+				signals[sig].name
+			);
+
+	for (sig = 1; sig < NSIG; sig++)
 		defaulthandler[sig] = SIG_DFL;
-	for (sig = 1; sig < NUMOFSIGNALS; sig++) {
+	for (sig = 1; sig < NSIG; sig++) {
 		Sighandler h;
 #if USE_SIGACTION
 		struct sigaction sa;
@@ -146,7 +182,10 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 		else if (h == SIG_DFL || h == SIG_ERR)
 			sigeffect[sig] = sig_default;
 		else
-			panic("initsignals: bad incoming signal value for %s: %x", signals[sig].name, h);
+			panic(
+				"initsignals: bad incoming signal value for %s: %x",
+				signame(sig), h
+			);
 	}
 
 	if (interactive || sigeffect[SIGINT] == sig_default)
@@ -167,7 +206,7 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 extern void setsigdefaults(void) {
 	int sig;
 
-	for (sig = 1; sig < NUMOFSIGNALS; sig++) {
+	for (sig = 1; sig < NSIG; sig++) {
 		Sigeffect e = sigeffect[sig];
 		if (e == sig_catch || (e == sig_default && defaulthandler[sig] != SIG_DFL)) {
 			defaulthandler[sig] = SIG_DFL;
@@ -192,8 +231,8 @@ extern Boolean issilentsignal(List *e) {
 }
 
 extern List *mksiglist(void) {
-	int sig = NUMOFSIGNALS;
-	Sigeffect effects[NUMOFSIGNALS];
+	int sig = NSIG;
+	Sigeffect effects[NSIG];
 	getsigeffects(effects);
 	Ref(List *, lp, NULL);
 	while (--sig > 0)
@@ -201,14 +240,14 @@ extern List *mksiglist(void) {
 		case sig_default:
 			break;
 		case sig_catch:
-			lp = mklist(mkterm(signals[sig].name, NULL), lp);
+			lp = mklist(mkterm(signame(sig), NULL), lp);
 			break;
 		case sig_ignore:
-			lp = mklist(mkterm(str("-%s", signals[sig].name), NULL), lp);
+			lp = mklist(mkterm(str("-%s", signame(sig)), NULL), lp);
 			break;
 		default:
 			panic("mksiglist: getsigeffects returned bad value for %s: %d",
-			      signals[sig].name, effects[sig]);
+			      signame(sig), effects[sig]);
 		}
 	RefReturn(lp);
 }
@@ -247,13 +286,13 @@ extern void sigchk(void) {
 			caught[sig] = 0;
 			break;
 		}
-		if (sig >= NUMOFSIGNALS) {
+		if (sig >= NSIG) {
 			/* panic("all-zero sig vector with nonzero sigcount"); */
 			sigcount = 0;
 			return;
 		}
 	}
-	Ref(List *, e, mklist(mkterm("signal", NULL), mklist(mkterm(signals[sig].name, NULL), NULL)));
+	Ref(List *, e, mklist(mkterm("signal", NULL), mklist(mkterm(signame(sig), NULL), NULL)));
 
 	switch (sigeffect[sig]) {
 	case sig_catch:

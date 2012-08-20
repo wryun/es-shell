@@ -1,4 +1,4 @@
-/* input.c -- read input from files or strings ($Revision: 1.7 $) */
+/* input.c -- read input from files or strings ($Revision: 1.11 $) */
 
 #include "es.h"
 #include "input.h"
@@ -30,7 +30,7 @@ static char *history;
 static int historyfd = -1;
 
 #if READLINE
-extern int rl_meta_chars;
+int rl_meta_chars;	/* for editline; ignored for gnu readline */
 extern char *readline(char *);
 extern void add_history(char *);
 #endif
@@ -106,15 +106,70 @@ extern void sethistory(char *file) {
 
 
 /*
+ * unget -- character pushback
+ */
+
+/* ungetfill -- input->fill routine for ungotten characters */
+static int ungetfill(Input *in) {
+	int c;
+	assert(in->ungot > 0);
+	c = in->unget[--in->ungot];
+	if (in->ungot == 0) {
+		assert(in->rfill != NULL);
+		in->fill = in->rfill;
+		in->rfill = NULL;
+		assert(in->rbuf != NULL);
+		in->buf = in->rbuf;
+		in->rbuf = NULL;
+	}
+	return c;
+}
+
+/* unget -- push back one character */
+extern void unget(Input *in, int c) {
+	if (in->ungot > 0) {
+		assert(in->ungot < MAXUNGET);
+		in->unget[in->ungot++] = c;
+	} else if (in->bufbegin < in->buf && in->buf[-1] == c && (input->runflags & run_echoinput) == 0)
+		--in->buf;
+	else {
+		assert(in->rfill == NULL);
+		in->rfill = in->fill;
+		in->fill = ungetfill;
+		assert(in->rbuf == NULL);
+		in->rbuf = in->buf;
+		in->buf = in->bufend;
+		assert(in->ungot == 0);
+		in->ungot = 1;
+		in->unget[0] = c;
+	}
+}
+
+
+/*
  * getting characters
  */
 
 /* get -- get a character, filter out nulls */
-extern int get(Input *in) {
+static int get(Input *in) {
 	int c;
 	while ((c = (in->buf < in->bufend ? *in->buf++ : (*in->fill)(in))) == '\0')
 		warn("null character ignored");
 	return c;
+}
+
+/* getverbose -- get a character, print it to standard error */
+static int getverbose(Input *in) {
+	if (in->fill == ungetfill)
+		return get(in);
+	else {
+		int c = get(in);
+		if (c != EOF) {
+			char buf = c;
+			ewrite(2, &buf, 1);
+		}
+		return c;
+	}
 }
 
 /* eoffill -- report eof when called to fill input buffer */
@@ -184,55 +239,12 @@ static int fdfill(Input *in) {
 		return EOF;
 	}
 
-	if (in->runflags & run_echoinput)
-		ewrite(2, (char *) in->bufbegin, nread);
 	if (in->runflags & run_interactive)
 		loghistory((char *) in->bufbegin, nread);
 
 	in->buf = in->bufbegin;
 	in->bufend = &in->buf[nread];
 	return *in->buf++;
-}
-
-
-/*
- * unget -- character pushback
- */
-
-/* ungetfill -- input->fill routine for ungotten characters */
-static int ungetfill(Input *in) {
-	int c;
-	assert(in->ungot > 0);
-	c = in->unget[--in->ungot];
-	if (in->ungot == 0) {
-		assert(in->rfill != NULL);
-		in->fill = in->rfill;
-		in->rfill = NULL;
-		assert(in->rbuf != NULL);
-		in->buf = in->rbuf;
-		in->rbuf = NULL;
-	}
-	return c;
-}
-
-/* unget -- push back one character */
-extern void unget(Input *in, int c) {
-	if (in->ungot > 0) {
-		assert(in->ungot < MAXUNGET);
-		in->unget[in->ungot++] = c;
-	} else if (in->bufbegin < in->buf && in->buf[-1] == c)
-		--in->buf;
-	else {
-		assert(in->rfill == NULL);
-		in->rfill = in->fill;
-		in->fill = ungetfill;
-		assert(in->rbuf == NULL);
-		in->rbuf = in->buf;
-		in->buf = in->bufend;
-		assert(in->ungot == 0);
-		in->ungot = 1;
-		in->unget[0] = c;
-	}
 }
 
 
@@ -288,12 +300,10 @@ extern List *runinput(Input *in, int flags) {
 		"fn-%noeval-print",
 	};
 
+	in->get = (flags & run_echoinput) ? getverbose : get;
 	in->runflags = flags;
 	in->prev = input;
 	input = in;
-
-	if (flags & run_echoinput && in->buf < in->bufend)
-		ewrite(2, (char *) in->buf, in->bufend - in->buf);
 
 	if ((e = pushhandler(&h)) != NULL) {
 		(*input->cleanup)(input);
@@ -309,11 +319,11 @@ extern List *runinput(Input *in, int flags) {
 		arg = mklist(mkterm("%exit-on-false", NULL), arg);
 	repl = varlookup((flags & run_interactive) ? "fn-%interactive-loop" : "fn-%batch-loop", NULL);
 	if (repl == NULL)
-		result = prim("batchloop", arg, 0);
+		result = prim("batchloop", arg, flags &~ eval_inchild);
 	else {
 		if (arg != NULL)
 			repl = append(repl, arg);
-		result = eval(repl, NULL, flags & eval_inchild);
+		result = eval(repl, NULL, flags &~ eval_inchild);
 	}
 
 	pophandler(&h);
@@ -329,6 +339,7 @@ extern List *runinput(Input *in, int flags) {
 
 /* fdcleanup -- cleanup after running from a file descriptor */
 static void fdcleanup(Input *in) {
+	unregisterfd(&in->fd);
 	if (in->fd != -1)
 		close(in->fd);
 	efree(in->bufbegin);
@@ -344,6 +355,7 @@ extern List *runfd(int fd, const char *name, int flags) {
 	in.fill = fdfill;
 	in.cleanup = fdcleanup;
 	in.fd = fd;
+	registerfd(&in.fd, TRUE);
 	in.buflen = BUFSIZE;
 	in.bufbegin = in.buf = ealloc(in.buflen);
 	in.bufend = in.bufbegin;
@@ -400,6 +412,8 @@ extern Tree *parseinput(Input *in) {
 	Tree *result;
 
 	in->prev = input;
+	in->runflags = 0;
+	in->get = get;
 	input = in;
 
 	if ((e = pushhandler(&h)) != NULL) {

@@ -1,0 +1,431 @@
+# .esrc -- login initialization for es
+
+# this is the .esrc i'm using on machines at adobe; we do the
+# obvious thing of having one home directory shared among all
+# machines, so i use this file everywhere.  it turns out to be
+# much more portable to use lots of es features (because i can
+# control when i upgrade) rather than counting on more than
+# a very minimal set of unix utilities being out there.
+#
+# this is really my .esrc, though i commented it before i made
+# it available.  i didn't want to hide any of the ugliness.
+# i want to emphasize that almost everything in here is just
+# personal preference.
+#
+#			-- paul haahr
+#			   haahr@adobe.com
+
+# i most often log in first on a next machine.  typically, in that
+# environment, a login shell is run in every window.  that was just
+# too painful for me.  i use the ``loginwindow Workspace'' hack so
+# i can share the same context for all window.  this is the default
+# behavior for X (running .esrc in the window manager's context).
+# this file is derived from my .rcrc, which in turn, was derived from
+# my .profile.  not all that much has changed, although i have added
+# some new functions since then.
+
+# i also don't use es as my /etc/passwd shell on most machines,
+# because it's not in /etc/shells everywhere, so i have this at
+# the top of my .profile:
+#
+#	machine=`/user/haahr/bin/sh/cputype`
+#	export machine
+#
+#	if [ -f /user/haahr/bin/$machine/es ]
+#	then
+#		SHELL=/user/haahr/bin/$machine/es
+#		export SHELL
+#		exec $SHELL -l
+#	fi
+#
+# to avoid an extra fork/exec (and running cputype, which in my
+# case is a script that has at least one more fork/exec), i make
+# sure to check that $machine isn't already set.
+
+if {~ $#machine 0} {machine = `{~/bin/sh/cputype}}
+
+
+# umask is effectively the same as it was in v7 shell.
+# i've heard that some shells allow symbolic names here;
+# es doesn't.
+
+umask 022
+
+
+# i've used these shell variables as abbreviations for years.
+# they date back to the days when i didn't have ~ in my shell.
+# when i added ~ to es i figured i'd never use it; instead i
+# i find that i use $h almost never now that i have ~ lying
+# around.  just goes to show.
+
+h = ~
+b = ~/bin/sh
+m = ~/bin/$machine
+l = ~/Library
+me = ~/me
+
+f = /adobe/releasefonts
+I = /usr/include
+inc = $I
+
+# $md is central to how i get work done in a multi-platform
+# environment.  all my mkfiles (i use mk from the at&t toolchest)
+# are set up to build files (intermediary files, objects, and
+# executables) in a subdirectory of the source directory,
+# conventionally named obj.<machine>, e.g., obj.next or obj.sparc.
+# $md is in $path right after the current directory, so i don't
+# even notice normally that my executables are not in my working
+# directory.  (
+
+md = obj.$machine
+
+# these are just lying around so i can get at files i've ``thrown
+# out'' on my next machine but might want to still look at.
+# i usually mount floppies on /f.
+
+trash = ~/.NeXT/.NextTrash
+frash = /f/.NextTrash
+
+
+# paths
+
+# when i used sh and rc, i had an external program which i
+# used to test all the files in a path.  in es it's pretty
+# trivial to cons such a thing up without needing an exec.
+# this is basically the same mechanism as is used for searching
+# for executables, except using different flags to access.
+
+fn filter test list {
+	let (result = ) {
+		for (i = $list) {
+			if {$test $i} {
+				result = $result $i
+			}
+		}
+		result $result
+	}
+}
+
+local(
+	fn filter-path dirs {
+		filter @{access -dx $*} $dirs
+	}
+	fn colon-path dirs {
+		%flatten : <={filter-path $dirs}
+	}
+) {
+
+	path = '' $md $m $b <={
+		filter-path (
+			(/usr/local^(/gnu '') /opt/SUNWspro)^/bin
+			/usr/ucb /usr/bin /bin
+		)
+	}
+
+	cdpath = '' .. <={filter-path ~ ~/^(adobe src me)}
+	
+	MANPATH	= <={
+		colon-path ($l /usr/local /usr/local/gnu /opt/SUNWspro /usr)^/man
+	}
+
+	LD_LIBRARY_PATH = <={colon-path (/usr/local /usr)^/lib $l/$machine}
+
+}
+
+
+# %whatis in es raises an exception if it fails, rather than
+# just signalling an error.  thus, i use catch to handle failures
+# when doing path searching like this.
+
+EDITOR = <={ catch @{} { %whatis ed } }
+VISUAL = <={
+	catch @{
+		catch @{} { %whatis emacs }
+	} {
+		%whatis visual
+	}
+}
+
+
+# miscellaneous shell variables, mainly for other programs.
+
+if {~ $#SHELL 0 || !~ $SHELL */es} {
+	SHELL=$m/es
+}
+ENSCRIPT = -2r
+folder = ~
+MBOX = +inbox
+
+
+# NPROC is used by mk to determine how many parallel processes
+# to fork.  sun3s with 8m (which i still use to test stuff on,
+# though little else) tend to be too anemic to run gcc fast,
+# but everything else seems to benefit from a little parallelism.
+# unfortunately i don't have regular access to multiprocessors.
+
+NPROC = <={ if {~ $machine sun3} {result 1} {result 2} }
+
+
+# shell functions
+#
+#	i used to have lots of more, but i moved the into my autoload
+#	directory.  (see below.)  these are still here because they're
+#	mainly run in backquotes, where the loading happens in a
+#	separate process, so the functions wouldn't persist.
+
+fn src { echo *.[schylm] }
+fn inc { echo $inc/*.h }
+
+
+# history (- and --)
+#
+#	i use the history functions in
+#		ftp.sys.utoronto.ca:/pub/es/history.tar.Z
+#	that were inspired by the eighth edition =(1) command.
+#	these function ensure that the retrieved commands are
+#	run in the context of the calling shell.
+
+fn - {
+	let (cmd = `` '' { -p $* }) {
+		echo -n $cmd >[1=2]
+		eval $cmd
+	}
+}
+fn -- {
+	eval `` '' { $0^p $* }
+}
+history = ~/.eshistory
+
+
+# stripe
+#
+#	this is used to change the title bar for my terminal windows.
+#	unfortunately, the next terminal emulator doesn't support such
+#	a thing, but it's nice when i run under x.  (anyone want to
+#	port 9term to a dying window system?)
+
+fn stripe {
+	if {~ $TERM x* } {
+		echo -n \e']0;'^$^*^''
+	} {~ $TERM sun*} {
+		echo -n \e']l'^$^*^'\'
+	}
+}
+
+
+# next-specific shell functions
+
+if {~ $machine next} {
+
+	# p & c -- paste and copy for the window system
+	fn p { paste $* }
+	fn c { copy $* }
+
+	# errors -- save errors and open an editor window on them
+	fn errors {
+		tee /dev/stderr > errors
+		if {test -s errors} {
+			openfile errors
+		} {
+			rm -f errors
+		}
+	}
+
+	# commands which use errors
+	fn gn { g -n $* | errors }
+	let (mk = `` \n {whatis mk}) {
+		fn mk { $mk $* |[2] errors }
+	}
+	let (make = `` \n {whatis make}) {
+		fn make { $make $* |[2] errors }
+	}
+
+	# bogus printer setup (because NeXT refuses to be like anyone else)
+	fn printer {
+		if {~ $#* 0} {
+			* = `{ dread System Printer }
+			echo $*($#*)
+		} {
+			PRINTER = $1
+			dwrite System Printer $1
+			dwrite System PrinterHost `{ phost $1 }
+		}
+	}
+	PRINTER = `printer
+
+} {
+	fn-mkdirs = mkdir -p
+	fn printer { if {~ $#* 0} {echo $PRINTER} {PRINTER = $1} }
+	PRINTER = cheque
+}
+
+
+# spoofing
+#
+# this is the part of my .esrc which is really unique to es.  (actually,
+# the redefinitions of builtins can be done in rc or other sane shells,
+# but most of these are es-specific.)
+
+# general cd hacking
+#
+#	this spoof does three things:
+#		+ provides a back command to go to the previous directory
+#		+ calls the strip function above for the current directory
+#		+ writes the current directory to the file ~/.dot, so new
+#		  shells start up in the same directory.
+#
+#	perhaps a set of pushd/popd functions would be nice.  i haven't
+#	written them and haven't missed them, but i'm sure somebody would
+#	like to have them.
+
+let (cd = <={%whatis cd})
+	fn cd {
+		if {$cd $*} {
+			backdir = $wd
+			wd = <={if {~ $#* 0} {result ~} {result `` \n pwd}}
+			stripe $title $wd
+			echo $wd > ~/.dot
+		}
+	}
+fn back { cd $backdir }
+
+
+# mkdir on cd
+#
+#	this patch to %cdpathsearch does nothing if the searched for
+#	directory does exist.  if it does not, the user is asked whether
+#	it should be created.  (i rely upon the pick(1) command which
+#	is not standard on most systems; see [Kernighan & Pike 1984].)
+
+let (search = <={%whatis %cdpathsearch})
+	fn %cdpathsearch {
+		catch @ e {
+			if {access -w .} {
+				let (dir = `` \n { pick 'mkdir '$^* })
+					if {~ $#dir 1 && mkdirs $dir} {
+						return $dir
+					}
+			}
+			throw $e
+		} {
+			$search $*
+		}
+	}
+
+
+# path caching
+#
+#	this patch caches absolute path names for executables found by
+#	%pathsearch.  it emulated the ``hashing'' in recent Bourne shells.
+#	fortunately, its implementation does not resemble that of the csh,
+#	which scans all directories in $path when the shell starts up.
+#
+#	i originally wrote this as an experiment, not intending to use it,
+#	but i've kept it around because when all the directories in $path
+#	are NFS-mounted (as mine are) and your network is busy, the caching
+#	actually makes the system feel faster.
+
+path-cache =
+let (search = $fn-%pathsearch)
+	fn %pathsearch prog {
+		let (what-it-is = <={$search $prog}) {
+			if {~ $what-it-is /*} {
+				path-cache = $path-cache $prog
+				fn-$prog = $what-it-is
+			}
+			return $what-it-is
+		}
+	}
+fn recache {
+	if {~ $#* 0} {
+		* = $path-cache
+		path-cache =
+	}
+	for (i = $*)
+		fn-$i =
+}
+
+
+# autoloading of shell functions
+#
+#	this is a very simple patch to %pathsearch which tries to autoload
+#	shell functions from the directory $autoload.  the function foo
+#	should be in a file named foo and (since that file is run) should
+#	contain the definition of the function, as in
+#		fn name args {
+#			body
+#		}
+#	note that you don't want to put the body alone into the file.
+#
+#	imho, this is a big win for es.  other shells have autoloading of
+#	shell functions (i've heard that credit for applying the idea to
+#	shells goes to Dave Korn), but this is implemented with no extra
+#	mechanism inside the shell. 
+
+autoload = ~/bin/es
+let (search = $fn-%pathsearch)
+	fn %pathsearch prog {
+		if {access -f -r $autoload/$prog} {
+			. $autoload/$prog
+			if {!~ $#(fn-$prog) 0} {
+				return $(fn-$prog)
+			}
+		}
+		$search $prog
+	}
+
+
+# set up the terminal.  i still use tset, though i think it's rapidly
+# becoming obsolete.  oh well.
+
+if {!~ $TERM pipe && !~ $machine pmax} {
+	local (
+		fn export {}
+	) {
+		eval `{
+			tset -QIs <={
+				if {~ $TERM NeXT} {
+					result vt100
+				} {~ $TERM sun* *xterm* vt10* ansi iris*} {
+					result $TERM
+				} {~ $TERM su network dialup unknown switch} {
+					result '?vt100'
+				} {
+					result '?'^$TERM
+				}
+			}
+		}
+	}
+}
+
+# pick stty flags that make sense for this os.  this is brain-dead.
+
+stty = erase '^?' werase '^h' kill '^u' intr '^c'
+if {!~ $machine rios} {stty = crt $stty}
+if {!~ $machine rios solaris} {stty = new $stty}
+
+
+# initial %prompt function
+#
+#	the function named %prompt every time before the shell prints
+#	its prompt.  this function deletes itself right away because
+#	i want it to be run once per interactive session (e.g., login,
+#	remote login, or window.)  i would probably just do all this
+#	in my .esrc directly if i ran the .esrc in each window.
+#
+#	newpgrp is actually in the shell solely to work around a NextStep
+#	bug (whereby all terminal windows are put in the same process
+#	group, because nobody at next ever thought to test with a shell
+#	other than csh.)
+
+fn %prompt {
+	fn %prompt
+	if {!~ $TERM pipe && tty -s} {
+		cd `` \n {cat ~/.dot}
+		stty $stty
+		if {~ $machine next && ~ $Workspace Workspace} {
+			newpgrp
+		}
+	}
+	stty =
+}

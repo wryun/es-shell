@@ -1,4 +1,4 @@
-/* util.c -- the kitchen sink ($Revision: 1.3 $) */
+/* util.c -- the kitchen sink ($Revision: 1.4 $) */
 
 #include "es.h"
 
@@ -60,16 +60,6 @@ extern void efree(void *p) {
 	extern void free(void *);
 	assert(p != NULL);
 	free(p);
-}
-
-/* strdup -- copy a string into malloc space */
-extern char *strdup(const char *s) {
-	char *t;
-	size_t n = strlen(s);
-	t = ealloc(n);
-	memcpy(t, s, n);
-	t[n] = '\0';
-	return t;
 }
 
 

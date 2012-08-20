@@ -1,4 +1,4 @@
-/* gc.c -- copying garbage collector for es ($Revision: 1.6 $) */
+/* gc.c -- copying garbage collector for es ($Revision: 1.7 $) */
 
 #define	GARBAGE_COLLECTOR	1	/* for es.h */
 
@@ -41,7 +41,7 @@ static size_t minspace = 10000;		/* minimum number of bytes in a new space */
  */
 
 #if GCVERBOSE
-#define	VERBOSE(p)	STMT(if (gcverbose) eprint p)
+#define	VERBOSE(p)	STMT(if (gcverbose) eprint p;)
 #else
 #define	VERBOSE(p)	STMT(;)
 #endif

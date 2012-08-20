@@ -1,4 +1,4 @@
-/* es.h -- definitions for higher order shell ($Revision: 1.19 $) */
+/* es.h -- definitions for higher order shell ($Revision: 1.22 $) */
 
 #include "config.h"
 #include "stdenv.h"
@@ -142,6 +142,7 @@ extern Binding *mkbinding(char *name, List *defn, Binding *next);
 
 /* eval.c */
 
+extern Binding *bindargs(Tree *params, List *args, Binding *binding);
 extern List *forkexec(char *file, List *list, Boolean inchild);
 extern List *walk(Tree *tree, Binding *binding, int flags);
 extern List *eval(List *list, Binding *binding, int flags);
@@ -256,7 +257,6 @@ extern void uerror(char *msg);
 extern void *ealloc(size_t n);
 extern void *erealloc(void *p, size_t n);
 extern void efree(void *p);
-extern char *strdup(const char *s);
 extern void ewrite(int fd, const char *s, size_t n);
 extern long eread(int fd, char *buf, size_t n);
 extern Boolean isabsolute(char *path);
@@ -305,6 +305,10 @@ extern List *fsplit(const char *sep, List *list);
 
 
 /* signal.c */
+
+extern int signumber(const char *name);
+extern char *signame(int sig);
+extern char *sigmessage(int sig);
 
 #define	SIGCHK() sigchk()
 typedef enum { sig_nochange, sig_default, sig_ignore, sig_catch } Sigeffect;

@@ -1,4 +1,4 @@
-/* eval.c -- evaluation of lists and trees ($Revision: 1.13 $) */
+/* eval.c -- evaluation of lists and trees ($Revision: 1.15 $) */
 
 #include "es.h"
 
@@ -44,7 +44,7 @@ extern List *forkexec(char *file, List *list, Boolean inchild) {
 }
 
 /* bindargs -- bind an argument list to the parameters of a lambda */
-static Binding *bindargs(Tree *params, List *args, Binding *binding) {
+extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
 	if (params == NULL)
 		return mkbinding("*", args, binding);
 
@@ -94,7 +94,7 @@ extern List *eval(List *list, Binding *binding0, int flags) {
 restart:
 	if (list == NULL) {
 		RefPop(funcname);
-		return true;
+		return listcopy(true);
 	}
 
 	Ref(List *, lp, list);
@@ -226,7 +226,7 @@ extern List *walk(Tree *tree0, Binding *binding0, int flags) {
 
 top:
 	if (tree == NULL)
-		return true;
+		return listcopy(true);
 
 	switch (tree->kind) {
 
@@ -251,7 +251,7 @@ top:
 		pattern = glom2(tp->u[1].p, bp, &quote);
 		result = listmatch(subject, pattern, quote);
 		RefEnd3(subject, tp, bp);
-		return result ? true : false;
+		return listcopy(result ? true : false);
 	}
 
 	case nAssign: {
@@ -260,7 +260,7 @@ top:
 		Ref(char *, var, varname(glom(tp->u[0].p, bp, FALSE)));
 		vardef(var, bp, glom(tp->u[1].p, bp, TRUE));
 		RefEnd3(var, tp, bp);
-		return true;
+		return listcopy(true);
 	}
 
 	case nLet: case nClosure: {
@@ -353,7 +353,7 @@ top:
 			SIGCHK();
 		}
 
-		e = result;
+		e = (result == true) ? listcopy(true) : result;
 		RefEnd4(looping, body, outer, result);
 		pophandler(&h);
 		return e;

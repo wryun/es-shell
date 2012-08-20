@@ -1,4 +1,4 @@
-/* config.h -- es(1) configuration parameters ($Revision: 1.8 $) */
+/* config.h -- es(1) configuration parameters ($Revision: 1.15 $) */
 
 /*
  * Compile time options
@@ -19,7 +19,10 @@
  *
  *	BSD_LIMITS
  *		if this is on, the limit builtin (ala csh) is included.
- *		also triggers inclusion of the time builtin.
+ *
+ *	BUILTIN_TIME
+ *		if this is on, the time builtin is included.  by default, it is
+ *		on, but feel free to turn it off.  see also USE_WAIT3.
  *
  *	DEVFD
  *		turn this on if your system supports /dev/fd for >{} and <{}
@@ -59,6 +62,11 @@
  *		second argument.  while POSIX.1 says it does, on many
  *		systems, gid_t is a short while getgroups() takes an int*.
  *
+ *	HAS_LSTAT
+ *		define this as true if your system has lstat(2).  the default
+ *		is on.  (it's been reported that SCO does not have lstat, but
+ *		is this true even for recent versions?)
+ *
  *	INITIAL_PATH
  *		this is the default value for $path (and $PATH) when the shell
  *		starts up.  it is replaced by one from the environment if it
@@ -90,6 +98,16 @@
  *	REISER_CPP
  *		true if es is being compiled with a reiser-style preprocessor.
  *		if you have an ansi preprocessor, use it and turn this off.
+ *
+ *	SHOW_DOT_FILES
+ *		if this option is off (the default), wildcard patterns do not
+ *		match files that being with a ``.'' character;  this behavior
+ *		is the same as in most unix shells.  if it is on, the only
+ *		files not matched are ``.'' and ``..'';  this behavior follows
+ *		convention on bell labs research unix systems (since the eighth
+ *		edition) and plan 9.  in either case, an explicit ``.'' at
+ *		the beginning of a pattern will match the hidden files.
+ *		(Contributed by Steve Kilbane.)
  *
  *	SPECIAL_SIGCLD
  *		true if SIGCLD has System V semantics.  this is true at least
@@ -128,6 +146,12 @@
  *
  *	USE_UNISTD
  *		define this if you have the include file <unistd.h>
+ *
+ *	USE_WAIT3
+ *		this option should be on if your system supports the BSD-style
+ *		wait3() system call.  by default, it is on, because most systems
+ *		have wait3().  if this option is false and the BUILTIN_TIME
+ *		is true, the getrusage() call must exist.
  *
  *	VOID_SIGNALS
  *		define this as true if signal handlers are declared with void
@@ -168,9 +192,6 @@
 #ifndef	USE_SIGACTION
 #define	USE_SIGACTION		1
 #endif
-#ifndef	USE_SIG_ATOMIC_T
-#define	USE_SIG_ATOMIC_T 	1
-#endif
 #endif	/* _AIX */
 
 
@@ -189,15 +210,12 @@
 #ifndef	SYSV_SIGNALS
 #define	SYSV_SIGNALS		1
 #endif
-#ifndef	USE_SIGACTION
-#define	USE_SIGACTION		1
-#endif
 #endif	/* sgi */
 
 
-/* SunOS defaults */
+/* SunOS 4.x defaults */
 
-#if sun
+#if sun && !SOLARIS
 #ifndef	INITIAL_PATH
 #define	INITIAL_PATH		"/usr/ucb", "/usr/bin", ""
 #endif
@@ -205,6 +223,54 @@
 #define	USE_SIGACTION		1
 #endif
 #endif	/* sun */
+
+
+/* Solaris 2 (SunOS 5.x) defaults */
+
+#if SOLARIS
+#ifndef	SPECIAL_SIGCLD
+#define	SPECIAL_SIGCLD		1
+#endif
+#ifndef	SYSV_SIGNALS
+#define	SYSV_SIGNALS		1
+#endif
+#ifndef	USE_SIGACTION
+#define	USE_SIGACTION		0
+#endif
+#ifndef	USE_WAIT3
+#define	USE_WAIT3		0
+#endif
+#endif	/* SOLARIS */
+
+
+/* SCO Xenix -- from steveo@world.std.com (Steven W Orr) for SCO-ODT-1.1 */
+
+#if sco
+#ifndef	BSD_LIMITS
+#define BSD_LIMITS		0
+#endif
+#ifndef	GETGROUPS_USES_GID_T
+#define GETGROUPS_USES_GID_T	1
+#endif
+#ifndef	HAS_LSTAT
+#define HAS_LSTAT		0
+#endif
+#ifndef	KERNEL_POUNDBANG
+#define KERNEL_POUNDBANG	0
+#endif
+#ifndef	SPECIAL_SIGCLD
+#define SPECIAL_SIGCLD		1
+#endif
+#ifndef	SYSV_SIGNALS
+#define SYSV_SIGNALS		1
+#endif
+#ifndef	USE_SIGACTION
+#define USE_SIGACTION		1
+#endif
+#ifndef	USE_SIG_ATOMIC_T
+#define USE_SIG_ATOMIC_T	1
+#endif
+#endif	/* sco */
 
 
 /* OSF/1 -- this is taken from the DEC Alpha */
@@ -216,7 +282,7 @@
 #endif	/* OSF1 */
 
 
-/* POSIX -- not that you should ever believe this */
+/* POSIX -- not that you should never believe this */
 
 #if POSIX
 #ifndef	GETGROUPS_USES_GID_T
@@ -238,6 +304,10 @@
 
 #ifndef	BSD_LIMITS
 #define	BSD_LIMITS		1
+#endif
+
+#ifndef	BUILTIN_TIME
+#define	BUILTIN_TIME		1
 #endif
 
 #ifndef	DEVFD
@@ -272,6 +342,10 @@
 #define	GETGROUPS_USES_GID_T	0
 #endif
 
+#ifndef	HAS_LSTAT
+#define	HAS_LSTAT		1
+#endif
+
 #ifndef	INITIAL_PATH
 #define	INITIAL_PATH		"/usr/ucb", "/usr/bin", "/bin", ""
 #endif
@@ -296,6 +370,10 @@
 #define	REISER_CPP		0
 #endif
 
+#ifndef	SHOW_DOT_FILES
+#define	SHOW_DOT_FILES		0
+#endif
+
 #ifndef	SPECIAL_SIGCLD
 #define	SPECIAL_SIGCLD		0
 #endif
@@ -316,6 +394,10 @@
 #define	USE_SIG_ATOMIC_T	0
 #endif
 
+#ifndef USE_SIGACTION
+#define	USE_SIGACTION		0
+#endif
+
 #ifndef	USE_STDARG
 #define	USE_STDARG		1
 #endif
@@ -326,6 +408,10 @@
 
 #ifndef	USE_VOLATILE
 #define	USE_VOLATILE		1
+#endif
+
+#ifndef	USE_WAIT3
+#define	USE_WAIT3		1
 #endif
 
 #ifndef	VOID_SIGNALS

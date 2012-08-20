@@ -1,4 +1,4 @@
-/* glob.c -- wildcard matching ($Revision: 1.5 $) */
+/* glob.c -- wildcard matching ($Revision: 1.7 $) */
 
 #define	REQUIRE_STAT	1
 #define	REQUIRE_DIRENT	1
@@ -34,6 +34,15 @@ static Boolean haswild(const char *s, const char *q) {
 	}
 }
 
+/* ishiddenfile -- return true if the file is a dot file to be hidden */
+static int ishiddenfile(const char *s) {
+#if SHOW_DOT_FILES
+	return *s == '.' && (!s[1] || (s[1] == '.' && !s[2]));
+#else
+	return *s == '.';
+#endif
+}
+
 /* dirmatch -- match a pattern against the contents of directory */
 static List *dirmatch(const char *prefix, const char *dirname, const char *pattern, const char *quote) {
 	List *list, **prevp;
@@ -54,7 +63,7 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 	if (stat(dirname, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR || (dirp = opendir(dirname)) == NULL)
 		return NULL;	
 	for (list = NULL, prevp = &list; (dp = readdir(dirp)) != NULL;)
-		if (match(dp->d_name, pattern, quote) && (*dp->d_name != '.' || *pattern == '.')) {
+		if (match(dp->d_name, pattern, quote) && (!ishiddenfile(dp->d_name) || *pattern == '.')) {
 			List *lp = mklist(mkterm(str("%s%s", prefix, dp->d_name), NULL), NULL);
 			*prevp = lp;
 			prevp = &lp->next;

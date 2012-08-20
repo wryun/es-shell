@@ -1,4 +1,4 @@
-/* prim-etc.c -- miscellaneous primitives ($Revision: 1.12 $) */
+/* prim-etc.c -- miscellaneous primitives ($Revision: 1.15 $) */
 
 #define	REQUIRE_PWD	1
 
@@ -6,11 +6,11 @@
 #include "prim.h"
 
 PRIM(true) {
-	return true;
+	return listcopy(true);
 }
 
 PRIM(false) {
-	return false;
+	return listcopy(false);
 }
 
 PRIM(result) {
@@ -38,7 +38,7 @@ PRIM(echo) {
 		}
 	}
 	print("%L%s", list, " ", eol);
-	return true;
+	return listcopy(true);
 }
 
 PRIM(count) {
@@ -67,7 +67,7 @@ PRIM(dot) {
 	int c, fd;
 	Push zero, star;
 	volatile int runflags = (evalflags & eval_inchild);
-	const char * const usage = ". [-invx] file [arg ...]";
+	const char * const usage = ". [-einvx] file [arg ...]";
 
 	esoptbegin(list, "$&dot", usage);
 	while ((c = esopt("einvx")) != EOF)
@@ -233,12 +233,14 @@ PRIM(batchloop) {
 	if (e->term == NULL || e->term->str == NULL || !streq(e->term->str, "eof"))
 		throw(e);
 	RefEnd(arg);
+	if (result == true)
+		result = listcopy(true);
 	RefReturn(result);
 }
 
 PRIM(collect) {
 	gc();
-	return true;
+	return listcopy(true);
 }
 
 PRIM(home) {
@@ -260,7 +262,21 @@ PRIM(internals) {
 }
 
 PRIM(isinteractive) {
-	return isinteractive() ? true : false;
+	return listcopy(isinteractive() ? true : false);
+}
+
+PRIM(noreturn) {
+	if (list == NULL)
+		fail("$&noreturn", "usage: $&noreturn lambda args ...");
+	Ref(List *, lp, list);
+	Ref(Closure *, closure, getclosure(lp->term));
+	if (closure == NULL || closure->tree->kind != nLambda)
+		fail("$&noreturn", "$&noreturn: %E is not a lambda", lp->term);
+	Ref(Tree *, tree, closure->tree);
+	Ref(Binding *, context, bindargs(tree->u[0].p, lp->next, closure->binding));
+	lp = walk(tree->u[1].p, context, evalflags);
+	RefEnd3(context, tree, closure);
+	RefReturn(lp);
 }
 
 
@@ -293,5 +309,6 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(result);
 	X(isinteractive);
 	X(exitonfalse);
+	X(noreturn);
 	return primdict;
 }

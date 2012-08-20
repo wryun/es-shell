@@ -1,6 +1,73 @@
 CHANGES
 =======
 
+0.82 to 0.83
+------------
+
+there's now an debugger for es scripts, called, appropriately enough, esdebug.
+it presents a vaguely gdb-like interface; there are minimal help and usage
+messages, and that's the sum total of documentation for it right now, but it
+looks like it could be useful.  so far i've used esdebug on some trivial
+scripts and my .esrc; the two things i think it can't debug are initial.es (at
+least in the environment in which it runs) and esdebug itself, which is a
+shame because esdebug is the most complex es script i've written to date. 
+note that esdebug not an essential piece of the shell, and was hacked
+together over about 3 hours.  in fact, esdebug probably has more bugs than any
+script it is pointed at, but i think it's (at very least) a good example of
+what you can do with es, and potentially a useful tool.  (this tool was
+inspired by some recent postings in comp.unix.shell, by the way.)
+
+one feature was added to es to support esdebug: it's a primitive named
+$&noreturn which takes as its arguments a lambda and the arguments to the
+lambda.  it runs the lambda exactly as the normal evaluation mechanism would
+except that the lambda does not catch the return exception.
+
+the part of the build process which extracts signal names and signal
+messages from /usr/include/sys/signal.h.  we'd like to thank Tom
+Culliton, Arnold Robbins, Rich Salz, and DaviD Sanderson for their
+suggestions and code, as well as the rest of the list for the large
+number of signal.h files which i now have.
+
+thanks to help from Steve Kilbane and Steven Orr, this release of es
+should now run out of the box on Solaris 2 and SCO ODT 1.1.
+
+esrc.haahr is now provided as an example.
+
+a reasonably major bug with reference sharing where there should have
+been value sharing was fixed.  the bug involved the list constants
+true and false.  the simplest to way to trigger the bug is
+	echo <=$&true <=$&true
+
+initial.es now contains detailed comments on what it's doing, at the
+suggestion of Arnold Robbins. 
+
+patches from Loren Rittle were installed in dump.c to get rid of some version
+of gcc's ``warning frenzy.''
+
+defaults for Irix no longer include USE_SIGACTION, since es does not seem to
+catch any signals with sigaction() on SGI machines. 
+
+fixed a bug that had reappeared, where the file descriptor that commands were
+being read from could get confused by an exec {redirection}. 
+
+es -v now echoes the input as the characters are scanned, rather than when
+they are read.  for programs reading from a tty device, this is the same as
+before, but for programs running from files the output comes at a more
+sensible time. 
+
+es -e now exits on error exceptions as well as false return values. 
+
+es -x now works.  before, it printed commands twice without evaluating them. 
+it's still not very useful. 
+
+the '|' token was renamed PIPE in parse.y and token.c to work around a bug
+in the yacc that comes with the (value added, expensive) SPARCcompiler tools.
+
+initial.es now contains comments that explain what's going on.
+
+the function strdup() in utils.c, which was unused, was removed.
+
+
 0.8 to 0.82
 -----------
 
