@@ -83,8 +83,6 @@ extern Dirent *readdir(DIR *);
 #include <fcntl.h>
 #endif
 
-#include <sys/wait.h>
-
 /* stdlib */
 #if __GNUC__
 typedef volatile void noreturn;
@@ -92,8 +90,7 @@ typedef volatile void noreturn;
 typedef void noreturn;
 #endif
 
-#if 0 /* STDC_HEADERS */
-/* This breaks on Linux, because input.c tries to redefine getenv */
+#if STDC_HEADERS
 # include <stdlib.h>
 #else
 extern noreturn exit(int);
@@ -105,6 +102,7 @@ extern void *qsort(
 );
 #endif /* !STDC_HEADERS */
 
+#include <sys/wait.h>
 #include <time.h>
 
 /*
