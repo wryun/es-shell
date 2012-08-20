@@ -68,7 +68,7 @@ extern char *sigmessage(int sig) {
 
 /* catcher -- catch (and defer) a signal from the kernel */
 static void catcher(int sig) {
-#if !SYSV_SIGNALS /* only do this for unreliable signals */
+#if SYSV_SIGNALS /* only do this for unreliable signals */
 	signal(sig, catcher);
 #endif
 	if (hasforked)
