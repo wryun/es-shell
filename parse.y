@@ -1,4 +1,4 @@
-/* parse.y -- grammar for es ($Revision: 1.3 $) */
+/* parse.y -- grammar for es ($Revision: 1.6 $) */
 
 %{
 #include "es.h"
@@ -8,7 +8,7 @@
 
 %token	WORD QWORD
 %token	LOCAL LET FOR CLOSURE FN
-%token	ANDAND BACKBACK BOX COUNT DUP FLAT OROR PRIM REDIR SUB
+%token	ANDAND BACKBACK CALL COUNT DUP FLAT OROR PRIM REDIR SUB
 %token	NL ENDFILE ERROR
 
 %left	LOCAL LET FOR CLOSURE ')'
@@ -98,10 +98,10 @@ comword	: param				{ $$ = $1; }
 	| '@' params '{' body '}'	{ $$ = mklambda($2, $4); }
 	| '$' sword			{ $$ = mk(nVar, $2); }
 	| '$' sword SUB words ')'	{ $$ = mk(nVarsub, $2, $4); }
-	| PRIM WORD			{ $$ = mk(nPrim, $2); }
-	| BOX sword			{ $$ = mk(nCall, $2); }
+	| CALL sword			{ $$ = mk(nCall, $2); }
 	| COUNT sword			{ $$ = mk(nCall, prefix("%count", treecons(mk(nVar, $2), NULL))); }
 	| FLAT sword			{ $$ = flatten(mk(nVar, $2), " "); }
+	| PRIM WORD			{ $$ = mk(nPrim, $2); }
 	| '`' sword			{ $$ = backquote(mk(nVar, mk(nWord, "ifs")), $2); }
 	| BACKBACK word	sword		{ $$ = backquote($2, $3); }
 

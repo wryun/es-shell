@@ -1,4 +1,4 @@
-/* prim-etc.c -- miscellaneous primitives ($Revision: 1.11 $) */
+/* prim-etc.c -- miscellaneous primitives ($Revision: 1.12 $) */
 
 #define	REQUIRE_PWD	1
 
@@ -119,8 +119,15 @@ PRIM(whatis) {
 	if (term->closure == NULL) {
 		Ref(char *, prog, term->str);
 		assert(prog != NULL);
-		if (!isabsolute(prog) && (list = varlookup2("fn-", prog)) == NULL)
-			list = pathsearch(term);
+		if (isabsolute(prog)) {
+			char *error = checkexecutable(prog);
+			if (error != NULL)
+				fail("$&whatis", "%s: %s", prog, error);
+		} else {
+			list = varlookup2("fn-", prog);
+			if (list == NULL)
+				list = pathsearch(term);
+		}
 		RefEnd(prog);
 	}
 	RefEnd(term);

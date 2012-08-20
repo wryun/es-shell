@@ -1,4 +1,4 @@
-/* main.c -- initialization for es ($Revision: 1.7 $) */
+/* main.c -- initialization for es ($Revision: 1.10 $) */
 
 #include "es.h"
 
@@ -68,6 +68,8 @@ int main(int argc, char **argv) {
 	int c;
 	List *e;
 	Handler h;
+	volatile int ac;
+	char **volatile av;
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */
@@ -80,6 +82,12 @@ int main(int argc, char **argv) {
 	initgc();
 	initconv();
 
+	if (argc == 0) {
+		argc = 1;
+		argv = ealloc(2 * sizeof (char *));
+		argv[0] = "es";
+		argv[1] = NULL;
+	}
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
@@ -129,6 +137,9 @@ getopt_done:
 	)
 		runflags |= run_interactive;
 
+	ac = argc;
+	av = argv;
+
 	roothandler = &h;
 	if ((e = pushhandler(&h)) != NULL) {
 		if (streq(getstr(e->term), "error"))
@@ -146,9 +157,9 @@ getopt_done:
 
 	initpath();
 	initpid();
+	initsignals(runflags & run_interactive, allowquit);
 	hidevariables();
 	initenv(environ, protected);
-	initsignals(allowquit);
 
 	if (loginshell) {
 		char *esrc = str("%L/.esrc", varlookup("home", NULL), "\001");
@@ -157,21 +168,21 @@ getopt_done:
 			runfd(fd, esrc, 0);
 	}
 
-	if (cmd == NULL && !stdin && optind < argc) {
+	if (cmd == NULL && !stdin && optind < ac) {
 		int fd;
-		Ref(char *, file, argv[optind++]);
+		Ref(char *, file, av[optind++]);
 		if ((fd = eopen(file, oOpen)) == -1) {
 			eprint("%s: %s\n", file, strerror(errno));
 			return 1;
 		}
-		vardef("*", NULL, listify(argc - optind, argv + optind));
+		vardef("*", NULL, listify(ac - optind, av + optind));
 		vardef("0", NULL, mklist(mkterm(file, NULL), NULL));
 		return exitstatus(runfd(fd, file, runflags));
 		RefEnd(file);
 	}
 
-	vardef("*", NULL, listify(argc - optind, argv + optind));
-	vardef("0", NULL, mklist(mkterm(argv[0], NULL), NULL));
+	vardef("*", NULL, listify(ac - optind, av + optind));
+	vardef("0", NULL, mklist(mkterm(av[0], NULL), NULL));
 	if (cmd != NULL)
 		return exitstatus(runstring(cmd, NULL, runflags));
 	return exitstatus(runfd(0, "stdin", runflags));

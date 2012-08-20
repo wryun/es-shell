@@ -1,4 +1,4 @@
-/* except.c -- exception mechanism ($Revision: 1.6 $) */
+/* except.c -- exception mechanism ($Revision: 1.7 $) */
 
 #include "es.h"
 #include "print.h"
@@ -64,3 +64,11 @@ extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
 extern void newchildcatcher(void) {
 	tophandler = roothandler;
 }
+
+#if DEBUG_EXCEPTIONS
+/* raised -- print exceptions as we climb the exception stack */
+extern List *raised(List *e) {
+	eprint("raised (sp @ %x) %L\n", &e, e, " ");
+	return e;
+}
+#endif

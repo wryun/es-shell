@@ -1,4 +1,4 @@
-/* es.h -- definitions for higher order shell ($Revision: 1.11 $) */
+/* es.h -- definitions for higher order shell ($Revision: 1.19 $) */
 
 #include "config.h"
 #include "stdenv.h"
@@ -142,6 +142,7 @@ extern Binding *mkbinding(char *name, List *defn, Binding *next);
 
 /* eval.c */
 
+extern List *forkexec(char *file, List *list, Boolean inchild);
 extern List *walk(Tree *tree, Binding *binding, int flags);
 extern List *eval(List *list, Binding *binding, int flags);
 extern List *eval1(Term *term, int flags);
@@ -198,12 +199,17 @@ extern char *mkstatus(int status);
 extern void printstatus(int pid, int status);
 
 
+/* access.c */
+
+extern char *checkexecutable(char *file);
+
+
 /* proc.c */
 
 extern Boolean hasforked;
 extern int efork(Boolean parent, Boolean background);
-extern int ewaitfor2(int pid, void *rusage);
-#define	ewaitfor(pid)	ewaitfor2(pid, NULL)
+extern int ewait(int pid, Boolean interruptible, void *rusage);
+#define	ewaitfor(pid)	ewait(pid, FALSE, NULL)
 
 
 /* dict.c */
@@ -301,21 +307,25 @@ extern List *fsplit(const char *sep, List *list);
 /* signal.c */
 
 #define	SIGCHK() sigchk()
+typedef enum { sig_nochange, sig_default, sig_ignore, sig_catch } Sigeffect;
+extern Sigeffect esignal(int sig, Sigeffect effect);
+extern void setsigeffects(const Sigeffect effects[]);
+extern void getsigeffects(Sigeffect effects[]);
+extern List *mksiglist(void);
+extern void initsignals(Boolean interactive, Boolean allowdumps);
 extern Atomic slow, interrupted;
 extern jmp_buf slowlabel;
 extern Boolean sigint_newline;
-extern void catcher(int sig);
 extern void sigchk(void);
-extern sigresult (*esignal(int sig, sigresult (*h)(int)))(int);
-extern void initsignals(Boolean allowdumps);
 extern Boolean issilentsignal(List *e);
-extern void setsigdefaults(Boolean background);
-extern void trapsignals(Boolean sigs[]);
+extern void setsigdefaults(void);
+extern void blocksignals(void);
+extern void unblocksignals(void);
 
 
 /* open.c */
 
-typedef enum { oOpen, oCreate, oAppend } OpenKind;
+typedef enum { oOpen, oCreate, oAppend, oReadWrite, oReadCreate, oReadAppend } OpenKind;
 extern int eopen(char *name, OpenKind k);
 
 
@@ -443,10 +453,16 @@ extern noreturn throw(List *exc);
 extern noreturn fail(const char *from, const char *name VARARGS);
 extern void newchildcatcher(void);
 
+#if DEBUG_EXCEPTIONS
+extern List *raised(List *e);
+#else
+#define	raised(e)	(e)
+#endif
+
 #define	pushhandler(hp)	( \
 		((hp)->rootlist = rootlist), \
 		((hp)->pushlist = pushlist), \
 		((hp)->up = tophandler), \
 		(tophandler = (hp)), \
-		(setjmp((hp)->label) ? exception : NULL) \
+		(setjmp((hp)->label) ? raised(exception) : NULL) \
 	)

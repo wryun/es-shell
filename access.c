@@ -1,4 +1,4 @@
-/* access.c -- access testing and path searching ($Revision: 1.7 $) */
+/* access.c -- access testing and path searching ($Revision: 1.9 $) */
 
 #define	REQUIRE_STAT	1
 #define	REQUIRE_PARAM	1
@@ -18,7 +18,8 @@
 static Boolean ingroupset(int gid) {
 #ifdef NGROUPS
 	int i;
-	static int ngroups, gidset[NGROUPS];
+	static int ngroups;
+	static gidset_t gidset[NGROUPS];
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initialized = TRUE;
@@ -55,8 +56,14 @@ static int testperm(struct stat *stat, int perm) {
 
 static int testfile(char *path, int perm, int type) {
 	struct stat st;
-	if (stat(path, &st) == -1)
-		return errno;
+#ifdef S_IFLNK
+	if (type == S_IFLNK) {
+		if (lstat(path, &st) == -1)
+			return errno;
+	} else
+#endif
+		if (stat(path, &st) == -1)
+			return errno;
 	if (type != 0 && (st.st_mode & S_IFMT) != type)
 		return EACCES;		/* what is an appropriate return value? */
 	return testperm(&st, perm);
@@ -167,4 +174,9 @@ PRIM(access) {
 extern Dict *initprims_access(Dict *primdict) {
 	X(access);
 	return primdict;
+}
+
+extern char *checkexecutable(char *file) {
+	int err = testfile(file, EXEC, S_IFREG);
+	return err == 0 ? NULL : strerror(err);
 }

@@ -1,8 +1,120 @@
 CHANGES
 =======
 
-since 0.79
-----------
+0.8 to 0.82
+-----------
+
+BIG CHANGE:  the <> operator was renamed <= to make way for <>file.
+(see below.)  when you install this version of es, please be sure to
+look for <> in any es scripts and especially your .esrc; if, like
+me, you had <> in your environment, you will need to (at very least)
+re-run your .esrc.
+
+the new redirections <>file and <>>file can now be used for ``open
+file for reading and writing'' and ``open file for reading and
+appending,'' and correspond to the new hook functions %open-write
+and %open-append.  the file is, by default, opened on file descriptor
+0 for compatibility with old shells that (unbeknownst to me)
+implemented this syntax; use <>[n] and <>>[n] for other file
+descriptors.
+
+due to suggestions from the es list, the fact that historical and
+posix shells accept the notation <>file for ``open file for reading
+and writing,'' and my obsession with completeness, many more forms
+of redirection are supported.  es now recognizes the following
+redirections and hook functions:
+	cmd < file		%open 0 file {cmd}
+	cmd > file		%create 1 file {cmd}
+	cmd >> file		%append 1 file {cmd}
+	cmd <> file		%open-write 0 file {cmd}
+	cmd <>> file		%open-append 0 file {cmd}
+	cmd >< file		%open-create 1 file {cmd}
+	cmd >>< file		%open-append 1 file {cmd}
+note that the first character determines whether the file descriptor
+used is 0 or 1.  you can of course, use the [n] notation with these
+operators to override the defaults.
+
+on some machines, ps would print garbage entries for es or its
+child processes.  i think this is fixed, but let us know if you
+see the problem happening.
+
+some portability changes for the RS/6000 (by DaviD W. Sanderson)
+and SGI machines (by Chuck Rendleman) were incorporated.
+
+es now catches errors in redirections better.  previous versions
+printed usage messages for the primitives $&open, $&create, and
+$&append for the conditions that now generate the (hopefully more
+informative) messages
+	null filename in redirection
+	too many files in redirection
+the %one primitive is used to make sure that these messages are
+triggered.
+
+many man page bugs were fixed thanks to Arnold Robbins.
+
+signal handling was significantly revamped.  the list $signals now
+can have an additional form, -signame, which ignores the appropriate
+signal.  also, removing a signal from $signals now restores it to
+default behavior rather than ignoring it.  ignored signals are properly
+inherited from the state of the signals.
+
+es now supports POSIX-style sigaction(2) if the compile-time flag
+USE_SIGACTION is defined.
+
+fixed a bug where the default %interactive-loop silently ignored
+signals that it shouldn't have.
+
+in 0.79 and 0.8, a signal coming in while %interactive-loop was in
+its exception-catching routine would cause the shell to exit.
+(this is a new twist on the old signal comes in while signal handler
+is running problem.) this was ``fixed'' by preventing any delivery
+of signals while the handler of a catch routine was running.  i'm
+not sure that this is a good thing.  signals now should be delivered
+immediately after the catcher finishes running, which means right
+before the body starts again in the retry case.
+
+wait now does not print ``pid: '' alone when background jobs complete.
+
+a new builtin %run was added.  %run takes a program and an argv
+list, including argv[0], and execs the program.  this is the only
+way in es to set the argv[0] of a called program.  (as a consequence
+of adding this operator, es is now bullet-proofed to not dump core
+in the case where it is passed a null argv array.)
+
+local () definitions of variables to the empty list no longer cause
+the variables to be exported as the null string.
+
+absolute path names used with cd do not cause %cdpathsearch to be
+invoked.
+
+some declarations in prim-sys.c and version.c were written to work
+around bugs in some versions of IBM's rs6000 compiler.
+
+limits were added to match the ones listed in Richard Stevens's
+Advanced Unix Programming.
+
+a cputime limit of hh:mm:ss is now interpreted as hours, minutes
+and seconds.  mm:ss is still interpreted as minutes and seconds.
+in addition, bad suffixes on limits are now caught.
+
+fixed the example of fork in the man page to use es rather than rc
+syntax.
+
+access -l will now report true for symbolic links;  it used to
+always report false.  oops.
+
+whatis was broken and accepted any absolute filename as a valid
+without checking the executable bit.  fixed.
+
+when the wait builtin was made interruptible, it broke the handling
+of control-c.  that's fixed now.
+
+we'd like to thank Pete Ho and Loren James Rittle for finding many
+of the bugs in this release.
+
+
+0.79 to 0.8
+-----------
 
 there's now a man page.  i believe that it's up to date.
 

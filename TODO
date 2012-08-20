@@ -1,6 +1,5 @@
-0.9	better yacc error handling
-0.9	clean up behavior of control-c
 0.9	clean up parse.y
+0.9	comment initial.es better
 0.9	cut down amount of memory initialized in the parser
 0.9	externalize mutual recursion correctly
 0.9	figure out performance consequences of disabling gc
@@ -8,6 +7,7 @@
 0.9	make -x more like it is in sh and rc?
 0.9	multiple assignment
 0.9	openbuffer/sealbuffer directly into gc space
+0.9	splitting on strings
 0.9	trip.es
 1.5	make user functions properly tail recursive
 1.5	meta-circular decompose operation

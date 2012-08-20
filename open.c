@@ -1,23 +1,27 @@
-/* open.c -- to insulate <fcntl.h> from the rest of es ($Revision: 1.3 $) */
+/* open.c -- to insulate <fcntl.h> from the rest of es ($Revision: 1.5 $) */
 
 #define	REQUIRE_FCNTL	1
 
 #include "es.h"
 
-/* prototype for open() follows. comment out if necessary */
-#if __MACH__
-extern int open(char *, int VARARGS);
+#if NeXT
+extern int open(const char *, int, ...);
 #endif
 
 /*
  * Opens a file with the necessary flags.  Assumes the following order:
- *	typedef enum { oOpen, oCreate, oAppend } OpenKind;
+ *	typedef enum {
+ *		oOpen, oCreate, oAppend, oReadCreate, oReadTrunc oReadAppend
+ *	} OpenKind;
  */
 
 static int mode_masks[] = {
 	O_RDONLY,			/* rOpen */
-	O_TRUNC  | O_CREAT | O_WRONLY,	/* rCreate */
-	O_APPEND | O_CREAT | O_WRONLY	/* rAppend */
+	O_WRONLY | O_CREAT | O_TRUNC,	/* rCreate */
+	O_WRONLY | O_CREAT | O_APPEND,	/* rAppend */
+	O_RDWR   | O_CREAT,		/* oReadWrite */
+	O_RDWR   | O_CREAT | O_TRUNC,	/* oReadCreate */
+	O_RDWR   | O_CREAT | O_APPEND,	/* oReadAppend */
 };
 
 extern int eopen(char *name, OpenKind k) {

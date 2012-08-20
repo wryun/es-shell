@@ -1,4 +1,4 @@
-/* var.c -- es variables ($Revision: 1.12 $) */
+/* var.c -- es variables ($Revision: 1.14 $) */
 
 #include "es.h"
 #include "gc.h"
@@ -257,7 +257,12 @@ extern void varpop(Push *push) {
 static void mkenv0(void *dummy, char *key, void *value) {
 	Var *var = value;
 	assert(gcisblocked());
-	if (var == NULL || (var->flags & var_isinternal) || !isexported(key))
+	if (
+		   var == NULL
+		|| var->defn == NULL
+		|| (var->flags & var_isinternal)
+		|| !isexported(key)
+	)
 		return;
 	if (var->env == NULL || (rebound && (var->flags & var_hasbindings))) {
 		char *envstr = str(ENV_FORMAT, key, var->defn, "\001");
@@ -340,8 +345,11 @@ extern void initvars(void) {
 /* initenv -- load variables from the environment */
 extern void initenv(char **envp, Boolean protected) {
 	char *envstr;
+	size_t bufsize = 1024;
+	char *buf = ealloc(bufsize);
 
 	for (; (envstr = *envp) != NULL; envp++) {
+		size_t nlen;
 		char *eq = strchr(envstr, '=');
 		if (eq == NULL) {
 			env->vector[env->count++] = envstr;
@@ -353,9 +361,11 @@ extern void initenv(char **envp, Boolean protected) {
 			}
 			continue;
 		}
-		*eq = '\0';
-		Ref(char *, name, str(ENV_DECODE, envstr));
-		*eq = '=';
+		for (nlen = eq - envstr; nlen >= bufsize; bufsize *= 2)
+			buf = erealloc(buf, bufsize);
+		memcpy(buf, envstr, nlen);
+		buf[nlen] = '\0';
+		Ref(char *, name, str(ENV_DECODE, buf));
 		if (!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
 			List *defn = fsplit("\1", mklist(mkterm(eq + 1, NULL), NULL));
 			vardef(name, NULL, defn);
@@ -364,4 +374,5 @@ extern void initenv(char **envp, Boolean protected) {
 	}
 
 	envmin = env->count;
+	efree(buf);
 }

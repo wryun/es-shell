@@ -1,4 +1,4 @@
-/* proc.c -- process control system calls ($Revision: 1.5 $) */
+/* proc.c -- process control system calls ($Revision: 1.7 $) */
 
 #include "es.h"
 
@@ -65,7 +65,7 @@ extern int efork(Boolean parent, Boolean background) {
 		}
 	}
 	closefds();
-	setsigdefaults(FALSE);
+	setsigdefaults();
 	newchildcatcher();
 	return 0;
 }
@@ -74,8 +74,8 @@ extern int efork(Boolean parent, Boolean background) {
 static struct rusage wait_rusage;
 #endif
 
-/* ewait -- a wait wrapper that interfaces with signals */
-static int ewait(int *statusp) {
+/* dowait -- a wait wrapper that interfaces with signals */
+static int dowait(int *statusp) {
 	int n;
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
@@ -111,8 +111,8 @@ static void reap(int pid, int status) {
 		}
 }
 
-/* ewaitfor2 -- wait for a specific process to die, or any process if pid == 0 */
-extern int ewaitfor2(int pid, void *rusage) {
+/* ewait -- wait for a specific process to die, or any process if pid == 0 */
+extern int ewait(int pid, Boolean interruptible, void *rusage) {
 	Proc *proc;
 top:
 	for (proc = proclist; proc != NULL; proc = proc->next)
@@ -120,13 +120,13 @@ top:
 			int status;
 			if (proc->alive) {
 				int deadpid;
-				while ((deadpid = ewait(&proc->status)) != pid)
+				while ((deadpid = dowait(&proc->status)) != pid)
 					if (deadpid != -1)
 						reap(deadpid, proc->status);
-					else if (errno == EINTR)
+					else if (errno != EINTR)
+						fail("es:ewait", "wait: %s", strerror(errno));
+					else if (interruptible)
 						SIGCHK();
-					else
-						fail("es:ewaitfor2", "wait: %s", strerror(errno));
 				proc->alive = FALSE;
 #if BSD_LIMITS
 				proc->rusage = wait_rusage;
@@ -152,15 +152,16 @@ top:
 		}
 	if (pid == 0) {
 		int status;
-		while ((pid = ewait(&status)) == -1)
-			if (errno == EINTR)
+		while ((pid = dowait(&status)) == -1) {
+			if (errno != EINTR)
+				fail("es:ewait", "wait: %s", strerror(errno));
+			if (interruptible)
 				SIGCHK();
-			else
-				fail("es:ewaitfor2", "wait: %s", strerror(errno));
+		}
 		reap(pid, status);
 		goto top;
 	}
-	fail("es:ewaitfor2", "wait: %d is not a child of this shell", pid);
+	fail("es:ewait", "wait: %d is not a child of this shell", pid);
 	NOTREACHED;
 }
 
@@ -192,7 +193,7 @@ PRIM(wait) {
 		fail("$&wait", "usage: wait [pid]");
 		NOTREACHED;
 	}
-	return mklist(mkterm(mkstatus(ewaitfor(pid)), NULL), NULL);
+	return mklist(mkterm(mkstatus(ewait(pid, TRUE, NULL)), NULL), NULL);
 }
 
 extern Dict *initprims_proc(Dict *primdict) {

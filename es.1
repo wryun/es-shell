@@ -1,4 +1,4 @@
-.\" es.1 -- es manual page ($Revision: 1.18 $)
+.\" es.1 -- es manual page ($Revision: 1.27 $)
 .\" macros stolen from rc.1
 .\"-------
 .\" Man page portability notes
@@ -162,6 +162,23 @@
 .if !"\\$4"" .Xf \\$2 \\$1 "\\$3\\f\\$1\\$4\\*(Xi" "\\$5" "\\$6" "\\$7" "\\$8" "\\$9"
 .if "\\$4"" \\$3\fR\s10
 ..
+.\"-------
+.\" IS, IE -- sublist begin and end
+.\"-------
+.de IS
+.ie \n(.g .RS
+.el \{\
+.nr )R +7m
+.nr )P -.5v
+.sp .7v \}
+..
+.de IE
+.ie \n(.g .RE
+.el \{\
+.nr )R -7m
+.nr )P +.5v
+.sp .4v \}
+..
 .TH ES 1 "5 March 1992"
 .SH NAME
 es \- extensible shell
@@ -194,6 +211,8 @@ See the section entitled
 for details on entry points which can be redefined to give
 the shell extended semantics.
 .SH LANGUAGE
+.I Es
+is an interpreter which reads commands and executes them.
 The simplest form of command in
 .I es
 is a sequence of words separated by white space (space and tab) characters.
@@ -259,9 +278,7 @@ one of the special characters, except for newline.
 In addition,
 .IR es
 recognizes backslash sequences similar to those used in C strings:
-.sp .7v
-.nr )R +3m
-.nr )P -.5v
+.IS
 .TP
 .Cr \ea
 alert (bell)
@@ -291,8 +308,7 @@ hexadecimal character
 .Ci \e nnn
 octal character
 .IR nnn
-.nr )R -3m
-.nr )P +.5v
+.IE
 .SS Comments
 The number sign
 .Rc ( # )
@@ -423,7 +439,7 @@ such as concatenation, should be enclosed in parentheses:
 Thus:
 .Ds
 .Cr "Good\-Morning = Bonjour"
-.Cr "Good = Guten"
+.Cr "Guten = Good"
 .Cr "Morgen = Morning"
 .Cr "echo $($Guten^\-^$Morgen)"
 .De
@@ -690,7 +706,7 @@ and
 .Cr "?" .
 However,
 .I es
-does expand the glob the subject against filenames if it contains
+does expand the subject against filenames if it contains
 metacharacters.
 Thus, the command
 .Ds
@@ -768,18 +784,18 @@ into fields.
 .SS "Return Values"
 The return value of a command is obtained with the construct
 .Ds
-.Ci "<>{" " command " }
+.Ci "<={" " command " }
 .De
 .PP
-The return value of an external program is its exit status,
-which in other shell can be found in special variables such as
+The return value of an external program is its exit status
+(which in other shell can be found in special variables such as
 .Cr $?
 or
-.Cr $status ,
+.Cr $status ),
 as either a small integer or the name of signal.
 Thus
 .Ds
-.Cr "echo <>{test \-f /etc/motd} <>{test \-w /vmunix} <>{a.out}"
+.Cr "echo <={test \-f /etc/motd} <={test \-w /vmunix} <=a.out"
 .De
 .PP
 might produce the output
@@ -818,7 +834,7 @@ the first command has a ``false'' return value.
 .Cr ! command
 .De
 .PP
-inverts the truth value the exit status of a command.
+inverts the truth value of the exit status of a command.
 .SS "Input and output"
 .PP
 The standard output may be redirected to a file with
@@ -860,6 +876,20 @@ existing file, use:
 .De
 .PP
 If the file does not exist, then it is created.
+.PP
+To open a file for reading and writing, use the
+.Cr <>
+redirection operator;
+for reading and appending, use
+.Cr <>> .
+Both of these operators use file descriptor 0 (standard input)
+by default.
+Similarly,
+.Cr ><
+truncates a file and opens it for reading and writing, and
+.Cr >><
+opens a file for reading and appending;
+these operators use file descriptor 1 by default.
 .PP
 ``Here documents'' are supported as in
 .IR sh (1)
@@ -1107,6 +1137,11 @@ If, as the most common case, a function variable is bound to a lambda,
 when the function is invoked, the variable
 .Cr $0
 is bound (dynamically, see below) to the name of the function.
+.PP
+Lambdas are just another form of code fragment, and, as such, can be
+exported in the environment, passed as arguments, etc.
+The central difference between the two forms is that lambdas bind their arguments,
+where simple brace-enclosed groups just ignore theirs.
 .SS "Local Variables"
 Variable assignments may be made local to a set of commands with the
 .Cr local
@@ -1137,7 +1172,7 @@ supports a different form of temporary variable binding,
 using let-bound, or ``lexically scoped,'' variables.
 (Lexical scoping is the form of binding used by most compiled
 programming languages, such as C or Scheme.)
-A lexically scoped variable is introduce with a
+A lexically scoped variable is introduced with a
 .Cr let
 statement:
 .Ds
@@ -1153,6 +1188,8 @@ any environment or local-bound variable;
 the immediate text of the
 .Cr let
 statement is the complete extent of that binding.
+That is, lexically bound variables surrounding code fragments
+follow those code fragments around.
 .PP
 An example best shows the difference between
 .Cr let
@@ -1226,6 +1263,30 @@ While the settor function is running,
 the variable
 .Cr $0
 is bound to the name of the variable being assigned.
+.PP
+For example, the following settor function is used to keep
+the shell variables
+.Cr home
+and
+.Cr HOME
+synchronized.
+.Ds
+.Cr "set-HOME = @ {"
+.Cr "    local (set-home = )"
+.Cr "        home = $*"
+.Cr "    result $*"
+.Cr "}"
+.De
+.PP
+This settor function is called when any assignment is made to the variable
+.Cr HOME .
+It assigns the new value to the variable
+.Cr home ,
+but disables any settor function for
+.Cr home
+to prevent an infinite recursion.
+Then it returns its argument unchanged for use in the actual assignment to
+.Cr HOME .
 .PP
 Settor functions do not apply to lexically bound variables.
 .SS Primitives
@@ -1357,15 +1418,15 @@ A list of directories to search for the target of a
 .Cr cd
 command.
 The empty string stands for the current directory.
-Note that if the
+Note that if
 .Cr $cdpath
-variable does not contain the current directory, then the current
+does not contain the current directory, then the current
 directory will not be searched; this allows directory searching to
 begin in a directory other than the current directory.
 Note also that an assignment to
-.Cr $cdpath
+.Cr cdpath
 causes an automatic assignment to
-.Cr $CDPATH ,
+.Cr CDPATH ,
 and vice-versa.
 .TP
 .Cr history
@@ -1379,7 +1440,7 @@ which parses the contents of the history file and presents them to
 .I es
 for reinterpretation.
 If
-.Cr $history
+.Cr history
 is not set, then
 .I es
 does not append commands to any file.
@@ -1397,17 +1458,20 @@ if
 .I es
 has been started up as a login shell.
 Like
-.Cr $cdpath
+.Cr cdpath
 and
-.Cr $CDPATH ,
-.Cr $home
+.Cr CDPATH ,
+.Cr home
 and
-.Cr $HOME
+.Cr HOME
 are aliased to each other.
 .TP
 .Cr ifs
 The default input field separator, used for splitting up the output of
 backquote commands for digestion as a list.
+The initial value of
+.Cr ifs
+is space-tab-newline.
 .TP
 .Cr noexport
 A list of variables which
@@ -1420,22 +1484,22 @@ are exported.
 This is a list of directories to search in for commands.
 The empty string stands for the current directory.
 Note that like
-.Cr $cdpath
+.Cr cdpath
 and
-.Cr $CDPATH ,
-.Cr $path
+.Cr CDPATH ,
+.Cr path
 and
-.Cr $PATH
+.Cr PATH
 are aliased to each other.
 If
-.Cr $path
+.Cr path
 or
-.Cr $PATH
+.Cr PATH
 is not set at startup time,
-.Cr $path
+.Cr path
 assumes a default value suitable for your system.
 This is typically
-.Cr "(/usr/ucb /usr/bin /bin '')"
+.Cr "/usr/ucb /usr/bin /bin ''" .
 .TP
 .Cr pid
 The process ID of the currently running
@@ -1501,15 +1565,15 @@ one can use the form:
 .De
 .PP
 The values of
-.Cr "$path" ,
-.Cr "$cdpath" ,
+.Cr path ,
+.Cr cdpath ,
 and
-.Cr $home
+.Cr home
 are derived from the environment values of
-.Cr "$PATH" ,
-.Cr "$CDPATH" ,
+.Cr PATH ,
+.Cr CDPATH ,
 and
-.Cr "$HOME"
+.Cr HOME
 if those values are present.
 This is for compatibility with other Unix programs, such as
 .IR sh (1).
@@ -1564,8 +1628,13 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP=@ \fIargs\fP{\fIcmd\fP}
 \fIcmd\fP > \fIfile\fP	%create 1 \fIfile\fP {\fIcmd\fP}
 \fIcmd\fP >[\fIn\fP] \fIfile\fP	%create \fIn\fP \fIfile\fP {\fIcmd\fP}
 \fIcmd\fP >> \fIfile\fP	%append 1 \fIfile\fP {\fIcmd\fP}
-\fIcmd\fP >[\fIn\fP=]	%close n {\fIcmd\fP}
-\fIcmd\fP >[\fIm\fP=\fIn\fP]	%dup m \fIn\fP {\fIcmd\fP}
+\fIcmd\fP <> \fIfile\fP	%open-write 0 \fIfile\fP {\fIcmd\fP}
+\fIcmd\fP <>> \fIfile\fP	%open-append 0 \fIfile\fP {\fIcmd\fP}
+\fIcmd\fP >< \fIfile\fP	%open-create 1 \fIfile\fP {\fIcmd\fP}
+\fIcmd\fP >>< \fIfile\fP	%open-append 1 \fIfile\fP {\fIcmd\fP}
+\fIcmd\fP >[\fIn\fP=]	%close \fIn\fP {\fIcmd\fP}
+\fIcmd\fP >[\fIm\fP=\fIn\fP]	%dup \fIm\fP \fIn\fP {\fIcmd\fP}
+\fIcmd\fP << tag \fIinput\fP tag	%here 0 \fIinput\fP {\fIcmd\fP}
 \fIcmd\fP <<< string	%here 0 string {\fIcmd\fP}
 \fIcmd1\fP | \fIcmd2\fP	%pipe {\fIcmd1\fP} 1 0 {\fIcmd2\fP}
 \fIcmd1\fP |[\fIm\fP=\fIn\fP] \fIcmd2\fP	%pipe {\fIcmd1\fP} \fIm\fP \fIn\fP {\fIcmd2\fP}
@@ -1576,10 +1645,10 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP=@ \fIargs\fP{\fIcmd\fP}
 .SS "Expressions"
 .Ds
 .ft \*(Cf
-$#\fIvar\fP	<>{%count $\fIvar\fP}
-$^\fIvar\fP	<>{%flatten ' ' $\fIvar\fP}
-`{\fIcmd\fP \fIargs\fP}	<>{%backquote <>{%flatten '' $ifs} {\fIcmd\fP \fIargs\fP}}
-``\fIifs\fP {\fIcmd\fP}	<>{%backquote <>{%flatten '' \fIifs\fP} {\fIcmd\fP}}
+$#\fIvar\fP	<={%count $\fIvar\fP}
+$^\fIvar\fP	<={%flatten ' ' $\fIvar\fP}
+`{\fIcmd args\fP}	<={%backquote <={%flatten '' $ifs} {\fIcmd args\fP}}
+``\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
 .ft R
 .De
 .SH BUILTINS
@@ -1605,7 +1674,7 @@ Reads
 .I file
 as input to
 .I es
-as executes its contents.
+and executes its contents.
 The options are a subset of the invocation options for the shell (see below).
 .TP
 .Cr "access \fR[\fP-n \fIsuffix\fP\fR]\fP \fR[\fP-1e\fR]\fP \fR[\fP-rwx\fR]\fP  \fR[\fP-fdcblsp\fR]\fP \fIpath ...\fP"
@@ -1618,9 +1687,10 @@ for files which are not accessible.
 If the
 .Cr \-1
 option is used, the name of the first file which the test succeeds for is returned;
-if the test succeeds for no file, the empty list is returned, unless the
+if the test succeeds for no file, the empty list is returned.
+However, if the
 .Cr \-e
-option was used, in which case,
+option was used,
 .Cr access
 raises an
 .Cr error
@@ -1636,9 +1706,7 @@ is used for path searching.)
 .sp 1v
 The default test is whether a file exists.
 These options change the test:
-.nr )R +7m
-.nr )P -.5v
-.sp .7v
+.IS
 .TP
 .Cr \-r
 Is the file readable (by the current user)?
@@ -1670,8 +1738,7 @@ Is the file a socket?
 .TP
 .Cr \-p
 Is the file a named pipe (FIFO)?
-.nr )R -7m
-.nr )P +.5v
+.IE
 .TP
 .Cr "apids"
 Prints the process IDs of all background processes that the shell
@@ -1692,7 +1759,7 @@ is run and passed the exception as an argument.
 .Cr "cd \fR[\fP\fIdirectory\fP\fR]\fP"
 Changes the current directory to
 .IR directory .
-The variable
+The list of directories in
 .Cr $cdpath
 is searched for possible locations of
 .IR directory ,
@@ -1769,7 +1836,7 @@ of state changing operations such as
 and variable assignments.
 For example:
 .Ds
-.Cr "@ {cd ..; make}"
+.Cr "fork {cd ..; make}"
 .De
 .TP
 \&
@@ -1785,15 +1852,16 @@ Evaluates the command
 If the result is true, the command
 .I then
 is run and
-.Cr if completes.
+.Cr if
+completes.
 If the result of the test is false, the next
 .I "test-then"
-pair checked, until one where the
+pair is checked, until one where the
 .I test
 is true is found.
 If none of the
 .IR test s
-is true, the
+are true, the
 .I else
 command is run.
 .TP
@@ -1841,14 +1909,19 @@ For size limits, the suffixes
 .Cr m
 (megabytes), and
 .Cr g
-(gigabytes) are recognized;
-for time limits,
+(gigabytes) are recognized.
+For time limits,
 .Cr s
 (seconds),
 .Cr m
 (minutes), and
 .Cr h
-(hours) are known.
+(hours) are known;
+in additons, times of the for
+.Cr "\fIhh\fP:\fImm\fP:\fIss\fP"
+and
+.Cr "\fImm\fP:\fIss\fP"
+are accepted.
 See
 .IR getrlimit (2)
 for details on resource limit semantics.
@@ -1862,6 +1935,8 @@ This builtin is useful for making
 behave like a job-control shell in a hostile environment.
 One example is the NeXT Terminal program, which implicitly assumes
 that each shell it forks will put itself into a new process group.
+Note that the controlling tty for the process must be on standard error
+(file descriptor 2) when this operation is run.
 .TP
 .Cr "result \fIvalue ...\fP"
 Returns its arguments.
@@ -1880,7 +1955,8 @@ Raise the named exception, passing all of the arguments to
 to the enclosing exception handler.
 .TP
 .Cr "time \fIcmd arg ... \fP"
-Prints, on standard output, the real, user, and system time consumed by
+Prints, on the shell's standard error,
+the real, user, and system time consumed by
 executing the command.
 .TP
 .Cr "true"
@@ -1907,12 +1983,10 @@ suitable for being used as input to the shell.
 Prints all shell variables, functionsm, and settor functions,
 (in a form suitable for use as shell input)
 which match the criteria specified by the options.
-.nr )R +7m
-.nr )P -.5v
-.sp .7v
+.IS
 .TP
 .Cr \-v
-variables (that are not functions or settor functions.
+variables (that are not functions or settor functions)
 .TP
 .Cr \-f
 functions
@@ -1929,8 +2003,7 @@ private (not exported) values
 .TP
 .Cr \-i
 internal (predefined and builtin) values
-.nr )R -7m
-.nr )P +.5v
+.IE
 .TP
 \&
 If none of
@@ -1957,7 +2030,7 @@ If no
 .I pid
 is specified, waits for any child process to exit.
 .TP
-.Cr "whatis \fI\fP"
+.Cr "whatis \fIprogam ...\fP"
 For each named 
 .IR program ,
 returns the pathname, primitive, lambda, or code fragment which
@@ -1993,8 +2066,8 @@ set up to append to the
 .Cr "%background \fIcmd\fP"
 Runs the command in the background.
 The shell variable
-.Cr $apid
-the process ID of the background process,
+.Cr apid
+contains the process ID of the background process,
 which is printed if the shell is interactive (according to
 .Cr %is-interactive ).
 .TP
@@ -2103,7 +2176,9 @@ when the shell is invoked with the
 option.)
 .TP
 .Cr "%flatten \fIseparator list\fP"
-Concatenate the elements of the list into one string,
+Concatenate the elements of
+.I list
+into one string,
 separated by the string
 .IR separator .
 .TP
@@ -2113,7 +2188,7 @@ Runs the command with the
 passed as input on file descriptor
 .IR fd .
 .TP
-.Cr "%home \fI[user]\fP"
+.Cr "%home \fR[\fIuser\fR]"
 Returns the home directory of the named user, or
 .Cr $home
 if there are no arguments.
@@ -2164,6 +2239,54 @@ Runs the command with
 open for reading on file descriptor
 .IR fd .
 .TP
+.Cr "%open-append \fIfd file cmd\fP"
+Runs the command with
+.I file
+open for reading and appending on file descriptor
+.IR fd .
+.TP
+.Cr "%open-create \fIfd file cmd\fP"
+Runs the command with
+.I file
+open for reading and writing on file descriptor
+.IR fd .
+If the file already exists, it is truncated.
+.TP
+.Cr "%open-write \fIfd file cmd\fP"
+Runs the command with
+.I file
+open for reading and writing on file descriptor
+.IR fd .
+.TP
+.Cr "%openfile \fImode fd file cmd\fP"
+Runs the command with
+.I file
+opened according to
+.I mode
+on file descriptor
+.IR fd .
+The modes
+.Rc ( r ,
+.Cr w ,
+.Cr a ,
+.Cr r+ ,
+.Cr w+ ,
+and
+.Cr a+ )
+have the same meanings in
+.Cr %openfile
+as they do in
+.IR fopen (3).
+.Cr %openfile
+is invoked by the redirection hook functions:
+.Cr %append ,
+.Cr %create ,
+.Cr %open ,
+.Cr %open-append ,
+.Cr %open-create ,
+and
+.Cr %open-write .
+.TP
 .Cr "%or \fIcmd ...\fP"
 Runs the commands in order, stopping after the first one
 that has a true return value.
@@ -2190,7 +2313,7 @@ if one is not found, an
 .Cr error
 exception is raised.
 .TP
-.Cr "%pipe \fIcmd [outfd infd cmd] ...\fP"
+.Cr "%pipe \fIcmd \fP\fR[\fP\fIoutfd infd cmd\fR] ..."
 Runs the commands, with the file descriptor
 .I outfd
 in the left-hand process connected by a pipe to the file descriptor
@@ -2206,20 +2329,39 @@ before every call to
 .Cr %parse .
 .TP
 .Cr "%readfrom \fIvar input cmd\fP"
-Runs the command with the named variable locally bound
+Runs
+.I cmd
+with the variable
+.I var
+locally bound
 to the name of a file which contains the output of running
 the command
 .IR input .
 .TP
 .Cr "%seq \fIcmd ...\fP"
 Run the commands, in order.
+.TP
+.Cr "%whatis \fIprogram ...\fP"
+For each named 
+.IR program ,
+returns the pathname, primitive, lambda, or code fragment which
+would be run if the program appeared as the first word of a command.
+.TP
+.Cr "%writeto \fIvar input cmd\fP"
+Runs
+.I cmd
+with the variable
+.I var
+locally bound
+to the name of a file which is used as the input for the command
+.IR output .
 .SS "Utility Functions"
 These functions are useful for people customizing the shell,
 may be used by other builtin commands,
 and probably don't make much sense to replace,
 though that is always possible.
 .TP
-.Cr "%fsplit \fIseparator [args ...]\fP"
+.Cr "%fsplit \fIseparator \fR[\fIargs ...\fR]"
 Splits its arguments into separate strings at every occurance
 of any of the characters in the string
 .IR separator .
@@ -2228,12 +2370,28 @@ appear in the result.
 (This function is used by some builtin settor functions.)
 .TP
 .Cr "%is-interactive"
-Returns true if the current interpreter context is interactive.
+Returns true if the current interpreter context is interactive;
+that is, if shell command input is currently coming from an
+interactive user.
+More precisely, this is true if the innermost enclosing read-eval-print
+loop is
+.Cr %interactive-loop
+rather than
+.Cr %batch-loop .
 .TP
 .Cr "%newfd"
 Returns a file descriptor that the shell thinks is not currently in use.
 .TP
-.Cr "%split \fIseparator [args ...]\fP"
+.Cr "%run \fIprogram argv0 args ...\fP"
+Run the named program, which is not searched for in
+.Cr $path ,
+with the argument vector set to the remaing arguments.
+This builtin can be used to set
+.Cr argv[0]
+(by convention, the name of the program)
+to something other than file name.
+.TP
+.Cr "%split \fIseparator \fR[\fPargs ...\fR]"
 Splits its arguments into separate strings at every occurance
 of any of the characters in the string
 .IR separator .
@@ -2245,17 +2403,6 @@ For each named variable,
 returns a string which, if interpreted by
 .I es
 would assign to the variable its current value.
-.TP
-.Cr "%whatis \fIprogram ...\fP"
-For each named 
-.IR program ,
-returns the pathname, primitive, lambda, or code fragment which
-would be run if the program appeared as the first word of a command.
-.TP
-.Cr "%writeto \fIvar input cmd\fP"
-Runs the command with the named variable locally bound
-to the name of a file which is used as the input for the command
-.IR output .
 .SH OPTIONS
 .TP
 .Cr \-c
@@ -2281,8 +2428,7 @@ Force
 to be an interactive shell.
 Normally
 .I es
-is only interactive if
-.I es
+is only interactive if it
 is run with commands coming from standard input and
 standard input is connected to a terminal.
 .TP
@@ -2310,7 +2456,7 @@ Print commands to standard error before executing them.
 Turn off execution of commands.
 This can be used for checking the syntax of scripts.
 When combined with
-.Cr \-x
+.Cr \-x ,
 .I es
 prints the typed command based on the internal (parsed) representation.
 .TP
@@ -2347,6 +2493,9 @@ should have lexical scope.
 .Cr \-x
 is not nearly as useful as it should be.
 .PP
+Line numbers in error messages refer to the last line parsed,
+rather than something more useful.
+.PP
 Too many creatures have fept in.
 .PP
 Please send bug reports to
@@ -2359,15 +2508,16 @@ and
 .IR sh (1),
 .IR execve (2),
 .IR getrlimit (2),
+.IR fopen (3),
 .IR getpwent (3)
 .PP
 Paul Haahr and Byron Rakitzis,
-``Es \(em A shell with higher-order functions,''
+.I "Es \(em A shell with higher-order functions,"
 Proceedings of the Winter 1993 Usenix Conference,
 San Diego, CA.
 .PP
 Tom Duff,
-``Rc \(em A Shell for Plan 9 and UNIX Systems,''
+.I "Rc \(em A Shell for Plan 9 and UNIX Systems,"
 Unix Research System,
 10th Edition,
 Volume 2.

@@ -1,7 +1,15 @@
-/* prim-io.c -- input/output and redirection primitives ($Revision: 1.8 $) */
+/* prim-io.c -- input/output and redirection primitives ($Revision: 1.11 $) */
 
 #include "es.h"
 #include "prim.h"
+
+PRIM(one) {
+	if (list == NULL)
+		fail("$&one", "null filename in redirection");
+	if (list->next != NULL)
+		fail("$&one", "too many files in redirection");
+	return list;
+}
 
 static const char *caller;
 
@@ -40,57 +48,62 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 	RefReturn(lp);
 }
 
-static List *simple(OpenKind o, int *srcfdp, List *list) {
-	char *name;
-	int fd;
-	assert(length(list) == 2);
-	Ref(List *, lp, list);
-	name = getstr(lp->term);
-	lp = lp->next;
-	fd = eopen(name, o);
-	if (fd == -1)
-		fail(caller, "%s: %s", name, strerror(errno));
-	*srcfdp = fd;
-	RefReturn(lp);
-}
-
 #define	REDIR(name)	static List *CONCAT(redir_,name)(int *srcfdp, List *list)
 
 static noreturn argcount(const char *s) {
 	fail(caller, "argument count: usage: %s", s);
 }
 
-REDIR(open) {
-	return simple(oOpen, srcfdp, list);
+REDIR(openfile) {
+	int i, fd;
+	char *mode, *name;
+	OpenKind kind;
+	static const struct {
+		const char *name;
+		OpenKind kind;
+	} modes[] = {
+		{ "r",	oOpen },
+		{ "w",	oCreate },
+		{ "a",	oAppend },
+		{ "r+",	oReadWrite },
+		{ "w+",	oReadCreate },
+		{ "a+",	oReadAppend },
+		{ NULL, 0 }
+	};
+
+	assert(length(list) == 3);
+	Ref(List *, lp, list);
+
+	mode = getstr(lp->term);
+	lp = lp->next;
+	for (i = 0;; i++) {
+		if (modes[i].name == NULL)
+			fail("$&openfile", "bad %%openfile mode: %s", mode);
+		if (streq(mode, modes[i].name)) {
+			kind = modes[i].kind;
+			break;
+		}
+	}
+
+	name = getstr(lp->term);
+	lp = lp->next;
+	fd = eopen(name, kind);
+	if (fd == -1)
+		fail("$&openfile", "%s: %s", name, strerror(errno));
+	*srcfdp = fd;
+	RefReturn(lp);
 }
 
-PRIM(open) {
-	caller = "$&open";
-	if (length(list) != 3)
-		argcount("%open fd file cmd");
-	return redir(redir_open, list, evalflags);
-}
-
-REDIR(create) {
-	return simple(oCreate, srcfdp, list);
-}
-
-PRIM(create) {
-	caller = "$&create";
-	if (length(list) != 3)
-		argcount("%create fd file cmd");
-	return redir(redir_create, list, evalflags);
-}
-
-REDIR(append) {
-	return simple(oAppend, srcfdp, list);
-}
-
-PRIM(append) {
-	caller = "$&append";
-	if (length(list) != 3)
-		argcount("%append fd file cmd");
-	return redir(redir_append, list, evalflags);
+PRIM(openfile) {
+	List *lp;
+	caller = "$&openfile";
+	if (length(list) != 4)
+		argcount("%openfile mode fd file cmd");
+	/* transpose the first two elements */
+	lp = list->next;
+	list->next = lp->next;
+	lp->next = list;
+	return redir(redir_openfile, lp, evalflags);
 }
 
 REDIR(dup) {
@@ -389,9 +402,8 @@ PRIM(newfd) {
 }
 
 extern Dict *initprims_io(Dict *primdict) {
-	X(open);
-	X(create);
-	X(append);
+	X(one);
+	X(openfile);
 	X(close);
 	X(dup);
 	X(pipe);

@@ -1,4 +1,4 @@
-/* eval.c -- evaluation of lists and trees ($Revision: 1.11 $) */
+/* eval.c -- evaluation of lists and trees ($Revision: 1.13 $) */
 
 #include "es.h"
 
@@ -21,7 +21,7 @@ static noreturn failexec(char *file, List *args) {
 }
 
 /* forkexec -- fork (if necessary) and exec */
-static List *forkexec(char *file, List *list, Boolean inchild) {
+extern List *forkexec(char *file, List *list, Boolean inchild) {
 	int pid, status;
 	Vector *env;
 	gcdisable(0);
@@ -146,6 +146,9 @@ restart:
 	/* the logic here is duplicated in $&whatis */
 
 	if (isabsolute(lp->term->str)) {
+		char *error = checkexecutable(lp->term->str);
+		if (error != NULL)
+			fail("$&whatis", "%s: %s", lp->term->str, error);
 		lp = forkexec(lp->term->str, lp, flags & eval_inchild);
 		goto done;
 	}

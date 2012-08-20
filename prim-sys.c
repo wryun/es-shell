@@ -1,10 +1,14 @@
-/* prim-sys.c -- system call primitives ($Revision: 1.10 $) */
+/* prim-sys.c -- system call primitives ($Revision: 1.23 $) */
 
 #define	REQUIRE_IOCTL	1
 
 #include "es.h"
 #include "prim.h"
 #include "sigmsgs.h"
+
+#if sgi
+#define	setpgrp(a,b)	BSDsetpgrp(a,b)
+#endif
 
 PRIM(newpgrp) {
 	int pid;
@@ -14,9 +18,9 @@ PRIM(newpgrp) {
 	setpgrp(pid, pid);
 #ifdef TIOCSPGRP
 	{
-		sigresult (*sigtstp)(int) = esignal(SIGTSTP, SIG_IGN);
-		sigresult (*sigttin)(int) = esignal(SIGTTIN, SIG_IGN);
-		sigresult (*sigttou)(int) = esignal(SIGTTOU, SIG_IGN);
+		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
+		Sigeffect sigttin = esignal(SIGTTIN, sig_ignore);
+		Sigeffect sigttou = esignal(SIGTTOU, sig_ignore);
 		ioctl(2, TIOCSPGRP, &pid);
 		esignal(SIGTSTP, sigtstp);
 		esignal(SIGTTIN, sigttin);
@@ -29,12 +33,8 @@ PRIM(newpgrp) {
 PRIM(background) {
 	int pid = efork(TRUE, TRUE);
 	if (pid == 0) {
-#if JOB_PROTECT && SIGTTOU && SIGTTIN && SIGTSTP
+#if JOB_PROTECT
 		/* job control safe version: put it in a new pgroup. */
-		/* TODO:
-		esignal(SIGTTOU, SIG_IGN);
-		esignal(SIGTTIN, SIG_IGN);
-		esignal(SIGTSTP, SIG_IGN); */
 		setpgrp(0, getpid());
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
@@ -57,6 +57,16 @@ PRIM(fork) {
 	SIGCHK();
 	printstatus(0, status);
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
+}
+
+PRIM(run) {
+	char *file;
+	if (list == NULL)
+		fail("$&run", "usage: %%run file argv0 argv1 ...");
+	Ref(List *, lp, list);
+	file = getstr(lp->term);
+	lp = forkexec(file, lp->next, (evalflags & eval_inchild) != 0);
+	RefReturn(lp);
 }
 
 PRIM(umask) {
@@ -88,19 +98,22 @@ PRIM(cd) {
 		list = varlookup("home", NULL);
 		if (list == NULL)
 			fail("$&cd", "cd: no home directory");
-	} else if (list->next == NULL) {
+	} else if (list->next != NULL)
+		fail("$&cd", "usage: cd [directory]");
+
+	dir = getstr(list->term);
+	if (!isabsolute(dir)) {
 		List *search = varlookup("fn-%cdpathsearch", NULL);
 		if (search == NULL)
 			fail("$&cd", "%L: fn %%cdpathsearch undefined", list, " ");
 		list = eval(append(search, list), NULL, 0);
 		if (list == NULL)
 			fail("$&cd", "%%cdpathsearch must return a value");
-	} else
-		fail("$&cd", "usage: cd [directory]");
+		if (list->next != NULL)
+			fail("$&cd", "cd %L: directory must be one word long", list, " ");
+		dir = getstr(list->term);
+	}
 
-	if (list->next != NULL)
-		fail("$&cd", "cd %L: directory must be one word long", list, " ");
-	dir = getstr(list->term);
 	if (chdir(dir) == -1)
 		fail("$&cd", "chdir %s: %s", dir, strerror(errno));
 	return true;
@@ -108,20 +121,27 @@ PRIM(cd) {
 
 PRIM(setsignals) {
 	int i;
-	Boolean sigs[NUMOFSIGNALS];
+	Sigeffect effects[NUMOFSIGNALS];
 	for (i = 0; i < NUMOFSIGNALS; i++)
-		sigs[i] = FALSE;
-	Ref(List *, result, list);
+		effects[i] = sig_default;
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next) {
-		for (i = 1; !streq(getstr(lp->term), signals[i].name); )
+		const char *s = getstr(lp->term);
+		Sigeffect effect = sig_catch;
+		if (*s == '-') {
+			++s;
+			effect = sig_ignore;
+		}
+		for (i = 1; !streq(s, signals[i].name); )
 			if (++i == NUMOFSIGNALS)
-				fail("$&setsignals", "unknown signal: %s", getstr(lp->term));
-		sigs[i] = TRUE;
+				fail("$&setsignals", "unknown signal: %s", s);
+		effects[i] = effect;
 	}
 	RefEnd(lp);
-	trapsignals(sigs);
-	RefReturn(result);
+	blocksignals();
+	setsigeffects(effects);
+	unblocksignals();
+	return mksiglist();
 }
 
 /*
@@ -133,46 +153,62 @@ PRIM(setsignals) {
 #include <sys/time.h>
 #include <sys/resource.h>
 extern int getrlimit(int, struct rlimit *);
-extern int setrlimit(int, struct rlimit *);
+extern int setrlimit(int, const struct rlimit *);
 
 typedef struct Suffix Suffix;
 struct Suffix {
-	const Suffix *next;
-	long amount;
 	const char *name;
+	long amount;
+	const Suffix *next;
 };
 
-static const Suffix
-	kbsuf = { NULL, 1024, "k" },
-	mbsuf = { &kbsuf, 1024*1024, "m" },
-	gbsuf = { &mbsuf, 1024*1024*1024, "g" },
-	stsuf = { NULL, 1, "s" },
-	mtsuf = { &stsuf, 60, "m" },
-	htsuf = { &mtsuf, 60*60, "h" };
-#define	SIZESUF &gbsuf
-#define	TIMESUF &htsuf
-#define	NOSUF ((Suffix *) NULL)  /* for RLIMIT_NOFILE on SunOS 4.1 */
+static const Suffix sizesuf[] = {
+	{ "g",	1024*1024*1024,	sizesuf + 1 },
+	{ "m",	1024*1024,	sizesuf + 2 },
+	{ "k",	1024,		NULL },
+};
+
+static const Suffix timesuf[] = {
+	{ "h",	60 * 60,	timesuf + 1 },
+	{ "m",	60,		timesuf + 2 },
+	{ "s",	1,		NULL },
+};
 
 typedef struct {
 	char *name;
 	int flag;
 	const Suffix *suffix;
 } Limit;
+
 static const Limit limits[] = {
-	{ "cputime",		RLIMIT_CPU,	TIMESUF },
-	{ "filesize",		RLIMIT_FSIZE,	SIZESUF },
-	{ "datasize",		RLIMIT_DATA,	SIZESUF },
-	{ "stacksize",		RLIMIT_STACK,	SIZESUF },
-	{ "coredumpsize",	RLIMIT_CORE,	SIZESUF },
+
+	{ "cputime",		RLIMIT_CPU,	timesuf },
+	{ "filesize",		RLIMIT_FSIZE,	sizesuf },
+	{ "datasize",		RLIMIT_DATA,	sizesuf },
+	{ "stacksize",		RLIMIT_STACK,	sizesuf },
+	{ "coredumpsize",	RLIMIT_CORE,	sizesuf },
+
 #ifdef RLIMIT_RSS	/* SysVr4 does not have this */
-	{ "memoryuse",		RLIMIT_RSS,	SIZESUF },
+	{ "memoryuse",		RLIMIT_RSS,	sizesuf },
 #endif
 #ifdef RLIMIT_VMEM	/* instead, they have this! */
-	{ "vmemory",		RLIMIT_VMEM,	SIZESUF },
+	{ "memorysize",		RLIMIT_VMEM,	sizesuf },
 #endif
+
+#ifdef RLIMIT_MEMLOCK	/* 4.4bsd adds an unimplemented limit on non-pageable memory */
+	{ "lockedmemory",	RLIMIT_CORE,	sizesuf },
+#endif
+
 #ifdef RLIMIT_NOFILE	/* SunOS 4.1 adds a limit on file descriptors */
-	{ "descriptors",	RLIMIT_NOFILE,	NOSUF },
+	{ "descriptors",	RLIMIT_NOFILE,	NULL },
+#elif defined(RLIMIT_OFILE) /* but 4.4bsd uses this name for it */
+	{ "descriptors",	RLIMIT_OFILE,	NULL },
 #endif
+
+#ifdef RLIMIT_NPROC	/* 4.4bsd adds a limit on child processes */
+	{ "processes",		RLIMIT_NPROC,	NULL },
+#endif
+
 	{ NULL, 0, NULL }
 };
 
@@ -197,24 +233,35 @@ static void printlimit(const Limit *limit, Boolean hard) {
 	}
 }
 
-static long parselimit(const Limit *limit, const char *s) {
+static long parselimit(const Limit *limit, char *s) {
 	long lim;
-	int len = strlen(s);
-	const char *t;
+	char *t;
 	const Suffix *suf = limit->suffix;
 	if (streq(s, "unlimited"))
-		lim = RLIM_INFINITY;
+		return RLIM_INFINITY;
 	if (!isdigit(*s))
-		return -1;
-	if (suf == TIMESUF && (t = strchr(s, ':')) != NULL)
-		lim = 60 * atoi(s) + atoi(++t);
-	else {
-		for (lim = 1; suf != NULL; suf = suf->next)
-			if (streq(suf->name, s + len - strlen(suf->name))) {
-				lim = suf->amount;
-				break;
+		fail("$&limit", "%s: bad limit value", s);
+	if (suf == timesuf && (t = strchr(s, ':')) != NULL) {
+		char *u;
+		lim = strtol(s, &u, 0) * 60;
+		if (u != t)
+			fail("$&limit", "%s %s: bad limit value", limit->name, s);
+		lim += strtol(u + 1, &t, 0);
+		if (t != NULL && *t == ':')
+			lim = lim * 60 + strtol(t + 1, &t, 0);
+		if (t != NULL && *t != '\0')
+			fail("$&limit", "%s %s: bad limit value", limit->name, s);
+	} else {
+		lim = strtol(s, &t, 0);
+		if (t != NULL && *t != '\0')
+			for (;; suf = suf->next) {
+				if (suf == NULL)
+					fail("$&limit", "%s %s: bad limit value", limit->name, s);
+				if (streq(suf->name, t)) {
+					lim *= suf->amount;
+					break;
+				}
 			}
-		lim *= atoi(s);
 	}
 	return lim;
 }
@@ -233,7 +280,7 @@ PRIM(limit) {
 		for (; lim->name != NULL; lim++)
 			printlimit(lim, hard);
 	else {
-		const char *name = getstr(lp->term);
+		char *name = getstr(lp->term);
 		for (;; lim++) {
 			if (lim->name == NULL)
 				fail("$&limit", "%s: no such limit", name);
@@ -273,7 +320,7 @@ PRIM(time) {
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
 		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewaitfor2(pid, &r);
+	status = ewait(pid, FALSE, &r);
 	t1 = time(NULL);
 	SIGCHK();
 	printstatus(0, status);
@@ -363,6 +410,7 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(umask);
 	X(cd);
 	X(fork);
+	X(run);
 	X(setsignals);
 #if BSD_LIMITS
 	X(limit);

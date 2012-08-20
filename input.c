@@ -1,4 +1,4 @@
-/* input.c -- read input from files or strings ($Revision: 1.6 $) */
+/* input.c -- read input from files or strings ($Revision: 1.7 $) */
 
 #include "es.h"
 #include "input.h"
@@ -268,7 +268,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 		assert(error != NULL);
 		e = error;
 		error = NULL;
-		fail("$&parse", e);
+		fail("$&parse", "%s", e);
 	}
 #if LISPTREES
 	if (input->runflags & run_lisptrees)

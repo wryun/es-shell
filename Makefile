@@ -1,6 +1,11 @@
-# Makefile for es ($Revision: 1.4 $)
+# Makefile for es ($Revision: 1.6 $)
 
-CC	= cc
+# comment out the CFLAGS -Wall if you're not using gcc,
+# but i'd encourage you to compile with full warnings on.
+# let us know what warnings you get, though we don't promise
+# to shut them all up.
+
+CC	= gcc
 CFLAGS	= -g -O -Wall
 
 HFILES	= config.h es.h gc.h input.h prim.h print.h stdenv.h syntax.h var.h
@@ -71,8 +76,7 @@ signal.o : signal.c es.h config.h stdenv.h sigmsgs.h
 split.o : split.c es.h config.h stdenv.h gc.h 
 status.o : status.c es.h config.h stdenv.h sigmsgs.h 
 str.o : str.c es.h config.h stdenv.h gc.h print.h 
-syntax.o : syntax.c es.h config.h stdenv.h input.h syntax.h \
-  token.h 
+syntax.o : syntax.c es.h config.h stdenv.h input.h syntax.h token.h 
 term.o : term.c es.h config.h stdenv.h gc.h 
 token.o : token.c es.h config.h stdenv.h input.h syntax.h token.h 
 tree.o : tree.c es.h config.h stdenv.h gc.h 

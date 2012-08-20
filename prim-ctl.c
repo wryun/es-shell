@@ -1,4 +1,4 @@
-/* prim-ctl.c -- control flow primitives ($Revision: 1.7 $) */
+/* prim-ctl.c -- control flow primitives ($Revision: 1.8 $) */
 
 #include "es.h"
 #include "prim.h"
@@ -100,14 +100,18 @@ PRIM(catch) {
 		fail("$&catch", "usage: catch catcher body");
 
 	Ref(List *, lp, list);
-	while ((e = pushhandler(&h)) != NULL)
+	while ((e = pushhandler(&h)) != NULL) {
+		blocksignals();
 		if ((e2 = pushhandler(&h)) == NULL) {
 			list = eval(mklist(lp->term, e), NULL, evalflags);
 			pophandler(&h);
 			RefPop(lp);
+			unblocksignals();
 			return list;
 		} else if (!streq(e2->term->str, "retry"))
 			throw(e2);
+		unblocksignals();
+	}
 
 	lp = eval(lp->next, NULL, evalflags);
 	pophandler(&h);

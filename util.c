@@ -1,4 +1,4 @@
-/* util.c -- the kitchen sink ($Revision: 1.2 $) */
+/* util.c -- the kitchen sink ($Revision: 1.3 $) */
 
 #include "es.h"
 
@@ -79,13 +79,14 @@ extern char *strdup(const char *s) {
 
 extern void ewrite(int fd, const char *buf, size_t n) {
 	volatile long i, remain;
-	for (i = 0, remain = n; remain > 0; buf += i, remain -= i) {
+	const char *volatile bufp = buf;
+	for (i = 0, remain = n; remain > 0; bufp += i, remain -= i) {
 		interrupted = FALSE;
 		if (!setjmp(slowlabel)) {
 			slow = TRUE;
 			if (interrupted)
 				break;
-			else if ((i = write(fd, buf, remain)) <= 0)
+			else if ((i = write(fd, bufp, remain)) <= 0)
 				break; /* abort silently on errors in write() */
 		} else
 			break;

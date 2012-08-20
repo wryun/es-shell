@@ -1,4 +1,4 @@
-/* conv.c -- convert between internal and external forms ($Revision: 1.7 $) */
+/* conv.c -- convert between internal and external forms ($Revision: 1.11 $) */
 
 #include "es.h"
 #include "print.h"
@@ -52,11 +52,11 @@ static Boolean Tconv(Format *f) {
 
 
 #define	tailcall(tree, altform) \
-	do { \
+	STMT ( \
 		n = (tree); \
 		group = (altform); \
 		goto top; \
-	} while (0)
+	)
 
 top:
 	if (n == NULL) {
@@ -72,7 +72,6 @@ top:
 	case nPrim:	fmtprint(f, "$&%s", n->u[0].s);		return FALSE;
 
 	case nAssign:	fmtprint(f, "%#T=", n->u[0].p);		tailcall(n->u[1].p, FALSE);
-	case nCall:	fmtprint(f, "<>{%T}", n->u[0].p);	return FALSE;
 	case nConcat:	fmtprint(f, "%#T^", n->u[0].p);		tailcall(n->u[1].p, TRUE);
 	case nMatch:	fmtprint(f, "~ %#T ", n->u[0].p);	tailcall(n->u[1].p, FALSE);
 	case nThunk:	fmtprint(f, "{%T}", n->u[0].p);		return FALSE;
@@ -82,6 +81,15 @@ top:
 	case nLet:	binding(f, "let", n);		tailcall(n->u[1].p, FALSE);
 	case nFor:	binding(f, "for", n);		tailcall(n->u[1].p, FALSE);
 	case nClosure:	binding(f, "%closure", n);	tailcall(n->u[1].p, FALSE);
+
+	case nCall: {
+		Tree *t = n->u[0].p;
+		fmtprint(f, "<=");
+		if (t != NULL && (t->kind == nThunk || t->kind == nPrim))
+			tailcall(t, FALSE);
+		fmtprint(f, "{%T}", t);
+		return FALSE;
+	}
 
 	case nVar:
 		fmtputc(f, '$');

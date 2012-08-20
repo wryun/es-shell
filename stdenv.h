@@ -1,4 +1,4 @@
-/* stdenv.h -- set up an environment we can use ($Revision: 1.7 $) */
+/* stdenv.h -- set up an environment we can use ($Revision: 1.13 $) */
 
 
 /*
@@ -99,6 +99,8 @@ extern Dirent *readdir(DIR *);
 #define	memzero(dest, count)	memset(dest, 0, count)
 #define	atoi(s)			strtol(s, NULL, 0)
 
+#define	STMT(stmt)		do { stmt } while (0)
+
 #if REISER_CPP
 #define CONCAT(a,b)	a/**/b
 #define STRING(s)	"s"
@@ -123,17 +125,27 @@ typedef void noreturn;
 #endif
 
 #if USE_SIG_ATOMIC_T
+#if !_AIX
 typedef volatile sig_atomic_t Atomic;
+#else
+typedef sig_atomic_t Atomic;
+#endif
 #else
 typedef volatile int Atomic;
 #endif
 
 #if VOID_SIGNALS
-typedef void sigresult;
+typedef void Sigresult;
 #define	SIGRESULT
 #else
-typedef int sigresult;
+typedef int Sigresult;
 #define	SIGRESULT	0
+#endif
+
+#if GETGROUPS_USES_GID_T
+typedef gid_t gidset_t;
+#else
+typedef int gidset_t;
 #endif
 
 
@@ -164,15 +176,15 @@ typedef int sigresult;
 
 #if ASSERTIONS
 #define	assert(expr) \
-	do \
+	STMT( \
 		if (!(expr)) { \
 			eprint("%s:%d: assertion failed (%s)\n", \
 				__FILE__, __LINE__, STRING(expr)); \
 			ABORT(); \
 		} \
-	while (0)
+	)
 #else
-#define	assert(ignore) do ; while (0)
+#define	assert(ignore) STMT(;)
 #endif
 
 #if NeXT
@@ -182,7 +194,7 @@ typedef int sigresult;
 #endif
 
 enum { UNREACHABLE = 0 };
-#define	NOTREACHED	do assert(UNREACHABLE); while (1)
+#define	NOTREACHED	STMT(assert(UNREACHABLE);)
 
 /*
  * system calls -- can we get these from some standard header uniformly?

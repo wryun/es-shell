@@ -1,4 +1,4 @@
-/* status.c -- status manipulations ($Revision: 1.2 $) */
+/* status.c -- status manipulations ($Revision: 1.4 $) */
 
 #include "es.h"
 #include "sigmsgs.h"
@@ -61,15 +61,18 @@ extern char *mkstatus(int status) {
 /* printstatus -- print the status if we should */
 extern void printstatus(int pid, int status) {
 	if (status & 0xff) {
-		char *msg = ((status & 0x7f) < NUMOFSIGNALS ? signals[status & 0x7f].msg : "");
-		if (pid != 0)
-			eprint("%d: ", pid);
+		const char *msg, *tail;
+		msg = ((status & 0x7f) < NUMOFSIGNALS ? signals[status & 0x7f].msg : "");
+		tail = "";
 		if (status & 0x80) {
+			tail = "--core dumped";
 			if (*msg == '\0')
-				eprint("core dumped\n");
+				tail += (sizeof "--") - 1;
+		}
+		if (*msg != '\0' || *tail != '\0')
+			if (pid == 0)
+				eprint("%s%s\n", msg, tail);
 			else
-				eprint("%s--core dumped\n", msg);
-		} else if (*msg != '\0')
-			eprint("%s\n", msg);
+				eprint("%d: %s%s\n", pid, msg, tail);
 	}
 }

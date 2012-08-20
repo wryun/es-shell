@@ -1,4 +1,4 @@
-/* config.h -- es(1) configuration parameters ($Revision: 1.4 $) */
+/* config.h -- es(1) configuration parameters ($Revision: 1.8 $) */
 
 /*
  * Compile time options
@@ -54,6 +54,11 @@
  *		in a mode where it explains what it is doing at all times.
  *		implied by GCDEBUG.
  *
+ *	GETGROUPS_USES_GID_T
+ *		define this as true if getgroups() takes a gid_t* as its
+ *		second argument.  while POSIX.1 says it does, on many
+ *		systems, gid_t is a short while getgroups() takes an int*.
+ *
  *	INITIAL_PATH
  *		this is the default value for $path (and $PATH) when the shell
  *		starts up.  it is replaced by one from the environment if it
@@ -86,21 +91,28 @@
  *		true if es is being compiled with a reiser-style preprocessor.
  *		if you have an ansi preprocessor, use it and turn this off.
  *
- *	SYSV_SIGNALS
- *		true if signal handling follows System V behavior; otherwise,
- *		berkeley signals are assumed.
- *
  *	SPECIAL_SIGCLD
  *		true if SIGCLD has System V semantics.  this is true at least
  *		for silicon graphics machines running Irix.  (according to
  *		Byron, ``if you trap SIGCLD on System V machines, weird things
  *		happen.'')
  *
+ *	SYSV_SIGNALS
+ *		true if signal handling follows System V behavior; otherwise,
+ *		berkeley signals are assumed.
+ *
  *	USE_CONST
  *		allow const declarations.  if your compiler supports 'em, use 'em.
  *
  *	USE_DIRENT
  *		if on, <dirent.h> is used; if off, <sys/direct.h>.
+ *
+ *	USE_SIGACTION
+ *		turn this on if your system understands the POSIX.1 sigaction(2)
+ *		call.  it's probably better to use this version if you have it.
+ *		if sigaction() is used, es assumes that signals have POSIX
+ *		semantics, so the SPECIAL_SIGCLD and SYSV_SIGNALS options are
+ *		turned off.
  *
  *	USE_SIG_ATOMIC_T
  *		define this on a system which has its own typedef for
@@ -129,43 +141,91 @@
  */
 
 
-/* NeXT defaults -- paul haahr */
+/* NeXT defaults */
 
 #if NeXT
 #ifndef	USE_DIRENT
-#define	USE_DIRENT	0
+#define	USE_DIRENT		0
 #endif
 #ifndef	USE_SIG_ATOMIC_T
-#define	USE_SIG_ATOMIC_T 1
+#define	USE_SIG_ATOMIC_T	1
 #endif
 #ifndef	USE_UNISTD
-#define	USE_UNISTD	0
+#define	USE_UNISTD		0
 #endif
 #endif	/* NeXT */
 
 
-/* Irix -- derived from rc 1.4 */
+/* AIX defaults -- DaviD W. Sanderson */
+
+#if _AIX
+#ifndef	SPECIAL_SIGCLD
+#define	SPECIAL_SIGCLD		1
+#endif
+#ifndef	SYSV_SIGNALS
+#define	SYSV_SIGNALS		1
+#endif
+#ifndef	USE_SIGACTION
+#define	USE_SIGACTION		1
+#endif
+#ifndef	USE_SIG_ATOMIC_T
+#define	USE_SIG_ATOMIC_T 	1
+#endif
+#endif	/* _AIX */
+
+
+/* Irix defaults */
 
 #if sgi
-#ifndef	SYSV_SIGNALS
-#define	SYSV_SIGNALS	1
-#endif
-#ifndef	SPECIAL_SIGCLD
-#define	SPECIAL_SIGCLD	1
+#ifndef	GETGROUPS_USES_GID_T
+#define	GETGROUPS_USES_GID_T	1
 #endif
 #ifndef	INITIAL_PATH
-#define	INITIAL_PATH	"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
+#define	INITIAL_PATH		"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
+#endif
+#ifndef	SPECIAL_SIGCLD
+#define	SPECIAL_SIGCLD		1
+#endif
+#ifndef	SYSV_SIGNALS
+#define	SYSV_SIGNALS		1
+#endif
+#ifndef	USE_SIGACTION
+#define	USE_SIGACTION		1
 #endif
 #endif	/* sgi */
 
 
-/* SunOS -- derived from rc 1.4 */
+/* SunOS defaults */
 
 #if sun
 #ifndef	INITIAL_PATH
-#define	INITIAL_PATH	"/usr/ucb", "/usr/bin", ""
+#define	INITIAL_PATH		"/usr/ucb", "/usr/bin", ""
+#endif
+#ifndef	USE_SIGACTION
+#define	USE_SIGACTION		1
 #endif
 #endif	/* sun */
+
+
+/* OSF/1 -- this is taken from the DEC Alpha */
+
+#if OSF1
+#ifndef	USE_SIGACTION
+#define	USE_SIGACTION		1
+#endif
+#endif	/* OSF1 */
+
+
+/* POSIX -- not that you should ever believe this */
+
+#if POSIX
+#ifndef	GETGROUPS_USES_GID_T
+#define	GETGROUPS_USES_GID_T	1
+#endif
+#ifndef	USE_SIGACTION
+#define	USE_SIGACTION		1
+#endif
+#endif
 
 
 /*
@@ -173,99 +233,103 @@
  */
 
 #ifndef	ASSERTIONS
-#define	ASSERTIONS	1
+#define	ASSERTIONS		1
 #endif
 
 #ifndef	BSD_LIMITS
-#define	BSD_LIMITS	1
+#define	BSD_LIMITS		1
 #endif
 
 #ifndef	DEVFD
-#define	DEVFD		0
+#define	DEVFD			0
 #endif
 
 #ifndef	DEVFD_PATH
-#define	DEVFD_PATH	"/dev/fd/%d"
+#define	DEVFD_PATH		"/dev/fd/%d"
 #endif
 
 #ifndef	GCALWAYS
-#define	GCALWAYS	0
+#define	GCALWAYS		0
 #endif
 
 #ifndef	GCDEBUG
-#define	GCDEBUG		0
+#define	GCDEBUG			0
 #endif
 
 #ifndef	GCINFO
-#define	GCINFO		0
+#define	GCINFO			0
 #endif
 
 #ifndef	GCPROTECT
-#define	GCPROTECT	0
+#define	GCPROTECT		0
 #endif
 
 #ifndef	GCVERBOSE
-#define	GCVERBOSE	0
+#define	GCVERBOSE		0
+#endif
+
+#ifndef	GETGROUPS_USES_GID_T
+#define	GETGROUPS_USES_GID_T	0
 #endif
 
 #ifndef	INITIAL_PATH
-#define	INITIAL_PATH	"/usr/ucb", "/usr/bin", "/bin", ""
+#define	INITIAL_PATH		"/usr/ucb", "/usr/bin", "/bin", ""
 #endif
 
 #ifndef	KERNEL_POUNDBANG
-#define	KERNEL_POUNDBANG 1
+#define	KERNEL_POUNDBANG	1
 #endif
 
 #ifndef	JOB_PROTECT
-#define	JOB_PROTECT	1
+#define	JOB_PROTECT		1
 #endif
 
 #ifndef	PROTECT_ENV
-#define	PROTECT_ENV	1
+#define	PROTECT_ENV		1
 #endif
 
 #ifndef	READLINE
-#define	READLINE	0
+#define	READLINE		0
 #endif
 
 #ifndef	REISER_CPP
-#define	REISER_CPP	0
-#endif
-
-#ifndef	SYSV_SIGNALS
-#define	SYSV_SIGNALS	0
+#define	REISER_CPP		0
 #endif
 
 #ifndef	SPECIAL_SIGCLD
-#define	SPECIAL_SIGCLD	0
+#define	SPECIAL_SIGCLD		0
+#endif
+
+#ifndef	SYSV_SIGNALS
+#define	SYSV_SIGNALS		0
 #endif
 
 #ifndef	USE_CONST
-#define	USE_CONST	1
+#define	USE_CONST		1
 #endif
 
 #ifndef	USE_DIRENT
-#define	USE_DIRENT	1
+#define	USE_DIRENT		1
 #endif
 
 #ifndef	USE_SIG_ATOMIC_T
-#define	USE_SIG_ATOMIC_T 0
+#define	USE_SIG_ATOMIC_T	0
 #endif
 
 #ifndef	USE_STDARG
-#define	USE_STDARG	1
+#define	USE_STDARG		1
 #endif
 
 #ifndef	USE_UNISTD
-#define	USE_UNISTD	1
+#define	USE_UNISTD		1
 #endif
 
 #ifndef	USE_VOLATILE
-#define	USE_VOLATILE	1
+#define	USE_VOLATILE		1
 #endif
 
 #ifndef	VOID_SIGNALS
-#define	VOID_SIGNALS	1
+#define	VOID_SIGNALS		1
 #endif
 
 
@@ -273,13 +337,20 @@
  * enforcing choices that must be made
  */
 
-#if	GCDEBUG
+#if GCDEBUG
 #undef	GCALWAYS
 #undef	GCINFO
 #undef	GCPROTECT
 #undef	GCVERBOSE
-#define	GCALWAYS	1
-#define	GCINFO		1
-#define	GCPROTECT	1
-#define	GCVERBOSE	1
+#define	GCALWAYS		1
+#define	GCINFO			1
+#define	GCPROTECT		1
+#define	GCVERBOSE		1
+#endif
+
+#if USE_SIGACTION
+#undef	SPECIAL_SIGCLD
+#undef	SYSV_SIGNALS
+#define	SPECIAL_SIGCLD		0
+#define	SYSV_SIGNALS		0
 #endif

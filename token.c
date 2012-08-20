@@ -1,4 +1,4 @@
-/* token.c -- lexical analyzer for es ($Revision: 1.5 $) */
+/* token.c -- lexical analyzer for es ($Revision: 1.11 $) */
 
 #include "es.h"
 #include "input.h"
@@ -18,7 +18,7 @@ static Boolean goterror = FALSE;
 static size_t bufsize = 0;
 static char *tokenbuf = NULL;
 
-#define	InsertFreeCaret()	do {if (w != NW) { w = NW; UNGETC(c); return '^'; }} while (0)
+#define	InsertFreeCaret()	STMT(if (w != NW) { w = NW; UNGETC(c); return '^'; })
 
 
 /*
@@ -180,17 +180,17 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		UNGETC(c);
 		buf[i] = '\0';
 		w = KW;
-		if (streq(buf, "@"))			return '@';
-		if (streq(buf, "~"))			return '~';
-		if (*buf == 'f') {
+		if (buf[1] == '\0') {
+			int k = *buf;
+			if (k == '@' || k == '~')
+				return k;
+		} else if (*buf == 'f') {
 			if (streq(buf + 1, "n"))	return FN;
 			if (streq(buf + 1, "or"))	return FOR;
-		}
-		if (*buf == 'l') {
+		} else if (*buf == 'l') {
 			if (streq(buf + 1, "ocal"))	return LOCAL;
 			if (streq(buf + 1, "et"))	return LET;
-		}
-		if (streq(buf, "%closure"))		return CLOSURE;
+		} else if (streq(buf, "%closure"))	return CLOSURE;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;
@@ -309,7 +309,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		w = NW;
 		return NL;
 	case '(':
-		if (w == RW) /* SUB's happen only after real words, not keywords, so let and friends work */
+		if (w == RW)	/* not keywords, so let & friends work */
 			c = SUB;
 		/* FALLTHROUGH */
 	case ';':
@@ -336,7 +336,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		if (!getfds(p, c, 1, 0))
 			return ERROR;
 		if (p[1] == CLOSED) {
-			scanerror("expected digit after '='");		/* can't close a pipe */
+			scanerror("expected digit after '='");	/* can't close a pipe */
 			return ERROR;
 		}
 		y->tree = mk(nPipe, p[0], p[1]);
@@ -349,21 +349,33 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 	case '<':
 		fd[0] = 0;
 		if ((c = GETC()) == '>')
-			return BOX;
+			if ((c = GETC()) == '>') {
+				c = GETC();
+				cmd = "%open-append";
+			} else
+				cmd = "%open-write";
 		else if (c == '<')
 			if ((c = GETC()) == '<') {
 				c = GETC();
 				cmd = "%here";
 			} else
 				cmd = "%heredoc";
+		else if (c == '=')
+			return CALL;
 		else
 			cmd = "%open";
 		goto redirection;
 	case '>':
 		fd[0] = 1;
-		if ((c = GETC()) == '>') {
+		if ((c = GETC()) == '>')
+			if ((c = GETC()) == '<') {
+				c = GETC();
+				cmd = "%open-append";
+			} else
+				cmd = "%append";
+		else if (c == '<') {
 			c = GETC();
-			cmd = "%append";
+			cmd = "%open-create";
 		} else
 			cmd = "%create";
 		goto redirection;

@@ -1,34 +1,42 @@
-# initial.es -- set up initial machine state ($Revision: 1.22 $)
+# initial.es -- set up initial machine state ($Revision: 1.32 $)
 
 #
 # syntactic sugar
 #
 
 fn-%and		= $&and
-fn-%append	= $&append
 fn-%backquote	= $&backquote
 fn-%close	= $&close
 fn-%count	= $&count
-fn-%create	= $&create
 fn-%dup		= $&dup
 fn-%flatten	= $&flatten
 fn-%fsplit	= $&fsplit
 fn-%here	= $&here
 fn-%not		= $&not
-fn-%open	= $&open
+fn-%one		= $&one
+fn-%openfile	= $&openfile
 fn-%or		= $&or
 fn-%pipe	= $&pipe
 fn-%seq		= $&seq
 fn-%split	= $&split
 
 fn %background cmd {
-	let (pid = <>{$&background $cmd}) {
+	let (pid = <={$&background $cmd}) {
 		if {%is-interactive} {
 			echo $pid >[1=2]
 		}
 		apid = $pid
 	}
 }
+
+# redirections
+
+fn-%open	= %openfile r		# < file
+fn-%create	= %openfile w		# > file
+fn-%append	= %openfile a		# >> file
+fn-%open-write	= %openfile r+		# <> file
+fn-%open-create	= %openfile w+		# >< file
+fn-%open-append	= %openfile a+		# >>< file, <>> file
 
 
 #
@@ -39,13 +47,14 @@ fn-%batch-loop	= $&batchloop
 fn-%home	= $&home
 fn-%is-interactive = $&isinteractive
 fn-%newfd	= $&newfd
+fn-%run		= $&run
 fn-%parse	= $&parse
 fn-%whatis	= $&whatis
 fn-%var		= $&var
 
 fn %pathsearch name { access -n $name -1e -xf $path }
 fn %cdpathsearch name {
-	let (dir = <>{access -n $name -1e -d  $cdpath}) {
+	let (dir = <={access -n $name -1e -d  $cdpath}) {
 		if {!~ $dir $name} {
 			echo >[1=2] $dir
 		}
@@ -53,21 +62,26 @@ fn %cdpathsearch name {
 	}
 }
 
-$&if {~ <>$&primitives execfailure} {fn-%exec-failure = $&execfailure}
+$&if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
 #
 # the read-eval-print loop
 #
 
 fn %interactive-loop dispatch {
-	let (result = <>$&true) {
-		catch @ e from msg {
+	let (result = <=$&true) {
+		catch @ e type msg {
+			#echo >[1=2] caught $e $type $msg
 			if {~ $e eof} {
 				return $result
 			} {~ $e error} {
 				echo >[1=2] $msg
-			} {!~ $e(1) signal && !~ $e(2) sigint} {
-				echo >[1=2] uncaught exception: $e $from $msg
+			} {~ $e signal} {
+				if {!~ $type sigint sigterm sigquit} {
+					echo >[1=2] caught unexpected signal: $type
+				}
+			} {
+				echo >[1=2] uncaught exception: $e $type $msg
 			}
 			throw retry
 		} {
@@ -75,7 +89,7 @@ fn %interactive-loop dispatch {
 				if {!~ $#fn-%prompt 0} {
 					%prompt
 				}
-				result = <>{$dispatch <>{%parse $prompt}}
+				result = <={$dispatch <={%parse $prompt}}
 			}
 		}
 	}
@@ -116,8 +130,8 @@ fn-umask	= $&umask
 fn-unwind-protect = $&unwindprotect
 fn-wait		= $&wait
 fn-while	= $&while
-$&if {~ <>$&primitives limit} {fn-limit = $&limit}
-$&if {~ <>$&primitives time}  {fn-time  = $&time}
+$&if {~ <=$&primitives limit} {fn-limit = $&limit}
+$&if {~ <=$&primitives time}  {fn-time  = $&time}
 
 #
 # predefined functions
@@ -126,9 +140,9 @@ $&if {~ <>$&primitives time}  {fn-time  = $&time}
 fn-break	= throw break
 fn-return	= throw return
 
-fn apids	{ echo <>$&apids }
-fn var		{ for (i = $*) echo <>{%var $i} }
-fn whatis	{ for (i = $*) echo <>{%whatis $i} }
+fn apids	{ echo <=$&apids }
+fn var		{ for (i = $*) echo <={%var $i} }
+fn whatis	{ for (i = $*) echo <={%whatis $i} }
 
 fn vars {
 	if {~ $* -a} {
@@ -161,18 +175,18 @@ fn vars {
 		let (
 			dovar = @ var {
 				if {if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
-					echo <>{%var $var}
+					echo <={%var $var}
 				}
 			}
 		) {
 			if {$export || $priv} {
-				for (var = <>$&vars)
+				for (var = <= $&vars)
 					if {if {~ $var $noexport} $priv $export} {
 						$dovar $var
 					}
 			}
 			if {$intern} {
-				for (var = <>$&internals)
+				for (var = <= $&internals)
 					$dovar $var
 			}
 		}
@@ -183,7 +197,7 @@ fn vars {
 # >{} and <{} redirections -- either use /dev/fd (builtin) or /tmp
 #
 
-if {~ <>$&primitives readfrom} {
+if {~ <=$&primitives readfrom} {
 	fn-%readfrom = $&readfrom
 } {
 	fn %readfrom var cmd body {
@@ -198,7 +212,7 @@ if {~ <>$&primitives readfrom} {
 	}
 }
 
-if {~ <>$&primitives writeto} {
+if {~ <=$&primitives writeto} {
 	fn-%writeto = $&writeto
 } {
 	fn %writeto var cmd body {
@@ -222,11 +236,11 @@ if {~ <>$&primitives writeto} {
 set-home = @ { local (set-HOME = ) HOME = $*; result $* }
 set-HOME = @ { local (set-home = ) home = $*; result $* }
 
-set-path = @ { local (set-PATH = ) PATH = <>{%flatten : $*}; result $* }
-set-PATH = @ { local (set-path = ) path = <>{%fsplit  : $*}; result $* }
+set-path = @ { local (set-PATH = ) PATH = <={%flatten : $*}; result $* }
+set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 
-set-cdpath = @ { local (set-CDPATH = ) CDPATH = <>{%flatten : $*}; result $* }
-set-CDPATH = @ { local (set-cdpath = ) cdpath = <>{%fsplit  : $*}; result $* }
+set-cdpath = @ { local (set-CDPATH = ) CDPATH = <={%flatten : $*}; result $* }
+set-CDPATH = @ { local (set-cdpath = ) cdpath = <={%fsplit  : $*}; result $* }
 
 set-history	= $&sethistory
 set-signals	= $&setsignals
@@ -239,7 +253,7 @@ set-noexport	= $&setnoexport
 ifs = ' ' \t \n
 home = /		# so home definitely exists, even if wrong
 cdpath = ''
-noexport = noexport apid
+noexport = noexport apid signals
 
 #
 # title for the initial memory state

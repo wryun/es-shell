@@ -1,4 +1,4 @@
-/* dump.c -- dump es's internal state as a c program ($Revision: 1.4 $) */
+/* dump.c -- dump es's internal state as a c program ($Revision: 1.5 $) */
 
 #include "es.h"
 #include "var.h"
@@ -219,10 +219,7 @@ static void dumpvar(void *ignore, char *key, void *value) {
 }
 
 static void dumpdef(char *name, Var *var) {
-	print("\tvardef((char *) %s, NULL, (List *) %s);\n",
-		dumpstring(name),
-		dumplist(var->defn)
-	);
+	print("\t{ %s, %s },\n", dumpstring(name), dumplist(var->defn));
 }
 
 static void dumpfunctions(void *ignore, char *key, void *value) {
@@ -269,11 +266,19 @@ extern void runinitial(void) {
 
 	printheader(title);
 	dictforall(vars, dumpvar, NULL);
-	print("\nextern void runinitial(void) {\n");
+
 	/* these must be assigned in this order, or things just won't work */
+	print("\nstatic const struct { const char *name; const List *value; } defs[] = {\n");
 	dictforall(vars, dumpfunctions, NULL);
 	dictforall(vars, dumpsettors, NULL);
 	dictforall(vars, dumpvariables, NULL);
+	print("\t{ NULL, NULL }\n");
+	print("};\n\n");
+
+	print("\nextern void runinitial(void) {\n");
+	print("\tint i;\n");
+	print("\tfor (i = 0; defs[i].name != NULL; i++)\n");
+	print("\t\tvardef((char *) defs[i].name, NULL, (List *) defs[i].value);\n");
 	print("}\n");
 
 	exit(0);

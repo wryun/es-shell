@@ -1,30 +1,48 @@
-/* signal.c -- signal handling ($Revision: 1.4 $) */
+/* signal.c -- signal handling ($Revision: 1.11 $) */
 
 #include "es.h"
 #include "sigmsgs.h"
+
+typedef Sigresult (*Sighandler)(int);
 
 Boolean sigint_newline = TRUE;
 
 jmp_buf slowlabel;
 Atomic slow = FALSE;
 Atomic interrupted = FALSE;
-static sigresult (*sighandlers[NUMOFSIGNALS])(int);
 static Atomic sigcount;
 static Atomic caught[NUMOFSIGNALS];
+static Sigeffect sigeffect[NUMOFSIGNALS];
+static Sighandler defaulthandler[NUMOFSIGNALS];
 
-static sigresult (*default_sigint)(int)  = SIG_DFL,
-		 (*default_sigquit)(int) = SIG_DFL,
-		 (*default_sigterm)(int) = SIG_DFL;
+#if USE_SIGACTION
+#ifndef	SA_NOCLDSTOP
+#define	SA_NOCLDSTOP	0
+#endif
+#ifndef	SA_NOCLDWAIT
+#define	SA_NOCLDWAIT	0
+#endif
+#ifndef	SA_INTERRUPT		/* for sunos */
+#define	SA_INTERRUPT	0
+#endif
+#endif
 
-/* catcher -- the signal handler routine */
-extern void catcher(int sig) {
+
+/*
+ * the signal handler
+ */
+
+/* catcher -- catch (and defer) a signal from the kernel */
+static void catcher(int sig) {
+#if SYSV_SIGNALS /* only do this for unreliable signals */
+	signal(sig, catcher);
+#endif
 	if (hasforked)
 		exit(1); /* exit unconditionally on a signal in a child process */
 	if (caught[sig] == 0) {
 		caught[sig] = TRUE;
-		++sigcount;		/* TODO: unsafe? */
+		++sigcount;
 	}
-	signal(sig, catcher);
 	interrupted = TRUE;
 #if !SYSV_SIGNALS
 	if (slow)
@@ -32,97 +50,140 @@ extern void catcher(int sig) {
 #endif
 }
 
-extern void sigchk(void) {
-	if (sigcount != 0) {
-		int sig;
-		sigresult (*h)(int);
-		if (hasforked)
-			exit(1); /* exit unconditionally on a signal in a child process */
-		for (sig = 0;; sig++) {
-			if (caught[sig] != 0) {
-				--sigcount;	/* TODO: this is unsafe */
-				caught[sig] = 0;
-				break;
-			}
-			if (sig >= NUMOFSIGNALS)
-				panic("all-zero sig vector with nonzero sigcount");
-		}
-		if ((h = sighandlers[sig]) == SIG_DFL)
-			panic("caught signal set to SIG_DFL");
-		if (h == SIG_IGN)
-			panic("caught signal set to SIG_IGN");
-		(*h)(sig);
-	}
+
+/*
+ * setting and getting signal effects
+ */
+
+static Sighandler setsignal(int sig, Sighandler handler) {
+#if USE_SIGACTION
+	struct sigaction nsa, osa;
+	sigemptyset(&nsa.sa_mask);
+	nsa.sa_handler = handler;
+	nsa.sa_flags = SA_INTERRUPT;
+	if (sigaction(sig, &nsa, &osa) == -1)
+		return SIG_ERR;
+	return osa.sa_handler;
+#else /* !USE_SIGACTION */
+#if SPECIAL_SIGCLD
+	if (sig == SIGCLD && handler != SIG_DFL)
+		return SIG_ERR;
+#endif
+	return signal(sig, handler);
+#endif /* !USE_SIGACTION */
 }
 
-extern sigresult (*esignal(int sig, sigresult (*h)(int)))(int) {
-	sigresult (*old)(int);
-	SIGCHK();
-	old = sighandlers[sig];
-	if (h == SIG_DFL || h == SIG_IGN) {
-		signal(sig, h);
-		sighandlers[sig] = h;
-	} else {
-		sighandlers[sig] = h;
-		signal(sig, catcher);
+extern Sigeffect esignal(int sig, Sigeffect effect) {
+	Sigeffect old;
+	assert(0 < sig && sig <= NUMOFSIGNALS);
+	old = sigeffect[sig];
+	if (effect != sig_nochange && effect != old) {
+		switch (effect) {
+		case sig_ignore:
+			if (setsignal(sig, SIG_IGN) == SIG_ERR) {
+				eprint("$&setsignals: cannot ignore %s\n", signals[sig].name);
+				return old;
+			}
+			break;
+		case sig_catch:
+			if (setsignal(sig, catcher) == SIG_ERR) {
+				eprint("$&setsignals: cannot catch %s\n", signals[sig].name);
+				return old;
+			}
+			break;
+		case sig_default:
+			setsignal(sig, defaulthandler[sig]);
+			break;
+		default:
+			NOTREACHED;
+		}
+		sigeffect[sig] = effect;
 	}
 	return old;
 }
 
-static sigresult sigint(int sig) {
-	assert(sig == SIGINT);
-	/* this is the newline you see when you hit ^C while typing a command */
-	if (sigint_newline)
-		eprint("\n");
-	sigint_newline = TRUE;
-	while (gcisblocked())
-		gcenable();
-	throw(mklist(mkterm("signal", NULL), mklist(mkterm("sigint", NULL), NULL)));
-	NOTREACHED;
-}
-
-static sigresult trapsig(int sig) {
-	while (gcisblocked())
-		gcenable();
-	throw(mklist(mkterm("signal", NULL), mklist(mkterm(signals[sig].name, NULL), NULL)));
-	NOTREACHED;
-}
-
-static sigresult noop(int sig) {
-	return SIGRESULT;
-}
-
-extern void trapsignals(Boolean sigs[NUMOFSIGNALS]) {
+extern void setsigeffects(const Sigeffect effects[]) {
 	int sig;
 	for (sig = 1; sig < NUMOFSIGNALS; sig++)
-		if (sigs[sig]) {
-#if SPECIAL_SIGCLD
-			if (sig == SIGCLD)
-				fail("$&setsignals", "cannot trap SIGCLD");
-#endif
-			if (sighandlers[sig] != trapsig)
-				esignal(sig, trapsig);
-		} else if (sighandlers[sig] == trapsig)
-			esignal(sig, SIG_IGN);
+		esignal(sig, effects[sig]);
 }
 
-extern void initsignals(Boolean allowdumps) {
-	int sig;
-	for (sig = 1; sig < NUMOFSIGNALS; sig++) {
-		sigresult (*h)(int) = signal(sig, SIG_DFL);
-		if (h != SIG_DFL)
-			signal(sig, h);
-		sighandlers[sig] = h;
-	}
-	if (isinteractive() || sighandlers[SIGINT] != SIG_IGN)
-		esignal(SIGINT, default_sigint = sigint);
-	if (!allowdumps) {
-		if (isinteractive())
-			esignal(SIGTERM, default_sigterm = noop);
-		if (isinteractive() || sighandlers[SIGQUIT] != SIG_IGN)
-			esignal(SIGQUIT, default_sigquit = noop);
-	}
+extern void getsigeffects(Sigeffect effects[]) {
+	memcpy(effects, sigeffect, sizeof sigeffect);
 }
+
+
+/*
+ * initialization
+ */
+
+static void markspecial(int sig) {
+	defaulthandler[sig] = catcher;
+	setsignal(sig, catcher);
+}
+
+extern void initsignals(Boolean interactive, Boolean allowdumps) {
+	int sig;
+	Push settor;
+
+	for (sig = 1; sig < NUMOFSIGNALS; sig++)
+		defaulthandler[sig] = SIG_DFL;
+	for (sig = 1; sig < NUMOFSIGNALS; sig++) {
+		Sighandler h;
+#if USE_SIGACTION
+		struct sigaction sa;
+		sigaction(sig, NULL, &sa);
+		h = sa.sa_handler;
+		if (h == SIG_IGN)
+			sigeffect[sig] = sig_ignore;
+#else /* !USE_SIGACTION */
+		h = signal(sig, SIG_DFL);
+		if (h == SIG_IGN) {
+			setsignal(sig, SIG_IGN);
+			sigeffect[sig] = sig_ignore;
+		}
+#endif /* !USE_SIGACTION */
+		else if (h == SIG_DFL || h == SIG_ERR)
+			sigeffect[sig] = sig_default;
+		else
+			panic("initsignals: bad incoming signal value for %s: %x", signals[sig].name, h);
+	}
+
+	if (interactive || sigeffect[SIGINT] == sig_default)
+		markspecial(SIGINT);
+	if (!allowdumps) {
+		if (interactive)
+			markspecial(SIGTERM);
+		if (interactive || sigeffect[SIGQUIT] == sig_default)
+			markspecial(SIGQUIT);
+	}
+
+	/* here's the end-run around set-signals */
+	varpush(&settor, "set-signals", NULL);
+	vardef("signals", NULL, mksiglist());
+	varpop(&settor);
+}
+
+extern void setsigdefaults(void) {
+	int sig;
+
+	for (sig = 1; sig < NUMOFSIGNALS; sig++) {
+		Sigeffect e = sigeffect[sig];
+		if (e == sig_catch || (e == sig_default && defaulthandler[sig] != SIG_DFL)) {
+			defaulthandler[sig] = SIG_DFL;
+			esignal(sig, sig_default);
+		}
+	}
+
+	defaulthandler[SIGINT] = SIG_DFL;
+	defaulthandler[SIGQUIT] = SIG_DFL;
+	defaulthandler[SIGTERM] = SIG_DFL;
+}
+
+
+/*
+ * utility functions
+ */
 
 extern Boolean issilentsignal(List *e) {
 	return streq(getstr(e->term), "signal")
@@ -130,42 +191,90 @@ extern Boolean issilentsignal(List *e) {
 		&& streq(getstr(e->next->term), "sigint");
 }
 
-extern void setsigdefaults(Boolean background) {
-
-#if JOB_PROTECT && SIGTTOU && SIGTTIN && SIGTSTP
-#define	IGNORE(signal) (CONCAT(default_,signal) = SIG_DFL)
-#else
-#define	IGNORE(signal) \
-	if (!background) \
-		CONCAT(default_,signal) = SIG_DFL; \
-	else { \
-		CONCAT(default_,signal) = SIG_IGN; \
-		esignal(sig, SIG_IGN); \
-		/* TODO: remove #signal from $signals */ \
-		break; \
-	}
-#endif
-
-	int sig;
-	for (sig = 1; sig < NUMOFSIGNALS; sig++)
-		if (sighandlers[sig] != SIG_IGN) {
-			sighandlers[sig] = NULL;
-			switch (sig) {
-			case SIGINT:
-				IGNORE(sigint);
-				goto common;
-			case SIGQUIT:
-				IGNORE(sigquit);
-				goto common;
-			case SIGTERM:
-				default_sigterm = SIG_DFL;
-				goto common;
-			default:
-			common:
-				if (sighandlers[sig] != SIG_DFL) {
-					esignal(sig, SIG_DFL);
-					/* TODO: delete_fn(signals[i].name); */
-				}
-			}
+extern List *mksiglist(void) {
+	int sig = NUMOFSIGNALS;
+	Sigeffect effects[NUMOFSIGNALS];
+	getsigeffects(effects);
+	Ref(List *, lp, NULL);
+	while (--sig > 0)
+		switch (effects[sig]) {
+		case sig_default:
+			break;
+		case sig_catch:
+			lp = mklist(mkterm(signals[sig].name, NULL), lp);
+			break;
+		case sig_ignore:
+			lp = mklist(mkterm(str("-%s", signals[sig].name), NULL), lp);
+			break;
+		default:
+			panic("mksiglist: getsigeffects returned bad value for %s: %d",
+			      signals[sig].name, effects[sig]);
 		}
+	RefReturn(lp);
+}
+
+
+/*
+ * signal delivery
+ */
+
+static int blocked = 0;
+
+/* blocksignals -- turn off delivery of signals as exceptions */
+extern void blocksignals(void) {
+	assert(blocked >= 0);
+	++blocked;
+}
+
+/* unblocksignals -- turn on delivery of signals as exceptions */
+extern void unblocksignals(void) {
+	assert(blocked > 0);
+	--blocked;
+}
+
+/* sigchk -- throw the signal as an exception */
+extern void sigchk(void) {
+	int sig;
+
+	if (sigcount == 0 || blocked)
+		return;
+	if (hasforked)
+		exit(1);	/* exit unconditionally on a signal in a child process */
+
+	for (sig = 0;; sig++) {
+		if (caught[sig] != 0) {
+			--sigcount;
+			caught[sig] = 0;
+			break;
+		}
+		if (sig >= NUMOFSIGNALS) {
+			/* panic("all-zero sig vector with nonzero sigcount"); */
+			sigcount = 0;
+			return;
+		}
+	}
+	Ref(List *, e, mklist(mkterm("signal", NULL), mklist(mkterm(signals[sig].name, NULL), NULL)));
+
+	switch (sigeffect[sig]) {
+	case sig_catch:
+		while (gcisblocked())
+			gcenable();
+		throw(e);
+		NOTREACHED;
+	case sig_default:
+		if (sig == SIGINT) {
+			/* this is the newline you see when you hit ^C while typing a command */
+			if (sigint_newline)
+				eprint("\n");
+			sigint_newline = TRUE;
+			while (gcisblocked())
+				gcenable();
+			throw(e);
+			NOTREACHED;
+		}
+		break;
+	default:
+		/* panic("sigchk: caught %L with sigeffect %d", e, " ", sigeffect[sig]) */ ;
+	}
+	RefEnd(e);
 }

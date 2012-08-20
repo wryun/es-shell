@@ -1,4 +1,4 @@
-/* syntax.c -- abstract syntax tree re-writing rules ($Revision: 1.3 $) */
+/* syntax.c -- abstract syntax tree re-writing rules ($Revision: 1.7 $) */
 
 #include "es.h"
 #include "input.h"
@@ -192,7 +192,8 @@ extern Tree *mkredir(Tree *cmd, Tree *file) {
 			treecons(var, NULL)
 		);
 		word = treecons(mk(nVar, var), NULL);
-	}
+	} else if (!firstis(cmd, "%heredoc") && !firstis(cmd, "%here"))
+		file = mk(nCall, prefix("%one", treecons(file, NULL)));
 	cmd = treeappend(
 		cmd,
 		treecons(
