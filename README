@@ -16,11 +16,12 @@ shell interact.
 
 The official ftp site (associated with the original authors) is at:
 
-	ftp://ftp.sys.utoronto.ca/pub/es
+    ftp://ftp.sys.utoronto.ca/pub/es
 
-but all of the relevant information should be mirrored in the repository,
+but all of the relevant information is mirrored in the repository and/or the website,
 
     http://www.github.com/wryun/es-shell
+    http://wryun.github.com/es-shell
 
 including the change history and the old mailing list archives.
 
