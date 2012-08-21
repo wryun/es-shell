@@ -7,7 +7,7 @@
 
 #define	isodigit(c)	('0' <= (c) && (c) < '8')
 
-#define	BUFSIZE	((size_t) 1000)
+#define	BUFSIZE	((size_t) 2048)
 #define	BUFMAX	(8 * BUFSIZE)
 
 typedef enum { NW, RW, KW } State;	/* "nonword", "realword", "keyword" */

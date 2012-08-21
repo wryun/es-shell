@@ -9,7 +9,7 @@
  * constants
  */
 
-#define	BUFSIZE		((size_t) 1024)		/* buffer size to fill reads into */
+#define	BUFSIZE		((size_t) 4096)		/* buffer size to fill reads into */
 
 
 /*
