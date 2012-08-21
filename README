@@ -6,20 +6,21 @@ implementation of rc.
 
 See the INSTALL file for installation instructions. Once it's running
 have a look at the manual page and the docs and examples directories,
-in particular Haahr & Rakitzis' paper: ``Es: a shell with higher-order 
-functions.'' The paper corresponds to a slightly older version of the shell;  see the file ERRATA for changes which affect parts of the paper.
+in particular Haahr & Rakitzis's paper: ``Es: a shell with higher-order
+functions.'' The paper corresponds to a slightly older version of the
+shell;  see the file ERRATA for changes which affect parts of the paper.
 
-The file initial.es, which is used to build the initial
-memory state of the es interpreter, can be read to better understand
-how pieces of the shell interact.
+The file initial.es, which is used to build the initial memory state of
+the es interpreter, can be read to better understand how pieces of the
+shell interact.
 
 The official ftp site (associated with the original authors) is at:
 
-	ftp.sys.utoronto.ca/pub/es
+	ftp://ftp.sys.utoronto.ca/pub/es
 
 but all of the relevant information should be mirrored in the repository,
 
-    www.github.com/wryun/es-shell
+    http://www.github.com/wryun/es-shell
 
 including the change history and the old mailing list archives.
 
@@ -28,12 +29,6 @@ example as esrc.haahr; correctness is not guaranteed.  A simple
 debugger for es scripts, esdebug, is also included; this is very
 untested and should be considered little more than a sketch of a few
 ideas.
-
-A simple history mechanism for this shell (conceptually derived from
-the Research Eighth Edition Unix =(1) commands) is available in
-
-	ftp.sys.utoronto.ca:/pub/es/history.tar.Z
-
 
 Copyright
 ---------
