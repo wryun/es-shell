@@ -1,8 +1,28 @@
-CHANGES		-*- mode: indented-text -*- ($Revision: 1.4 $)
+CHANGES
 =======
 
-0.9-alpha2 to 0.9beta
----------------------
+0.9beta1 to 0.9
+---------------
+
+Numerous collated patches dealing with minor bugs and compilation errors.
+Most importantly fixes to signal handling (now Ctrl-C works). Some small
+file reorganisation, including all information in the archive, and making
+readline the default.
+
+This should have comprehensive coverage of fixes posted to the mailing
+list or applied by package maintainers (debian, FreeBSD, pkgsrc). Left out,
+however, are:
+
+ - Olaf Rogalsky's job control patch (available in the jobcontrol branch);
+   alpha-level code
+ - Soren Dayton's readfrom/writeto patch (only necessary without /dev/fd);
+   see Harald Hanche-Olsen's email (15 Dec 2000)
+ - Gergely Nagy's signal handling patch from debian's es 0.90beta1-10
+   (appears unnecessary) (other parts of that debian patchset are included)
+ - Paul Haahr's DUMB_ASS_LINUX_BUG signal patch (again unnecessary)
+
+0.9-alpha2 to 0.9beta1
+----------------------
 
 Prototypes are only provided if they are not in the standard header
 files.  

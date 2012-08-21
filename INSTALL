@@ -38,9 +38,8 @@ Es Options
   Es can be built to link to two command line editting libraries:
 GNU readline and editline.  For information about obtaining these, see
 the README file.  These may used by providing, respectively, the
---with-readline or --with-editline respectively.  
-
-
+--with-readline or --with-editline respectively.  Readline is currently
+enabled by deafult.
 
 Problems with building
 ----------------------
