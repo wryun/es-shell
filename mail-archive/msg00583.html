@@ -1,0 +1,189 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  Confession -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Fri, 28 May 1993 14:50:23 &#45;0400 -->
+<!--X-Message-Id: 9305281851.AA08610@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  Confession</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00582.html">Date Prev</a>][<a href="msg00584.html">Date Next</a>][<a href="msg00582.html">Thread Prev</a>][<a href="msg00586.html">Thread Next</a>][<a href="maillist.html#00583">Date Index</a>][<a href="threads.html#00583">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  Confession</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:rsalz%40osf.org">rsalz@osf.org</a></li>
+<li><em>Subject</em>: Re:  Confession</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Fri, 28 May 1993 14:51:01 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>oh, is that what ksh's test -nt is supposed to do?  i had no clue,
+which is why i didn't suggest anything better.
+
+i like Rich's ``make -f -'' solution, but something which is a little
+clearer, i think is
+
+	for (i = *.el) {
+		if {newer -s $i $i^c} {
+			echo $i
+		}
+
+which depends on newer(1), but you should have that anyway.  this
+is the version i've been using for probably 8 years.
+
+paul
+
+/* newer.c -- which file is newer? */
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+
+#define streq(s, t)	(strcmp((s), (t)) == 0)
+
+enum { ACCESSED, MODIFIED, CHANGED } which = MODIFIED;
+
+#ifndef	TRUE
+#define	TRUE	1
+#endif
+#ifndef	FALSE
+#define	FALSE	0
+#endif
+
+#define	EXIT_TRUE	0
+#define	EXIT_FALSE	1
+
+extern int stat(), lstat();
+int (*statfunc)() = stat;
+
+void usage()
+{
+	fprintf(stderr, &quot;usage: newer [-s] [-l] [-acm] file1 file2\n&quot;);
+	exit(2);
+}
+
+time_t gettime(s)
+	char *s;
+{
+	struct stat st;
+	if (statfunc(s, &amp;st) == -1)
+		return 0;
+	switch (which) {
+	case ACCESSED:	return st.st_atime;
+	case MODIFIED:	return st.st_mtime;
+	case CHANGED:	return st.st_ctime;
+	}
+}
+
+int main(argc, argv)
+	int argc;
+	char *argv[];
+{
+	int c;
+	time_t t1, t2;
+	int silent = FALSE;
+	extern int optind;
+
+	while ((c = getopt(argc, argv, &quot;slacm?&quot;)) != EOF)
+		switch (c) {
+		case 's':	silent = TRUE;		break;
+		case 'l':	statfunc = lstat;	break;
+		case 'a':	which = ACCESSED;	break;
+		case 'm':	which = MODIFIED;	break;
+		case 'c':	which = CHANGED;	break;
+		case '?':	usage();
+		}
+	if (optind + 2 != argc)
+		usage();
+
+	t1 = gettime(argv[optind]);
+	t2 = gettime(argv[optind + 1]);
+
+	if (silent) {
+		if (t1 != 0 || t2 != 0)
+			exit(t1 &gt;= t2 ? EXIT_TRUE : EXIT_FALSE);
+		fprintf(stderr, &quot;newer: %s and %s don't exist\n&quot;,
+			argv[optind], argv[optind + 1]);
+		exit(2);
+	}
+
+	if (t2 == 0) {
+		perror(argv[optind + 1]);
+		exit(2);
+	}
+	if (t1 == 0) {
+		perror(argv[optind]);
+		exit(2);
+	}
+
+	if (t1 &gt;= t2)
+		printf(&quot;%s\n&quot;, argv[optind]);
+	else
+		printf(&quot;%s\n&quot;, argv[optind + 1]);
+	return 0;
+}
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00589" href="msg00589.html">Re: Confession</a></strong>
+<ul><li><em>From:</em> Calvin Clark &lt;ckclark@MIT.EDU&gt;</li></ul></li>
+<li><strong><a name="00586" href="msg00586.html">newer</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00582.html">Re: Confession</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00584.html">Re: Confession</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00582.html">Re: Confession</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00586.html">newer</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00583"><strong>Date</strong></a></li>
+<li><a href="threads.html#00583"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

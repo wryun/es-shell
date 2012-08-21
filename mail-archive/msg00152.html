@@ -1,0 +1,149 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  backslash -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Fri, 23 Oct 1992 12:25:27 &#45;0400 -->
+<!--X-Message-Id: 9210231625.AA07741@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  backslash</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00151.html">Date Prev</a>][<a href="msg00153.html">Date Next</a>][<a href="msg00154.html">Thread Prev</a>][<a href="msg00155.html">Thread Next</a>][<a href="maillist.html#00152">Date Index</a>][<a href="threads.html#00152">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  backslash</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:john%40civil.su.oz.au">john@civil.su.oz.au</a></li>
+<li><em>Subject</em>: Re:  backslash</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Fri, 23 Oct 1992 12:25:24 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Is what you've done with backslash _really necessary_?
+
+necessary?  no.  useful, we think so.  in the same category as many
+of the other creatures which have feeped their way into es.  here's
+a list of 10 features, some of which are in es, some of which may be
+some day, and some of which probably won't.
+
+	1. backslash escapes
+	2. ~ expansion
+	3. job control
+	4. sorting of the environment
+	5. %split and %fsplit
+	6. for with multiple variables -- for (i = 1 2 3; j = a b c)
+	7. $&amp;newfd and the protecting of es' file descriptors
+	8. readline support
+	9. redirections without forking
+	10. hooks for arbitrary command completion code
+
+[for the record, 1,2,4,5, and 6 are in 0.7, and 7, 8, and 9 will be
+in 0.75]
+
+none of these is desired by everyone, i would guess.  i'm not going
+to go through and explain what i feel about each on, and i ask the
+es mailing list very strongly not to send notes saying ``i want 6
+but don't want 7 and if you keep 2 in there may fleas infest your
+armpits.'' i expect that if we did poll a large number of shell
+users we'd get close to 1k different responses as to what people
+wanted.
+
+none of the above features, by the way, is essential to es' ``mission,''
+which is to explore the uses of a command language with hooks all over
+the place and first class functions/closures.
+
+we already have, in my mind, the perfect minimalist shell.  it's rc.
+it's not the smallest shell one could use, but probably the smallest
+shell that hundreds of different people could find comfortable to use
+in these days of bloat.
+
+es is different.  it's much more of a general purpose programming
+language.  yes it's a shell, and we're hoping that it's a great one
+to use.  we're also hoping that eventually it can be the same sort
+of extension language as tcl, but we think it will be more useful
+because of the synergy of using the same language as your shell.
+
+because of that, es is more featureful.  \ escapes are just one
+example.  i use \n all over the place, and it has the nice feature
+that it goes into history files better than '
+' does.  \t (i think) makes script more readable.  look at the
+definition of ifs in initial.es, for example.
+
+&gt; I really, really, REALLY don't want to
+&gt; have to change my history character AGAIN.
+
+backslash as your history character?  really?  do you use it in rc?
+what do you do about rc's meaning of \ as the continuation marker?
+or do you just never type backslash-return.
+
+i'm sorry, but that's just not a good enough reason for use to cut
+out using a traditional escape character with the meaning it has
+in many programming languages.  certainly it's not exactly what
+it means anywhere else, because to keep quoting rules simple,
+backslashes are only interpreted outside of quotes, but that's
+not much of a distinction.
+
+&gt; I have no problem at all with `{echo -e \a}.
+
+i do.  i've never liked echo -e one bit.  (with the -e ala v8
+or without ala sysV.)  there you have to fork and exec in order
+to get at something i really believe you should be able to say
+inside the language.  and which you can in fact, say inside the
+language, just with messy quoted expressions.
+
+sorry if this note went on too long.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00151.html">backslash</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00153.html">Re: backslash</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00154.html">Re: backslash</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00155.html">Re: backslash</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00152"><strong>Date</strong></a></li>
+<li><a href="threads.html#00152"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

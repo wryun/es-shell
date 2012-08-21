@@ -1,0 +1,209 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: a brief introduction the lambda calculus for es users -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 12 May 1993 08:04:17 &#45;0400 -->
+<!--X-Message-Id: 9305121204.AA28577@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>a brief introduction the lambda calculus for es users</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00370.html">Date Prev</a>][<a href="msg00372.html">Date Next</a>][<a href="msg00509.html">Thread Prev</a>][<a href="msg00425.html">Thread Next</a>][<a href="maillist.html#00371">Date Index</a>][<a href="threads.html#00371">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>a brief introduction the lambda calculus for es users</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:creilly%40maths.tcd.ie">creilly@maths.tcd.ie</a></li>
+<li><em>Subject</em>: a brief introduction the lambda calculus for es users</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 12 May 1993 08:04:51 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[Scott &amp; i blather.]
+
+Colman writes
+&gt; Guys, could you use little words please? Or last least explain this sort of
+&gt; terms before you use them?
+
+this got out of hand, but please don't take us too seriously.
+
+now, it's been a while since i last saw this stuff, but as i remember,
+the are all terms derived from (pure) lambda calculi, and i refer you
+to books on the subject or people more knowledgable than i for precise,
+accurate descriptions.
+
+a ``beta reduction'' is the replacement of a lambda with its body,
+substituting arguments for the parameters.  if you could think of
+es as a pure lambda calculus, an example of beta reduction might be
+
+	@ fd file cmd {
+		if {access -f $file} {
+			throw error noclobber $file exists
+		} {
+			$&amp;create $fd $file $cmd
+		}
+	} 1 c {cat a b}
+=&gt;
+	if {access -f c} {
+		throw error noclobber c exists
+	} {
+		$&amp;create 1 c {cat a b}
+	}
+
+now, let's look at a particularly troubling beta reduction:
+
+	@ x { $x $x } @ x { $x $x }
+=&gt;
+	@ x { $x $x } @ x { $x $x }
+
+if you run this in es, you'll notice your shell dying with a segementation
+violation or somesuch:  it obviously causes an infinite recursion.
+
+now, let's consider passing that value to a function which ignores it:
+
+	@ y { true } &lt;={ @ x { $x $x } @ x { $x $x } }
+
+there are two possible beta reductions we can do to on expression.
+first, we could reduce the expression in the &lt;={} clause:
+
+	@ y { true } &lt;={ @ x { $x $x } @ x { $x $x } }
+=&gt;
+	@ y { true } &lt;={ @ x { $x $x } @ x { $x $x } }
+
+which, basically, leads to the same infinite recursion as we had above.
+on the other hand, we could beta reduce the outermost lambda first:
+
+	@ y { true } &lt;={ @ x { $x $x } @ x { $x $x } }
+=&gt;
+	true
+
+which has the property that it doesn't cause its argument to be evaluated
+because y is ignored in the body of the lambda.  since it never has to
+evaluate the term that causes infinite recursion, the infinite recursion
+never happens, and evaluation terminates.
+
+now the terminology:  applicative order evaluation means evaluate all
+the arguments to a lambda before you beta-reduce the lambda.  normal
+order means beta-reduce lambda applications before evaluating their
+arguments.
+
+the fundamental theorem of lambda calculus, which i believe is known as
+``Church's Theorem,'' says that, if they both terminate, normal order
+and applicative order produce the same result.  there are no expressions
+for which applicative order produces a result that normal order doesn't,
+but, as we've seen above, there are times when normal order terminates
+that applicative order doesn't.
+
+now, why not always use normal order, since it handles more cases?
+performance is the main reason.  first of all, consider the following:
+
+	@ x { echo $x $x } `{find / -name glob.c -print}
+
+in a naive implementation of normal order would turn into
+
+	echo `{find / -name glob.c -print} `{find / -name glob.c -print}
+
+which has the unfortunate property of running a really slow operation
+twice.  in reality, normal order evaluation systems do updates to make
+sure that expressions which are referenced twice do not cause double
+evaluation.  nonetheless, you're passing pointers to code which evaluates
+terms rather than the values of those terms, updating terms to guarantee
+single evaluation, etc.  this costs;  how much it costs is a constant
+source of debate in the functional programming world, but most c hackers
+would be sorely disappointed with performance.
+
+normal order evaluation is usually associated with ``lazy'' (also known as
+``non-strict'') evaluation;  i forget if there is a difference, so i don't
+want to say that they are equivalent in theory, but in practice, you will
+find normal order evaluation in lazy functional languages and nowhere else.
+examples are haskell, lazy ml, and, i think, miranda.  (also, come to think
+of it, haskerl, the haskell-perl hybrid uses normal order semantics. :-)
+
+applicative order (strict) evaluation semantics are what we usually think
+of for most programming languages, but if you really think about it, most
+languages have some forms which evaluate their arguments lazily.  in c,
+for example,
+
+	if, while, do ... while, for, ?:, &amp;&amp;, ||
+
+(and perhaps some others) can be thought of as operations which are lazy,
+in that they don't evaluate all their arguments before ``doing'' the
+operation.  functions in c, on the other hand, are strict.  most lisps,
+ml, pascal, all shells i know of, awk, perl, postscript, tcl, and many
+other languages are either completely strict or similar to c.
+
+further, most normal order systems do not have side effects, which is
+roughly the same as saying that they are ``referentially transparent.''
+(again, i believe that referential transparency is not precisely the
+same thing as side effect free, but for my purposes, it is.)
+
+i've almost certainly made some mistakes here (heck, it's 5am), but i
+think the gist of things is correct.  it's also not all that relevent
+to es, imho.
+
+in fact, i think Scott was pulling my chain.  even if he wasn't,
+i consider normal order evaluation ludicrous for unix shells,
+but don't want to debate the matter.  es has applicative order
+semantics.  period.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00425" href="msg00425.html">Re: a brief introduction the lambda calculus for es users</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00370.html">Re: %and, %or, and the return value of assignment</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00372.html">null list concatenation</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00509.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00425.html">Re: a brief introduction the lambda calculus for es users</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00371"><strong>Date</strong></a></li>
+<li><a href="threads.html#00371"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

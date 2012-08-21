@@ -1,0 +1,139 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Signals under Solaris (es 0.9alpha1) -->
+<!--X-From-R13: "Vnenyq Vnapur&#45;Ayfra" <unapurNvzs.havg.ab> -->
+<!--X-Date: Fri, 24 Nov 1995 13:31:36 &#45;0500 -->
+<!--X-Message-Id: 9511241931.ZM17611@romberg.imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Signals under Solaris (es 0.9alpha1)</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00888.html">Date Prev</a>][<a href="msg00890.html">Date Next</a>][<a href="msg00887.html">Thread Prev</a>][<a href="msg00890.html">Thread Next</a>][<a href="maillist.html#00889">Date Index</a>][<a href="threads.html#00889">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Signals under Solaris (es 0.9alpha1)</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Signals under Solaris (es 0.9alpha1)</li>
+<li><em>From</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Fri, 24 Nov 1995 13:31:15 -0500</li>
+<li><em>Sender</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I just discovered that es 0.9alpha1, on Solaris, blocks SIGINT.  That is,
+not right away, but all it takes is to start a virgin es (not a login
+shell, and only a minimal environment) and execute
+
+signals=$signals
+
+and then signal 2 (SIGINT) is blocked (in the sense of being marked in the
+process' signal mask).  Some further experimentation indicates that the
+problem occurs whenever $signals already contains .sigint and I set
+signals to some list containing .sigint again.  As an experiment, I tried
+setting
+
+set-signals=@ {$&amp;setsignals; $&amp;setsignals $*}
+
+and this cured the bug partly; but the problem just moved elsewhere.  If
+es sees a SIGINT, it blocks SIGINT in the future.
+
+Here's a quick demo.  The program sigprocmask just does the system call of
+the same name and prints what it finds.  I run sleep 60, and interrupts
+it. No problem, but SIGINT is now blocked.  If I run sleep 60 again and
+hit ^C, nothing happens, and I must type ^\ or wait until the minute has
+passed.
+
+$ /bin/es
+; ~/test/sigprocmask
+sigprocmask={00000000,00000000,00000000,00000000}
+; sleep 60
+^C
+; ~/test/sigprocmask
+sigprocmask={00000002,00000000,00000000,00000000}
+; sleep 60
+^C^\quit--core dumped
+; ~/test/sigprocmask
+sigprocmask={00000002,00000000,00000000,00000000}
+
+I tried turning on USE_SIGACTION in config.h, and that cured the first
+version of the problem, but made the second version even a little worse:
+ After the experiment above, SIGQUIT is also blocked.
+
+So what do we try next?  I don't really understand signals all that well,
+and have already wasted too much time messing around with this problem.
+ From earlier discussions it has been my impression that sigaction is what
+we want to use when it exists, but this blocking of signals is another
+ball game alltogether.
+
+- Harald
+
+PS.  Source code for the sigprocmask test program:
+
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;signal.h&gt;
+
+void
+main() {
+  sigset_t oset;
+  if (sigprocmask(SIG_UNBLOCK, NULL, &amp;oset)) perror(&quot;sigprocmask&quot;);
+  else printf(&quot;sigprocmask={%08x,%08x,%08x,%08x}\n&quot;,
+	      oset.__sigbits[0],
+	      oset.__sigbits[1],
+	      oset.__sigbits[2],
+	      oset.__sigbits[3]);
+}
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00888.html">unsubscribe</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00890.html">New alpha?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00887.html">Bug fix for es 0.9alpha1, for SunOS 4 users.</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00890.html">New alpha?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00889"><strong>Date</strong></a></li>
+<li><a href="threads.html#00889"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

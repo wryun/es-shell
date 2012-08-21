@@ -1,0 +1,110 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Incorrect signal handling under SYSV machines -->
+<!--X-From-R13: Zbera Xnzrf Dvggyr <evggyrNpbzz.zbg.pbz> -->
+<!--X-Date: Wed, 26 Mar 1997 21:14:13 &#45;0500 -->
+<!--X-Message-Id: 9703270106.AA27404@supra.rsch.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Incorrect signal handling under SYSV machines</title>
+<link rev="made" href="mailto:rittle@comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00939.html">Date Prev</a>][<a href="msg00941.html">Date Next</a>][<a href="msg00939.html">Thread Prev</a>][<a href="msg00942.html">Thread Next</a>][<a href="maillist.html#00940">Date Index</a>][<a href="threads.html#00940">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Incorrect signal handling under SYSV machines</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Incorrect signal handling under SYSV machines</li>
+<li><em>From</em>: Loren James Rittle &lt;<a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 26 Mar 1997 20:06:02 -0500</li>
+<li><em>Reply-to</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I have used es-0.9-alpha1 for many moon under SunOS 4.1.[34] and DEC
+Alpha UNIX V4.0.  [Note: I always have `interrupt' set to Control C
+under the terminal driver.]  Whenever I hit Control C, most normal
+programs interactively activated under the shell are killed and I get
+a fresh command prompt.  If I was in the middle of forming a command
+line, it is killed and I get a fresh prompt.  Even if I had typed
+nothing, I get a fresh prompt.
+
+I recently recompiled it for SunOS 5.X and HP-UX 10.20 with
+gcc-2.7.2.1.  For all architectures (even SunOS 4.1.4), I linked
+against the readline package.
+
+Under HP-UX 10.20, when I hit Control C twice at any points during a
+session under the es shell, the shell ``terminate[s] on signal 2.''
+
+Under SunOS 5.5.1, the shell only responses to the first
+Control C, all later Control Cs appear to be eaten somewhere.
+
+Sorry to be so vague, I'm hoping someone out there knows my problem
+without me having to fully debug it.
+
+Thanks,
+Loren
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00946" href="msg00946.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+<ul><li><em>From:</em> Chris R Dalton &lt;crd@hplb.hpl.hp.com&gt;</li></ul></li>
+<li><strong><a name="00944" href="msg00944.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="00943" href="msg00943.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+<ul><li><em>From:</em> Soren Dayton &lt;csdayton@cs.uchicago.edu&gt;</li></ul></li>
+<li><strong><a name="00942" href="msg00942.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@comm.mot.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00939.html">Re: es variables</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00941.html">Bug or feature?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00939.html">Re: es variables</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00942.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00940"><strong>Date</strong></a></li>
+<li><a href="threads.html#00940"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

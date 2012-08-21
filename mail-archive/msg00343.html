@@ -1,0 +1,103 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: pushd/popd/dirs for es -->
+<!--X-From-R13: oifNPvgPybpxf.pbz -->
+<!--X-Date: Sat, 1 May 1993 22:52:07 &#45;0400 -->
+<!--X-Message-Id: 199305011739.AA29321@bitblks.bitblocks.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305010631.AA10170@nutrimat.gnu.ai.mit.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: pushd/popd/dirs for es</title>
+<link rev="made" href="mailto:bvs@BitBlocks.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00342.html">Date Prev</a>][<a href="msg00344.html">Date Next</a>][<a href="msg00340.html">Thread Prev</a>][<a href="msg00346.html">Thread Next</a>][<a href="maillist.html#00343">Date Index</a>][<a href="threads.html#00343">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: pushd/popd/dirs for es</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Subject</em>: Re: pushd/popd/dirs for es</li>
+<li><em>From</em>: <a href="mailto:bvs%40BitBlocks.com">bvs@BitBlocks.com</a></li>
+<li><em>Date</em>: Sat, 1 May 1993 13:39:25 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Sat, 01 May 93 02:31:44 EDT.&quot;             &lt;<a href="msg00338.html">9305010631.AA10170@nutrimat.gnu.ai.mit.edu</a>&gt; </li>
+<li><em>Reply-to</em>: <a href="mailto:bvs%40BitBlocks.com">bvs@BitBlocks.com</a> (Bakul Shah)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+&gt; I'd like to know what other people think of the issue.
+
+The `right' place to fix this is in the kernel :-)/2
+But seriously, file name resolution in a shell should be
+consistent with what the kernel does so that there are no
+surprises.  For example,
+	rm -rf ../foo
+should remove the same foo directory as in
+	cd ..
+	rm -rf foo
+and a C program that does
+	system(&quot;rm -rf foo&quot;);
+
+-- bakul
+
+PS: I happen to like treating `&lt;path&gt;/foo/..' as equivalent to
+    `&lt;path&gt;'  but not at the expense of inconsistency.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00338" href="msg00338.html">Re: pushd/popd/dirs for es</a></strong>
+<ul><li><em>From:</em> friedman@gnu.ai.mit.edu (Noah Friedman)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00342.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00344.html">%and, %or, and the return value of assignment</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00340.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00346.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00343"><strong>Date</strong></a></li>
+<li><a href="threads.html#00343"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

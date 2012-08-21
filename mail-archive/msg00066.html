@@ -1,0 +1,223 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es %dup -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Fri, 16 Oct 1992 04:27:03 &#45;0400 -->
+<!--X-Message-Id: 9210160826.AA09205@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es %dup</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00065.html">Date Prev</a>][<a href="msg00067.html">Date Next</a>][<a href="msg00065.html">Thread Prev</a>][<a href="msg00067.html">Thread Next</a>][<a href="maillist.html#00066">Date Index</a>][<a href="threads.html#00066">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es %dup</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es %dup</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Fri, 16 Oct 1992 04:26:45 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>This is a long one that's probably mostly of interest to the authors.
+I'll start off with what I think is probably a bug, no doubt already fixed
+in versions following 0.67.
+
+	;; ls gnatback &gt;[1=2]
+	;; ls gnatback
+	gnatback: No such file or directory
+
+Maybe rDup is supposed to lead to cpfd() instead of mvfd(), and in fact
+that makes things work better.
+
+OK, now, on to the fairly bizarre stuff, but it does happen to be
+a matter of great personal interest.  My problem is that I need to be
+able to dup2() file descriptors, without clobbering descriptors in use
+within es.  Currently, if I have a descriptor 3 open for read, and I
+dot-source a file that does &quot;exec {&lt;[0=3]}&quot;, when es returns from the
+dot-sourced file it will begin to execute commands from what had been
+unit 3.  As in (note that the results shown are from the tty, i.e. a
+line buffered device):
+
+	;; cat e3
+	echo in third file
+	;; cat e1
+	exec {&lt;[0=3]}
+	echo in dot file
+	;; let (prompt = '$ ') {./es}
+	$ exec {&lt;[3] e3}
+	$ . ./e1
+	in dot file
+	in third file			&lt; cmd input changed from tty to &quot;e1&quot;
+	$ ;;
+
+Whereas what I think is arguably right, or at least mighty convenient for
+me, is for command input to return to the original source.  (Note that now
+it doesn't matter, line buffered tty behaves the same as disk file.)
+
+	$ . ./e1
+	in dot file
+	$ cat				&lt; cmd input still on tty
+	echo in third file		&lt; (but the world sees &quot;e1&quot; on unit 0)
+	$ exit
+	;; 
+
+Patches follow to that effect.  I can understand that this would be a
+pretty grey area, and there's actually no other shell that does right
+on this one.  The practical value of it comes from a user interface
+front end, which sends commands to an rc back end through a pipe.
+The back end shell needs 0 open on the tty, so that the commands it
+execs will work, and I have been using hacks to the rc source to
+specify an alternate descriptor in place of 0.  If es could do
+&quot;exec {&lt;[0=3]}&quot; without clobbering its internal descriptors, I could
+have the read end of the pipe open on 0, the tty on 3, and then switch
+them up front in the shell initialization once es has started.  And in
+fact that works, with the following patches.  Perhaps there are other
+ways to do the same thing.
+
+Incidentally, the above examples work from DYNIX/ptx (SVR3 + POSIX), but
+from RISC Ultrix 4.2 es craps out on the &quot;exec {&lt;[3] e3}&quot;, don't know why,
+but anyway your mileage may vary.  The following patch doesn't affect that
+problem one way or the other.  Patches are again to 0.67, on top of a
+distributed patch to prim-io.c.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+-------------------------------
+*** input.c.dist	Thu Oct  1 00:25:38 1992
+--- input.c	Thu Oct 15 23:24:29 1992
+***************
+*** 424,429 ****
+--- 424,441 ----
+  		}
+  }
+  
++ /* savefds -- before clobbering via dup2(), dup() old descriptors */
++ extern void savefds(int new) {
++ 	Input *i;
++ 	if (new &lt; 0) return;
++ 	if (historyfd == new) {
++ 		historyfd = dup (historyfd);
++ 	}
++ 	for (i = istack; i != itop; --i)
++ 		if (i-&gt;t == iFd &amp;&amp; i-&gt;fd == new)
++ 			i-&gt;fd = dup (i-&gt;fd);
++ }
++ 
+  
+  /*
+   * initialization
+*** util.c.dist	Thu Oct  1 00:25:38 1992
+--- util.c	Thu Oct 15 23:27:48 1992
+***************
+*** 27,33 ****
+  /* mvfd -- duplicate a fd and close the old */
+  extern int mvfd(int old, int new) {
+  	if (old != new) {
+! 		int fd = dup2(old, new);
+  		if (fd == -1)
+  			fail(&quot;dup2: %s&quot;, strerror(errno));
+  		assert(fd == new);
+--- 27,35 ----
+  /* mvfd -- duplicate a fd and close the old */
+  extern int mvfd(int old, int new) {
+  	if (old != new) {
+! 		int fd;
+! 		savefds (new);
+! 		fd = dup2(old, new);
+  		if (fd == -1)
+  			fail(&quot;dup2: %s&quot;, strerror(errno));
+  		assert(fd == new);
+***************
+*** 40,46 ****
+  /* cpfd -- duplicate a fd keeping the old one open */
+  extern int cpfd(int old, int new) {
+  	if (old != new) {
+! 		int fd = dup2(old, new);
+  		if (fd == -1)
+  			fail(&quot;dup2: %s&quot;, strerror(errno));
+  		assert(fd == new);
+--- 42,50 ----
+  /* cpfd -- duplicate a fd keeping the old one open */
+  extern int cpfd(int old, int new) {
+  	if (old != new) {
+! 		int fd;
+! 		savefds (new);
+! 		fd = dup2(old, new);
+  		if (fd == -1)
+  			fail(&quot;dup2: %s&quot;, strerror(errno));
+  		assert(fd == new);
+*** prim-io.c.dist2	Wed Oct 14 12:00:00 1992
+--- prim-io.c	Fri Oct 16 01:09:32 1992
+***************
+*** 50,56 ****
+  		close(dstfd);
+  		break;
+  	case rDup:
+! 		mvfd(srcfd, dstfd);
+  		break;
+  	default:
+  		panic(&quot;redirection not handled&quot;);
+--- 50,56 ----
+  		close(dstfd);
+  		break;
+  	case rDup:
+! 		cpfd(srcfd, dstfd);
+  		break;
+  	default:
+  		panic(&quot;redirection not handled&quot;);
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00065.html">Re: split ''</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00067.html">Re: es %dup</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00065.html">Re: split ''</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00067.html">Re: es %dup</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00066"><strong>Date</strong></a></li>
+<li><a href="threads.html#00066"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: is this my mistake or someone elses? -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 29 Nov 1994 19:21:03 &#45;0500 -->
+<!--X-Message-Id: 199411300018.TAA09972@netcom4.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199411291449.JAA05458@netcom4.netcom.com -->
+<!--X-Reference: 9411292319.AA27916@stealth.ctron.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: is this my mistake or someone elses?</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00769.html">Date Prev</a>][<a href="msg00771.html">Date Next</a>][<a href="msg00769.html">Thread Prev</a>][<a href="msg00779.html">Thread Next</a>][<a href="maillist.html#00770">Date Index</a>][<a href="threads.html#00770">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: is this my mistake or someone elses?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: &quot;Jeffrey C. Rogers&quot; &lt;<a href="mailto:rogerj%40mailhost.ctron.com">rogerj@mailhost.ctron.com</a>&gt;</li>
+<li><em>Subject</em>: Re: is this my mistake or someone elses?</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 29 Nov 1994 19:18:40 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00769.html">9411292319.AA27916@stealth.ctron.com</a>&gt;</li>
+<li><em>References</em>: &lt;199411291449.JAA05458@netcom4.netcom.com&gt;	&lt;<a href="msg00769.html">9411292319.AA27916@stealth.ctron.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Jeffrey C. Rogers writes:
+&gt;  - Is there any way to make open descriptors hang around and remain open 
+&gt; between commands, or permanently (until otherwise affected) with exec?
+
+This is minorly different from rc and other shells, due to some ultra
+important reason having to do with es semantics that I've forgotten.
+The redirections following exec must be enclosed in braces, so:
+
+	; echo tofu &gt; food
+	; exec { &lt;[4] food }
+	; cat &lt;[0=4]
+	tofu
+	; exec { &lt;[4=] }
+	; cat &lt;[0=4]
+	dup: Bad file number
+	; 
+
+&gt;  - should writing to a closed file descriptor really be a fatal error?
+&gt; 
+&gt; ; echo &gt;[1=]
+&gt; write: Bad file number
+&gt; &lt;shell exits&gt;
+&gt; 
+&gt; And you can't even unwind-protect it, because it just exits (line 288, print.c)
+
+Yeah, that probably counts as a bug.  Should probably signal an error.
+Hadn't this been hashed out before?  Was there a reason?  I'll check the
+list archives one of these days.
+
+&gt;  - why can't %parse read from somewhere other than the terminal? 
+&gt; 
+&gt; ; fork {echo &lt;={%parse &lt;etest}}
+&gt; input.c:210: assertion failed (in-&gt;fd &gt;= 0)
+&gt; abort--core dumped
+&gt; ; 
+&gt; 
+&gt; Without the fork it just reads from the terminal (I assume because of the 
+&gt; deferred fd system).  This probably isn't much of an issue, as there's not too 
+&gt; many places where it would be used (implementing . in the shell comes to 
+&gt; mind), but when it's supposed to be extensible, why a restriction like this? 
+
+As I remember -- and it's been a while -- there's some form of parsing
+context that includes the file descriptor that input is coming from, and
+parse has to use that for reasons having to do with buffering and
+look-ahead.  The internal function runfd() should probably be exposed so
+you can do the sort of thing you're looking for.  When I was last
+actively working on es (over a year ago), I know that I was thinking
+about the read-eval-print loop and how to make it more flexible, based
+on comments from the list, but I've forgotten a lot of this.
+
+&gt; Are the assertions over-protective (some seem to be - in gcndup, for example), 
+&gt; or are they generally just killing you before you would be otherwise?
+
+I think of the assertions really as ``can't happen'' events, and if one
+is happening, the sky is falling, as far as I'm concerned.  I tend to be
+over-cautious at times, in that I assert things which I know to be true
+because the calling function, for example, makes the same assertion, but
+I consider it a useful way to prevent myself from introducing bugs.
+
+Paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00769" href="msg00769.html">Re: is this my mistake or someone elses?</a></strong>
+<ul><li><em>From:</em> &quot;Jeffrey C. Rogers&quot; &lt;rogerj@mailhost.ctron.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00769.html">Re: is this my mistake or someone elses?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00771.html">Re: es bug</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00769.html">Re: is this my mistake or someone elses?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00779.html">Non-login config files</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00770"><strong>Date</strong></a></li>
+<li><a href="threads.html#00770"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es&#45;remote problem; how to fix? -->
+<!--X-From-R13: evggyrNpbzz.zbg.pbz (Zbera Xnzrf Dvggyr) -->
+<!--X-Date: Thu, 1 Apr 1993 17:34:19 &#45;0500 -->
+<!--X-Message-Id: 9304012240.AA22116@supra.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es-remote problem; how to fix?</title>
+<link rev="made" href="mailto:rittle@comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00270.html">Date Prev</a>][<a href="msg00272.html">Date Next</a>][<a href="msg00266.html">Thread Prev</a>][<a href="msg00274.html">Thread Next</a>][<a href="maillist.html#00271">Date Index</a>][<a href="threads.html#00271">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es-remote problem; how to fix?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es-remote problem; how to fix?</li>
+<li><em>From</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a> (Loren James Rittle)</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 17:40:01 -0500</li>
+<li><em>Cc</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Hello,
+
+I have access to 40+ workstations.  I want to build a parallel make
+utility with GNU make and es.
+
+I have defined the following functions:
+
+fn res m c {if {~ $#c 0} {c=es -i}; rsh $m `{{vars;vars -f;vars -s} | sed 's,$,;,'}';cd '`pwd';prompt=''u=''^$USER^''@''^`{hostname | sed ''s,\([^.]*\).*,\1,''}^''; '' '''';'$^c}
+fn pick-remote {l=`{wc -l ~/.rhosts}; d=`{date +%H%M%S}; a=$d $pid + $l(1) % 1 + p; o=`{dc &lt;&lt;&lt; $^a}; tail +$o ~/.rhosts | head -1}
+fn es-remote {res `pick-remote $*}
+
+CC=es-remote /usr/local/bin/gcc
+
+es-remote seems to work fine if I have no 's in the command.
+
+But, as you can see, the following doesn't work:
+
+u=rittle@supra; echo 'a=b'
+a=b
+u=rittle@supra; es-remote echo 'a=b'
+es panic: bad conversion character in printfmt: %i
+
+Can anyone explain what I'm missing and a possible fix?
+
+Thanks,
+Loren
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00270.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00272.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00266.html">one more remark about bash</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00274.html">Re: es-remote problem; how to fix?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00271"><strong>Date</strong></a></li>
+<li><a href="threads.html#00271"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

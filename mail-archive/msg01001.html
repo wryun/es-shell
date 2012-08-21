@@ -1,0 +1,111 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: why? -->
+<!--X-From-R13: svfpure <vabqrNserrarg.qr> -->
+<!--X-Date: Wed, 12 Apr 2000 00:51:43 &#45;0400 -->
+<!--X-Message-Id: Pine.BSF.4.05.10004050958190.758&#45;100000@spotteswoode.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>why?</title>
+<link rev="made" href="mailto:inode@freenet.de">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01000.html">Date Prev</a>][<a href="msg01003.html">Date Next</a>][<a href="msg01000.html">Thread Prev</a>][<a href="msg01003.html">Thread Next</a>][<a href="maillist.html#01001">Date Index</a>][<a href="threads.html#01001">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>why?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: why?</li>
+<li><em>From</em>: fischer &lt;<a href="mailto:inode%40freenet.de">inode@freenet.de</a>&gt;</li>
+<li><em>Date</em>: Wed, 5 Apr 2000 04:12:41 -0400</li>
+<li><em>Organization</em>: private</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>excuse me.  i got:
+
+fn log {let (q=`` \n {ls -t /var/log/* | head -15}; qq=''; i='') {
+	qq=$q
+	while {!~ $#q 0} {            # this contruct avoids the
+		echo $#q $qq($#q)     # otherwise popular call
+		q=$q(2 ...)           # to `{expr $something + 1}
+	}
+	echo -n '## ? '               # input list of naturals
+	i=&lt;={%read}
+	echo $i
+	catch @ exc org msg {
+		echo exception: $exc origin: $org
+		echo message: $msg
+		echo resuming std handler
+		throw $exc $org $msg
+	} {
+		echo $qq($i) $qq($^i)
+		%read
+		$PAGER $qq($^i)
+	}
+}}
+
+this should give a list of the most-recently-changed logfiles, which it
+does, and page it to my screen, which it refuses to do.  it shows only one
+file, the first selected by the user during %read.
+
+...BUT IT DOES NOT WORK!  i tried almost everything by now, what should i
+do?  am i too tired?  if yes, of what?
+
+help awaiting, gnawing on my own teeth...
+
+-- 
+inode@freenet.de
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01000.html">Re: latest version</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01003.html">my recent request for help</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01000.html">Re: latest version</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01003.html">my recent request for help</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01001"><strong>Date</strong></a></li>
+<li><a href="threads.html#01001"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es and environment -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Tue, 13 Oct 1992 12:23:18 &#45;0400 -->
+<!--X-Message-Id: 9210131623.AA09941@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es and environment</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00053.html">Date Prev</a>][<a href="msg00055.html">Date Next</a>][<a href="msg00053.html">Thread Prev</a>][<a href="msg00055.html">Thread Next</a>][<a href="maillist.html#00054">Date Index</a>][<a href="threads.html#00054">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es and environment</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es and environment</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Tue, 13 Oct 1992 12:23:13 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I hate to bring this up, but if it ever looks like there's an appropriate
+place to implement process scope variables, I think that would be a very
+useful feature.  That's an obfuscation for leaving variables out of the
+exported environment.
+
+It looks like &quot;local&quot; variables aren't exported, but lexical binding
+isn't always convenient.
+
+I have work-arounds (collected from the rc list), but it seems like it
+ought to be a language feature.  It puts less of a load on the system,
+it cuts down on the amount of wierd gibberish people see when they do a
+printenv, but most importantly it's more sanitary.  Like scoping in any
+programming language, it gives you a way to do something in one place
+without any risk of unintended effects somewhere else.  In the Bourne
+shell, I can define a variable name &quot;EDITOR&quot;, if that happens to be
+convenient, without fear that some child process will see it and react
+in an unforeseen way.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00053.html">oops, i forgot to send this fix to the list</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00055.html">Re: es and environment</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00053.html">oops, i forgot to send this fix to the list</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00055.html">Re: es and environment</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00054"><strong>Date</strong></a></li>
+<li><a href="threads.html#00054"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Object orientation in es, and a bug? -->
+<!--X-From-R13: Vnenyq Vnapur&#45;Ayfra <unapurNvzs.havg.ab> -->
+<!--X-Date: Wed, 14 Dec 1994 07:51:09 &#45;0500 -->
+<!--X-Message-Id: 1994&#45;12&#45;14.132021.hanche@pride.imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Object orientation in es, and a bug?</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00798.html">Date Prev</a>][<a href="msg00800.html">Date Next</a>][<a href="msg00797.html">Thread Prev</a>][<a href="msg00800.html">Thread Next</a>][<a href="maillist.html#00799">Date Index</a>][<a href="threads.html#00799">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Object orientation in es, and a bug?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Object orientation in es, and a bug?</li>
+<li><em>From</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Wed, 14 Dec 1994 07:50:44 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>(While preparing this message, I uncovered what appears to be a bug in
+es.  I describe the bug at the end...)
+
+A while back, when we discussed the (un)desirability of settor
+functions in es, it was stated that they are used in ksh to support
+object oriented programming and that perhaps they might be used for a
+similar purpose in es.
+
+However, once you have lambda, one can easily implement do some simple
+o-o stuff.  For example, a simple stack object type (without error
+checking) could be implemented as follows
+
+  fn stack {
+    let (s=
+	 push=@ items{s=$items $s}
+	 pop =@ {let (a=$s(1)) {s=$s(2 ...); result $a}}
+	 all =@ {result $s})
+      result @ method args{$$method $args}}
+
+In other words, put the object's data in a let (or lambda) body and
+provide a simple method dispatching routine (the @ method args
+... thing).  This is easier in es than in (say) scheme, because in
+scheme you would have to code the dispatch routine something like
+
+  (lambda (method . args)
+    (case method
+      ((push) (apply push args))
+      ((pop)  (apply pop  args))
+      ((all)  (apply all  args))))
+
+Here is a simple demonstration of the stack object type:
+
+  ; f=&lt;={stack}
+  ; g=&lt;={stack}
+  ; $f push foo
+  ; $g push grief!
+  ; $f push fie foe
+  ; $g push good
+  ; $f push fee
+  ; echo &lt;={$f pop}
+  fee
+  ; echo &lt;={$f pop}
+  fie
+  ; echo &lt;={$f pop}
+  foe
+  ; echo &lt;={$f pop}
+  foo
+  ; echo &lt;={$g all}
+  good grief!
+
+So, indeed, simple object oriented programming is not hard to do in
+es.  The cost in terms of memory appears to be high though.  After all
+the pushing on $f and before the popping, we get
+
+  ; echo $f
+  %closure(*=;s=fee fie foe foo;push='%closure(*=;s=fee fie foe foo)@
+  items{s=$items $s}';pop='%closure(*=;s=fee fie foe
+  foo;push=''%closure(*=;s=fee fie foe foo)@ items{s=$items $s}'')@ *
+  {let(a=$s(1)){%seq {s=$s(2 ...)} {result $a}}}';all='%closure(*=;s=fee
+  fie foe foo;push=''%closure(*=;s=fee fie foe foo)@ items{s=$items
+  $s}'';pop=''%closure(*=;s=fee fie foe foo;push=''''%closure(*=;s=fee
+  fie foe foo)@ items{s=$items $s}'''')@ * {let(a=$s(1)){%seq {s=$s(2
+  ...)} {result $a}}}'')@ * {result $s}')@ method args{$($method) $args}
+
+(I reformatted the one line output using M-q in emacs...)
+
+which does indeed appear to use an excessive amount of space.  Worse,
+it becomes INCORRECT if passed through the environment to an inferior
+es:
+
+  ; es
+  ; prompt = ';; ' ''
+  ;; echo &lt;={$f pop}
+  fee
+  ;; echo &lt;={$f pop}
+  fie
+  ;; $f push poodle
+  ;; echo &lt;={$f all}
+  fee fie foe foo
+
+The problem seems to be that each interior function now has its own
+copy of s, rather than referring to the common s.  Surely a bug?
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00800" href="msg00800.html">Re: Object orientation in es, and a bug?</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00798.html">Re: variable indices</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00800.html">Re: Object orientation in es, and a bug?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00797.html">Re: variable indices</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00800.html">Re: Object orientation in es, and a bug?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00799"><strong>Date</strong></a></li>
+<li><a href="threads.html#00799"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

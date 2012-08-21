@@ -1,0 +1,124 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Semantics of let -->
+<!--X-From-R13: crgreNebobgf.bksbeq.np.hx -->
+<!--X-Date: Tue, 18 May 1993 22:49:22 &#45;0400 -->
+<!--X-Message-Id: 9305190248.AA04036@thurio.robots.ox.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Semantics of let</title>
+<link rev="made" href="mailto:peter@robots.oxford.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00434.html">Date Prev</a>][<a href="msg00436.html">Date Next</a>][<a href="msg00434.html">Thread Prev</a>][<a href="msg00437.html">Thread Next</a>][<a href="maillist.html#00435">Date Index</a>][<a href="threads.html#00435">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Semantics of let</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: Semantics of let</li>
+<li><em>From</em>: <a href="mailto:peter%40robots.oxford.ac.uk">peter@robots.oxford.ac.uk</a></li>
+<li><em>Date</em>: Tue, 18 May 1993 22:48:10 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I include below the reply to my message I sent to Paul.
+
+---
+
+I use this sequential binding quite often, it saves me typing lots of nested
+lets/locals, so personally I'd rather not have its semantics changed :-).
+I think it's rather intuitive having ``;'' mean sequential composition.
+
+Paul writes
+&gt; this is, of course, the reason that the semantics are they way they are
+&gt; right now.  of course, you can do
+&gt; 
+&gt; 	let (x = ...) let (y = ...) cmd
+&gt; 
+&gt; without the other braces, but it isn't pretty.  the verdict's not in yet.
+
+Anyway, wouldn't the other behaviour be achievable when multiple-assignment
+arrives? Ie,
+	; foo = foo; bar = bar
+	; let ((foo bar) = ($bar $foo)) echo $foo $bar
+	bar foo
+
+Paul writes
+&gt; no.  remember that es has no hierarchical lists.
+&gt; 
+&gt; 	; a = foo bar
+&gt; 	; b = baz
+&gt; 	; let ((x y) = ($a $b)) echo $x -- $y
+&gt; 	foo -- bar baz
+&gt; 	; 
+
+To make ``for'' consistent with let and local, couldn't we make the current
+behaviour the semantics for multiple assignment in the for-binding, and
+single-assignment would give a sequential binding, eg
+	; for (i = a b; j = 1 2) echo $i $j
+equivalent to
+	; for (i = a b) for(j = 1 2) echo $i $j
+
+Paul writes
+&gt; again, the absence of hierarchical lists gets in the way.  besides,
+&gt; i have semantics i like for multiple-assignment based for:
+&gt; 
+&gt; 	; for (i j = 1 2 3 4) echo $i $j
+&gt; 	1 2
+&gt; 	3 4
+&gt; 	; 
+&gt; 
+&gt; it's gratuitous, but it falls right out of everything that's already
+&gt; there.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00434.html">Re:  Semantics of let</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00436.html">result</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00434.html">Re:  Semantics of let</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00437.html">Re: Semantics of let</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00435"><strong>Date</strong></a></li>
+<li><a href="threads.html#00435"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

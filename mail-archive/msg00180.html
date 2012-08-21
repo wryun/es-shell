@@ -1,0 +1,87 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es memory requirements -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Tue, 5 Jan 1993 18:25:20 &#45;0500 -->
+<!--X-Message-Id: 9301052325.AA00552@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es memory requirements</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00179.html">Date Prev</a>][<a href="msg00181.html">Date Next</a>][<a href="msg00179.html">Thread Prev</a>][<a href="msg00181.html">Thread Next</a>][<a href="maillist.html#00180">Date Index</a>][<a href="threads.html#00180">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es memory requirements</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: es memory requirements</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Tue, 5 Jan 1993 18:25:19 -0500</li>
+<li><em>Cc</em>: es mailing list &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>well, the real problem (dramatically different resident set sizes) is going to  
+need some study, but...
+
+&gt; When would you expect &quot;the next time a collection is done&quot; to happen?  I'm
+&gt; thinking perhaps, if I could induce a collection at certain points, things
+&gt; might improve.
+
+that's pretty easy.  we'll probably introduce a $&amp;collect primitive which  
+calls the collector and returns.  (if you want to hand carve one, just call  
+the function gc() from the primitive and return true.  that should be  
+sufficient.)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00179.html">Re: es memory requirements</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00181.html">Re: es memory requirements</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00179.html">Re: es memory requirements</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00181.html">Re: es memory requirements</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00180"><strong>Date</strong></a></li>
+<li><a href="threads.html#00180"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

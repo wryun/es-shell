@@ -1,0 +1,106 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Settor functions and initialization -->
+<!--X-From-R13: "Vnenyq Vnapur&#45;Ayfra" <unapurNvzs.havg.ab> -->
+<!--X-Date: Thu, 11 May 1995 16:07:25 &#45;0400 -->
+<!--X-Message-Id: 9505112207.ZM12050@chanur.imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Settor functions and initialization</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00832.html">Date Prev</a>][<a href="msg00834.html">Date Next</a>][<a href="msg00832.html">Thread Prev</a>][<a href="msg00834.html">Thread Next</a>][<a href="maillist.html#00833">Date Index</a>][<a href="threads.html#00833">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Settor functions and initialization</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Settor functions and initialization</li>
+<li><em>From</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Thu, 11 May 1995 16:07:06 -0400</li>
+<li><em>Sender</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Ouch.  After redesigning part of my es init files, I find that I often
+cannot run es in subprocesses anymore.  What happens is this:
+
+I have a settor function that calls another function I have defined.  The
+principle is this:
+
+set-FOO = @ *{%fun foo $*}
+fn %fun ... {...}
+
+Now, when a new es starts up, things break if variables are initialized
+from the environment in this order:
+
+  set-FOO
+  FOO
+  fn-%fun
+
+for when FOO is set, set-FOO is called and it tries to run %fun which is
+not defined.  This kills the shell.
+
+I believe that during initialization, all variables should be initialized
+from the environment without trying to call settor functions.  Only
+afterwards should settors be looked for and called, for each variable that
+was initialized from the environment in the first place.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00837" href="msg00837.html">Re: Settor functions and initialization</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@netcom.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00832.html">Re: Strange behaviour of access</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00834.html">Settor functions and initialization</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00832.html">Re: Strange behaviour of access</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00834.html">Settor functions and initialization</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00833"><strong>Date</strong></a></li>
+<li><a href="threads.html#00833"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

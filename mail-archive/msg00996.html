@@ -1,0 +1,128 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: can only interrupt once -->
+<!--X-From-R13: Vnenyq Vnapur&#45;Ayfra <unapurNzngu.agah.ab> -->
+<!--X-Date: Mon, 24 Jan 2000 16:25:08 &#45;0500 -->
+<!--X-Message-Id: 20000124075606N.hanche@math.ntnu.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 20000121054038.937961.FMU887@piglet.prv.splode.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: can only interrupt once</title>
+<link rev="made" href="mailto:hanche@math.ntnu.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00994.html">Date Prev</a>][<a href="msg00995.html">Date Next</a>][<a href="msg00994.html">Thread Prev</a>][<a href="msg00995.html">Thread Next</a>][<a href="maillist.html#00996">Date Index</a>][<a href="threads.html#00996">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: can only interrupt once</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:friedman%40splode.com">friedman@splode.com</a></li>
+<li><em>Subject</em>: Re: can only interrupt once</li>
+<li><em>From</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Date</em>: Mon, 24 Jan 2000 01:56:26 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Fri, 21 Jan 2000 08:41:42 -0500&quot;	&lt;<a href="msg00994.html">20000121054038.937961.FMU887@piglet.prv.splode.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00994.html">20000121054038.937961.FMU887@piglet.prv.splode.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>+ Noah Friedman &lt;friedman@splode.com&gt;:
+
+| Has anyone else noticed this behavior?
+| 
+| On linux (redhat 6.1), if I start es, I can hit C-c once to interrupt a
+| process started by es.  Afterward, sigint is forever ignored.
+
+Hmmm...  Sounds familiar.  In fact, I saw that problem back in 1996
+(but not on linux I think).  Could it be that configure doesn't
+correctly set HAVE_SIGSETJMP?  (See stdenv.h).
+
+I never understood the problem then, but managed to expose it enough
+that someone who did understand could fix it.  In my case, I think the
+interrupt wasn't ignored, but rather masked (with sigsetmask).  I
+wrote the following tiny little program to diagnose the problem:
+
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;signal.h&gt;
+
+void
+main() {
+  sigset_t oset;
+  if (sigprocmask(SIG_UNBLOCK, NULL, &amp;oset)) perror(&quot;sigprocmask&quot;);
+  else printf(&quot;sigprocmask={%08x,%08x,%08x,%08x}\n&quot;,
+	      oset.__sigbits[0],
+	      oset.__sigbits[1],
+	      oset.__sigbits[2],
+	      oset.__sigbits[3]);
+}
+
+Running this from your signal-less shell might tell you whether or not
+signals are blocked.  (Warning:  I have no idea how portable the
+program is.  I think I wrote it on a sunos4 machine.)
+
+Interesting you should write just now, BTW.  I had been thinking about
+the es list, wondering if it still worked and if anybody actually uses
+es.  Obviously someone does.  I use it as my login shell still, and
+have found no reason to switch.  I've made sure it's available
+everywhere at my home university, and a number of people have looked
+at it and played with it, but still as far as I know I am the only
+regular user.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00994" href="msg00994.html">can only interrupt once</a></strong>
+<ul><li><em>From:</em> Noah Friedman &lt;friedman@splode.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00994.html">can only interrupt once</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00995.html">Re: can only interrupt once</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00994.html">can only interrupt once</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00995.html">Re: can only interrupt once</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00996"><strong>Date</strong></a></li>
+<li><a href="threads.html#00996"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

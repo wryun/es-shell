@@ -1,0 +1,118 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: executable sizes -->
+<!--X-From-R13: Xbua (_Kbh_ uvqr, gurl frrx.) [npxva <wbuaNpvivy.fh.bm.nh> -->
+<!--X-Date: Fri, 2 Oct 1992 20:01:15 &#45;0400 -->
+<!--X-Message-Id: 199210030952.14386.es.baben@civil.su.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9210022344.AA26850@utopia.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>executable sizes</title>
+<link rev="made" href="mailto:john@civil.su.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00012.html">Date Prev</a>][<a href="msg00014.html">Date Next</a>][<a href="msg00012.html">Thread Prev</a>][<a href="msg00014.html">Thread Next</a>][<a href="maillist.html#00013">Date Index</a>][<a href="threads.html#00013">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>executable sizes</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: The es Mailing List &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: executable sizes</li>
+<li><em>From</em>: John (_You_ hide, they seek.) Mackin &lt;<a href="mailto:john%40civil.su.oz.au">john@civil.su.oz.au</a>&gt;</li>
+<li><em>Date</em>: Fri, 2 Oct 1992 19:52:11 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00010.html">9210022344.AA26850@utopia.mv.us.adobe.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>    &gt; What's worse, es is as big as itcsh on this machine, and almost as big
+    &gt; as csh.
+
+    AAAIGH!  i hadn't realized it was that bad.  hopefully, when we get
+    a chance, we'll be able to get the size down.  i'm not making
+    promises, though.
+
+Some hard data: these sizes are for a DECstation (MIPS chip) running
+Ultrix 4.2.
+
+: g;; size */^(rc es)
+text    data    bss     dec     hex
+90112   16384   3792    110288  1aed0   rc-try/rc
+167936  28672   1344    197952  30540   0.67/es
+
+The text size does seem to be fairly out of control.  (These were both
+compiled with gcc -g and no -O.)  For comparison, but note that these
+were compiled with DEC cc:
+
+: g;; size /bin/sh /usr/bin/sh5 /bin/csh
+text    data    bss     dec     hex
+36864   4096    1616    42576   a650    /bin/sh
+131072  24576   35264   190912  2e9c0   /usr/bin/sh5
+221184  28672   39824   289680  46b90   /bin/csh
+
+sh is a very old version, with no functions and all the traditional bugs.
+sh5 is from System Vile R3, and has functions (and all-new bugs :).
+I don't doubt that the csh is an older version and that the Latest
+and `Greatest' one would be even bigger.
+
+If the garbage collector is the problem, well, there's lots of great
+research been going on in that area.  I can probably dig out a bibliography
+if it's wanted.
+
+OK,
+John.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00010" href="msg00010.html">Re: compiling es</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@mv.us.adobe.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00012.html">compiling es</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00014.html">Re: compiling es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00012.html">compiling es</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00014.html">Re: compiling es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00013"><strong>Date</strong></a></li>
+<li><a href="threads.html#00013"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

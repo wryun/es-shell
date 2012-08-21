@@ -1,0 +1,113 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Reading through files -->
+<!--X-From-R13: evggyrNpbzz.zbg.pbz (Zbera Xnzrf Dvggyr) -->
+<!--X-Date: Mon, 19 Jun 1995 15:56:54 &#45;0400 -->
+<!--X-Message-Id: 9506191954.AA04150@supra.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 2013.199506191857@ensoniq.seattle.harlequin.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Reading through files</title>
+<link rev="made" href="mailto:rittle@comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00844.html">Date Prev</a>][<a href="msg00846.html">Date Next</a>][<a href="msg00844.html">Thread Prev</a>][<a href="msg00847.html">Thread Next</a>][<a href="maillist.html#00845">Date Index</a>][<a href="threads.html#00845">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Reading through files</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:gregoir%40harlequin.com">gregoir@harlequin.com</a></li>
+<li><em>Subject</em>: Re: Reading through files</li>
+<li><em>From</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a> (Loren James Rittle)</li>
+<li><em>Date</em>: Mon, 19 Jun 1995 15:54:31 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Comments</em>: Hyperbole mail buttons accepted, v3.16.</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00844.html">2013.199506191857@ensoniq.seattle.harlequin.com</a>&gt; (gsnead@harlequin.com)</li>
+<li><em>Reply-to</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+&gt;Date: 	Mon, 19 Jun 1995 14:57:01 -0400
+&gt;From: &quot;Gregory L. Snead&quot; &lt;gsnead@harlequin.com&gt;
+
+&gt;  I'm missing something conceptually.  I have a file that I want
+&gt;to read through one line at a time and perform some type of
+&gt;operation in es using the data read in.  I've read through
+&gt;the man page a couple of times and I don't see how I can do this.
+&gt;What am I missing?  How do I do this?
+
+Although the on-line manual gives you everything you need, some
+synthesis must be done to put the pieces together.  Here is a
+quick example:
+
+for (i= `` \n {cat /etc/passwd}) # in turn, i is assigned each line from file
+  {j= &lt;={%fsplit : $i};          # i is broken down into fields in temp j
+   echo $j(1)}                   # the symbolic user id is printed for line i
+
+See on-line es manual for details on
+%fsplit,
+`` ifs-list { command },
+and for (var = list) command
+
+-- 
+Loren J. Rittle (rittle@comm.mot.com)          Ripem-1.2 MD5OfPublicKey:
+Systems Technology Research (IL02/2240)        D2CE4A0F2BABF33AEF10C8C669DD782D
+Motorola, Inc.                                 PGP-2.6 Key fingerprint:
+(708) 576-7794                                 6810D8AB3029874DD7065BC52067EAFD
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00844" href="msg00844.html">Reading through files</a></strong>
+<ul><li><em>From:</em> &quot;Gregory L. Snead&quot; &lt;gsnead@harlequin.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00844.html">Reading through files</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00846.html">Re: Reading through files</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00844.html">Reading through files</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00847.html">Re: Reading through files</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00845"><strong>Date</strong></a></li>
+<li><a href="threads.html#00845"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

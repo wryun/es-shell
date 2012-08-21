@@ -1,0 +1,121 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: tilde operator -->
+<!--X-From-R13: "Zbera X. Dvggyr" <evggyrNfhcen.efpu.pbzz.zbg.pbz> -->
+<!--X-Date: Sat, 19 Dec 1998 18:31:20 &#45;0500 -->
+<!--X-Message-Id: 199812150351.VAA28459@supra.rsch.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199812112230.QAA16086@supra.rsch.comm.mot.com -->
+<!--X-Reference: 19981212134128O.hanche@math.ntnu.no -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: tilde operator</title>
+<link rev="made" href="mailto:rittle@supra.rsch.comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00992.html">Date Prev</a>][<a href="msg00994.html">Date Next</a>][<a href="msg00991.html">Thread Prev</a>][<a href="msg00992.html">Thread Next</a>][<a href="maillist.html#00993">Date Index</a>][<a href="threads.html#00993">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: tilde operator</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: tilde operator</li>
+<li><em>From</em>: &quot;Loren J. Rittle&quot; &lt;<a href="mailto:rittle%40supra.rsch.comm.mot.com">rittle@supra.rsch.comm.mot.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 14 Dec 1998 22:51:45 -0500</li>
+<li><em>Comments</em>: ( Received on ftpbox.mot.com from client mothost.mot.com, sender <a href="mailto:rittle%40supra.rsch.comm.mot.com">rittle@supra.rsch.comm.mot.com</a> )</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00991.html">19981212134128O.hanche@math.ntnu.no</a>&gt; (message from Harald	Hanche-Olsen on Sat, 12 Dec 1998 07:41:28 -0500)</li>
+<li><em>References</em>: &lt;<a href="msg00990.html">199812112230.QAA16086@supra.rsch.comm.mot.com</a>&gt; &lt;<a href="msg00991.html">19981212134128O.hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Reply-to</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Harald and the list,
+
+You all have reminded me that many eyes make it easier to find bugs in
+one's thinking.  I actually feel kind of dumb since I knew the details
+(one-scan rule, eval to re-scan, quoting pattern when assigning to a
+variable - this flaw was only in the posted example code), I just
+didn't put them together right.
+
+As I replied to Byron, based upon his advice, this was the &quot;solution&quot;
+to make the middle example print 0:
+
+S rittle@supra; h='x*'; echo &lt;={eval '~' x1 $h}
+0
+
+Although I didn't mention it, before I mailed the list, I had tried:
+
+S rittle@supra; h='x*'; echo &lt;={eval ~ x1 $h}
+/usr/users/rittle: Permission denied
+
+At the time, it just didn't seem right to have to quote '~' (I wont
+even claim to have thought about even trying that), but now it makes
+perfect sense.  Harald, I think you said it best (paraphrased),
+~``eval: Here be dragons''.
+
+Thanks to:
+
+Harald Hanche-Olsen &lt;hanche@math.ntnu.no&gt;
+Bill Trost &lt;trost@cloud.rain.com&gt;
+Byron Rakitzis &lt;byron@rakitzis.com&gt;
+&lt;rsc@plan9.bell-labs.com&gt;
+
+Regards,
+Loren
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00990" href="msg00990.html">tilde operator</a></strong>
+<ul><li><em>From:</em> &quot;Loren J. Rittle&quot; &lt;rittle@supra.rsch.comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="00991" href="msg00991.html">Re: tilde operator</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@math.ntnu.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00992.html">Re: tilde operator</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00994.html">can only interrupt once</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00991.html">Re: tilde operator</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00992.html">Re: tilde operator</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00993"><strong>Date</strong></a></li>
+<li><a href="threads.html#00993"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

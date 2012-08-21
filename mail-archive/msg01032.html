@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es signal handling bug on recent Linuces -->
+<!--X-From-R13: Vnenyq Vnapur&#45;Ayfra <unapurNzngu.agah.ab> -->
+<!--X-Date: Thu, 14 Dec 2000 13:55:52 &#45;0500 -->
+<!--X-Message-Id: 20001214110959X.hanche@math.ntnu.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: cWe19d5OT0@iadd.jivetech.com -->
+<!--X-Reference: 20001214010615.10392.qmail@g.bio.cse.psu.edu -->
+<!--X-Reference: cWe1UZ5OT2@iadd.jivetech.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es signal handling bug on recent Linuces</title>
+<link rev="made" href="mailto:hanche@math.ntnu.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01031.html">Date Prev</a>][<a href="msg01034.html">Date Next</a>][<a href="msg01025.html">Thread Prev</a>][<a href="msg01037.html">Thread Next</a>][<a href="maillist.html#01032">Date Index</a>][<a href="threads.html#01032">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es signal handling bug on recent Linuces</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: es signal handling bug on recent Linuces</li>
+<li><em>From</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Date</em>: Thu, 14 Dec 2000 05:09:59 -0500</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01025.html">cWe1UZ5OT2@iadd.jivetech.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg01027.html">cWe19d5OT0@iadd.jivetech.com</a>&gt;	&lt;<a href="msg01029.html">20001214010615.10392.qmail@g.bio.cse.psu.edu</a>&gt;	&lt;<a href="msg01025.html">cWe1UZ5OT2@iadd.jivetech.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>+ Paul Haahr &lt;haahr@jivetech.com&gt;:
+
+| This makes sense.  A lot of sense.  I'll probably recode to use
+| sigsetjmp very soon.
+
+Been there, done that:  I raised the sigsetjmp issue in October 1996,
+and Soren got it into the autoconf'd 0.9 beta1 in August 1997.
+
+In fact, stdenv.h says
+
+#if HAVE_SIGSETJMP
+/* Some versions of linux are helpful by providing sigsetjmp as a macro
+   rather than as a function.  *arg* */
+# ifndef sigsetjmp
+
+#  define setjmp(buf) sigsetjmp(buf,1)
+#  define longjmp     siglongjmp
+#  define jmp_buf     sigjmp_buf
+# endif
+#endif
+
+so if sigsetjmp() isn't used in your copy of es, it must be the
+configure script that is acting up.
+
+- Harald
+
+PS.  Since the list seems sort of responsive now, I'm putting an end
+to this business of Cc:ing everybody and his grandmother.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01037" href="msg01037.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01027" href="msg01027.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+<li><strong><a name="01029" href="msg01029.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@bio.cse.psu.edu&gt;</li></ul></li>
+<li><strong><a name="01025" href="msg01025.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01031.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01034.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01025.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01037.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01032"><strong>Date</strong></a></li>
+<li><a href="threads.html#01032"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

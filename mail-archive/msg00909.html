@@ -1,0 +1,218 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: fixed the getenv problem -->
+<!--X-From-R13: Ebera Rnlgba <pfqnlgbaNjbbqynja.hpuvpntb.rqh> -->
+<!--X-Date: Mon, 1 Jul 1996 19:34:11 &#45;0400 -->
+<!--X-Message-Id: 199607012333.SAA21933@midway.uchicago.edu -->
+<!--X-Content-Type: multipart/mixed -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>fixed the getenv problem</title>
+<link rev="made" href="mailto:csdayton@woodlawn.uchicago.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00908.html">Date Prev</a>][<a href="msg00910.html">Date Next</a>][<a href="msg00900.html">Thread Prev</a>][<a href="msg00910.html">Thread Next</a>][<a href="maillist.html#00909">Date Index</a>][<a href="threads.html#00909">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>fixed the getenv problem</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: fixed the getenv problem</li>
+<li><em>From</em>: Soren Dayton &lt;<a href="mailto:csdayton%40woodlawn.uchicago.edu">csdayton@woodlawn.uchicago.edu</a>&gt;</li>
+<li><em>Date</em>: Mon, 1 Jul 1996 19:34:56 -0400</li>
+<li><em>Reply-to</em>: <a href="mailto:csdayton%40midway.uchicago.edu">csdayton@midway.uchicago.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+I just grabbed the freebsd getenv and called that stdgetenv.  changes
+the es getenv to esgetenv and made getenv call something that is
+initialized to stdgetenv and is changed to esgetenv after the
+initialization of the variables.
+
+it seems to work fine on FreeBSD with readline now.
+
+Soren
+
+</pre><pre>*** 1.1	1996/07/01 23:03:40
+--- input.c	1996/07/01 23:34:02
+***************
+*** 1,4 ****
+! /* input.c -- read input from files or strings ($Revision: 1.1 $) */
+  
+  #include &quot;es.h&quot;
+  #include &quot;input.h&quot;
+--- 1,5 ----
+! /* input.c -- read input from files or strings ($Revision: 1.2 $) */
+! /* stdgetenv is based on the FreeBSD getenv */
+  
+  #include &quot;es.h&quot;
+  #include &quot;input.h&quot;
+***************
+*** 35,40 ****
+--- 36,45 ----
+  extern char *readline(char *);
+  extern void add_history(char *);
+  extern void rl_reset_terminal(char *);
++ 
++ static char *stdgetenv(const char *);
++ static char *esgetenv(const char *);
++ static char *(*realgetenv)(const char *) = stdgetenv;
+  #endif
+  
+  
+***************
+*** 207,213 ****
+  }
+  
+  /* getenv -- fake version of getenv for readline (or other libraries) */
+! extern char *getenv(const char *name) {
+  	List *value = varlookup(name, NULL);
+  	if (value == NULL)
+  		return NULL;
+--- 212,218 ----
+  }
+  
+  /* getenv -- fake version of getenv for readline (or other libraries) */
+! static char *esgetenv(const char *name) {
+  	List *value = varlookup(name, NULL);
+  	if (value == NULL)
+  		return NULL;
+***************
+*** 237,242 ****
+--- 242,282 ----
+  		RefReturn(string);
+  	}
+  }
++ 
++ 
++ static char *
++ stdgetenv(name)
++ 	register const char *name;
++ {
++ 	extern char **environ;
++ 	register int len;
++ 	register const char *np;
++ 	register char **p, *c;
++ 
++ 	if (name == NULL || environ == NULL)
++ 		return (NULL);
++ 	for (np = name; *np &amp;&amp; *np != '='; ++np)
++ 		continue;
++ 	len = np - name;
++ 	for (p = environ; (c = *p) != NULL; ++p)
++ 		if (strncmp(c, name, len) == 0 &amp;&amp; c[len] == '=') {
++ 			return (c + len + 1);
++ 		}
++ 	return (NULL);
++ }
++ 
++ char *
++ getenv(char *name)
++ {
++ 	return realgetenv(name);
++ }
++ 
++ extern void
++ initgetenv(void)
++ {
++ 	realgetenv = esgetenv;
++ }
++ 
+  #endif	/* READLINE */
+  
+  /* fdfill -- fill input buffer by reading from a file descriptor */
+*** 1.1	1996/07/01 23:14:16
+--- var.c	1996/07/01 23:14:32
+***************
+*** 1,4 ****
+! /* var.c -- es variables ($Revision: 1.1 $) */
+  
+  #include &quot;es.h&quot;
+  #include &quot;gc.h&quot;
+--- 1,4 ----
+! /* var.c -- es variables ($Revision: 1.24 $) */
+  
+  #include &quot;es.h&quot;
+  #include &quot;gc.h&quot;
+***************
+*** 348,353 ****
+--- 348,357 ----
+  	vars = mkdict();
+  	noexport = NULL;
+  	env = mkvector(10);
++ #if READLINE
++ 	initgetenv();
++ #endif
++ 	
+  }
+  
+  /* importvar -- import a single environment variable */
+*** 1.1	1996/07/01 23:16:14
+--- es.h	1996/07/01 23:18:19
+***************
+*** 288,293 ****
+--- 288,296 ----
+  
+  extern List *runfd(int fd, const char *name, int flags);
+  extern List *runstring(const char *str, const char *name, int flags);
++ #if READLINE
++ extern void initgetenv(void);
++ #endif
+  
+  /* eval_* flags are also understood as runflags */
+  #define	run_interactive		 4	/* -i or $0[0] = '-' */
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00910" href="msg00910.html">Re: fixed the getenv problem</a></strong>
+<ul><li><em>From:</em> Soren Dayton &lt;csdayton@woodlawn.uchicago.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00908.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00910.html">Re: fixed the getenv problem</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00900.html">Status of the es/rc/sam-fans mailing lists</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00910.html">Re: fixed the getenv problem</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00909"><strong>Date</strong></a></li>
+<li><a href="threads.html#00909"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

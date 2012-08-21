@@ -1,0 +1,102 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Not job control in ES, but job control implemented in an ES script -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Wed, 21 Oct 1992 20:21:20 &#45;0400 -->
+<!--X-Message-Id: 9210212348.AA10878@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Not job control in ES, but job control implemented in an ES script</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00132.html">Date Prev</a>][<a href="msg00134.html">Date Next</a>][<a href="msg00156.html">Thread Prev</a>][<a href="msg00136.html">Thread Next</a>][<a href="maillist.html#00133">Date Index</a>][<a href="threads.html#00133">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Not job control in ES, but job control implemented in an ES script</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Bruce Perens &lt;<a href="mailto:bruce%40pixar.com">bruce@pixar.com</a>&gt;</li>
+<li><em>Subject</em>: Re: Not job control in ES, but job control implemented in an ES script</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 21 Oct 1992 19:48:23 -0400</li>
+<li><em>Cc</em>: es mailing list &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; What I was proposing was to make it possible for an ES user
+&gt; to write a job-control system as an ES script.
+
+maybe it could be done external to es, but you're going to need some  
+access to system calls that is not provided now.  maybe i'm too deep  
+into implementation right now, but i don't think it's possible.  if you  
+(or anyone else) can do it, great.
+
+as to the religious issue of job control:  i don't use it, i don't like  
+it, i don't understand how it fully works, and i don't want to make  
+pervasive changes to es to support it.  if someone comes to me and  
+Byron and says, ``i need these two extra primitives and this one extra  
+line of conditionally compiled code in signal.c and i'll then be able  
+to write full csh-style job control in es,'' we'd probably put it in,  
+albeit with some serious grumbling.  (i don't think it will happen,  
+though.  it just don't look that easy to me.)
+
+&gt; I don't even think ES should provide globbing. It should call
+&gt; on an external program to do that.
+
+the reason that there's no %glob to be replaced is that the quoting  
+flags are not visible as es data structures.  maybe that's a mistake,  
+but i do let performance concerns matter some of the time.  as time  
+goes on, globbing may move out of the shell.  (since that's how it was  
+done in days of yore, i think we've observed another cycle of  
+reincarnation.)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00132.html">Not job control in ES, but job control implemented in an ES script</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00134.html">Re: You said the J word</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00156.html">Re: You said the J word</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00136.html">redirection from builtins without forking</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00133"><strong>Date</strong></a></li>
+<li><a href="threads.html#00133"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: '{}' feature or bug? -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Tue, 29 Nov 1994 10:35:09 &#45;0500 -->
+<!--X-Message-Id: 9411291534.AA19170@tepui -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199408282012.WAA05759@father.ludd.luth.se -->
+<!--X-Reference: 199411291517.KAA07298@netcom4.netcom.com -->
+<!--X-Reference: haahr@netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: '{}' feature or bug?</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00766.html">Date Prev</a>][<a href="msg00768.html">Date Next</a>][<a href="msg00765.html">Thread Prev</a>][<a href="msg00748.html">Thread Next</a>][<a href="maillist.html#00767">Date Index</a>][<a href="threads.html#00767">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: '{}' feature or bug?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a></li>
+<li><em>Subject</em>: Re: '{}' feature or bug?</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Tue, 29 Nov 1994 10:34:44 -0500</li>
+<li><em>Cc</em>: <a href="mailto:d87-man%40ludd.luth.se">d87-man@ludd.luth.se</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;haahr@netcom.com&gt; Tue, 29 November 1994 10:17:13 -0500</li>
+<li><em>References</em>: &lt;<a href="msg00747.html">199408282012.WAA05759@father.ludd.luth.se</a>&gt;	&lt;<a href="msg00765.html">199411291517.KAA07298@netcom4.netcom.com</a>&gt;</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;&gt;      ; '{}'
+&gt;&gt;      ; '{echo strange}'
+&gt;&gt;      strange
+&gt;&gt;      ; 
+&gt;
+&gt;I'd have to call this a feature
+
+And, I must confess, I've taken advantage of it (though not for anything
+terribly practical).  I implemented conses (using message-passing closures)
+and various list operations, and implemented list-copy as
+
+        fn list-copy { %flatten ' ' $* }
+
+which is used to implement e.g. the following functions:
+
+        fn reverse { $0^! &lt;={ list-copy $* } }
+
+        fn reverse!    list \
+        {
+          let (p = $list
+               q = &lt;={ cdr $list }
+               r =)
+            {
+              set-cdr! $p
+              while {} \
+                {
+                  r = &lt;={ cdr $q }
+                  set-cdr! $q $p
+                  p = $q
+                  if { ~ $r () } \
+                       { break } \
+                     { q = $r }
+                }
+              result $q
+            }
+        }
+
+I suppose I should be beaten with a stick.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00747" href="msg00747.html">'{}' feature or bug?</a></strong>
+<ul><li><em>From:</em> Mikael Adolfsson &lt;d87-man@ludd.luth.se&gt;</li></ul></li>
+<li><strong><a name="00765" href="msg00765.html">Re: '{}' feature or bug?</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00766.html">Re: subscripting</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00768.html">Re: es bug</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00765.html">Re: '{}' feature or bug?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00748.html">subscripting</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00767"><strong>Date</strong></a></li>
+<li><a href="threads.html#00767"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

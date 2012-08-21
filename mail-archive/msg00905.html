@@ -1,0 +1,152 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: esdump dumps ...... core! -->
+<!--X-From-R13: snevrq anjnm <anjnm921Npf.hvqnub.rqh> -->
+<!--X-Date: Wed, 26 Jun 1996 14:51:08 &#45;0400 -->
+<!--X-Message-Id: 21410.835815041@waldrog.cs.uidaho.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199606261825.OAA09515@netcom12.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: esdump dumps ...... core!</title>
+<link rev="made" href="mailto:nawaz921@cs.uidaho.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00904.html">Date Prev</a>][<a href="msg00906.html">Date Next</a>][<a href="msg00904.html">Thread Prev</a>][<a href="msg00906.html">Thread Next</a>][<a href="maillist.html#00905">Date Index</a>][<a href="threads.html#00905">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: esdump dumps ...... core!</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Subject</em>: Re: esdump dumps ...... core!</li>
+<li><em>From</em>: faried nawaz &lt;<a href="mailto:nawaz921%40cs.uidaho.edu">nawaz921@cs.uidaho.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 26 Jun 1996 14:50:41 -0400</li>
+<li><em>Cc</em>: Soren Dayton &lt;<a href="mailto:csdayton%40midway.uchicago.edu">csdayton@midway.uchicago.edu</a>&gt;,	<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Wed, 26 Jun 1996 14:25:29 PDT.&quot;             &lt;<a href="msg00904.html">199606261825.OAA09515@netcom12.netcom.com</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Paul Haahr wrote...
+   
+   Um, because of changes to crt0?  What?  How?  Huh?
+
+   The only thing of that might affect this is that crt0 could be defining
+   some symbol that es wants to be bss'ed.
+
+I thought it was crt0 because I'd have problems with some function (I believe
+it was getenv()) where the argument to the function was
+&quot;ENABLE_STARTUP_LOCALE&quot;, according to gdb.  Looking through FreeBSD's CVS
+logs on crt0.c, I found
+
+----------------------------
+revision 1.21
+date: 1995/11/02 12:42:42;  author: ache;  state: Exp;  lines: +1 -12
+Remove my locale hack. Sigh.
+----------------------------
+.
+.
+.
+----------------------------
+revision 1.14
+date: 1994/09/24 16:01:30;  author: ache;  state: Exp;  lines: +3 -2
+Call reduced (8-bit only) startup_setlocale()
+----------------------------
+revision 1.13
+date: 1994/09/19 02:00:21;  author: ache;  state: Exp;  lines: +5 -6
+Change level of setlocale hack enabling from compile option STARTUP_LOCALE
+to check (via getenv) environment variable &quot;ENABLE_STARTUP_LOCALE&quot; at
+runtime.
+Submitted by: me per Bruce suggestion
+----------------------------
+revision 1.12
+date: 1994/09/18 22:21:04;  author: ache;  state: Exp;  lines: +8 -2
+Add (#ifdef'ed by STARTUP_LOCALE) following line to crt0.c
+
+	(void) setlocale(LC_ALL, &quot;&quot;);
+
+It will be easiest way now to make national chars available
+for all ctype-oriented programs at once by simple:
+
+setenv LANG Your_National_Charset
+
+Default case (without &quot;LANG&quot; environment
+variable) will be fully ANSI compatible (got &quot;C&quot; locale).
+
+If &quot;LANG&quot; variable present, extention becomes active.
+
+Effect of this extention is great: in one time all ctype
+oriented programs can accept/print national characters
+without any touching source/binary code, it is big win, IMHO.
+
+This method is fully compatible with ISO8859-* and russian koi8-r
+too (in general -- with all 8-bit character sets). I think
+it is very useful.
+I got this idea from Xenix locale implementation.
+
+This extention is even never compiled in, unless you set
+	setenv STARTUP_LOCALE
+before rebuilding crt0.c or corresponding variable in /etc/make.conf
+----------------------------
+
+etc.
+
+
+   
+   I won't be able to track this one down, I suspect.
+
+Would an account help?  :)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00904" href="msg00904.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00904.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00906.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00904.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00906.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00905"><strong>Date</strong></a></li>
+<li><a href="threads.html#00905"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

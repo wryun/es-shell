@@ -1,0 +1,107 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: final call:  a replacement for <>{} -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 6 Apr 1993 23:54:36 &#45;0400 -->
+<!--X-Message-Id: 9304070355.AA18921@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>final call:  a replacement for &lt;&gt;{}</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00284.html">Date Prev</a>][<a href="msg00286.html">Date Next</a>][<a href="msg00284.html">Thread Prev</a>][<a href="msg00286.html">Thread Next</a>][<a href="maillist.html#00285">Date Index</a>][<a href="threads.html#00285">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>final call:  a replacement for &lt;&gt;{}</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: final call:  a replacement for &lt;&gt;{}</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 6 Apr 1993 23:55:04 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>i have a release (tentatively called 0.82) of es waiting to go out the
+door, with the only thing left for discussion being the ``what is the
+replacement for &lt;&gt;{}'' question.  after the list has had this release
+for a week, i want to announce es to the rest of the world.
+
+anyway, i've been thinking about this a lot, and all proposals have
+serious problems, but if we're going to stay with the ascii character
+set, we have to pick something.
+
+my preference at the moment is for using the construct ${ ... } for
+return value/exit status of a command.  the braces are required.  this
+usurps the current meaning of ${}, which is cute but not terribly
+useful.  the non-orthogonality is a shame, but $# and $^ are already
+overloadings on $ and nobody has seemed to complain.
+
+if you really want the old meaning of ${cmd}, you can always do it
+with $({cmd}) or even $'{cmd}'.  As a side note, ${cmd} in the current
+es is less useful than most people think it is.  try using that form
+when a lexical binding is in place, e.g.
+	let (x = foo) echo ${a}
+
+now, if anyone objects to this change, please send a note to the list
+by thursday afternoon (california time) giving both
+	+ a reason (other than the extra overloading of $ and the loss
+	  of the current meaning for ${}) why you don't like it, and
+	+ a suggestion which doesn't prevent someone from using
+	  : or % as a command.
+
+i really want to wrap this up soon.
+
+thank you,
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00284.html">autoloading es functions</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00286.html">Re: final call: a replacement for &lt;&gt;{}</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00284.html">autoloading es functions</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00286.html">Re: final call: a replacement for &lt;&gt;{}</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00285"><strong>Date</strong></a></li>
+<li><a href="threads.html#00285"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: ^Z signal -->
+<!--X-From-R13: "Dbtre Brccr" <ebtNbuz.lbex.np.hx> -->
+<!--X-Date: Mon, 17 May 1993 08:13:27 &#45;0400 -->
+<!--X-Message-Id: m0nv43o&#45;00055zC@talisker.ohm.york.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: ^Z signal</title>
+<link rev="made" href="mailto:rog@ohm.york.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00401.html">Date Prev</a>][<a href="msg00403.html">Date Next</a>][<a href="msg00400.html">Thread Prev</a>][<a href="msg00415.html">Thread Next</a>][<a href="maillist.html#00402">Date Index</a>][<a href="threads.html#00402">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: ^Z signal</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: ^Z signal</li>
+<li><em>From</em>: &quot;Roger Peppe&quot; &lt;<a href="mailto:rog%40ohm.york.ac.uk">rog@ohm.york.ac.uk</a>&gt;</li>
+<li><em>Date</em>: Mon, 17 May 1993 08:12:52 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Dave Nicol writes :
+&gt; Is there a way of suspending a foreground process in es using the ^Z signal
+&gt; thing ... When I try it with Vi, the whole shell exits ...
+&gt;
+&gt; What signal does ^Z correspond to ??
+
+that's job control. es doesn't have it.
+(too much added complexity - it might be nice, but it's not necessary)
+
+(^Z usually generates a SIGTSTP signal, which the shell turns
+into a SIGSTOP sent to the currently running process - at least,
+that's my understanding of it; i've never written the code myself)
+
+what primitives are actually necessary to allow an implementation 
+
+of job control within es ?
+
+On a previous note (about the proposed %read implementation), it
+is not always necessary to read a character at a time; the original
+bourne shell read in multiples of BUFSIZ on files that were seekable,
+and single characters otherwise.
+
+I'm in favour of %read, but could we keep things like gnu readline
+out of it ? If line editing is desired, an external program is really
+more appropriate - it's only when reading non-interactively that the
+performance really matters.
+
+  cheers,
+    rog.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00415" href="msg00415.html">Re: ^Z signal</a></strong>
+<ul><li><em>From:</em> Chet Ramey &lt;chet@odin.INS.CWRU.Edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00401.html">job control</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00403.html">Re: ^Z signal</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00400.html">^Z signal</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00415.html">Re: ^Z signal</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00402"><strong>Date</strong></a></li>
+<li><a href="threads.html#00402"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

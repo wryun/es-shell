@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Bug? -->
+<!--X-From-R13: Bnhy Vnnue <unnueNargpbz.pbz> -->
+<!--X-Date: Fri, 19 May 1995 12:17:12 &#45;0400 -->
+<!--X-Message-Id: 1076.9505191614@bessie.harlequin.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199505181703.KAA19959@hp08.nas.nasa.gov -->
+<!--X-Reference: gray@nas.nasa.gov -->
+<!--X-Reference: 9505191534.ZM15685@chanur.imf.unit.no -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Bug?</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00841.html">Date Prev</a>][<a href="msg00843.html">Date Next</a>][<a href="msg00841.html">Thread Prev</a>][<a href="msg00840.html">Thread Next</a>][<a href="maillist.html#00842">Date Index</a>][<a href="threads.html#00842">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Bug?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Subject</em>: Re: Bug?</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40netcom.com">haahr@netcom.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 19 May 1995 12:14:01 -0400</li>
+<li><em>Cc</em>: &quot;Scott C. Gray&quot; &lt;<a href="mailto:gray%40nas.nasa.gov">gray@nas.nasa.gov</a>&gt;, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00841.html">9505191534.ZM15685@chanur.imf.unit.no</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00839.html">199505181703.KAA19959@hp08.nas.nasa.gov</a>&gt;	&lt;gray@nas.nasa.gov&gt;	&lt;<a href="msg00841.html">9505191534.ZM15685@chanur.imf.unit.no</a>&gt;</li>
+<li><em>Reply-to</em>: Paul Haahr &lt;<a href="mailto:haahr%40netcom.com">haahr@netcom.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; However the catcher procedure is *not* protected by $&amp;noreturn, and
+&gt; so something is returned as the value of the catcher -- and hence of
+&gt; the while construct.
+
+Yep.  That's the problem.  Thanks for the diagnosis -- I spent about
+twenty minutes looking at it last night without realizing what the
+problem is.
+
+&gt; Maybe the protection of $&amp;noreturn should be extended to all lexically
+&gt; enclosed procedures.  Or, maybe that doesn't make any sense.
+
+That would be difficult to do.
+
+I would argue that catch should call the catching function with
+$&amp;noreturn.  
+
+Line 62 of prim-ctl.c
+
+  list = eval(mklist(lp-&gt;term, e), NULL, evalflags);
+
+could probably be changed to
+
+  list = eval(mklist(mkterm(&quot;$&amp;noreturn&quot;, NULL), mklist(lp-&gt;term, e)),
+	      NULL, evalflags);
+
+This does fix the problem, but I don't know whether it introduces any
+bugs.
+
+&gt; Apparently, the following slightly more obfuscated version of while fixes
+&gt; the problem.
+
+Clever.  Looks good to me, pending a fix in $&amp;catch, as above.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00839" href="msg00839.html">Bug?</a></strong>
+<ul><li><em>From:</em> &quot;Scott C. Gray&quot; &lt;gray@nas.nasa.gov&gt;</li></ul></li>
+<li><strong><a name="00841" href="msg00841.html">Re: Bug?</a></strong>
+<ul><li><em>From:</em> &quot;Harald Hanche-Olsen&quot; &lt;hanche@imf.unit.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00841.html">Re: Bug?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00843.html">the ever-forthcoming next release of es...</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00841.html">Re: Bug?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00840.html">Re: Bug?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00842"><strong>Date</strong></a></li>
+<li><a href="threads.html#00842"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

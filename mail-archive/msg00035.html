@@ -1,0 +1,120 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: call&#45;with&#45;current&#45;continuation -->
+<!--X-From-R13: Epbgg Epujnegm <fpujnegmNtebhpub.pf.cfh.rqh> -->
+<!--X-Date: Mon, 5 Oct 1992 17:13:09 &#45;0400 -->
+<!--X-Message-Id: 92Oct5.171237edt.2620@groucho.cs.psu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9210051933.AA08138@utopia.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: call-with-current-continuation</title>
+<link rev="made" href="mailto:schwartz@groucho.cs.psu.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00034.html">Date Prev</a>][<a href="msg00036.html">Date Next</a>][<a href="msg00034.html">Thread Prev</a>][<a href="msg00036.html">Thread Next</a>][<a href="maillist.html#00035">Date Index</a>][<a href="threads.html#00035">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: call-with-current-continuation</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Subject</em>: Re: call-with-current-continuation</li>
+<li><em>From</em>: Scott Schwartz &lt;<a href="mailto:schwartz%40groucho.cs.psu.edu">schwartz@groucho.cs.psu.edu</a>&gt;</li>
+<li><em>Date</em>: Mon, 5 Oct 1992 17:12:16 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Mon, 05 Oct 92 15:33:34 EDT.&quot;             &lt;<a href="msg00033.html">9210051933.AA08138@utopia.mv.us.adobe.com</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Paul says:
+| i retract what i said earlier about expecting to add call/cc to es.
+| the problem that es has with first class continuations is that, in
+| a shell, it must be possible to pass a first class value to an exec'ed
+| program.  i see no way to do that w/continuations.  that's one of
+| the reasons byron and i did not mention first class continuations
+| in our paper and why they do not appear on our todo list;  i regret
+| that i opened the door to them again, since we had months ago gone
+| down the path (in our heads) of trying to figure out what they meant
+| in the context of a shell, and concluded that they didn't make too
+| much sense.
+
+Most scheme implementations simply print a continuation like
+	#[control-point 405248]
+which, by design, is not readable.  Is that a fatal decision?  I think
+I could live with ``call-cc @ x {echo $x}'' printing something like the
+above.
+
+But suppose you printed it instead in a form that was readable by the
+shell.  Then you could save the current state of es in a file and read
+it back later.  In other words, you'd have an undump facility.  That's
+a useful feature, and one that shows that an external representation
+for a continuation is a sensible thing to want.  More generally,
+doesn't &quot;exec foo&quot; really mean to invoke the continuation stored by the
+file foo?  Implementing all this in a nice way might be a pain, but
+that's a different issue.
+
+The obvious response is that users would practically never actually use
+continuations that way.  The answer, as in scheme, is &quot;so what?&quot;
+Continuations are an invaluable abstraction for implementing language
+features, even if end users never touch them.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00036" href="msg00036.html">Re: call-with-current-continuation</a></strong>
+<ul><li><em>From:</em> John (_You_ hide, they seek.) Mackin &lt;john@civil.su.oz.au&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00033" href="msg00033.html">call-with-current-continuation</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@mv.us.adobe.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00034.html">Re: call-with-current-continuation</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00036.html">Re: call-with-current-continuation</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00034.html">Re: call-with-current-continuation</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00036.html">Re: call-with-current-continuation</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00035"><strong>Date</strong></a></li>
+<li><a href="threads.html#00035"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

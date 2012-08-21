@@ -1,0 +1,148 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es memory requirements -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Tue, 5 Jan 1993 18:21:43 &#45;0500 -->
+<!--X-Message-Id: 9301052321.AA06861@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es memory requirements</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00178.html">Date Prev</a>][<a href="msg00180.html">Date Next</a>][<a href="msg00178.html">Thread Prev</a>][<a href="msg00180.html">Thread Next</a>][<a href="maillist.html#00179">Date Index</a>][<a href="threads.html#00179">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es memory requirements</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: Re: es memory requirements</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Tue, 5 Jan 1993 18:21:26 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Date: 	Tue, 5 Jan 1993 16:54:25 -0500
+From: Paul Haahr &lt;haahr@mv.us.adobe.com&gt;
+Subject: Re: es memory requirements
+
+|&gt; I brought up es &quot;in production&quot; today on a fairly large system, and the
+|&gt; good news is that it seems to be working fine - have not heard one complaint
+|&gt; about anything breaking.  The application in question runs under 400 lines
+|&gt; of es code, so we're not talking about a mammoth program.
+|
+| still, it's the largest extant es program.  i'm glad to hear that it's
+| working.
+|
+| can you say anything about speed relative to rc?  i would expect
+| performance to be comparable.
+
+I believe it is.  The OS is DYNIX/ptx (Sequent), which has a &quot;ptime&quot;
+program that gets individual statistics for all the child process
+hierarchy, so I was able to compare es versus rc in principle as well
+as es versus rc in practice (I was able to eliminate some external programs
+when I switched to es.)  My recollection is not very specific, but for
+the small amount of CPU time consumed es was indeed comparable.
+
+|&gt; The bad news is that it's using 3 to 4 times as much memory as rc did, to
+|&gt; do pretty much the same thing.  That puts it almost in a class with perl.
+|&gt; Most of the memory is allocated at run time - the compiled binary sizes are
+|&gt; pretty comparable with rc.
+|
+| we haven't yet profiled memory usage in es, and don't even have real
+| mechanisms at our fingertips for giving back info on es's dynamic memory
+| usage patterns.  my guess is that while we allocate a fair amount of memory,
+| working sets are not much  larger than working sets in rc.  more data is
+| necessary.  (we should probably add an extra GCINFO compile-time option for
+| reporting amounts of live data.)
+
+Total size and resident set size differences were similar - es was larger by
+3 or 4 times.
+
+|&gt; I'm probably going to have to pull the es code and restore rc, my colleagues
+|&gt; here are getting pretty uptight over the memory (we apparently had some
+|&gt; low on memory problems this morning at only around 300 users, and we expect
+|&gt; more like 500 when things pick up.)
+|
+| does sound bad.  when you say low on memory, do you mean low on swap space
+| or do  you mean lots of thrashing?  the former is not that surprising
+| (300-500 users!!!), the latter is more disturbing.
+
+Well, there were some disturbed guys in my office yesterday.  Fortunately we
+can pull some memory from another system that's on its way out - the problem
+is the amount of real memory, not swap space.  We may be suffering from poor
+swapping and paging algorithms, which would be kind of typical from what I've
+seen, but the basic problem is that we suddenly had hundreds of these
+processes whose resident set size had increased dramatically.
+
+|&gt; What I'm wondering, since I faintly recall that es uses garbage collection,
+|&gt; would it be possible to influence the collection algorithm?  The application
+|&gt; tends to create a lot of functions and lists and then delete them all at once,
+|&gt; and I'm thinking it might be possible to do something, along with deleting,
+|&gt; that would allow the space to be reclaimed for the next batch of functions.  
+|
+| deleting them does free them up, the next time a collection is done.  the  
+| allocator requires free memory to be contiguous (it's a copying collector), so
+| knowing that some things are free already really doesn't help.
+
+When would you expect &quot;the next time a collection is done&quot; to happen?  I'm
+thinking perhaps, if I could induce a collection at certain points, things
+might improve.  As can be the case with any shell, es spends long periods
+dormant while the user is running a &quot;real&quot; application, and if I could get
+it to compact a little first it would be a great help.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00178.html">Re: es memory requirements</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00180.html">Re: es memory requirements</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00178.html">Re: es memory requirements</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00180.html">Re: es memory requirements</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00179"><strong>Date</strong></a></li>
+<li><a href="threads.html#00179"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

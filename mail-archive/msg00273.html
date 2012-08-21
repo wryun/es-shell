@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: <> redirection and notations -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Thu, 1 Apr 1993 20:54:38 &#45;0500 -->
+<!--X-Message-Id: 9304020152.AA10161@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: &lt;&gt; redirection and notations</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00272.html">Date Prev</a>][<a href="msg00274.html">Date Next</a>][<a href="msg00270.html">Thread Prev</a>][<a href="msg00276.html">Thread Next</a>][<a href="maillist.html#00273">Date Index</a>][<a href="threads.html#00273">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: &lt;&gt; redirection and notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: es mailing list &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: &lt;&gt; redirection and notations</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 20:52:17 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[sorry for taking so long to reply to this recent sequence of notes.]
+
+the suggestion, as i understand is to have to layers of hook  
+functions, which i will name consistently with current es.
+
+fn-%openfile	= $&amp;openfile
+fn-%open	= %openfile r		# &lt;file
+fn-%create	= %openfile w		# &gt;file
+fn-%append	= %openfile a		# &gt;&gt;file
+fn-%open-write	= %openfile r+		# &lt;&gt;file
+fn-%open-create	= %openfile w+		# useless; no special syntax
+fn-%open-append	= %openfile a+		# &lt;&gt;&gt;file
+
+(the last three names are up for grabs.  the first three aren't.   
+also if people really want &lt;&gt;! or &lt;&lt;&gt; or &lt;&gt;&lt; for %open-create, it can  
+always go in, though it does seem truly pointless to me.)
+
+(note also, that fn- variables don't have to be lambdas.  they're  
+just substituted in first position.)
+
+in addition, the $&amp;open, $&amp;create, and $&amp;append primitives would be  
+dropped from the language.
+
+now, some people have suggested using -x style options for selecting  
+which form of open we get.  i don't really like that, because i think  
+of -x as an option that changes a default behavior, and in this case  
+i don't want a default.
+
+anyway, barring dissent from the list, i want to implement this set  
+of operations.  please let me know (as i'm sure you will) about flaws  
+in this design.
+
+paul
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00272.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00274.html">Re: es-remote problem; how to fix?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00270.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00276.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00273"><strong>Date</strong></a></li>
+<li><a href="threads.html#00273"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

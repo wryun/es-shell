@@ -1,0 +1,98 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: bottomhandler == NULL -->
+<!--X-From-R13: Xbua (_Kbh_ uvqr, gurl frrx.) [npxva <wbuaNpvivy.fh.bm.nh> -->
+<!--X-Date: Fri, 2 Oct 1992 17:22:29 &#45;0400 -->
+<!--X-Message-Id: 199210030710.14015.es.babar@civil.su.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>bottomhandler == NULL</title>
+<link rev="made" href="mailto:john@civil.su.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00002.html">Date Prev</a>][<a href="msg00004.html">Date Next</a>][<a href="msg00014.html">Thread Prev</a>][<a href="msg00005.html">Thread Next</a>][<a href="maillist.html#00003">Date Index</a>][<a href="threads.html#00003">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>bottomhandler == NULL</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: The es Mailing List &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: bottomhandler == NULL</li>
+<li><em>From</em>: John (_You_ hide, they seek.) Mackin &lt;<a href="mailto:john%40civil.su.oz.au">john@civil.su.oz.au</a>&gt;</li>
+<li><em>Date</em>: Fri, 2 Oct 1992 17:10:28 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I don't know exactly what's going on here, but I've tracked it down a
+bit.  Shouldn't bottomhandler always be non-NULL?  Anyway, if you
+try this one:
+
+; prompt = (three element list) es
+
+You get this one:
+
+except.c:26: assertion failed (handler != NULL)
+illegal instruction--core dumped
+
+What's happened is that prim_setprompt tries to throw an error because
+it thinks prompt should only have two elements, and the first throw
+(back to vardef) works OK, but in the course of doing that the
+handler-&gt;up is NULL, so bottomhandler gets assigned NULL and when
+vardef tries to re-throw the exception the assertion fails.
+
+Apart from the bug, couldn't we just have extra elements of
+prompt silently ignored, like in rc?  I find it handy to carry
+a third one around.
+
+OK,
+John.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00002.html">compiling es</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00004.html">Re: compiling es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00014.html">Re: compiling es</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00005.html">Random comments and long memories</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00003"><strong>Date</strong></a></li>
+<li><a href="threads.html#00003"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

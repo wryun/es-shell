@@ -1,0 +1,100 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: globbing. -->
+<!--X-From-R13: fgrirNtrp&#45;rcy.pb.hx (Egrir_Yvyonar) -->
+<!--X-Date: Thu, 27 May 1993 10:53:20 &#45;0400 -->
+<!--X-Message-Id: 9305271452.AA00549@zombie.gec&#45;epl.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: globbing.</title>
+<link rev="made" href="mailto:steve@gec-epl.co.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00555.html">Date Prev</a>][<a href="msg00557.html">Date Next</a>][<a href="msg00555.html">Thread Prev</a>][<a href="msg00557.html">Thread Next</a>][<a href="maillist.html#00556">Date Index</a>][<a href="threads.html#00556">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: globbing.</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: globbing.</li>
+<li><em>From</em>: <a href="mailto:steve%40gec-epl.co.uk">steve@gec-epl.co.uk</a> (Steve_Kilbane)</li>
+<li><em>Date</em>: Thu, 27 May 1993 10:52:35 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+From: quanstro%epsilon.eecs.nwu.edu@gec-epl.co.uk (Erik Quanstrom) 
+&gt; Is there any real reason (other than cultural compatability) that
+&gt; a failed glob returns the globbing pattern?
+
+i assume you then meant: &quot;How about es returning a null list?&quot;
+
+&gt; 
+&gt; There is only one case that I could see this being a problem: 
+&gt; 
+&gt; ; ls *.c
+&gt; 
+&gt; will ls * because of the default behavior of ls.
+&gt; 
+
+...and i think that's the reason: so that programs which expected filenames
+would be given at least one, which they could then barf on. Consider
+re-creating a tarfile &quot;tarred-gnu-program-with-lots-of-chars-1.0.8.17&quot;:
+
+; tar cf tarred* file1.c file2.c file3.c ...
+
+..and your hours of work go down the toilet.
+
+steve.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00555.html">globbing.</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00557.html">%glob</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00555.html">globbing.</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00557.html">%glob</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00556"><strong>Date</strong></a></li>
+<li><a href="threads.html#00556"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

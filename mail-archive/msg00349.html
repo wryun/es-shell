@@ -1,0 +1,127 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Question? -->
+<!--X-From-R13: cnggrefbNpvf.hno.rqh (Zrjvf Bnggrefb) -->
+<!--X-Date: Mon, 3 May 1993 15:06:01 &#45;0400 -->
+<!--X-Message-Id: 9305031905.AA07689@cis.uab.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Question?</title>
+<link rev="made" href="mailto:patterso@cis.uab.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00348.html">Date Prev</a>][<a href="msg00350.html">Date Next</a>][<a href="msg00370.html">Thread Prev</a>][<a href="msg00350.html">Thread Next</a>][<a href="maillist.html#00349">Date Index</a>][<a href="threads.html#00349">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Question?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Question?</li>
+<li><em>From</em>: <a href="mailto:patterso%40cis.uab.edu">patterso@cis.uab.edu</a> (Lewis Patterso)</li>
+<li><em>Date</em>: Mon, 3 May 1993 15:05:52 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Following your announcement of es-0.84, I acquired the 'tar' file and
+attempted to construct the shell on an HP9000/835 running HPUX version
+A.09.00. I have encountered a problem which Iam hoping you have seen
+before.
+
+All compiles run flawlessly using the specifications shown below. The
+execution of esdump (./esdump &lt; initial.es &gt; initial.c) fails with a
+memory fault. Using the HP debugger (xdb) indicates the failure occurs
+in a call to strlen in fmtcat(). The first six lines of invocation stack
+are depicted below.
+
+               0- strlen
+               1- fmtcat     print.c:230
+               2- sconv      print.c:52
+               3- printfmt   print.c:249
+               4- fmtprint   print.c:271
+               5- Lconv      conv.c:17
+
+The offending variable appears to be 's' (strlen(s)) which is defined
+in 'sconv' by a statement of the form 'char* s= va_arg(...)'.
+
+Is this a known problem or 'am I breaking new ground?
+
+Specifications form Makefile.
+
+SHELL	= /bin/sh
+CC	= cc
+#CC	= gcc
+CFLAGS	= -g -zAa -DHPUX
+LDFLAGS	=
+LIBS	=
+
+Specifications form config.h
+
+#if HPUX
+#define _INCLUDE_POSIX_SOURCE
+#define _INCLUDE_XOPEN_SOURCE
+#define _INCLUDE_HPUX_SOURCE
+#define GETGROUPS_USES_GID_T    1
+#define USE_STDARG              1
+#define USE_UNISTD              1
+#ifndef	BSD_LIMITS
+#define BSD_LIMITS		0
+#endif
+#ifndef	USE_DIRENT
+#define	USE_DIRENT		0
+#endif
+
+Thank You!
+
+Lewis Patterson
+patterso@cis.uab.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00348.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00350.html">Re: Question?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00370.html">Re: %and, %or, and the return value of assignment</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00350.html">Re: Question?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00349"><strong>Date</strong></a></li>
+<li><a href="threads.html#00349"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

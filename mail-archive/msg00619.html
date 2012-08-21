@@ -1,0 +1,101 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: $$... parsing -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Sun, 6 Jun 1993 20:24:26 &#45;0400 -->
+<!--X-Message-Id: 9306070025.AA11677@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: $$... parsing</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00618.html">Date Prev</a>][<a href="msg00620.html">Date Next</a>][<a href="msg00618.html">Thread Prev</a>][<a href="msg00620.html">Thread Next</a>][<a href="maillist.html#00619">Date Index</a>][<a href="threads.html#00619">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: $$... parsing</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:alan%40oldp.astro.wisc.edu">alan@oldp.astro.wisc.edu</a></li>
+<li><em>Subject</em>: Re: $$... parsing</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Sun, 6 Jun 1993 20:25:14 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; &gt; Maybe the parsing rules ought to be changed so that $$name(4) and
+&gt; &gt; $($name)(4) are parsed the same (and the latter the way I would have
+&gt; &gt; expected it to)?  
+
+&gt; This still might be a good idea.
+
+subscript handling is rather unsatisfactory right now in es, due to
+its rc heritage.  (see Tom Duff's only complaint against rc's syntax
+other than free carets.)
+
+when/if es moves toward extensible syntax is the right time to debate
+such a change.  for now, making $($name)(4) parse would actually be
+very difficult.
+
+on the other hand, changing the interpretation of $$name(4) seems to
+just require switching the precedence declarations of '$' and SUB in
+parse.y and i couldn't find any immediate evil effects.  since $($name(4))
+is currently legal es syntax, it does make some sense to change the
+precedences.
+
+i consider this very minor issue; if there's broad consensus to change
+it, let's change it.  compatibility seems to be the downside, but the
+number of times i've typed $$foo(n) is very small.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00618.html">Re: $$... parsing</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00620.html">Re: $$... parsing</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00618.html">Re: $$... parsing</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00620.html">Re: $$... parsing</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00619"><strong>Date</strong></a></li>
+<li><a href="threads.html#00619"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

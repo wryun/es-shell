@@ -1,0 +1,97 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: problem compiling es under linux -->
+<!--X-From-R13: <zfoNpngf.GQEQ.SRG> -->
+<!--X-Date: Mon, 3 May 1993 16:11:55 &#45;0400 -->
+<!--X-Message-Id: 9305032011.AA08088@am.ucsc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>problem compiling es under linux</title>
+<link rev="made" href="mailto:msb@cats.UCSC.EDU">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00351.html">Date Prev</a>][<a href="msg00353.html">Date Next</a>][<a href="msg00351.html">Thread Prev</a>][<a href="msg00355.html">Thread Next</a>][<a href="maillist.html#00352">Date Index</a>][<a href="threads.html#00352">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>problem compiling es under linux</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: problem compiling es under linux</li>
+<li><em>From</em>: &lt;<a href="mailto:msb%40cats.UCSC.EDU">msb@cats.UCSC.EDU</a>&gt;</li>
+<li><em>Date</em>: Mon, 3 May 1993 16:11:45 -0400</li>
+<li><em>Illegal-object</em>: Syntax error in From: address found on hawkwind.utcs.toronto.edu:	From:	Maurice S.Barnum &lt;<a href="mailto:msb%40cats.UCSC.EDU">msb@cats.UCSC.EDU</a>&gt;		^	 ^-illegal period in phrase		 \-phrases containing '.' must be quoted</li>
+<li><em>Return-receipt-to</em>: <a href="mailto:msb%40cats.UCSC.EDU">msb@cats.UCSC.EDU</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+when compiling es with -D_POSIX_SOURCE under linux 0.99.9, the
+compilation failed because of calls to setpgrp().  The POSIX.1
+function is void setpgrp(void) --- the POSIX.1 &quot;equivalent&quot; of what
+es was doing is setpgid().
+
+(sorry, don't remember the source file, and don't have the source
+handy here)
+
+The change I made was adding an #ifdef _POSIX_SOURCE around each
+call.   Maybe something cleaner would be using a macro like
+SETPGRP that gets it's defined as either setpgid or setpgrp
+depending upon the defition of _POSIX_SOURCE?
+
+--- 
+Maurice S. Barnum  --- msb@cats.{ucsc.edu,BITNET}, mbarnum@eis.calstate.edu
+    There is no more light in a genius than in any other honest man---but he
+    has a ... lens to concentrate this light into a burning point. 
+	--- L. Wittgenstein
+--- 
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00351.html">Re: Question?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00353.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00351.html">Re: Question?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00355.html">pwd</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00352"><strong>Date</strong></a></li>
+<li><a href="threads.html#00352"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

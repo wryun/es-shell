@@ -1,0 +1,125 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: path should be in noexport, and a .esrc tip -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 29 Nov 1994 20:27:32 &#45;0500 -->
+<!--X-Message-Id: 199411300118.UAA17077@netcom4.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 1994&#45;11&#45;18.101120.hanche@chur -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: path should be in noexport, and a .esrc tip</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00771.html">Date Prev</a>][<a href="msg00773.html">Date Next</a>][<a href="msg00763.html">Thread Prev</a>][<a href="msg00774.html">Thread Next</a>][<a href="maillist.html#00772">Date Index</a>][<a href="threads.html#00772">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: path should be in noexport, and a .esrc tip</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Subject</em>: Re: path should be in noexport, and a .esrc tip</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 29 Nov 1994 20:18:31 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;1994-11-18.101120.hanche@chur&gt;</li>
+<li><em>References</em>: &lt;1994-11-18.101120.hanche@chur&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>On 18 Nov 1994, Harald Hanche-Olsen wrote:
+&gt; The `path' variable should not be exported to the environment (as
+&gt; opposed to PATH, which should).  I added the line
+&gt; 
+&gt; noexport = path $noexport
+&gt; 
+&gt; to my startup file.  Why?  First, it does not hurt.  If you start a
+&gt; new es, the set-PATH function will be run to set the path variable.
+&gt; Second, assume you do `su root', as I sometimes do.  When I am root, I
+&gt; still want the convenience of my favourite shell.  But upon su root,
+&gt; PATH is set to whatever is more appropriate for root, while the path
+&gt; variable is unchanged.  When I start es next, the set-path and
+&gt; set-PATH functions will both be run, and it so happens that the former
+&gt; is run last, overwriting root's PATH with mine.  One still has to be
+&gt; careful with personal functions, and one should probably also take
+&gt; care to run recache (for those who use the path cache code from
+&gt; esrc.haahr) too.
+
+Harald is right on both of these points.
+
+In the next release of es [been a while since I used that phrase, but I
+intend to release a new version by the early part of next year], the
+following will be changed:
+
+(1) path will be added to the noexport list in initial.es
+
+(2) cdpath has been removed from initial.es as already discussed on this
+list, but in the example of cdpath included in esrc.haahr, cdpath will
+be added to the noexport list
+
+(3) set-path and set-PATH will be redefined in esrc.haahr to do a
+recache for the reasons Harald points out
+
+Paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00777" href="msg00777.html">Re: Welcome back</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+<li><strong><a name="00774" href="msg00774.html">Welcome back</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@imf.unit.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00763" href="msg00763.html">path should be in noexport, and a .esrc tip</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@imf.unit.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00771.html">Re: es bug</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00773.html">Re: command line processing order</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00763.html">path should be in noexport, and a .esrc tip</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00774.html">Welcome back</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00772"><strong>Date</strong></a></li>
+<li><a href="threads.html#00772"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

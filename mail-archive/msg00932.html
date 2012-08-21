@@ -1,0 +1,124 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Plumbing -->
+<!--X-From-R13: Unergu [pQnhtuna <twz11Nqczzf.pnz.np.hx> -->
+<!--X-Date: Wed, 19 Mar 1997 16:36:16 &#45;0500 -->
+<!--X-Message-Id: E0w7Kkk&#45;0006mh&#45;00@g.pet.cam.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Plumbing</title>
+<link rev="made" href="mailto:gjm11@dpmms.cam.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00931.html">Date Prev</a>][<a href="msg00933.html">Date Next</a>][<a href="msg00931.html">Thread Prev</a>][<a href="msg00933.html">Thread Next</a>][<a href="maillist.html#00932">Date Index</a>][<a href="threads.html#00932">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Plumbing</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Plumbing</li>
+<li><em>From</em>: Gareth McCaughan &lt;<a href="mailto:gjm11%40dpmms.cam.ac.uk">gjm11@dpmms.cam.ac.uk</a>&gt;</li>
+<li><em>Date</em>: Wed, 19 Mar 1997 07:46:02 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[I have sent a please-subscribe-me message to es-request,
+ but haven't yet had an acknowledgement. I'd therefore
+ appreciate being sent copies of any replies to this. -- g]
+
+Suppose you're doing some operation that produces a lot of
+output, and possibly some error output too (a big &quot;make&quot;,
+say). It would be useful to be able to distinguish between
+the two kinds of output; but you don't just want to send them
+to different places, because you want to keep the two
+synchronised.
+
+What would be good would be the ability to connect both fd 1
+and fd 2 of one process to two different fd's of another
+process: some syntax like
+
+    make universe |[1=0,2=3] process_output
+
+or maybe
+
+    make universe |[1=0][2=3] process_output
+.
+
+It's not clear to me what the right way of modifying the pipe
+primitive for this would be; probably something like
+
+    %pipe {make universe} '1 2' '0 3' {process_output}
+
+would be best.
+
+
+Does this make sense, or is the whole idea crazy? If it makes
+sense, is there any chance of its seeing the light of day in
+a future &quot;es&quot; release? Is there more chance if I implement it?
+
+(It might be possible to get a similar effect by redirecting
+stderr of the first process to a fifo file, but I can't get this
+to do what I want because it seems that the first process can't
+write to the fifo unless the second is actually waiting for
+input from it; |select()|ing on it isn't enough. This is a
+nuisance.)
+
+-- 
+Gareth McCaughan       Dept. of Pure Mathematics &amp; Mathematical Statistics,
+gjm11@dpmms.cam.ac.uk  Cambridge University, England.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00933" href="msg00933.html">Re: Plumbing</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00931.html">Re: Need help to compile es</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00933.html">Re: Plumbing</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00931.html">Re: Need help to compile es</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00933.html">Re: Plumbing</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00932"><strong>Date</strong></a></li>
+<li><a href="threads.html#00932"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

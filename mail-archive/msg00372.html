@@ -1,0 +1,106 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: null list concatenation -->
+<!--X-From-R13: fgrirNtrp&#45;rcy.pb.hx (Egrir_Yvyonar) -->
+<!--X-Date: Thu, 13 May 1993 09:35:37 &#45;0400 -->
+<!--X-Message-Id: 9305130838.AA05108@zombie.gec&#45;epl.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>null list concatenation</title>
+<link rev="made" href="mailto:steve@gec-epl.co.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00371.html">Date Prev</a>][<a href="msg00373.html">Date Next</a>][<a href="msg00426.html">Thread Prev</a>][<a href="msg00373.html">Thread Next</a>][<a href="maillist.html#00372">Date Index</a>][<a href="threads.html#00372">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>null list concatenation</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: null list concatenation</li>
+<li><em>From</em>: <a href="mailto:steve%40gec-epl.co.uk">steve@gec-epl.co.uk</a> (Steve_Kilbane)</li>
+<li><em>Date</em>: Thu, 13 May 1993 04:38:27 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>One of the things which has been bugging me lately is the way that
+list concatenation works. In most cases, I prefer it to rc's strict
+ruling (I think - I haven't really used it in anger yet). But in the
+case where at least one of the lists is empty, things aren't so hot.
+Mainly because it's such a break from traditional shell behavior:
+
+x =
+echo $x/bin
+
+produces nothing, which isn't necessarily what is wanted. Paul has suggested
+using:
+
+x =
+echo $^x/bin
+
+instead, which is a reasonably workaround if you're writing scripts, but it's
+something else to remember when you're working interactively across different
+environments, using n different shells each day. I think it's in the same
+category of implicit ^ operators.
+
+However, changing es's default behaviour isn't a good idea, because it's
+regular (and correct) as it is. So how about some more re-writing, to
+produce another hook function:
+
+echo $x^$y
+=&gt;
+echo &lt;={%concat $x $y}
+
+...then I can break my own environment without upsetting everyone else. :-)
+
+Steve.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00371.html">a brief introduction the lambda calculus for es users</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00373.html">Re:  null list concatenation</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00426.html">Re: a brief introduction the lambda calculus for es users</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00373.html">Re:  null list concatenation</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00372"><strong>Date</strong></a></li>
+<li><a href="threads.html#00372"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

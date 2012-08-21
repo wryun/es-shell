@@ -1,0 +1,119 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Object orientation in es, and a bug? -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 14 Dec 1994 12:52:26 &#45;0500 -->
+<!--X-Message-Id: 199412141730.MAA22362@netcom4.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199412141510.KAA12050@netcom4.netcom.com -->
+<!--X-Reference: 94Dec14.115827est.12686@galapagos.cse.psu.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Object orientation in es, and a bug?</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00802.html">Date Prev</a>][<a href="msg00804.html">Date Next</a>][<a href="msg00801.html">Thread Prev</a>][<a href="msg00802.html">Thread Next</a>][<a href="maillist.html#00803">Date Index</a>][<a href="threads.html#00803">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Object orientation in es, and a bug?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Scott Schwartz &lt;<a href="mailto:schwartz%40galapagos.cse.psu.edu">schwartz@galapagos.cse.psu.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: Object orientation in es, and a bug?</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 14 Dec 1994 12:30:51 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00801.html">94Dec14.115827est.12686@galapagos.cse.psu.edu</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00800.html">199412141510.KAA12050@netcom4.netcom.com</a>&gt;	&lt;<a href="msg00801.html">94Dec14.115827est.12686@galapagos.cse.psu.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Scott Schwartz writes:
+&gt; | Well, yes, it's probably a bug if you want to think of es as a pure
+&gt; | lambda calculus, but it's a necessary consequence of using fork and the
+&gt; | environment on Unix.
+&gt; Isn't it the case that a more complex serialization could preserve the
+&gt; sharing?  Something like common lisp's external representation of
+&gt; circular objects?
+
+Some serialization and/or tagging of common objects would help, but the
+real problem is that environment variables are not shared on Unix
+between parent and child processes.  I can't do anything in a child
+process to affect the values in its parent's environment.
+
+And before anyone points out that Plan 9 lets parents and children share
+environments, the problem with that is that it's too coarse grained for
+what es wants, which is sharing variables by default, but replacing them
+in a child for that process and its children.  That is, es conceptually
+wants the environment to be a set of fluid variables.
+
+&gt; | Trying to shoehorn the semantics of the lambda calculus on top of Unix
+&gt; | may not have been the smartest idea I ever had.
+&gt; Heretic!
+
+Well, I have been reconsidering all my rather dogmatic beliefs.  Feel
+free to put me up in front of the Unix inquisition.
+
+I'm not saying I don't still like es.  I've had concerns all along that
+its model doesn't match Unix's very well.  I'd go so far as to say the
+problems in es are fundamentally the tension between two different 1970s
+computer systems, Unix and the Lisp machines.
+
+Paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00800" href="msg00800.html">Re: Object orientation in es, and a bug?</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+<li><strong><a name="00801" href="msg00801.html">Re: Object orientation in es, and a bug?</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@galapagos.cse.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00802.html">Object orientation in es, and a bug?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00804.html">Re: Object orientation in es, and a bug?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00801.html">Re: Object orientation in es, and a bug?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00802.html">Object orientation in es, and a bug?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00803"><strong>Date</strong></a></li>
+<li><a href="threads.html#00803"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

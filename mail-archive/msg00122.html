@@ -1,0 +1,133 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: You said the J word -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Wed, 21 Oct 1992 17:12:48 &#45;0400 -->
+<!--X-Message-Id: 9210212112.AA10597@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: You said the J word</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00121.html">Date Prev</a>][<a href="msg00123.html">Date Next</a>][<a href="msg00121.html">Thread Prev</a>][<a href="msg00126.html">Thread Next</a>][<a href="maillist.html#00122">Date Index</a>][<a href="threads.html#00122">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: You said the J word</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Bruce Perens &lt;<a href="mailto:bruce%40pixar.com">bruce@pixar.com</a>&gt;</li>
+<li><em>Subject</em>: Re: You said the J word</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 21 Oct 1992 17:12:09 -0400</li>
+<li><em>Cc</em>: es mailing list &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Well, Byron and Paul, how were you thinking of implementing a rewritable
+&gt; read-eval loop? Let's look at that, and see what facilities we might need
+&gt; to write a job-control system in an ES script.
+
+oh, something like
+
+	fn-forever = while {}
+	catch @ e msg {
+		if {~ $e error} {
+			echo &gt;[1=2] $msg
+		} {
+			echo &gt;[1=2] uncaught exception: $e $msg
+		}
+		throw retry
+	} {
+		forever {
+			if {!~ $#fn-prompt 0} {
+				prompt
+			}
+			local (cmd = &lt;&gt;{%parse $prompt}) {
+				if {~ $#cmd 0} {
+					break
+				}
+				$cmd
+			}
+		}
+	}
+
+for the default interactive loop.  possible additions:
+
+	- additional special exceptions (sigwinch, maybe)
+	- print of bad or non-0 statuses
+	- additional hooks like prompt
+	- anything you feel like
+
+i can't promise that the above code will work in 0.75, but something like it  
+will.  if you notice, the only thing that's missing for this to work is %parse is  
+not exposed yet.  also, we haven't decided whether it's only the interactive repl  
+that is redefinable or both interactive and non-interactive.  if it's both,  
+they'll probably be available under different names, with a strong recommendation  
+to not change the non-interactive one.
+
+other open issues:
+
+	- is history handled inside this loop? (probably yes)
+	- what happens when the user hits return at the prompt,
+	  with just an empty line. (probably %parse does not return
+	  and reprompts)
+
+as to job control, if you can figure out how to do it, great, but i'm not sure i  
+believe it's possible.  i'd be happy to be proven wrong, but my guess is that  
+really supporting job control is going to require work throughout the shell.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00126" href="msg00126.html">Re: You said the J word</a></strong>
+<ul><li><em>From:</em> Bruce Perens &lt;bruce@pixar.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00121.html">Re: You said the J word</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00123.html">Re: protecting shell fds</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00121.html">Re: You said the J word</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00126.html">Re: You said the J word</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00122"><strong>Date</strong></a></li>
+<li><a href="threads.html#00122"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

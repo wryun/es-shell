@@ -1,0 +1,143 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es variables -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 26 Mar 1997 19:27:21 &#45;0500 -->
+<!--X-Message-Id: 199703262211.OAA12131@netcom9.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199703262157.QAA19977@dur&#45;mail.ctron.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es variables</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00938.html">Date Prev</a>][<a href="msg00940.html">Date Next</a>][<a href="msg00938.html">Thread Prev</a>][<a href="msg00940.html">Thread Next</a>][<a href="maillist.html#00939">Date Index</a>][<a href="threads.html#00939">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es variables</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Jeffrey Rogers &lt;<a href="mailto:jrogers%40davros.ctron.com">jrogers@davros.ctron.com</a>&gt;</li>
+<li><em>Subject</em>: Re: es variables</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 26 Mar 1997 17:11:03 -0500</li>
+<li><em>Cc</em>: Byron Rakitzis &lt;<a href="mailto:byron%40netapp.com">byron@netapp.com</a>&gt;, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00938.html">199703262157.QAA19977@dur-mail.ctron.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00938.html">199703262157.QAA19977@dur-mail.ctron.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Jeffrey Rogers wrote
+&gt; I've been using es-0.9-alpha1 for a while now, with few problems (mostly 
+&gt; dealing with working in an environment oriented toward sh/ksh/csh users).
+
+It is painful at times.  Sorry about that.
+
+&gt; I recently noticed something odd with variables:
+&gt; 
+&gt; For variables like LD_LIBRARY_PATH I sometimes have to append or prepend
+&gt; something to the existing path, which is a : seperated list (just like
+&gt; PATH).  I normally do this using
+&gt; ; LD_LIBRARY_PATH=newpart:$LD_LIBRARY_PATH
+&gt; which works fine if LD_LIBRARY_PATH is already set.  However, if it is
+&gt; not set, then newpart:$LD_LIBRARY_PATH evaluates to nothing, instead of
+&gt; &quot;newpart:&quot; as I expect.  Adding carats doesn't help.  It doesn't matter
+&gt; if the variable is before or after the plaintext.  e.g.
+&gt; ; echo a$b $b^a a
+&gt; a
+&gt; ; b=foo           
+&gt; ; echo a$b $b^a a
+&gt; afoo fooa a
+&gt; ; 
+&gt; 
+&gt; Is this correct behavior?
+
+Well, let's just say it's doing what it's specified to do.  The problem
+is that there is no distinction between words and lists of words in
+concatenation.
+
+Whether it's what it should be doing is another story.  This is one of
+those places es diverged from rc for some abstract notion of perfect
+internal consistency, at the expense of being painful to use in practice.
+
+(Translation of the previous comment:  it's my fault, not Byron's.)
+
+&gt; Or is it a bug (perhaps only only local version)?
+
+No such luck.
+
+&gt; If it is correct behavior, I guess I could copy a PATH-style settor
+&gt; for my original problem, but how would one normally go about adding
+&gt; text to a variable that is possibly null?
+
+The workaround I've used is
+
+  LD_LIBRARY_PATH=newpart:$^LD_LIBRARY_PATH
+
+where $^var creates a single word from the variable, which is '' if the
+variable is a 0-length list.  The multiple components are concatenated
+with spaces, but that shouldn't hurt, since a multi-component
+LD_LIBRARY_PATH is probably a mistake.
+
+&gt; I'm not on the list (yet; I just sent my subscription notice to
+&gt; -request) but I didn't see anything like this in the list archive.
+
+(That may have prevented your note from going to the whole list, as part
+of cks's crackdown on spamming.)
+
+Paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00938" href="msg00938.html">es variables</a></strong>
+<ul><li><em>From:</em> Jeffrey Rogers &lt;jrogers@davros.ctron.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00938.html">es variables</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00940.html">Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00938.html">es variables</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00940.html">Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00939"><strong>Date</strong></a></li>
+<li><a href="threads.html#00939"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

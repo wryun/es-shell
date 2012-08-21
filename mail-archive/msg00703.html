@@ -1,0 +1,103 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: distinguishing shells -->
+<!--X-From-R13: Rnir [nfba <qznfbaNcyt.hjngreybb.pn> -->
+<!--X-Date: Thu, 23 Sep 1993 20:15:01 &#45;0400 -->
+<!--X-Message-Id: 93Sep23.201427edt.230427@plg.uwaterloo.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9309232223.AA27120@ssec.ssec.wisc.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>distinguishing shells</title>
+<link rev="made" href="mailto:dmason@plg.uwaterloo.ca">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00702.html">Date Prev</a>][<a href="msg00704.html">Date Next</a>][<a href="msg00700.html">Thread Prev</a>][<a href="msg00701.html">Thread Next</a>][<a href="maillist.html#00703">Date Index</a>][<a href="threads.html#00703">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>distinguishing shells</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:dws%40ssec.wisc.edu">dws@ssec.wisc.edu</a></li>
+<li><em>Subject</em>: distinguishing shells</li>
+<li><em>From</em>: Dave Mason &lt;<a href="mailto:dmason%40plg.uwaterloo.ca">dmason@plg.uwaterloo.ca</a>&gt;</li>
+<li><em>Date</em>: Thu, 23 Sep 1993 20:14:20 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:rc%40hawkwind.utcs.toronto.edu">rc@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00700.html">9309232223.AA27120@ssec.ssec.wisc.edu</a>&gt; (dws@ssec.wisc.edu)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>DaviD W Sanderson &lt;dws@ssec.wisc.edu&gt; asked for a way to differentiate between
+rc/es and the other shells.
+
+This works:
+
+ y=`echo`false;$y&amp;&amp;echo rc or es||echo sh
+
+(it *does* expect there to be a false accessible to /bin/sh, but that
+seems fairly likely, and it doesn't require anything for the rc side.)
+
+In trying a few things, one of my ideas was to:
+ $SHELL -c '~ 5 5 2&gt;/dev/null' &amp;&amp; echo rc || echo sh
+
+To my surprise, rc gave a syntax error because the ~ builtin doesn't
+accept I/O redirection.  (It actually doesn't work anyway because
+/bin/sh complains about '~ not found' before the stderr redirect.)
+
+../Dave
+
+(I forwarded this to the rc list in case anyone there needed it too.)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00700" href="msg00700.html">Re: distinguishing shells</a></strong>
+<ul><li><em>From:</em> &lt;dws@ssec.wisc.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00702.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00704.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00700.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00701.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00703"><strong>Date</strong></a></li>
+<li><a href="threads.html#00703"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

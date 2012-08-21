@@ -1,0 +1,150 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: a note on notations -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Thu, 1 Apr 1993 03:24:43 &#45;0500 -->
+<!--X-Message-Id: 9304010825.AA05768@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: a note on notations</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00251.html">Date Prev</a>][<a href="msg00253.html">Date Next</a>][<a href="msg00251.html">Thread Prev</a>][<a href="msg00253.html">Thread Next</a>][<a href="maillist.html#00252">Date Index</a>][<a href="threads.html#00252">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: a note on notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:alan%40oldp.astro.wisc.edu">alan@oldp.astro.wisc.edu</a></li>
+<li><em>Subject</em>: Re: a note on notations</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 03:25:03 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Maybe I'm just really dumb, but this particular overloading looks like
+&gt; it could get very confusing indeed.  And notice that
+&gt;         ; echo `ls
+&gt; works, but
+&gt;         ; echo %ls
+&gt; doesn't. 
+
+yup.  that's life.  i've looked at some code with %{} and % $&amp;primitives,
+and for %, you really want to use the braces, even if they're optional.
+&quot; probably doesn't suffer from that problem, but
+	x = &quot;src
+is bound to be just too confusing for everybody who's used any other
+programming language.
+
+&gt; if we're running out of characters at
+&gt; v0.8, how much more will we need them in v1.8?
+
+oh, i expect to have a good 63k available at that point.  :-)
+
+&gt; There are many
+&gt; constructs I avoid in rc and es because more visually distinctive but
+&gt; otherwise equivalent constructs exist -- readability is damned
+&gt; important -- and `foo falls into this category.
+
+there are almost no constructs i can think of that i avoid in es.
+but then again, i am one of the authors.
+
+as to readability, there are some things which are hard to read. &lt;&gt;{} is
+one of the biggies in my mind.  %$#primitives in my current initial.es
+is even worse.  but i type `src and `locked so many times in a day that
+they've become very readable.  in my mind, they are intended for use on
+command lines (interactive use) much more than scripting use, because i
+tend to not use so many commands with implicit arguments in scripts.
+
+a side note on the history of `foo:  i was Byron's first user for his rc.
+way back when, i had adopted rc as my shell before globbing made it in
+there.  i had a little shell script called star:
+	#! /bin/sh
+	echo *
+which i used quite a lot.  but typing
+	bundle `{star} | mail byron
+the braces were obviously superfluous, and that's when that hack made it
+in there.  es just makes it more natural because {...} is already a word.
+
+&gt; &gt; $&amp; has everything to do with lookup:  it looks up a procedure pointer
+&gt; &gt; in a dictionary of primitives.  see prim.c.
+
+&gt; Just because you chose to implement it as a lookup doesn't mean it
+&gt; intrinsically has ANYTHING to do with lookup in the sense that $foo
+&gt; does.
+
+i disagree.  you're referring to an value in the namespace of primitives.
+i call that looking it up.
+
+&gt; %%foo is at least clearly related to %foo; $&amp;foo is not.
+
+%%foo is a legitimate es variable name, $&amp;foo is not.  that's the difference.
+
+&gt; Finally, if you take away my ability to use % as a command name, I'm
+&gt; going to be spitting PASTEL PINK comets with BRIGHT ORANGE spots and
+&gt; LIME GREEN stripes.  Take a look at my email address if you doubt
+&gt; it...
+
+John's comet-spitting abilities have little to do with why i don't like
+using : as the es call function.  cultural compatibility is the winner
+there.  as i've said, i'm leaning towards % but i want other people's
+opinions.  i don't want to require UTF for es, and all of
+	$ % : , &quot;
+have serious problems.  i'm happy to go back to a two-character operator
+if someone can suggest one that is
+	currently illegal es syntax (or at least useless in es)
+	somehow implies a call operation
+
+-- paul (waiting for a consensus to emerge)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00251.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00253.html">Re: a note on notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00251.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00253.html">Re: a note on notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00252"><strong>Date</strong></a></li>
+<li><a href="threads.html#00252"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: <> redirection and notations -->
+<!--X-From-R13: crgreNebobgf.bksbeq.np.hx -->
+<!--X-Date: Thu, 1 Apr 1993 11:19:49 &#45;0500 -->
+<!--X-Message-Id: 9304011607.AA14673@quickly.robots.ox.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: &lt;&gt; redirection and notations</title>
+<link rev="made" href="mailto:peter@robots.oxford.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00262.html">Date Prev</a>][<a href="msg00264.html">Date Next</a>][<a href="msg00267.html">Thread Prev</a>][<a href="msg00272.html">Thread Next</a>][<a href="maillist.html#00263">Date Index</a>][<a href="threads.html#00263">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: &lt;&gt; redirection and notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a></li>
+<li><em>Subject</em>: Re: &lt;&gt; redirection and notations</li>
+<li><em>From</em>: <a href="mailto:peter%40robots.oxford.ac.uk">peter@robots.oxford.ac.uk</a></li>
+<li><em>Date</em>: Thu, 1 Apr 1993 11:07:13 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Again, I apologize for saying &lt;&gt; truncated in ksh. It does in bash, and I
+&gt; think bash is broken for doing it that way.  That mistake unfortunately added
+&gt; unnecessary fuel to the fire.
+&gt; 
+I know this is not a bash group, but I think in bash-1.12, &lt;&gt; doesn't
+truncate.  (try: echo hello &gt;/tmp/xxx; exec 9&lt;&gt;/tmp/xxx; read a &lt;&amp;9; echo
+bye &gt;&amp;9)
+
+&gt; 
+&gt; I had suggested multiple functions, Alan (I think) said why not just pass
+&gt; a mode to %open, and then Paul said sometimes one only wants to spoof one
+&gt; and not the other.  The way to go is to have our cake and eat it too:
+&gt; 
+&gt; Sugar	Meaning		Function	Implementation
+&gt; -----	-------		--------	--------------
+&gt; &lt;	open ro		%open-ro	@{ %open r $* }
+&gt; &gt;	open wo		%open-wo	@{ %open w $* }
+&gt; &gt;&gt;	open append	%open-app	@{ %open a $* }
+&gt; &lt;&gt;	open rw		%open-rw	@{ %open r+ $* }
+&gt; &lt;&gt;!	open rw+trun	%open-rw-trunc	@{ %open w+ $* }
+&gt; &lt;&gt;&gt;	open rw+app	%open-rw-app	@{ %open a+ $* }
+
+To allow spoofing of %create, %open and %append, why don't we let $&amp;open do
+the work of option processing instead.  So,
+	fn %open { $&amp;open -r $* }	# yep I think options should have a -
+etc.  But then we still need a name for &lt;&gt;, well you can't win them all.
+
+I'm not keen on having more syntax though, just makes es too `cluttered'.
+
+&gt; Now, as to how to replace &lt;&gt;{...}.  From the discussion, it sounds like we're
+&gt; going to need a two character glyph or else just %.  I'd rather see a
+&gt; two character glyph like :: but % will do the trick for me ok too.
+&gt; 
+&gt; Arnold
+&gt; 
+
+I must be the only one on the list, but actually I quite like &lt;&gt;.  It's so
+different that it reminds me that the the concept is different.  Using '%'
+reminds me of csh job control, but I can live with that.
+
+Pete.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00272" href="msg00272.html">Re: &lt;&gt; redirection and notations</a></strong>
+<ul><li><em>From:</em> Steven M Rezsutek &lt;steve@baloo.gsfc.nasa.gov&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00262.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00264.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00267.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00272.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00263"><strong>Date</strong></a></li>
+<li><a href="threads.html#00263"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es dumping core on me -->
+<!--X-From-R13: orgNfgq.fov.pbz (Praargg Fbqq) -->
+<!--X-Date: Wed, 16 Feb 1994 15:17:42 &#45;0500 -->
+<!--X-Message-Id: 9402161850.AA16591@std.sbi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es dumping core on me</title>
+<link rev="made" href="mailto:bet@std.sbi.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00725.html">Date Prev</a>][<a href="msg00727.html">Date Next</a>][<a href="msg00725.html">Thread Prev</a>][<a href="msg00740.html">Thread Next</a>][<a href="maillist.html#00726">Date Index</a>][<a href="threads.html#00726">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es dumping core on me</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es dumping core on me</li>
+<li><em>From</em>: <a href="mailto:bet%40std.sbi.com">bet@std.sbi.com</a> (Bennett Todd)</li>
+<li><em>Date</em>: Wed, 16 Feb 1994 13:50:50 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Es has been dumping core on me. Of late it seems to have gotten more
+frequent, and it isn't always happening when I'm doing anything particularly
+complex. I recently rebuilt it with -g unstripped, and just got another
+core.
+
+This is es version 0.84, built with gcc 2.5.5 under SunOS 4.1.1 on sun4c.
+Here are the diffs between the es 0.84 release tree and my build tree:
+
+diff -r -u es-0.84.orig/Makefile es-0.84/Makefile
+--- es-0.84.orig/Makefile	Thu Apr 29 22:09:55 1993
++++ es-0.84/Makefile	Tue Feb 15 10:24:19 1994
+@@ -23,11 +23,12 @@
+ # _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones.
+ 
+ SHELL	= /bin/sh
+-CC	= cc
+-#CC	= gcc
+-CFLAGS	= -g -O -Wall
+-LDFLAGS	=
+-LIBS	=
++#CC	= cc
++CC	= gcc
++CFLAGS	= -g -Wall \
++	  -DBSD_LIMITS -DREADLINE -DUSE_CONST -DUSE_DIRENT -DUSE_STDARG -DUSE_VOLATILE
++LDFLAGS	= -L/usr/local/lib
++LIBS	= -ledit
+ 
+ HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h stdenv.h syntax.h var.h
+ CFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c glob.c \
+diff -r -u es-0.84.orig/stdenv.h es-0.84/stdenv.h
+--- es-0.84.orig/stdenv.h	Thu Apr 29 22:09:12 1993
++++ es-0.84/stdenv.h	Tue Feb 15 10:26:03 1994
+@@ -285,4 +285,4 @@
+ /* setjmp */
+ 
+ extern int setjmp(jmp_buf env);
+-extern noreturn longjmp(jmp_buf env, int val);
++/* extern noreturn longjmp(jmp_buf env, int val); */
+
+
+I commented out the longjmp declaration because gcc was complaining about a
+mismatch between that dcl and the on in the system include file.
+
+Here's the stack traceback from the core dump:
+
+(gdb) where
+#0  0xf775c120 in kill ()
+#1  0xf777447c in abort ()
+#2  0xd910 in forward (p=0x46744) at gc.c:320
+#3  0xd9a8 in scanroots (rootlist=0xf7ffdcb0) at gc.c:332
+#4  0xdf80 in gc () at gc.c:425
+#5  0xdd1c in gcdisable (minfree=3600) at gc.c:377
+#6  0x14ce4 in parse (pr1=0x33210 &quot;; &quot;, pr2=0x30e40 &quot;&quot;) at input.c:279
+#7  0x1d334 in prim_parse (list=0x4adbc, evalflags=0) at prim-etc.c:193
+#8  0x21d60 in prim (s=0x2f488 &quot;parse&quot;, list=0x4adbc, evalflags=0) at prim.c:13
+#9  0x83cc in eval (list=0x4adec, binding0=0x441c4, flags=0) at eval.c:108
+#10 0x9f30 in walk (tree0=0x342f4, binding0=0x441c4, flags=0) at eval.c:241
+#11 0x83f8 in eval (list=0x4ad68, binding0=0x441c4, flags=0) at eval.c:111
+#12 0x9f30 in walk (tree0=0x34300, binding0=0x441c4, flags=0) at eval.c:241
+#13 0x121ec in glom1 (tree=0x34308, binding=0x441c4) at glom.c:198
+#14 0x1326c in glom2 (tree=0x34308, binding=0x441c4, quotep=0xf7ffe4c4) at glom.c:274
+#15 0x12df4 in glom2 (tree=0x34310, binding=0x441c4, quotep=0xf7ffe5a4) at glom.c:259
+#16 0x13b9c in glom (tree=0x34310, binding=0x441c4, globit=TRUE) at glom.c:309
+#17 0xa964 in walk (tree0=0x3446c, binding0=0x441c4, flags=0) at eval.c:279
+#18 0x83f8 in eval (list=0x4ad2c, binding0=0x0, flags=0) at eval.c:111
+#19 0x9120 in eval1 (term=0x4a9e4, flags=0) at eval.c:186
+#20 0x1a400 in prim_seq (list=0x4a9c0, evalflags=0) at prim-ctl.c:10
+#21 0x21d60 in prim (s=0x2f4b8 &quot;seq&quot;, list=0x4a9c0, evalflags=0) at prim.c:13
+#22 0x83cc in eval (list=0x4aa08, binding0=0x441c4, flags=0) at eval.c:108
+#23 0x9f30 in walk (tree0=0x34498, binding0=0x441c4, flags=0) at eval.c:241
+#24 0x83f8 in eval (list=0x49268, binding0=0x0, flags=0) at eval.c:111
+#25 0x1a9f4 in prim_forever (list=0x4a978, evalflags=4) at prim-ctl.c:39
+#26 0x21d60 in prim (s=0x31be0 &quot;forever&quot;, list=0x49268, evalflags=4) at prim.c:13
+#27 0x83cc in eval (list=0x49280, binding0=0x441c4, flags=4) at eval.c:108
+#28 0x9f30 in walk (tree0=0x344b8, binding0=0x441c4, flags=4) at eval.c:241
+#29 0x83f8 in eval (list=0x44234, binding0=0x0, flags=4) at eval.c:111
+#30 0x1aeb0 in prim_catch (list=0x468ec, evalflags=4) at prim-ctl.c:72
+#31 0x21d60 in prim (s=0x2fd18 &quot;catch&quot;, list=0x468ec, evalflags=4) at prim.c:13
+#32 0x83cc in eval (list=0x48620, binding0=0x46744, flags=4) at eval.c:108
+#33 0x9f30 in walk (tree0=0x344e4, binding0=0x46744, flags=4) at eval.c:241
+#34 0x83f8 in eval (list=0x4676c, binding0=0x46744, flags=4) at eval.c:111
+#35 0x9f30 in walk (tree0=0x34504, binding0=0x466d4, flags=4) at eval.c:241
+#36 0x85d0 in eval (list=0x3452c, binding0=0x0, flags=4) at eval.c:128
+#37 0x1511c in runinput (in=0xf7fff9b0, flags=4) at input.c:331
+#38 0x1530c in runfd (fd=0, name=0x17900 &quot;stdin&quot;, flags=4) at input.c:370
+#39 0x180bc in main (argc=1, argv=0xf7fffb4c) at main.c:191
+
+
+Here's the assertion that failed, in gc.c:
+
+/* forward -- forward an individual pointer from old space */
+extern void *forward(void *p) {
+	Tag *tag;
+	void *np;
+
+	if (!isinspace(old, p)) {
+		VERBOSE((&quot;GC %8ux : &lt;&lt;not in old space&gt;&gt;\n&quot;, p));
+		return p;
+	}
+
+	VERBOSE((&quot;GC %8ux : &quot;, p));
+
+	tag = TAG(p);
+	assert(tag != NULL);
+	if (FORWARDED(tag)) {
+		np = FOLLOW(tag);
+		assert(TAG(np)-&gt;magic == TAGMAGIC);
+		VERBOSE((&quot;%s	-&gt; %8ux (followed)\n&quot;, TAG(np)-&gt;typename, np));
+	} else {
+==&gt;		assert(tag-&gt;magic == TAGMAGIC);
+		np = (*tag-&gt;copy)(p);
+		VERBOSE((&quot;%s	-&gt; %8ux (forwarded)\n&quot;, tag-&gt;typename, np));
+		TAG(p) = FOLLOWTO(np);
+	}
+	return np;
+}
+
+
+Any ideas?
+
+-Bennett
+bet@sbi.com
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00725.html">9term's $TERM</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00727.html">thought this might amuse some people</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00725.html">9term's $TERM</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00740.html">Re: es dumping core on me</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00726"><strong>Date</strong></a></li>
+<li><a href="threads.html#00726"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

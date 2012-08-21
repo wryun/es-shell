@@ -1,0 +1,102 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: %read and %write -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Mon, 3 May 1993 12:26:35 &#45;0400 -->
+<!--X-Message-Id: 9305031624.AA22909@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: %read and %write</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00346.html">Date Prev</a>][<a href="msg00348.html">Date Next</a>][<a href="msg00331.html">Thread Prev</a>][<a href="msg00344.html">Thread Next</a>][<a href="maillist.html#00347">Date Index</a>][<a href="threads.html#00347">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: %read and %write</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Colman Reilly &lt;<a href="mailto:creilly%40maths.tcd.ie">creilly@maths.tcd.ie</a>&gt;</li>
+<li><em>Subject</em>: Re: %read and %write</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 3 May 1993 12:24:04 -0400</li>
+<li><em>Cc</em>: es mailing list &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[i thought i had replied to this earlier; sorry for the delay.]
+
+&gt; Is there a way of directly doing read and write to fd's? It would be sort
+&gt; of nice to be able to open an fd and access it directly.
+
+read, no, or, at least, not yet.  write, on the other hand, yes.  use echo  
+with redirections.  it just works.
+
+	; exec {&gt;[4] foo}
+	; ls -l foo
+	-rw-r--r--  1 haahr          0 May  3 09:21 foo
+	; echo hello, world &gt;[1=4]
+	; cat foo
+	hello, world
+	; echo goodbye, cruel world &gt;[1=4]
+	; cat foo
+	hello, world
+	goodbye, cruel world
+	; exec {&gt;[4=]}
+	; cat foo
+	hello, world
+	goodbye, cruel world
+	; 
+
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00346.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00348.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00331.html">%read and %write</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00344.html">%and, %or, and the return value of assignment</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00347"><strong>Date</strong></a></li>
+<li><a href="threads.html#00347"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

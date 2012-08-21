@@ -1,0 +1,169 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: let and for vs. lambda variations -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Mon, 7 Jun 1993 19:14:48 &#45;0400 -->
+<!--X-Message-Id: 9306072314.AA00486@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>let and for vs. lambda variations</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00620.html">Date Prev</a>][<a href="msg00622.html">Date Next</a>][<a href="msg00620.html">Thread Prev</a>][<a href="msg00622.html">Thread Next</a>][<a href="maillist.html#00621">Date Index</a>][<a href="threads.html#00621">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>let and for vs. lambda variations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: let and for vs. lambda variations</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 7 Jun 1993 19:14:26 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[Harald wrote a note a long time ago (last week) which i've been meaning to  
+reply to, with the subject ``Features to remove: return and noreturn.''  the  
+easier part dealt with removing for (which he called ``do'' by mistake in his  
+posting), so i decided to respond to that suggestion first.  a comment on his  
+other suggestions will follow.  first, i quote what Harald wrote, following a  
+,x/do/c/for/ so it made sense to me.]
+
+&gt; let me
+&gt; take another look at my suggestion to get rid of `for', which met with
+&gt; such resistance.  If people want for for its convenience I guess it
+&gt; stays in, but there is still no reason why we could not throw away at
+&gt; least the many-variable for and let the simple case be syntactic sugar:
+&gt;	Rewrite    for (x = x1 x2 ...) {cmd}   as    %for @ x {cmd} x1 x2 ...
+&gt; and define the hook function %for along the lines of
+&gt;	fn %for fun list {let (x=) {while {x list=$list; !~ $#x 0} {$fun $x}}}
+
+first of all, let me note that let is in the same category as for:  it can be  
+replaced by lambda, if you throw away the multiple binding forms.  that is,  
+the above fn %for can become
+
+	fn %for fun list {
+		@ x {while {x list=$list; !~ $#x 0} {$fun $x}}
+	}
+
+two notes:
+
+	(1) this should be obvious, since es at some levels is just a veneer
+	    over a lambda calculus, but it took me until i read Harald's note
+	    to realize it.
+
+	(2) the multiple assignment form of let (see comment), which will be
+	    in the next release, are definitely very close to lambda binding,
+	    and, in fact, use the same code.
+
+[notational comment:
+	multiple binding means ``let (a = 1; b = 2 3)''
+	multiple assignment means ``let (a b = 1 2 3)''
+they are not equivalent.  (consider
+	let (a b = $x $y)
+versus
+	let (a = $x; b = $y)
+where $x and $y are 2 element lists, for example.)]
+
+we also had some discussion earlier which argued that multiple binding should  
+not be the same as several nested bindings, that is, all of the values in the  
+let should be evaluated before any of the actual bindings are done.  for  
+example,
+
+	x = bar; y = foo
+	let (x = $y; y = $x) echo $x $y
+
+would print
+
+	foo bar			# let
+
+and not, as it currently (0.84) does,
+
+	foo foo			# let*
+
+for those who care, this is the let vs. let* discussion.
+
+note, and this is important, that in es, you cannot rewrite multiple binding  
+lets as lambdas, if let has the semantics we decided it should have.  (aka,  
+scheme let.)  this is exactly the same reason that multiple binding for cannot  
+be rewritten as lambdas.  (well, for is a little harder.)
+
+local is different, but easier in many ways.  local could almost be written as  
+a function, except for namespace collisions, as is usually the problem with  
+dynamic binding.  but local could easily become a primitive if, again, it  
+doesn't have a local binding form.
+
+so, i now raise the issue, should let, local, and for be replaced with syntax  
+rewriting and/or hook functions?  if so, it means that we have to give up  
+multiple binding semantics for all of them, including the somewhat special  
+form that multiple binding takes for ``for'':
+
+	; for (i = a b c; j = 1 2) echo $i $j
+	a 1
+	b 2
+	c
+	; 
+
+
+note that this is an all-or-nothing choice:  i want to handle all three of  
+these binding forms in the same way.  if for goes, so do let and local.  (of  
+course, all stay at the syntax level, but the multiple binding forms really  
+will disappear completely.)
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00622" href="msg00622.html">Re: let and for vs. lambda variations</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00620.html">Re: $$... parsing</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00622.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00620.html">Re: $$... parsing</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00622.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00621"><strong>Date</strong></a></li>
+<li><a href="threads.html#00621"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

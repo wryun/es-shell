@@ -1,0 +1,98 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Globbing -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Wed, 26 May 1993 17:37:34 &#45;0400 -->
+<!--X-Message-Id: 9305262137.AA01535@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Globbing</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00533.html">Date Prev</a>][<a href="msg00535.html">Date Next</a>][<a href="msg00532.html">Thread Prev</a>][<a href="msg00535.html">Thread Next</a>][<a href="maillist.html#00534">Date Index</a>][<a href="threads.html#00534">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Globbing</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Globbing</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Wed, 26 May 1993 17:37:29 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>At the risk of flogging an another dead horse...:
+
+The globbing behaviour of es disturbs me:
+
+; echo (w x)^*
+wocky.tex x*
+
+Is this for `cultural compatibility' or do people want it this way?  I
+don't like it, because it leads to disturbing error messages when I
+say rm *.^(aux dvi log toc idx ind) for example.  But since we will
+probably never agree on what should happen, maybe I might suggest
+adding a hook?  Yes, another feeping creature.  The hook might be
+called with any unmatched wildcard containing names as arguments, and
+whatever it returns will be substituted in its place.  Then the
+current behaviour can be gotten by assigning $&amp;result to this hook; I
+might wish to assign {result ()} to it; and others might want the hook
+to throw an error (even I might want that behaviour locally, in some
+functions) or send mail to their Congress Creature.
+
+Sorry to disturb the peace and quiet after yesterday's hectic flurries
+of activity...  ;-&gt;
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00533.html">Re:  word breaks and control-a</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00535.html">Re:  Globbing</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00532.html">Re: ^b^a cruft</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00535.html">Re:  Globbing</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00534"><strong>Date</strong></a></li>
+<li><a href="threads.html#00534"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

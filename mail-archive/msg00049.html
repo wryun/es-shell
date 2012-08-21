@@ -1,0 +1,86 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: whatis loop -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Mon, 12 Oct 1992 22:12:03 &#45;0400 -->
+<!--X-Message-Id: 9210130211.AA20024@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: whatis loop</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00048.html">Date Prev</a>][<a href="msg00050.html">Date Next</a>][<a href="msg00048.html">Thread Prev</a>][<a href="msg00050.html">Thread Next</a>][<a href="maillist.html#00049">Date Index</a>][<a href="threads.html#00049">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: whatis loop</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a></li>
+<li><em>Subject</em>: Re: whatis loop</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 12 Oct 1992 22:11:42 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>aha!  you found it!
+
+es internally lets you create recursive structures, but externalizing them
+(right now) causes infinite recursion.  we've just about got a framework
+in place to deal with them appropriately, and they will be supported in
+0.7 or 0.75, due later this week and next week, respectively.
+
+fyi, here's an even smaller version of the same basic crash:
+
+	local (x=) { x = @{}; echo $x }
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00048.html">whatis loop</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00050.html">Re: whatis loop</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00048.html">whatis loop</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00050.html">Re: whatis loop</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00049"><strong>Date</strong></a></li>
+<li><a href="threads.html#00049"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

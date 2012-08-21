@@ -1,0 +1,115 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: for -->
+<!--X-From-R13: Epbgg Epujnegm <fpujnegmNtebhpub.pf.cfh.rqh> -->
+<!--X-Date: Wed, 10 Feb 1993 20:44:53 &#45;0500 -->
+<!--X-Message-Id: 93Feb10.204347est.2538@groucho.cs.psu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9302082028.AA11657@earth.osf.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: for</title>
+<link rev="made" href="mailto:schwartz@groucho.cs.psu.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00200.html">Date Prev</a>][<a href="msg00202.html">Date Next</a>][<a href="msg00199.html">Thread Prev</a>][<a href="msg00200.html">Thread Next</a>][<a href="maillist.html#00201">Date Index</a>][<a href="threads.html#00201">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: for</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:rsalz%40osf.org">rsalz@osf.org</a></li>
+<li><em>Subject</em>: Re: for</li>
+<li><em>From</em>: Scott Schwartz &lt;<a href="mailto:schwartz%40groucho.cs.psu.edu">schwartz@groucho.cs.psu.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 10 Feb 1993 20:43:10 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Mon, 08 Feb 1993 15:28:52 EST.&quot;             &lt;<a href="msg00199.html">9302082028.AA11657@earth.osf.org</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>You write:
+| Do macros really provide that much more than functions + es's quoting
+| rules + eval?  I dunno.  I do know that I'd hate to see defmacro and , and
+| ` without good reason.
+
+Macros are better because they can obey lexical scoping rules, and can
+avoid capturing random free variables.  Here are some examples of
+Dyvbig's proposed hygienic macro system, from pub/scheme/tr356.ps,
+ftped from cs.indiana.edu just now:
+
+(define-syntax and2
+ (lambda (x)
+  (syntax-case x ()
+   ((_ x y)
+    (syntax (if x y #f))))))
+
+(define-syntax when
+ (lambda (x)
+  (syntax-case x ()
+   ((_ e0 e1 e2 ...) (syntax (if e0 (begin e1 e2 ...)))))))
+
+(define-syntax or
+ (lambda (x)
+  (syntax-case x ()
+   ((_) 
+    (syntax #f))
+   ((_ e) 
+    (syntax e))
+   ((_ e1 e2 e3 ...) 
+    (syntax (let ((t e1)) (if t t (or e2 e3 ...))))))))
+
+They can get much more complicated than these, of course.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00199" href="msg00199.html">Re: for</a></strong>
+<ul><li><em>From:</em> rsalz@osf.org</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00200.html">Re: for</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00202.html">anonymous lists</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00199.html">Re: for</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00200.html">Re: for</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00201"><strong>Date</strong></a></li>
+<li><a href="threads.html#00201"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: protecting shell fds -->
+<!--X-From-R13: Xbua (Tbe gur pbybhef ner znal, ohg gur yvtug vf bar.) [npxva <wbuaN	pvivy.fh.bm.nh> -->
+<!--X-Date: Wed, 21 Oct 1992 18:28:37 &#45;0400 -->
+<!--X-Message-Id: 199210220814.25376.es.baduy@civil.su.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9210212119.AA10610@utopia.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: protecting shell fds</title>
+<link rev="made" href="mailto:john@civil.su.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00128.html">Date Prev</a>][<a href="msg00130.html">Date Next</a>][<a href="msg00124.html">Thread Prev</a>][<a href="msg00130.html">Thread Next</a>][<a href="maillist.html#00129">Date Index</a>][<a href="threads.html#00129">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: protecting shell fds</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: The es Mailing List &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: protecting shell fds</li>
+<li><em>From</em>: John (For the colours are many, but the light is one.) Mackin &lt;john@	civil.su.oz.au&gt;</li>
+<li><em>Date</em>: Wed, 21 Oct 1992 18:14:36 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00124.html">9210212119.AA10610@utopia.mv.us.adobe.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I agree with the current position.  However, I'd just like to inject some
+more things for consideration.
+
+At the moment, if I understand correctly without examining the code in
+detail, es handles fd's 0, 1 and 2 in a similar way to how rc does: that is,
+it keeps 0, 1 and 2 open during shell operation on what they were open on
+when the shell was invoked.  This means that there is less work to do in
+a child after forking, since 0, 1 and 2 already have the right things on
+them.  It does have one disadvantage which to my mind is quite serious:
+namely, it makes it impossible (well, very very hard) to execute builtins
+with redirections unless you fork.  This is really, really terrible.  In
+fact, it is a bug.  If the builtin is either trying to change the
+state of the current shell, or trying to report a piece of the current
+shell's state that is not exported, then you lose big-time, and both
+of these are reasonable things to want to do.
+
+csh handles this (in a less complex environment, admittedly, since
+in the version of csh I am thinking of you can't do &quot;exec &lt;foo&quot;) by
+moving 0, 1 and 2 to other descriptors when it starts, and moving them
+back when it forks.  This has the huge advantage that builtins with
+redirections can be executed without a fork.  (Note: I don't give a
+good damn about questions of efficiency here.  I am talking about 
+_correctness_.)
+
+I haven't built es 0.7 yet, so can't try stuff, so please accept my
+apologies if it can already do this right.
+
+OK,
+John.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00124" href="msg00124.html">Re: protecting shell fds</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@mv.us.adobe.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00128.html">Re: You said the J word</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00130.html">Re: protecting shell fds</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00124.html">Re: protecting shell fds</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00130.html">Re: protecting shell fds</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00129"><strong>Date</strong></a></li>
+<li><a href="threads.html#00129"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

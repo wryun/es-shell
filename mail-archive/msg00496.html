@@ -1,0 +1,263 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: creature = `feep -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Tue, 25 May 1993 05:58:33 &#45;0400 -->
+<!--X-Message-Id: 9305250958.AA08408@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305250419.AA06740@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>creature = `feep</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00495.html">Date Prev</a>][<a href="msg00497.html">Date Next</a>][<a href="msg00492.html">Thread Prev</a>][<a href="msg00507.html">Thread Next</a>][<a href="maillist.html#00496">Date Index</a>][<a href="threads.html#00496">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>creature = `feep</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: creature = `feep</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Tue, 25 May 1993 06:58:02 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00492.html">9305250419.AA06740@astro.mv.us.adobe.com</a>&gt; (haahr@mv.us.adobe.com )</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Paul wrote:
+&gt;when pushed, i would get backgrounding out of es before many of the other
+&gt;constructs under discussion, and replace it with an external program that
+&gt;forked and returned right away.)
+
+I might agree with this except that it creates a dependency on a
+nonstandard external program.  It would also preclude the possibility of
+implementing some kind of job control mechanism within the shell (although
+I am finding myself less and less interested in actually implementing one).
+
+&gt;a lot of the suggestions have...been effectively ``move this from a
+&gt;primitive to initial.es'' and that's fine...but...it does nothing for the
+&gt;conceptual size of the shell, which is what is most troubling.
+
+I suggested going from primitives to initial.es because that is a first
+step toward eliminating them altogether (at the very least, if I have my
+own initial.es I don't get those unwanted builtins).  If they remain C
+primitives, it is harder to be convinced thay they can be eliminated
+because no one has tried to implement them using other existing parts of
+the language. 
+
+&gt;so, i solicit the list again for things that can go.  
+&gt;
+&gt;a couple of examples.  
+&gt;
+&gt;	; echo &lt;={%fsplit '' foo}
+&gt;	f o o
+
+Unless you forego %fsplit entirely, I think this is not only a very useful
+hack (for example, getopt can be implemented without needing to run sed),
+but even sort of sensible if you take it that there is an &quot;empty&quot; space
+between each of the characters in a string.  If it doesn't take much code,
+keep it.  Otherwise, {%fsplit '' foo} is just another way of saying 
+{result foo}, which isn't that helpful.
+
+
+What I definitely favor eliminating from es (including initial.es)
+altogether are:
+
+1) Anything related to &quot;cdpath&quot; searching.  I can't believe there aren't
+   more people who agree with me on this even if they think the rest of my
+   suggestions are out in left field.
+
+2) true and false.  Really.  {result 0} and {result 1} are short enough to
+   use explicitly.  How often do people actually need to refer to `true'
+   and `false' values explicitly anyway?  Out of a couple thousand lines of
+   es script so far I've only used `result 0' a total of five times, and
+   didn't use `true' or `false' even once.
+
+3) The `apids', `var', `vars', and `whatis' commands.
+
+   Paul said:
+   &gt;vars: it's more than the others.  it actually does something useful.
+
+   How often do people really use it?  I have never used it even once.  I
+   also find it hard to imagine anyone's scripts depending on it, so if
+   it's primarily an interactive feature it ought to be sufficient just to
+   drop it in your .esrc.
+
+   By the way, even if you do keep `whatis' around, why is %whatis a
+   primitive?  Doesn't it essentially just do
+
+      fn %whatis arg \
+      { 
+        if { ~ $(fn-$arg) () } \
+             { %pathsearch $arg } \
+           { result $(fn-$arg) } 
+      }
+
+   ?
+
+4) The various dispatch functions.  Just have a single user-definable
+   %dispatch.  If `.' needs some way of defining a local dispatcher, you
+   can do
+
+      local (fn-%dispatch = $my-dispatcher) . file args...
+
+   Maybe encapsulate this in a function if you do it that often.  I have
+   yet to take advantage of the local dispatcher for `.', personally.
+
+
+More things to consider removing, though I would push less hard for these:
+
+1) The `` syntactic sugar. 
+
+         pwent = `` ':' { grep '^friedman:' /etc/passwd }
+
+   is equivalent to
+
+         pwent = &lt;={ %fsplit ':' `{ grep '^friedman:' /etc/passwd } }
+
+   or even
+
+         local (ifs = ':') pwent = `{ grep '^friedman:' /etc/passwd }
+
+   I realize this is mostly a cultural compatibility issue with rc.  I
+   still think it's unnecessarily redundant. 
+
+2) `for'.  Harald's `each' definition is just as good (although you need to
+   use $&amp;noreturn to get the equivalent semantics of `for').  
+
+   Since the strongest, most essential feature of es is lambda, I think it
+   should be relied upon more heavily instead of making the grammar larger.
+
+3) `eval'. 
+
+   As has been pointed out, you really almost never need eval in rc and es
+   (by contrast, in the bourne shell you need it a lot).
+
+   At least one reason why `eval' isn't in R4RS is because R4RS doesn't
+   require first-class environments, without which you can't specify in
+   which environment the &quot;second&quot; evaluation should occur.  Perhaps, for
+   the same reasons, `eval' should be removed from es.  On the other hand,
+   most actual implementations of Scheme have eval (even those without 1st
+   class environments), so some people must think it's useful even with the
+   ambiguity about the environment in which the second evaluation occurs.
+
+4) unwind-protect.  
+
+   I find that most of the time I want to catch exceptions I want to
+   examine what they are, so I use `unwind-protect' very rarely.
+
+   Implementing unwind-protect is not complicated (but thanks for reminding
+   me that it shouldn't catch return).
+
+       fn-unwind-protect = $&amp;noreturn @ body cleanup \
+       {
+         catch @ args { $cleanup; throw $args } { $body }
+         $cleanup
+       }
+   
+
+Features I think should at least be moved into initial.es:
+
+1) $&amp;flatten and $&amp;split.  They are easy to implement in es script.
+
+   Someone raised a performance issue with regards to doing them in es
+   script.  It's true that they run substantially slower (particularly for
+   large arrays), but this is an indication that es ought to be made faster
+   somehow, not that you should bloat it with more primitives just in the
+   name of &quot;efficiency&quot;.  That way lies GNU Emacs.
+
+
+Features not to *add*, at least not right away:
+
+1) Hierarchical list support.  This is a wonderful idea that is now plainly
+   obvious (:-)) but so much of the syntax required to implement them has
+   to be inlined, and `wrap' performs so little of the work that I hardly
+   see any justification for adding it at all.
+
+2) Arithmetic.  You've given me some ideas that probably make it
+   unnecessary for my purposes, so I retract my suggestion of adding it.
+
+3) First class environments. 
+
+   Before anyone starts seriously thinking about implementing this as yet
+   another primitive feature, consider implementing them in terms of the
+   existing closure mechanism instead.  I have very little time right now
+   to think about it, but I have a hunch it's workable. 
+
+
+Features presently in the shell for which I've recanted my desire to
+eliminate them:
+
+1) `\n' and related syntax for special characters.  I guess I am not as
+   adverse to this as I once was.  There is already enough of a quoting
+   nightmare when you use eval that things like `\n' do not make it
+   substantially worse.
+
+
+Well, I swore to myself I'd put off thinking about es until the end of the
+week.  I have such a weak constitution.   Flame away.  :-)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00520" href="msg00520.html">Re: creature = `feep</a></strong>
+<ul><li><em>From:</em> &quot;Loren J. Rittle&quot; &lt;rittle@comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="00507" href="msg00507.html">creature = `feep</a></strong>
+<ul><li><em>From:</em> alk@et.msc.edu (Anthony L. Kimball)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00492" href="msg00492.html">feeping creatures, again</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00495.html">Re: login shells ...</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00497.html">Re: creature = `feep</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00492.html">feeping creatures, again</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00507.html">creature = `feep</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00496"><strong>Date</strong></a></li>
+<li><a href="threads.html#00496"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

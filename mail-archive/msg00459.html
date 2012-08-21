@@ -1,0 +1,139 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: ^Z signal -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Thu, 20 May 1993 20:45:12 &#45;0400 -->
+<!--X-Message-Id: 9305210044.AA14210@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 19975.9305171328@morris.harlqn.co.uk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>^Z signal</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00458.html">Date Prev</a>][<a href="msg00460.html">Date Next</a>][<a href="msg00404.html">Thread Prev</a>][<a href="msg00460.html">Thread Next</a>][<a href="maillist.html#00459">Date Index</a>][<a href="threads.html#00459">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>^Z signal</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:richard%40harlequin.co.uk">richard@harlequin.co.uk</a></li>
+<li><em>Subject</em>: ^Z signal</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Thu, 20 May 1993 20:44:50 -0400</li>
+<li><em>Cc</em>: <a href="mailto:pete%40minster.york.ac.uk">pete@minster.york.ac.uk</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>,	<a href="mailto:rog%40ohm.york.ac.uk">rog@ohm.york.ac.uk</a></li>
+<li><em>In-reply-to</em>: Richard Brooksby's message of Mon, 17 May 1993 09:28:08 -0400 &lt;<a href="msg00404.html">19975.9305171328@morris.harlqn.co.uk</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;&gt;&gt;&gt;&gt; On Monday, Richard Brooksby &lt;richard@harlequin.co.uk&gt; said:
+
+Richard&gt; pete@minster.york.ac.uk wrote:
+
+&gt; If people must have line editing then they can use ile, or atty, or
+&gt; any one of the other pty-based front ends; they also have the
+&gt; benefit that since they grab all the input and pass it on to the
+&gt; shell or whatever it's running, they work for _all_ programs, not
+&gt; just the shell.
+
+Richard&gt; I wasn't aware of these packages, although I've thought that a
+Richard&gt; pty-based editor was the `correct' thing to do for ages.  Can you tell
+Richard&gt; us where we can find them, or information about pty-based editors?
+Richard&gt; (I've tried archie.)
+
+Guess you didn't try hard enough.  Here are a few hits:
+
+unix.hensa.ac.uk:/pub/uunet/usenet/comp.sources.unix/volume25/ile.Z
+ftp.uu.net:/usenet/comp.sources.unix/volume25/ile.Z
+cnam.cnam.fr:/pub/Archives/comp.sources.unix/ile
+irisa.irisa.fr:/News/comp.sources.unix/volume25/ile.Z
+lth.se:/pub/netnews/sources.unix/volume25/ile.z
+
+The trick was to ask archie to search for the regexp ^ile, as the
+string &quot;ile&quot; is too likely to occur in oodles and oodles of names.
+
+I compiled ile and find it quite satisfactory, so I have now relinked
+es without the editline library.  Only problem with ile so far is a
+rather hackish way to get the current working directory for file name
+completion purposes:  You hit escape-p, and it issues a pwd command to
+the shell and reads the resulting output!  Not too cool if you're in
+the third line of a multiline command, but...
+
+ile appears to be a lot more portable than atty.  Except, I can't use
+gcc:
+
+; make 'CC=gcc ile'
+gcc ile -g   -c ile.c -o ile.o
+gcc: ile: linker input file unused since linking not done
+cc -o ile ile.o -ltermcap
+ld: Undefined symbol 
+   ___main 
+Compilation failed
+make: *** [ile] Error 2
+
+This is totally mystifying to me.  It compiles fine with plain old cc,
+though.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00462" href="msg00462.html">pty-based front ends: rk, the Reactive Keyboard (was Re: ^Z signal)</a></strong>
+<ul><li><em>From:</em> John (Most modern computers would break if you stood on them) Mackin &lt;john@	civil.su.oz.au&gt;</li></ul></li>
+<li><strong><a name="00460" href="msg00460.html">Re: ^Z signal</a></strong>
+<ul><li><em>From:</em> mycroft@gnu.ai.mit.edu</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00404" href="msg00404.html">Re: ^Z signal</a></strong>
+<ul><li><em>From:</em> Richard Brooksby &lt;richard@harlequin.co.uk&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00458.html">Re: Errors in .esrc</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00460.html">Re: ^Z signal</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00404.html">Re: ^Z signal</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00460.html">Re: ^Z signal</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00459"><strong>Date</strong></a></li>
+<li><a href="threads.html#00459"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

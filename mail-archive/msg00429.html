@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Semantics of let -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Tue, 18 May 1993 18:09:55 &#45;0400 -->
+<!--X-Message-Id: 9305182209.AA08883@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Semantics of let</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00428.html">Date Prev</a>][<a href="msg00430.html">Date Next</a>][<a href="msg00428.html">Thread Prev</a>][<a href="msg00430.html">Thread Next</a>][<a href="maillist.html#00429">Date Index</a>][<a href="threads.html#00429">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Semantics of let</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Semantics of let</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Tue, 18 May 1993 18:09:40 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I have noticed that
+   let (a=1;b={a=2}) {$b; echo $a}
+prints 2, i.e. it is equivalent to
+   let (a=1) { let (b={a=2}) {$b; echo $a} }
+In other words, es's let is like Scheme's let*.
+
+Actually, the experiment is consistent with let being like letrec, but
+   let (b={a=2};a=1) {$b; echo $a}
+prints 1, so that's not it.
+
+I presume this is intentional but can't see any mention of it in the
+documentation.  Can I expect this behaviour to last in future versions?
+
+And what will (read: should)
+   let ((a b)=1 {a=2}) {$b; echo $a}
+print, when multiple assignments are added to the language?
+
+By the way, I had some fun figuring out how to do the Y combinator:
+
+; fn Y f {@ g {$g $g} @ h {$f {$h $h}}}
+; foo = &lt;={Y @ r {
+           result @ x {
+             if {~ $#x 0} {result nice!} {echo $x; &lt;=$r $x(2 ...)}}}}
+; echo &lt;={$foo a b c}
+a b c
+b c
+c
+nice!
+; 
+
+Figuring out the fact that I had to use &lt;=$r to recurse cost me a bit
+of time, to be honest...  8-)
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00428.html">es vs SCCS</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00430.html">Re: Semantics of let</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00428.html">es vs SCCS</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00430.html">Re: Semantics of let</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00429"><strong>Date</strong></a></li>
+<li><a href="threads.html#00429"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

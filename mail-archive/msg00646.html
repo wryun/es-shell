@@ -1,0 +1,194 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Features to remove: return and noreturn -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 15 Jun 1993 21:18:18 &#45;0400 -->
+<!--X-Message-Id: 9306160118.AA08851@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Features to remove: return and noreturn</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00645.html">Date Prev</a>][<a href="msg00647.html">Date Next</a>][<a href="msg00605.html">Thread Prev</a>][<a href="msg00656.html">Thread Next</a>][<a href="maillist.html#00646">Date Index</a>][<a href="threads.html#00646">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Features to remove: return and noreturn</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: Features to remove: return and noreturn</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 15 Jun 1993 21:18:06 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[this is a reply to Harald's note about removing return and $&amp;noreturn.]
+
+	I understand that $&amp;noreturn is a relatively new feature of the es
+	landscape, so I'll probably attract a lot of flamage when I propose to
+	get rid of it.
+
+probably not.  if there's anything in the language that stands out
+as a hack, it's $&amp;noreturn.  i'm very unhappy with it.
+
+	Not only that, I'll propose to throw away return as
+	well!  Don't get out the old flame throwers yet -- please listen me
+	out -- the reason is this: There is already a perfectly decent catch
+	and throw mechanism in place; and the return mechanism is nothing but
+	using throw with the extra magic that functions capture thrown
+	returns.  Unless of course they are being run with $&amp;noreturn.  I find
+	this kludgy and confusing.
+
+	It can also cause subtle errors:
+[ example omitted. ]
+
+	Now, of course I do not intend to force the user to deal with raw
+	catch and throw.  All we need is a convenience function.  I'd call it
+	tag, but other suggestions are welcome:
+
+	fn tag name cmd {
+	  catch @ e x {if {~ $e $name} {result $x} {throw $e $x}} \
+	        {local (fn $name x {throw $name $x}) $cmd}}
+
+	Now, local and non-local returns are handled in exactly the same way,
+	namely by tagging the function and by using the tag to return values.
+	For example, here is a function that given three arguments will return
+	one of them if the two other are equal:
+
+	fn f a b c {
+	  tag retvrn {let (g = @ a b c {if {~ $a $b} {retvrn $c}})
+	                {$g $a $b $c; $g $b $c $a; $g $c $a $b; result}}}
+
+	At the minimal price of declaring the return tag, the user is given
+	the freedom of not having to worry about the number of levels his
+	returns have to ascend.
+
+there's a lot to this proposal, and i'm sorry it took me so long
+to reply to it.  i'm still not entirely sure about how i feel.
+this reply is basically just a set of thoughts that are not as
+coherent as i'd like.
+
+(a) return is only half of the problem.  break is the other half.
+    as far as i'm concerned, getting rid of return implies getting
+    rid of break.  (i don't think that's necessarily a bad thing.)
+
+(b) i think that this tag function is potentially very useful, and
+    people should probably consider adding it or something similar to
+    their set of tools for working with es.  perhaps with some
+    experience with tag it should be added to the default initial.es,
+    but only after we've played with it and alternatives.
+    (tag is now in my autoload directory.)
+
+(c) tag doesn't, however, address the fundamental problem with
+    break and return, which is that they have completely dynamic
+    behavior, and don't follow lexical scope.  if you use the
+    same tag name in two places, you have exactly the same problem
+    as you do with break or return.
+    
+(d) John and Scott were right in critizing es back in october for
+	(1) not having first-class continuations
+	(2) using first-class continuations for break/return
+    nonetheless, continuations are hard to implement (or, at least,
+    hard to retrofit) and ``it's not going to happen'' for pre-1.0 es.
+
+(e) if Harald had written this back then, i probably would have said
+    something like ``what you really want is something like an escape
+    continuation for the function lexically bound to a function named
+    return (or break) for the body of the lambda (or loop).''
+
+(f) experience with es and it's exception mechanism, however, tells
+    me that (e) is not what i want now.  in particular, continuations
+    have this nasty way of bypassing things like unwind-protect, which
+    is wrong, in my (current) opinion.  (perhaps that means that the
+    exception stuff should go away, but i like that idea less.)
+
+(g) what i think i want, at the moment, is the current dynamic behavior,
+    except that break and return would be bound lexically over their
+    bodies to things like
+    	throw break while-0x12345678
+    where the word after the word ``break'' in the exception would be
+    a unique (or ``unique-enough'') tag that would allow the ``right''
+    catch routine to catch the tag, and all others to ignore it.
+
+(h) unfortunately, since while is not syntax, (g) is hard to do.  (not
+    that there aren't workaround, but i don't like the ones i've come
+    up with yet.)
+
+(i) as a side note, es only has an exception mechanism because, when
+    we were designing es, we pulled rc's internal exception mechanism
+    out to user level, in order to support break and return.  when we
+    first thought of it, we didn't really expect to use the exceptions
+    for anything but them.  i find this slightly ironic.
+
+for now, nothing's going to change.  i want to know what other people think.
+something may appear between 0.88 and 0.89 that looks somewhat like (g).
+
+now, back to Harald's note:
+
+	Besides, I would assume that many present
+	uses of return could easily be replaced with result, perhaps after
+	some rewriting:
+		fn foo {                              fn foo {
+		  if {test} {return bar}    --&gt;		if {test} {result bar} {
+		  blah blah ...}		          blah blah ...}}
+
+true.  i would encourage people to use result instead of return when
+it makes sense to.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00656" href="msg00656.html">Re: Features to remove: return and noreturn</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00645.html">should es have a recursion depth limit?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00647.html">Re:  should es have a recursion depth limit?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00605.html">Re: Features to remove: return and noreturn</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00656.html">Re: Features to remove: return and noreturn</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00646"><strong>Date</strong></a></li>
+<li><a href="threads.html#00646"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

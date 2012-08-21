@@ -1,0 +1,107 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: should es have a recursion depth limit? -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 15 Jun 1993 20:38:37 &#45;0400 -->
+<!--X-Message-Id: 9306160038.AA17640@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>should es have a recursion depth limit?</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00643.html">Date Prev</a>][<a href="msg00645.html">Date Next</a>][<a href="msg01084.html">Thread Prev</a>][<a href="msg00645.html">Thread Next</a>][<a href="maillist.html#00644">Date Index</a>][<a href="threads.html#00644">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>should es have a recursion depth limit?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: should es have a recursion depth limit?</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 15 Jun 1993 20:38:14 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>infinite recursion in es causes core dumps.  currently, there is
+no check to see if you've gone too far down the c stack, which is
+used as the es call stack.  i'm proposing adding one.
+
+what i propose is a new, special variable
+
+	%max-call-depth
+
+which will have some default value in the small 100s.  if the depth
+of function calls exceeded the number stored in this variable, es
+would throw an error.  this should prevent the stack overruns and
+make it possible to deal with such infinite recursions in a sane way.
+(i.e., in a way that doesn't cause the shell to die.)
+
+the question becomes, what if i really want a very deep set of
+calls?  well, you could always set the limit high in your .esrc.
+and you may have to also set your ``limit stacksize'' to make it
+work.
+
+one thing that makes this worse is that es does not (currently) do
+proper tail calling.  therefore, tail recursion -- which should
+not have an effect on the call depth -- does.  i regard this as a
+serious implementation defect.
+
+if i don't hear any serious disagreements, i'm going to put this in.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00645" href="msg00645.html">should es have a recursion depth limit?</a></strong>
+<ul><li><em>From:</em> trost@cloud.rain.com (Bill Trost)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00643.html">Re:  multiple variable reference</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00645.html">should es have a recursion depth limit?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01084.html">Re: multiple variable reference</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00645.html">should es have a recursion depth limit?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00644"><strong>Date</strong></a></li>
+<li><a href="threads.html#00644"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: weird es behaviour -->
+<!--X-From-R13: neabyqNpp.tngrpu.rqh (Oeabyq Dboovaf) -->
+<!--X-Date: Thu, 13 Jan 1994 16:52:34 &#45;0500 -->
+<!--X-Message-Id: 199401132152.QAA01852@penfold.cc.gatech.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>weird es behaviour</title>
+<link rev="made" href="mailto:arnold@cc.gatech.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00720.html">Date Prev</a>][<a href="msg00722.html">Date Next</a>][<a href="msg00720.html">Thread Prev</a>][<a href="msg00722.html">Thread Next</a>][<a href="maillist.html#00721">Date Index</a>][<a href="threads.html#00721">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>weird es behaviour</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.utoronto.ca">es@hawkwind.utcs.utoronto.ca</a></li>
+<li><em>Subject</em>: weird es behaviour</li>
+<li><em>From</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a> (Arnold Robbins)</li>
+<li><em>Date</em>: Thu, 13 Jan 1994 16:52:22 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I don't know if this is a bug or a feature. I am using es inside 9term as
+my shell/window.  I use sam as my editor.  However, since sam is not
+installed in the public directory, I use a private version.  I start
+it with the following shell script:
+
+	#! /bin/sh
+	$HOME/bin/sam.real -t $HOME/bin/samterm &quot;$@&quot; &amp;
+
+Where sam.real is the real sam program.  I throw it into the background
+because that suits my working style - fire up the editor, but be able to
+continue to use the window I started it from.
+
+This is fine and good, sam runs etc.  When I control-d out of the shell,
+to kill the window, the sam goes away too!  This does not happen when I
+run this script from a ksh.
+
+This is on a sparc under sunos 4.1.3, with x11r4.  I suspect it has to
+do something with the signals.  The same thing happens inside an xterm, so
+I don't think 9term has anything to do with it.
+
+I tried starting sam.real with nohup, but that made no difference.
+
+Advice etc welcome.
+
+Thanks,
+
+Arnold
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00722" href="msg00722.html">Re: weird es behaviour</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cse.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00720.html">latest es version</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00722.html">Re: weird es behaviour</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00720.html">latest es version</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00722.html">Re: weird es behaviour</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00721"><strong>Date</strong></a></li>
+<li><a href="threads.html#00721"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

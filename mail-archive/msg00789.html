@@ -1,0 +1,119 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: extensions to settor variables? -->
+<!--X-From-R13: sevrqznaNpyv.pbz (@bnu Tevrqzna) -->
+<!--X-Date: Wed, 30 Nov 1994 14:12:02 &#45;0500 -->
+<!--X-Message-Id: 9411301911.AA10430@tepui -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9411301802.AA09932@zombie.gec&#45;epl.co.uk -->
+<!--X-Reference: steve@cegelecproj.co.uk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: extensions to settor variables?</title>
+<link rev="made" href="mailto:friedman@cli.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00788.html">Date Prev</a>][<a href="msg00790.html">Date Next</a>][<a href="msg00788.html">Thread Prev</a>][<a href="msg00792.html">Thread Next</a>][<a href="maillist.html#00789">Date Index</a>][<a href="threads.html#00789">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: extensions to settor variables?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:steve%40cegelecproj.co.uk">steve@cegelecproj.co.uk</a></li>
+<li><em>Subject</em>: Re: extensions to settor variables?</li>
+<li><em>From</em>: <a href="mailto:friedman%40cli.com">friedman@cli.com</a> (Noah Friedman)</li>
+<li><em>Date</em>: Wed, 30 Nov 1994 14:11:52 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;steve@cegelecproj.co.uk&gt; Wed, 30 November 1994 13:02:53 -0500</li>
+<li><em>References</em>: &lt;<a href="msg00788.html">9411301802.AA09932@zombie.gec-epl.co.uk</a>&gt;</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40cli.com">friedman@cli.com</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;I mean, you don't really want to have:
+&gt;	- a function called when you dereference anything, or
+
+I think you do.  Even in an object system with gettor functions, I want the
+fact that a gettor is being invoked to be explicit.  I don't care deeply
+about the particular syntax, but I want to look at the code and know that
+an *action* is being performed to fetch the value of something, and not
+simply a sort of passive inspection of state.
+
+As for es, which doesn't provide records or objects of any kind, the idea
+of a &quot;discipline function&quot; for a variable seems gratuitous anyway.  One
+expects a variable to change value by explicit assignment (or possibly as a
+side effect of some function).  But one does not normally expect them to
+change just by referencing them!  Settors in es already potentially confuse
+the issue, which is why I think any program that uses them should be
+judicious about the number of variables that are simple aliases or
+different &quot;views&quot; of the same data (e.g. `PATH' and `path').  Anything
+beyond that is probably abuse.
+
+Anyway, I think I'm straying from the point, and I don't really want to get
+into an argument about language semantics, especially since I have only
+limited and empirically-acquired knowledge.
+
+But I do want to recommend that people be conservative about what new
+features are added to es, if any.  When I first joined this list, I
+remember that the general attitude was that there were features that should
+be removed.
+
+I think it would be a lot more useful to think about cleaning up the
+semantics of existing features, such as the globbing/redirection problem.
+I don't have any ideas yet, because I keep worrying that if I don't
+vehemently shoot down the idea of &quot;discpline functions&quot;, someone will add
+them.  :-)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00788" href="msg00788.html">Re: extensions to settor variables?</a></strong>
+<ul><li><em>From:</em> steve@cegelecproj.co.uk (Steve_Kilbane)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00788.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00790.html">Re: Non-login config files</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00788.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00792.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00789"><strong>Date</strong></a></li>
+<li><a href="threads.html#00789"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

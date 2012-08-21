@@ -1,0 +1,94 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: extensions to settor variables? -->
+<!--X-From-R13: fgrirNprtryrpcebw.pb.hx (Egrir_Yvyonar) -->
+<!--X-Date: Wed, 30 Nov 1994 13:36:07 &#45;0500 -->
+<!--X-Message-Id: 9411301802.AA09932@zombie.gec&#45;epl.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: extensions to settor variables?</title>
+<link rev="made" href="mailto:steve@cegelecproj.co.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00787.html">Date Prev</a>][<a href="msg00789.html">Date Next</a>][<a href="msg00787.html">Thread Prev</a>][<a href="msg00789.html">Thread Next</a>][<a href="maillist.html#00788">Date Index</a>][<a href="threads.html#00788">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: extensions to settor variables?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: extensions to settor variables?</li>
+<li><em>From</em>: <a href="mailto:steve%40cegelecproj.co.uk">steve@cegelecproj.co.uk</a> (Steve_Kilbane)</li>
+<li><em>Date</em>: Wed, 30 Nov 1994 13:02:53 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Well, having a &quot;call when referenced&quot; function for a variable is indeed
+going over the top, but I can't really see how else you could generalise
+it. I mean, you don't really want to have:
+	- a function called when you dereference anything, or
+	- a %assign hook, or
+	- a %reference hook, or
+	- a (called hook) hook,
+because now you're grubbing around in the internals, and defining fundamentals
+in terms of concepts which are in turn defined by the fundamentals.
+
+Really, &quot;call when referenced&quot; is useful *only* when debugging. Perhaps there
+could be something equivalent to sequence points, and an if %debug is
+defined, it's called at each point; %debug would be a little like a
+supervisor trap, in that it automatically undefines itself for the duration
+of its invocation.
+
+Hehe.
+
+steve
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00787.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00789.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00787.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00789.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00788"><strong>Date</strong></a></li>
+<li><a href="threads.html#00788"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

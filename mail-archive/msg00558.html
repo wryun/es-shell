@@ -1,0 +1,134 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: "cdpath" searching, and pushd/popd too -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Thu, 27 May 1993 15:51:03 &#45;0400 -->
+<!--X-Message-Id: 9305271947.AA02201@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305260239.AA25670@morocco.Eng.Sun.COM -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: &quot;cdpath&quot; searching, and pushd/popd too</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00557.html">Date Prev</a>][<a href="msg00559.html">Date Next</a>][<a href="msg00521.html">Thread Prev</a>][<a href="msg00514.html">Thread Next</a>][<a href="maillist.html#00558">Date Index</a>][<a href="threads.html#00558">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: &quot;cdpath&quot; searching, and pushd/popd too</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:Doug.Landauer%40Eng.Sun.COM">Doug.Landauer@Eng.Sun.COM</a></li>
+<li><em>Subject</em>: Re: &quot;cdpath&quot; searching, and pushd/popd too</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Thu, 27 May 1993 15:47:55 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00521.html">9305260239.AA25670@morocco.Eng.Sun.COM</a>&gt; (Doug.Landauer@Eng.Sun.COM)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;&gt;&gt;&gt;&gt; On Tue, 25 May 1993 22:39:55 -0400, Doug.Landauer@Eng.Sun.COM
+&gt;&gt;&gt;&gt;&gt; (Doug Landauer) said:
+
+Doug&gt; Likewise.  *ALL* of my change-dir commands do a &quot;pushd&quot;-equivalent.
+Doug&gt; I use a &quot;z&quot; command instead of &quot;cd&quot; and it *always* pushes the directory.
+
+Doug&gt; [...]  If there's interest, I may find the time to sanitize &amp;
+Doug&gt; share the es code that does this.  It's pretty easy to do,
+Doug&gt; though -- much easier in es than it was in [gasp] ksh.
+
+Hmmm... yes, certainly an interesting approach.  Since I just invented
+this scheme of my own, however, I prefer to play with it for a while
+rather than jumping on something else, so I can find out if my idea
+was any good or not.  I'll keep your offer in mind, though.
+
+Also, thanks to the many folks who suggested ways to coexist with the
+automounter.  In case anybody out there want to play with my
+two-argument cd, I include below the code out of my .esrc that handles
+it.  Central to the solution is a function %cwd which returns a
+sanitized version of the current directory.  It even works with
+directory names containing newlines and other white space (I think (:-)).
+
+- Harald
+
+## NOTE site specific stuff here: Automounted directories have path
+#  names beginning /tmp_mnt.  This version of %cwd, which returns the
+#  current directory, strips off the leading component of those directories.
+let (pwd = &lt;={%whatis pwd}) {
+  fn-%cwd= {
+    let (t = `` () {$pwd}; n =) {
+      t = &lt;={%fsplit \n $t}; n = $#t; t = . $t; t = $t(2 ... $n);
+      t = &lt;={%flatten \n $t}
+      if {~ $t ''} {throw error $0 $pwd ^ ' returned nothing!?'}
+      if {~ $t /tmp_mnt*} {
+        t = &lt;={%split / $t}
+        t = / ^ &lt;={%flatten / $t(2 ...)}}
+      result $t}}}
+wd = &lt;={%cwd}
+fn-pwd = {echo $wd}
+fn cd to name {
+  if {~ $#to 0} \
+    {to=$home
+     if {!~ $#home 1} {throw error $0 '$home must have just one component'}}
+  if {~ $#name 0} {name=-}
+  if {!~ $#name 1} {throw error $0 'Usage: cd [dir [return-name]]'}
+  if {!~ $#(dir-$to) 0} {to=$(dir-$to); echo cd $to &gt;[1=2]}
+  $&amp;cd $to
+  dir-$name=$wd
+  wd= &lt;={%cwd}
+  $%cd-hook}
+fn dirs {each @ v{~ $v dir-* &amp;&amp; var $v} &lt;=$&amp;vars}
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00521" href="msg00521.html">Re: &quot;cdpath&quot; searching, and pushd/popd too</a></strong>
+<ul><li><em>From:</em> Doug.Landauer@Eng.Sun.COM (Doug Landauer)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00557.html">%glob</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00559.html">A couple of questions</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00521.html">Re: &quot;cdpath&quot; searching, and pushd/popd too</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00514.html">lots</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00558"><strong>Date</strong></a></li>
+<li><a href="threads.html#00558"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

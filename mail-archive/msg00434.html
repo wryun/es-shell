@@ -1,0 +1,121 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  Semantics of let -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 18 May 1993 22:31:20 &#45;0400 -->
+<!--X-Message-Id: 9305190231.AA04270@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  Semantics of let</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00433.html">Date Prev</a>][<a href="msg00435.html">Date Next</a>][<a href="msg00433.html">Thread Prev</a>][<a href="msg00435.html">Thread Next</a>][<a href="maillist.html#00434">Date Index</a>][<a href="threads.html#00434">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  Semantics of let</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a></li>
+<li><em>Subject</em>: Re:  Semantics of let</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 18 May 1993 22:31:55 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Paul&gt; re letrec:  currently the only way to create recursive structures
+&gt; Paul&gt; is to use assignment or something like the y combinator. [...]
+
+&gt; I don't think I quite understand.  The only recursiveness you create
+&gt; using letrec is indirect, in the sense that a program fragment would
+&gt; not contain a copy of itself, but has to dereference a variable to
+&gt; refer to itself.  In fact, you can get the effect of
+&gt;     letrec (a=foo; b=bar) {cmd}
+&gt; by rewriting it as
+&gt;     let (a=; b=) {a=foo; b=bar; cmd}
+&gt; which certainly causes no problem.  Of course, this means that letrec
+&gt; can simply be implemented as syntactic sugar, just like let* can, given
+&gt; the &quot;real&quot; let.
+
+yes, but, how about...
+
+	letrec (x = {echo $x}) $x
+
+which is equivalent to
+
+	let (x = ) { x = { echo $x }; $x }
+
+[this one happens not to crash the interpreter, so feel free to try
+it out.  on the other hand, it doesn't work correctly.  and, by the
+way, i believe that minor variations on this will cause the interpreter
+to die, so be careful]
+
+note that the closure here contains a pointer to itself.  it has to.
+there's no two way around it;  otherwise, you don't have real lexical
+scoping.
+
+&gt; Heck, even let can be written as syntactic sugar in terms of lambda!
+&gt; You just have to use some program fragments to get around the fact
+&gt; that es doesn't have hierarchical lists:
+
+&gt; ; x=foo zoo; y=bar zar
+&gt; ; # Think if this as a rewrite of  let (x=$y; y=$x) echo $x $y
+&gt; ; @ x y {x=&lt;=$x; y=&lt;=$y; echo $x $y} {result $y} {result $x}
+&gt; bar zar foo zoo
+
+yes, it probably could be, but i'm not sure it's any cleaner, or makes
+things any smaller.  (but a very clever piece of code, i must say.
+took me a long time to figure out what it was doing.)
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00433.html">Semantics of let</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00435.html">Re: Semantics of let</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00433.html">Semantics of let</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00435.html">Re: Semantics of let</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00434"><strong>Date</strong></a></li>
+<li><a href="threads.html#00434"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

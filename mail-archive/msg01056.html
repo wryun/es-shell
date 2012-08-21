@@ -1,0 +1,128 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Es and autocompleting -->
+<!--X-From-R13: Egrir Yvyonar <fgrirNjuvgrpebj.qrzba.pb.hx> -->
+<!--X-Date: Tue, 19 Dec 2000 19:09:57 &#45;0500 -->
+<!--X-Message-Id: 200012190847.IAA29234@whitecrow.demon.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: slrn93t97n.5d4.egnor@ofb.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Es and autocompleting</title>
+<link rev="made" href="mailto:steve@whitecrow.demon.co.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01055.html">Date Prev</a>][<a href="msg01057.html">Date Next</a>][<a href="msg01053.html">Thread Prev</a>][<a href="msg01057.html">Thread Next</a>][<a href="maillist.html#01056">Date Index</a>][<a href="threads.html#01056">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Es and autocompleting</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:egnor%40ofb.net">egnor@ofb.net</a> (Dan Egnor)</li>
+<li><em>Subject</em>: Re: Es and autocompleting</li>
+<li><em>From</em>: Steve Kilbane &lt;<a href="mailto:steve%40whitecrow.demon.co.uk">steve@whitecrow.demon.co.uk</a>&gt;</li>
+<li><em>Date</em>: Tue, 19 Dec 2000 03:47:07 -0500</li>
+<li><em>Cc</em>: <a href="mailto:mlist-es%40nntp-server.caltech.edu">mlist-es@nntp-server.caltech.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Tue, 19 Dec 2000 02:59:24 GMT.&quot;             &lt;<a href="msg01053.html">slrn93t97n.5d4.egnor@ofb.net</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Dan asked:
+&gt; Could you expand on this belief?
+&gt; (Or point me at some place where you already have done so.)
+
+While Paul's previous comments are probably on a list archive somewhere,
+a fresh articulation might be good, since he's already admitted to one
+shift in the last half-decade. :-)
+
+FWIW, my own objections to completion are distinctly dodgy, but I'll
+put them forth anyway:
+
+- In a general-purpose UNIX shell, completion demands a lot of its
+environment. It has to handle key characters specially beyond the usual
+character/word deletion operations, and that raises the complexity both
+of the read/execute loop and the porting process.
+
+- It's something that is completely unnecessary in a non-interactive state.
+
+- It's laziness; I like being able to type. :-&gt;
+
+&gt; It seems to me (probably naively) that the shell is in the best position
+&gt; to know the context of the current command, and therefore to be able to
+&gt; predict the set of possible choices.
+
+Well, maybe. Things are a little different in Plan 9, where the path is
+always just dot and /bin, but that can mean many different things. Similarly,
+in a windowing system, the window environment multiplexes the keystrokes and
+has to handle the edit stream, so why not let it do the completion magic too?
+It can also provide history, do so across different windows for a single
+history file, and maybe even provide other command mechanisms, too. As a
+minor example, I once had a hacked version of 9term that would receive commands
+from a pipe and forward them to the shell.
+
+steve
+
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01061" href="msg01061.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> Bill Trost &lt;trost@cloud.rain.com&gt;</li></ul></li>
+<li><strong><a name="01058" href="msg01058.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> Noah Friedman &lt;friedman@splode.com&gt;</li></ul></li>
+<li><strong><a name="01057" href="msg01057.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> Bill Trost &lt;trost@cloud.rain.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01053" href="msg01053.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> egnor@ofb.net (Dan Egnor)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01055.html">Re: Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01057.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01053.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01057.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01056"><strong>Date</strong></a></li>
+<li><a href="threads.html#01056"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: my recent request for help -->
+<!--X-From-R13: Vnenyq Vnapur&#45;Ayfra <unapurNzngu.agah.ab> -->
+<!--X-Date: Thu, 13 Apr 2000 04:23:34 &#45;0400 -->
+<!--X-Message-Id: 20000412162917P.hanche@math.ntnu.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.BSF.4.05.10004092026250.280&#45;100000@spotteswoode.de -->
+<!--X-Reference: Pine.BSF.4.05.10004112003590.400&#45;100000@spotteswoode.de -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: my recent request for help</title>
+<link rev="made" href="mailto:hanche@math.ntnu.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01006.html">Date Prev</a>][<a href="msg01004.html">Date Next</a>][<a href="msg01006.html">Thread Prev</a>][<a href="msg01008.html">Thread Next</a>][<a href="maillist.html#01005">Date Index</a>][<a href="threads.html#01005">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: my recent request for help</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: my recent request for help</li>
+<li><em>From</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Date</em>: Wed, 12 Apr 2000 10:29:17 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01003.html">Pine.BSF.4.05.10004092026250.280-100000@spotteswoode.de</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg01003.html">Pine.BSF.4.05.10004092026250.280-100000@spotteswoode.de</a>&gt;	&lt;<a href="msg01002.html">Pine.BSF.4.05.10004112003590.400-100000@spotteswoode.de</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>+ fischer &lt;inode@freenet.de&gt;:
+
+| thanx guys, for all the help.
+| 
+| i got exactly zero messages on a fairly simple problem 7^/
+
+Hey, the list has obviously been out of commision for several days.
+How about a little patience?
+
+| have no fear, because i got the solution.
+
+OK, glad you found it on your own.
+
+| when reading several values using %read, they will be returned in
+| one simple flat value.  to index a list you would rather want
+| several distinguishable values, and it happens like this:
+| 
+| i = &lt;=%read; i = `{echo $i}
+| echo $list($i)
+| 
+| ...then will work as expected.
+
+Yes, but using echo in backquotes to split a string is the sh way.
+The es way would be
+
+i = &lt;={%split $^ifs &lt;=%read}
+
+BTW, if like me you have set PAGER='less -s' then running $PAGER from
+es will not work; you will have to run &lt;={%split $^ifs $PAGER}
+instead.
+
+es's way of never gratuitously splitting single arguments containing
+spaces makes for fewer surprises, albeit at the cost of a little extra
+work once in a while.
+
+| am i the only person in the biz who uses es(local) as a login shell
+| and, moreover, would be bold enough to post to this mailing list?
+
+In what biz?  I sure use es as a login shell, but I may be in the
+wrong biz.  8-)
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01003" href="msg01003.html">my recent request for help</a></strong>
+<ul><li><em>From:</em> fischer &lt;inode@freenet.de&gt;</li></ul></li>
+<li><strong><a name="01002" href="msg01002.html">hello, world!\n</a></strong>
+<ul><li><em>From:</em> fischer &lt;inode@freenet.de&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01006.html">Re: hello, world!\n</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01004.html">Re: my recent request for help</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01006.html">Re: hello, world!\n</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01008.html">a few scripts...</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01005"><strong>Date</strong></a></li>
+<li><a href="threads.html#01005"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

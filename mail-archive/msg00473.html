@@ -1,0 +1,104 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: readline trubble -->
+<!--X-From-R13: Rnivq [p@vpby <pnoc09Npbzchgre&#45;prager&#45;fha.fgengupylqr.np.hx> -->
+<!--X-Date: Mon, 24 May 1993 07:55:22 &#45;0400 -->
+<!--X-Message-Id: 2296.9305241141@subnode.computer&#45;centre&#45;sun.strathclyde.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>readline trubble</title>
+<link rev="made" href="mailto:cabp09@computer-centre-sun.strathclyde.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00472.html">Date Prev</a>][<a href="msg00474.html">Date Next</a>][<a href="msg00472.html">Thread Prev</a>][<a href="msg00474.html">Thread Next</a>][<a href="maillist.html#00473">Date Index</a>][<a href="threads.html#00473">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>readline trubble</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: readline trubble</li>
+<li><em>From</em>: David McNicol &lt;<a href="mailto:cabp09%40computer-centre-sun.strathclyde.ac.uk">cabp09@computer-centre-sun.strathclyde.ac.uk</a>&gt;</li>
+<li><em>Date</em>: Mon, 24 May 1993 07:41:35 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+I tried compiling es with the readline lib ... and got this:
+
+&gt;&gt; gcc -o esdump -L/homedir/cabp09/lib access.o closure.o conv.o dict.o
+&gt;&gt; eval.o except.o fd.o gc.o glob.o glom.o input.o heredoc.o list.o main.o
+&gt;&gt; match.o open.o opt.o prim-ctl.o prim-etc.o prim-io.o prim-sys.o prim.o
+&gt;&gt; print.o proc.o sigmsgs.o signal.o split.o status.o str.o syntax.o term.o
+&gt;&gt; token.o tree.o util.o var.o vec.o version.o y.tab.o dump.o -lreadline
+&gt;&gt; ld: Undefined symbol
+&gt;&gt;    _tgetent 
+&gt;&gt;    _tgetstr 
+&gt;&gt;    _tputs 
+&gt;&gt;    _tgetnum 
+&gt;&gt;    _tgoto 
+&gt;&gt; collect: /usr/bin/ld returned 2 exit status
+&gt;&gt; *** Error code 1
+&gt;&gt; make: Fatal error: Command failed for target `esdump'
+
+I compiled on a SUN SparcSTATION with SunOS 4.1.3 ... I have no problems
+when I exclude the readline lib ...
+
+DAve.
+
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00474" href="msg00474.html">Re: readline trubble</a></strong>
+<ul><li><em>From:</em> Richard Brooksby &lt;richard@harlequin.co.uk&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00472.html">Re: es should call rl_reset_terminal() when $TERM is set</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00474.html">Re: readline trubble</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00472.html">Re: es should call rl_reset_terminal() when $TERM is set</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00474.html">Re: readline trubble</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00473"><strong>Date</strong></a></li>
+<li><a href="threads.html#00473"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

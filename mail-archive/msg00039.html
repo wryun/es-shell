@@ -1,0 +1,104 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es v*1* features -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Mon, 5 Oct 1992 18:18:01 &#45;0400 -->
+<!--X-Message-Id: 9210052219.AA08304@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es v*1* features</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00038.html">Date Prev</a>][<a href="msg00040.html">Date Next</a>][<a href="msg00038.html">Thread Prev</a>][<a href="msg00040.html">Thread Next</a>][<a href="maillist.html#00039">Date Index</a>][<a href="threads.html#00039">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es v*1* features</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:john%40civil.su.oz.au">john@civil.su.oz.au</a></li>
+<li><em>Subject</em>: Re: es v*1* features</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 5 Oct 1992 18:19:28 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; the ability to specify a user-defined
+&gt; function that would be invoked on a history-file write 
+
+we had kicked this one around, but unfortunately don't think it
+will be in v1, for unfortunate reasons having nothing to do with
+the shell's design and everything to do with current implementation.
+
+	(a) the garbage collector can move memory
+	(b) (a) -&gt; ALL live references must be identified
+	(c) we didn't write the yacc driver
+	(d) we don't want to rewrite the yacc driver (yet)
+	(e) (b+c+d) -&gt; yacc code may have unidentified references
+	(f) (e) -&gt; garbage collection must be disabled while the parser runs
+	(g) the parser calls the read routines
+	(h) the read routines write the history file
+	(i) (f+g+h) garbage collection must be disabled when we write the history file
+	(j) any es function cannot be guaranteed to halt
+	(k) (j) -&gt; the garbage collector cannot be disabled when we run es code
+	(l) (i+k) -&gt; when we write the history file, we cannot run es code
+
+now, none of this is cast in stone.  a reentrant parser, which includes
+being able to collect while it's running, is on our task list for after
+1.0.  it's also possible to move the history writing to a different
+place in the code (e.g., after the parser has finished), but that required
+potentially buffering a large amount of data.
+
+anyway, we're thinking about it, and we agree with the desirability of
+such a hook, but wanted you to understand why it ain't in there yet.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00038.html">es v*1* features</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00040.html">es-0.68</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00038.html">es v*1* features</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00040.html">es-0.68</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00039"><strong>Date</strong></a></li>
+<li><a href="threads.html#00039"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

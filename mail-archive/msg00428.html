@@ -1,0 +1,140 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es vs SCCS -->
+<!--X-From-R13: Rbht.ZnaqnhreNSat.Eha.QA[ (Rbht Znaqnhre) -->
+<!--X-Date: Tue, 18 May 1993 13:55:01 &#45;0400 -->
+<!--X-Message-Id: 9305181751.AA17115@morocco.Eng.Sun.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es vs SCCS</title>
+<link rev="made" href="mailto:Doug.Landauer@Eng.Sun.COM">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00427.html">Date Prev</a>][<a href="msg00429.html">Date Next</a>][<a href="msg00427.html">Thread Prev</a>][<a href="msg00429.html">Thread Next</a>][<a href="maillist.html#00428">Date Index</a>][<a href="threads.html#00428">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es vs SCCS</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es vs SCCS</li>
+<li><em>From</em>: <a href="mailto:Doug.Landauer%40Eng.Sun.COM">Doug.Landauer@Eng.Sun.COM</a> (Doug Landauer)</li>
+<li><em>Date</em>: Tue, 18 May 1993 13:51:46 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Here's a small warning for anyone insane enough to put es under SCCS:
+There's a couple of places in es where there are unintended SCCS
+keywords.  The symptoms I got were that any &quot;echo&quot; command just ended
+up echoing &quot;1s&quot; or &quot;2s&quot;.  Here's some diffs that fix the problem:
+------- conv.c -------
+*** /tmp/da004AG	Wed Dec 31 16:00:00 1969
+--- conv.c	Mon May 17 20:08:16 1993
+***************
+*** 10,16 ****
+  static Boolean Lconv(Format *f) {
+  	List *lp, *next;
+  	char *sep;
+! 	const char *fmt = (f-&gt;flags &amp; FMT_altform) ? &quot;%S%s&quot; : &quot;%s%s&quot;;
+  	
+  	lp = va_arg(f-&gt;args, List *);
+  	sep = va_arg(f-&gt;args, char *);
+--- 10,16 ----
+  static Boolean Lconv(Format *f) {
+  	List *lp, *next;
+  	char *sep;
+! 	const char *fmt = (f-&gt;flags &amp; FMT_altform) ? &quot;%S&quot; &quot;%s&quot; : &quot;%s%s&quot;;
+  	
+  	lp = va_arg(f-&gt;args, List *);
+  	sep = va_arg(f-&gt;args, char *);
+***************
+*** 118,124 ****
+  			fmtcat(f, &quot;()&quot;);
+  			break;
+  		case 1:
+! 			fmtprint(f, &quot;%T%T&quot;, n-&gt;u[0].p, n-&gt;u[1].p);
+  			break;
+  		default:
+  			fmtprint(f, &quot;(%T&quot;, n-&gt;u[0].p);
+--- 118,124 ----
+  			fmtcat(f, &quot;()&quot;);
+  			break;
+  		case 1:
+! 			fmtprint(f, &quot;%T&quot; &quot;%T&quot;, n-&gt;u[0].p, n-&gt;u[1].p);
+  			break;
+  		default:
+  			fmtprint(f, &quot;(%T&quot;, n-&gt;u[0].p);
+
+------- prim-etc.c -------
+*** /tmp/da004AI	Wed Dec 31 16:00:00 1969
+--- prim-etc.c	Mon May 17 20:07:43 1993
+***************
+*** 39,45 ****
+  			}
+  		}
+  	}
+! 	print(&quot;%L%s&quot;, list, &quot; &quot;, eol);
+  	return listcopy(true);
+  }
+  
+--- 39,46 ----
+  			}
+  		}
+  	}
+! 	/* Dorky SCCSIDs require separating the % strings */
+! 	print(&quot;%L&quot; &quot;%s&quot;, list, &quot; &quot;, eol);
+  	return listcopy(true);
+  }
+  
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+Doug.Landauer@sun.com				 &quot;Sukkiri ga ii.&quot;
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00427.html">Re:  automatic local variables</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00429.html">Semantics of let</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00427.html">Re:  automatic local variables</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00429.html">Semantics of let</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00428"><strong>Date</strong></a></li>
+<li><a href="threads.html#00428"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

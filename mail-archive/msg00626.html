@@ -1,0 +1,126 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: let and for vs. lambda variations -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Tue, 8 Jun 1993 10:12:10 &#45;0400 -->
+<!--X-Message-Id: 9306081412.AA00738@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9306072355.AA00556@utopia.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: let and for vs. lambda variations</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00625.html">Date Prev</a>][<a href="msg00627.html">Date Next</a>][<a href="msg00623.html">Thread Prev</a>][<a href="msg00627.html">Thread Next</a>][<a href="maillist.html#00626">Date Index</a>][<a href="threads.html#00626">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: let and for vs. lambda variations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: Re: let and for vs. lambda variations</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Tue, 8 Jun 1993 10:12:04 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00623.html">9306072355.AA00556@utopia.mv.us.adobe.com</a>&gt; (message from Paul Haahr on Mon, 7 Jun 93 16:55:02 PDT)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Harald&gt; Actually, even the multiple binding forms can be rewritten as lambdas,
+Harald&gt; using the wrapping trick, but it would be awkward and require some
+Harald&gt; obfuscated code:
+Harald&gt; ....
+Harald&gt; where `xy' is a symbol that does not appear in the text of cmd.  (!)
+
+Paul&gt; which is not possible to determine in es, given that you can write
+Paul&gt; 	`{ echo -n x; echo -n y } = foo
+Paul&gt; in es.  hence my comment about it not being possible.
+
+Again, I have been careless.  But this has got to be right:
+
+  let (x=a b; y=c d) cmd --&gt; 
+  @ curried-body x y {&lt;={$curried-body &lt;=$y} &lt;=$x} \
+    @ x {$&amp;result @ y {cmd}} &lt;={wrap x} &lt;={wrap y}
+
+Note that I am intentionally reusing the variables x and y, making the
+code harder to read but easier to generate automagically.
+Here is an experiment validating it, handtranslating
+
+let (x=new x; y=$x) {echo inner x: $x \ninner y: $y}
+
+; x = old x
+; @ curried-body x y {&lt;= {$curried-body &lt;=$x} &lt;=$y} \
+    @ x {$&amp;result @ y {echo inner x: $x \ninner y: $y}} \
+    &lt;={wrap new x} \
+    &lt;={wrap $x}
+inner x: new x 
+inner y: outer x
+;
+
+So indeed it can be done, given sufficient will and care.
+
+Note that I am not necessarily saying it *should* be done, but let us
+at least be clear on what is possible and what is not, and how hard it
+is to do the possible things, before we reject them.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00627" href="msg00627.html">Re: let and for vs. lambda variations</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00623" href="msg00623.html">Re: let and for vs. lambda variations</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@mv.us.adobe.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00625.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00627.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00623.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00627.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00626"><strong>Date</strong></a></li>
+<li><a href="threads.html#00626"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

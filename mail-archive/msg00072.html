@@ -1,0 +1,106 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es %dup -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Fri, 16 Oct 1992 18:18:29 &#45;0400 -->
+<!--X-Message-Id: 9210162218.AA25932@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es %dup</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00071.html">Date Prev</a>][<a href="msg00073.html">Date Next</a>][<a href="msg00071.html">Thread Prev</a>][<a href="msg00074.html">Thread Next</a>][<a href="maillist.html#00072">Date Index</a>][<a href="threads.html#00072">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es %dup</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:schwartz%40groucho.cs.psu.edu">schwartz@groucho.cs.psu.edu</a></li>
+<li><em>Subject</em>: Re: es %dup</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 16 Oct 1992 18:18:04 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; I thought you were suggesting that ``exec &lt;foo'' should
+&gt; mean  ``push foo onto input''
+
+as an aside: this functionality is avaible with the predefined function &quot;.&quot;,
+as in rc and sh.
+
+&gt; You should have direct access to
+&gt; open, close, read, write, etc.
+
+unclear.  read &amp; write are still controversial, in my mind.  open, close,
+etc. are provided, but insufficient, because you need to pick some fd
+to work on.  as Donn notes, it's probably reasonable to add something
+which returns an unused fd number that you can then use in open and
+create calls.  how about
+	&lt;&gt;{%newfd}
+?
+
+also, this points to a limitation in the syntax, which is that when
+using the syntactic sugar, you can only use hard-coded, literal numbers
+and not es-expressions.  for the next release, i'll add (on an experimental
+basis only, %newfd, but to really use it, you'll need to bypass the
+syntactic sugar and do direct %open, etc.  thus
+
+	;; fd = &lt;&gt;{%newfd}
+	;; exec {%create $fd foo}
+	;; %dup 1 $fd {echo bar}
+	;; exec {%close $fd}
+	;; cat foo
+	bar
+	;; 
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00071.html">Re: es %dup</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00073.html">split change</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00071.html">Re: es %dup</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00074.html">Re: es %dup</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00072"><strong>Date</strong></a></li>
+<li><a href="threads.html#00072"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es signal handling bug on recent Linuces -->
+<!--X-From-R13: Bnhy Vnnue <unnueNwvirgrpu.pbz> -->
+<!--X-Date: Thu, 14 Dec 2000 00:36:58 &#45;0500 -->
+<!--X-Message-Id: cWe19d5OT0@iadd.jivetech.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: haahr@jivetech.com -->
+<!--X-Reference: cWdY6U5Eta@iadd.jivetech.com -->
+<!--X-Reference: 20001213231306.5473.qmail@f.bio.cse.psu.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es signal handling bug on recent Linuces</title>
+<link rev="made" href="mailto:haahr@jivetech.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01028.html">Date Prev</a>][<a href="msg01025.html">Date Next</a>][<a href="msg01028.html">Thread Prev</a>][<a href="msg01026.html">Thread Next</a>][<a href="maillist.html#01027">Date Index</a>][<a href="threads.html#01027">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es signal handling bug on recent Linuces</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Loren James Rittle &lt;<a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a>&gt;,	Scott Schwartz &lt;<a href="mailto:schwartz%40bio.cse.psu.edu">schwartz@bio.cse.psu.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: es signal handling bug on recent Linuces</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 13 Dec 2000 19:20:29 -0500</li>
+<li><em>Cc</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01024.html">cWdY6U5Eta@iadd.jivetech.com</a>&gt;</li>
+<li><em>References</em>: &lt;haahr@jivetech.com&gt;	&lt;<a href="msg01024.html">cWdY6U5Eta@iadd.jivetech.com</a>&gt;	&lt;<a href="msg01028.html">20001213231306.5473.qmail@f.bio.cse.psu.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I wrote:
+&gt; I don't think it's a problem with es's internal state, but rather with
+&gt; how it sets the signal handling bits for the process.  [...]
+
+After a little bit of testing, useless exploration with strace, and a
+profitable visit to /proc, it appears that, when the SIGINT signal
+handler is called, SIGINT is blocked.  If memory serves (and it may not;
+es was the last real Unix code I've written), that's the way things are
+supposed to be.  But, when the signal handler exits, either by return or
+longjmp, the signal is supposed to be unblocked.
+
+That unblocking was not occurring.  (I wonder if it has to do with the
+longjmp.)
+
+I've appended some code to this message which appears to cure the bug
+when the appropriate compile-time flag is set, though es still sometimes
+reports ``wait: No child processes'' when processes are interrupted.  No
+idea what that happens.
+
+Any suggestions are welcome.
+
+Needs to be packaged better, of course.
+
+
+Scott wrote:
+&gt; To add fuel to your fire: Folks around here using bash2 have noticed
+&gt; that keyboard signals sometimes behave strangely under RH2.6.
+
+Can you say more about the symptoms?
+
+--p
+
+/* catcher -- catch (and defer) a signal from the kernel */
+static void catcher(int sig) {
+#if SYSV_SIGNALS /* only do this for unreliable signals */
+	signal(sig, catcher);
+#endif
+	if (hasforked)
+		/* exit unconditionally on a signal in a child process */
+		exit(1);
+	if (caught[sig] == 0) {
+		caught[sig] = TRUE;
+		++sigcount;
+	}
+	interrupted = TRUE;
+
+#if DUMB_ASS_LINUX_BUG
+	{
+		sigset_t unblock;
+		sigemptyset(&amp;unblock);
+		sigaddset(&amp;unblock, sig);
+		sigprocmask(SIG_UNBLOCK, &amp;unblock, NULL);
+	}
+#endif
+	
+	if (slow)
+		longjmp(slowlabel, 1);
+}
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01029" href="msg01029.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@bio.cse.psu.edu&gt;</li></ul></li>
+<li><strong><a name="01026" href="msg01026.html">spurious ``wait: No child processes'' messages</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01024" href="msg01024.html">es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+<li><strong><a name="01028" href="msg01028.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@bio.cse.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01028.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01025.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01028.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01026.html">spurious ``wait: No child processes'' messages</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01027"><strong>Date</strong></a></li>
+<li><a href="threads.html#01027"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

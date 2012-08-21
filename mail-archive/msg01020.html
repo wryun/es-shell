@@ -1,0 +1,201 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Possible fix for the signal&#45;handling problem in es&#45;0.9&#45;beta1.tar.gz -->
+<!--X-From-R13: Zbera Xnzrf Dvggyr <evggyrNyngbhe.efpu.pbzz.zbg.pbz> -->
+<!--X-Date: Wed, 13 Dec 2000 14:14:13 &#45;0500 -->
+<!--X-Message-Id: 200012130910.eBD9ApC75012@latour.rsch.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 200012080119.eB81JDe98193@latour.rsch.comm.mot.com -->
+<!--X-Reference: cWdHfF5Et0@iadd.jivetech.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</title>
+<link rev="made" href="mailto:rittle@latour.rsch.comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01019.html">Date Prev</a>][<a href="msg01021.html">Date Next</a>][<a href="msg01021.html">Thread Prev</a>][<a href="msg01022.html">Thread Next</a>][<a href="maillist.html#01020">Date Index</a>][<a href="threads.html#01020">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a></li>
+<li><em>Subject</em>: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</li>
+<li><em>From</em>: Loren James Rittle &lt;<a href="mailto:rittle%40latour.rsch.comm.mot.com">rittle@latour.rsch.comm.mot.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 13 Dec 2000 04:10:51 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>, <a href="mailto:friedman%40splode.com">friedman@splode.com</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01021.html">cWdHfF5Et0@iadd.jivetech.com</a>&gt; (message from Paul Haahr on Tue,	12 Dec 2000 15:25:29 -0800 (PST))</li>
+<li><em>References</em>: &lt;<a href="msg01018.html">200012080119.eB81JDe98193@latour.rsch.comm.mot.com</a>&gt; &lt;<a href="msg01021.html">cWdHfF5Et0@iadd.jivetech.com</a>&gt;</li>
+<li><em>Reply-to</em>: <a href="mailto:rittle%40rsch.comm.mot.com">rittle@rsch.comm.mot.com</a></li>
+<li><em>User-agent</em>: SEMI/1.13.7 (Awazu) FLIM/1.13.2 (Kasanui) Emacs/20.5 (i386-unknown-freebsdelf3.2) MULE/4.0 (HANANOEN)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>In article &lt;<a href="msg01021.html">cWdHfF5Et0@iadd.jivetech.com</a>&gt;,
+Paul Haahr &lt;haahr@jivetech.com&gt; writes:
+
+&gt;&gt; I have no idea if anyone besides me still runs es (or anyone cares to
+&gt;&gt; maintain their copies),
+
+&gt; Well, I still run it.
+
+Hi Paul,
+
+[Since the es list appears to insert a rather large time delay, I have
+ explicitly CC'd parties that were known to be interested in this
+ problem back in January 2000.]
+
+It is always great to hear from the author of the software that they
+still run it. ;-)
+
+&gt; Hasn't needed much maintenance lately,
+
+How true: The only reason I found the minor memory-handling bug is
+that I upgraded my operating system recently.  The new version
+(FreeBSD 4.2) checks for that exact type of memory handling error and
+many others (by default).
+
+IIRC, I seem to have hit this problem before but the crash/failure was
+not always so predictable.  At least, I am quite sure I was never able
+to pinpoint the errant code.
+
+&gt; but I've been meaning to fix the damn control-C on Linux bug for a
+&gt; long time.
+
+OK, the signal-handling code for interactive use could still use some
+minor tuning. ;-)
+
+Of course, I could never do the amount of work on es that you did, but
+as a small token of my gratitude, I have finally attempted to debug
+this problem in earnest and produce a patch for it.  It works for me
+on FreeBSD, OSF1 and Solaris (sorry, can't test Linux at the moment).
+
+If you are referring to the same long-standing bug that I am aware of
+(and that I can reproduce on Linux, Solaris, FreeBSD and OSF1), then
+it is not Linux-specific.  I assume that Linux also configures to
+HAVE_SIGACTION=1 (even if it doesn't, I have also found an unrelated
+regression that affects platforms that configure to HAVE_SIGACTION=0,
+SYSV_SIGNALS=1).  If so, then you may enjoy this analysis and possible
+patch.
+
+Below is a patch that was found tonight by manual inspection after
+getting a handle on the failure mode.  I found that the file-scoped
+variable ``blocked'' in signal.c became non-zero forever after the
+first interrupt was processed inside a shell-level while loop.  Thus,
+clearly, an imbalance in calls to blocksignals()/unblocksignals() must
+be present in some code path.  I hope I am not just trading the
+obvious fix of the call pairing for a race condition in some other
+case (I figure that you can judge this far faster than I).
+
+Although perhaps benign whenever HAVE_SIGACTION=1, I also removed the
+gratuitous signal() call in catcher() when SYSV_SIGNALS=0 and,
+conversely, added the needed signal() call in catcher() when
+SYSV_SIGNALS=1.  According to my local CVS archive of es, someone
+clearly hosed this between ES-0_9-ALPHA1 and ES-0_9-BETA1.
+
+Regards,
+Loren
+
+*** prim-ctl.c.orig	Fri Apr 11 15:54:34 1997
+--- prim-ctl.c	Wed Dec 13 00:55:27 2000
+***************
+*** 77,84 ****
+  				if (termeq(fromcatcher-&gt;term, &quot;retry&quot;)) {
+  					retry = TRUE;
+  					unblocksignals();
+! 				} else
+  					throw(fromcatcher);
+  			EndExceptionHandler
+  
+  		EndExceptionHandler
+--- 77,86 ----
+  				if (termeq(fromcatcher-&gt;term, &quot;retry&quot;)) {
+  					retry = TRUE;
+  					unblocksignals();
+! 				} else {
+! 					unblocksignals();
+  					throw(fromcatcher);
++ 				}
+  			EndExceptionHandler
+  
+  		EndExceptionHandler
+*** signal.c.orig	Fri Apr 11 15:54:37 1997
+--- signal.c	Wed Dec 13 00:59:29 2000
+***************
+*** 68,74 ****
+  
+  /* catcher -- catch (and defer) a signal from the kernel */
+  static void catcher(int sig) {
+! #if !SYSV_SIGNALS /* only do this for unreliable signals */
+  	signal(sig, catcher);
+  #endif
+  	if (hasforked)
+--- 68,74 ----
+  
+  /* catcher -- catch (and defer) a signal from the kernel */
+  static void catcher(int sig) {
+! #if SYSV_SIGNALS /* only do this for unreliable signals */
+  	signal(sig, catcher);
+  #endif
+  	if (hasforked)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01022" href="msg01022.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@math.ntnu.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01018" href="msg01018.html">Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="01021" href="msg01021.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01019.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01021.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01021.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01022.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01020"><strong>Date</strong></a></li>
+<li><a href="threads.html#01020"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

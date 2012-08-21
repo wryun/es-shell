@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  Should es do this? -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 28 Apr 1993 12:09:45 &#45;0400 -->
+<!--X-Message-Id: 9304281508.AA18454@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  Should es do this?</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00326.html">Date Prev</a>][<a href="msg00328.html">Date Next</a>][<a href="msg00326.html">Thread Prev</a>][<a href="msg00328.html">Thread Next</a>][<a href="maillist.html#00327">Date Index</a>][<a href="threads.html#00327">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  Should es do this?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:creilly%40maths.tcd.ie">creilly@maths.tcd.ie</a></li>
+<li><em>Subject</em>: Re:  Should es do this?</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 28 Apr 1993 11:08:58 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[i forwarded this to the list because i thought that there might be general
+interest;  the current design was worked out by me, Byron, and Arnold Robbins
+when Arnold posed basically the same question.]
+
+&gt; At the moment es doesn't recognise scripts without magic numbers as being
+&gt; executable. Is this the intended behaviour or a machine dependent bug?
+
+default behavior of es is that if something is not executable by the kernel,
+it is not executable.  however, when an execve(2) call fails in a child,
+the function %exec-failure, is called.  (see the manual for details.)
+
+if your kernel does not support #! magic numbers, define KERNEL_POUNDBANG
+as 0 when compiling and there will be a default %exec-failure function
+which knows about #!.
+
+if you want sh-style behavior, try something like
+
+        fn %exec-failure file argv0 args {
+                exec /bin/sh $file $args
+        }
+
+this passes any executable file that the shell finds to /bin/sh.  if you
+think, instead, that es should try to exec everything, you could do
+
+        fn %exec-failure file argv0 args {
+                . $file $args
+        }
+
+if you think that there is any chance that KERNEL_POUNDBANG is defined
+on any of the machines you are using, the definition should be something
+like
+
+	if {~ $#fn-%exec-failure 0} {
+		fn %exec-failure file argv0 args {
+			exec /bin/sh $file $args
+		}
+	} {
+		let (old = $fn-%execfailure) {
+			fn %exec-failure file argv0 args {
+				$old $file $arv0 $args
+				exec /bin/sh $file $args
+			}
+		}
+	}
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00326.html">Re: lexically scoped functions</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00328.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00326.html">Re: lexically scoped functions</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00328.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00327"><strong>Date</strong></a></li>
+<li><a href="threads.html#00327"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

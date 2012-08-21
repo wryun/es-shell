@@ -1,0 +1,91 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: redirection &#38; fork -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Fri, 16 Oct 1992 22:34:52 &#45;0400 -->
+<!--X-Message-Id: 9210170234.AA26137@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: redirection &amp; fork</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00078.html">Date Prev</a>][<a href="msg00080.html">Date Next</a>][<a href="msg00078.html">Thread Prev</a>][<a href="msg00083.html">Thread Next</a>][<a href="maillist.html#00079">Date Index</a>][<a href="threads.html#00079">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: redirection &amp; fork</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a></li>
+<li><em>Subject</em>: Re: redirection &amp; fork</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 16 Oct 1992 22:34:35 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; This causes a fork:
+&gt;	echo ouch &gt;[1=2]
+
+well, i know how to make it work, but it involves substantial changes to the
+redirection code, but that may be appropriate at this point.  (i've actually
+been looking at redirection today, so that's not much of an issue for me at
+the moment.)  will not be in 0.7, but if we do this, it will be in 0.75.
+
+[note to the reader:  the same set of hacks are truly desirable for the librarified
+(tcl-like) version of es we're planning for v2, so it probably will make it in
+there anyway.]
+
+re echo -u:  well, maybe, but only if we decided not to do it ``right''.  the
+whole point of redirection is that programs don't take fds or file names as
+arguments when they don't have to.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00078.html">Re: redirection &amp; fork</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00080.html">Re: whatis</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00078.html">Re: redirection &amp; fork</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00083.html">Re: redirection &amp; fork</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00079"><strong>Date</strong></a></li>
+<li><a href="threads.html#00079"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

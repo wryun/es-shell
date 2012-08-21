@@ -1,0 +1,93 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: pushd/popd/dirs for es -->
+<!--X-From-R13: Lnyzna Egrea <mfgreaNzi.hf.nqbor.pbz> -->
+<!--X-Date: Sat, 1 May 1993 00:25:17 &#45;0400 -->
+<!--X-Message-Id: 9305010430.AA26531@cartier.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: pushd/popd/dirs for es</title>
+<link rev="made" href="mailto:zstern@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00334.html">Date Prev</a>][<a href="msg00336.html">Date Next</a>][<a href="msg00333.html">Thread Prev</a>][<a href="msg00336.html">Thread Next</a>][<a href="maillist.html#00335">Date Index</a>][<a href="threads.html#00335">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: pushd/popd/dirs for es</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: pushd/popd/dirs for es</li>
+<li><em>From</em>: Zalman Stern &lt;<a href="mailto:zstern%40mv.us.adobe.com">zstern@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Sat, 1 May 1993 00:30:48 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[Noah Friedman (friedman@gnu.ai.mit.edu) writes:]
+&gt; I wrote a version of pushd/popd that uses no external programs at all
+&gt; except to call an external `pwd' once when it is loaded.  Afterward, `pwd'
+&gt; is a shell function that merely prints $dirstack(1).  Canonicalization of
+&gt; the pwd is done internally.  It's very fast.
+
+I'm opposed to overriding /bin/pwd. Csh does not do this. It has a separate  
+command &quot;dirs&quot; to give you its idea of the current working directory. Pwd  
+should grovel the filesystem and give me accurate (i.e. correct) information.  
+Think of pwd as relatively low-level functionality. If you want to introduce  
+a higher level user interface, give it a different name.
+
+-Z-
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00336" href="msg00336.html">Re: pushd/popd/dirs for es</a></strong>
+<ul><li><em>From:</em> friedman@gnu.ai.mit.edu (Noah Friedman)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00334.html">proposed minor change to var and whatis semantics</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00336.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00333.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00336.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00335"><strong>Date</strong></a></li>
+<li><a href="threads.html#00335"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

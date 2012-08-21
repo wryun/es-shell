@@ -1,0 +1,234 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es version of man -->
+<!--X-From-R13: dhnafgebNfgbyns.rqh (Sevx I Chnafgebz) -->
+<!--X-Date: Tue, 23 Mar 1993 21:18:08 &#45;0500 -->
+<!--X-Message-Id: 9303240217.AA12617@stolaf.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es version of man</title>
+<link rev="made" href="mailto:quanstro@stolaf.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00224.html">Date Prev</a>][<a href="msg00226.html">Date Next</a>][<a href="msg00224.html">Thread Prev</a>][<a href="msg00226.html">Thread Next</a>][<a href="maillist.html#00225">Date Index</a>][<a href="threads.html#00225">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es version of man</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es version of man</li>
+<li><em>From</em>: <a href="mailto:quanstro%40stolaf.edu">quanstro@stolaf.edu</a> (Erik W Quanstrom)</li>
+<li><em>Date</em>: Tue, 23 Mar 1993 21:17:41 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>After ~30 minutes of hacking I have translated the version of man
+written for rc to es. The preformance is not as good (30-40% slower,
+in most cases) although there have been a few optimizations made since
+the rc version. The code is ugly, but it works (I hope). Send bug
+reports, etc to quanstro@stolaf.edu
+
+#!/tmp/es
+#########################################################################
+# file:         man							#
+#									#
+# object:       display man pages					#
+#									#
+# Erik Quanstrom							#
+# 21. M&quot;arz 1993							#
+#########################################################################
+path = /bin /usr/bin /usr/ucb /usr/local/bin $path
+macros = an
+sections =
+
+n=; 
+fn-shiftn = {n = $n 1}
+
+#set default values
+if {~ $MANPATH ()} { manpath = /usr/man} {manpath = &lt;&gt;{%fsplit : $MANPATH}}
+%is-interactive &amp;&amp; ~ $PAGER () &amp;&amp; PAGER=more -s;
+~ $TCAT () &amp;&amp; TCAT =@{ lpr -t $* }
+~ $TROFF () &amp;&amp; TROFF = @{nroff -hq -Tcrt -m^$macros $*}
+
+#some functions
+fn-usage = { 
+  echo usage: $0 [-] [-t] [-M path] [-T macros [[section] name ... &gt;[2=1]
+  echo usage: $0 [-M path] -k [keyword] &gt;[2=1]
+  echo usage: $0 [-M path] -f [keyword] &gt;[2=1]
+  exit 1
+}
+
+fn-shift = @ var {
+  {~ $var () &amp;&amp; *=$*(2 ...)} || var=$var(2 ...);
+}
+
+# options 
+keyprog=;keyword=
+
+while {~ $1 -*} {
+  if (
+    {~ $1 -} 
+      {
+	 ~ $PAGER troff &amp;&amp; throw error $0^': bad combination of flags'
+	 PAGER=cat;
+      }
+    {~ $1 -t} 
+      {
+	 TROFF = @{troff -t $*}
+	 PAGER = $TCAT
+      }
+    {~ $1 -M}
+      {
+         shift;	 ~ $1 () &amp;&amp; usage;
+	 MANPATH=&lt;&gt;{%fsplit : $1}
+      }
+    {~ $1 -T}
+      {
+	 shift;	 ~ $1 () &amp;&amp; usage;
+	 macros = $1
+      }
+    {~ $1 -k}
+      {
+	 shift; ~ $1 () &amp;&amp; usage
+	 keyword = $1;
+	 break;
+      }
+    {~ $1 -f} 
+      {
+	 shift; ~ $1 () &amp;&amp; usage
+	 keyprog = $1;
+	 break;
+      }
+    {~ $1 -*}
+      {
+	 echo 'bad flag `'^$1^'''' &gt;[1=2]
+	 usage
+      }
+  )
+  shift;
+}
+
+if {! ~ $#* 1 &amp;&amp; {~ $1 [l1-8] || ~ $1 [l1-8]?}} {
+  sname=$1;
+  sectionsc=$manpath/cat^&lt;&gt;{%fsplit '' $1};
+  sectionsm=$manpath/man^&lt;&gt;{%fsplit '' $1};
+  shift
+} {
+  sectionsc = $manpath^/cat*
+  sectionsm = $manpath^/man*
+}
+
+if {! ~ () $keyword $keyprog} {
+  dirlist=()
+  for (d = $manpath)
+    test -s $d^/whatis &amp;&amp; dirlist = $dirlist $d^/whatis
+
+  ~ $1 () &amp;&amp; usage;
+
+  if {! ~ $keyprog ()} {
+    while {! ~ $1 ()} {
+      cmd=`{echo $1 | sed 's/^.*\///g'}
+      egrep -ih '^'^$cmd' ' $dirlist;
+      shift;
+    }
+  }  {
+    while {! ~ $1 ()} {
+      grep -ih $1 $dirlist;
+      shift;
+    }
+  }
+  exit 0;
+}
+
+s=0; list=; tmplist=
+while {!~ $1 ()} {
+  troffit=
+  filelist = `{echo $sectionsc^/$1^.* | tr ' ' '\12' | grep -v '*'}
+
+  ~ $filelist () &amp;&amp; {troffit=1
+    filelist = `{echo $sectionsm^/$1^.* | tr ' ' '\12' | grep -v '*'}}
+
+
+  if {~ $filelist ()} {
+    if {! ~ $sname ()} {
+      echo 'no entry for $1 in section `'$sname''' of the manual'&gt;[1=2];
+    } {
+      echo no entry for '`'$1'''' found. &gt;[1=2];
+    }
+    s=1;
+  } {
+    echo $filelist '(' $#filelist ')' &gt;[1=2];
+    
+    if {~ $troffit 1} {
+      echo -n 'Formatting'
+      l=
+      for (file = $filelist) {
+	echo -n .
+	t = /tmp/man^$pid^$#n; tmplist = $tmplist $t;
+	l = $l $t;
+        $TROFF $file &gt; $t
+        shiftn;
+      }
+      filelist = $l
+      echo ' 'done.
+    }
+  }
+  shift;
+  list = $list $filelist
+}
+
+! ~ $list () &amp;&amp; $PAGER $list
+
+rm -f $tmplist;
+exit $s;
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00224.html">Re: %assign</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00226.html">Re:  es version of man</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00224.html">Re: %assign</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00226.html">Re:  es version of man</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00225"><strong>Date</strong></a></li>
+<li><a href="threads.html#00225"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

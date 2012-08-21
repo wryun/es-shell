@@ -1,0 +1,132 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Es and autocompleting -->
+<!--X-From-R13: Pvyy Febfg <gebfgNpybhq.enva.pbz> -->
+<!--X-Date: Sat, 30 Dec 2000 17:14:46 &#45;0500 -->
+<!--X-Message-Id: 51651.978197421@cloud.rain.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 20001227160107.762871.FMU6828@piglet.prv.splode.com -->
+<!--X-Reference: slrn93t97n.5d4.egnor@ofb.net -->
+<!--X-Reference: 200012190847.IAA29234@whitecrow.demon.co.uk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Es and autocompleting</title>
+<link rev="made" href="mailto:trost@cloud.rain.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01060.html">Date Prev</a>][<a href="msg01062.html">Date Next</a>][<a href="msg01060.html">Thread Prev</a>][<a href="msg01033.html">Thread Next</a>][<a href="maillist.html#01061">Date Index</a>][<a href="threads.html#01061">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Es and autocompleting</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: Es and autocompleting</li>
+<li><em>From</em>: Bill Trost &lt;<a href="mailto:trost%40cloud.rain.com">trost@cloud.rain.com</a>&gt;</li>
+<li><em>Date</em>: Sat, 30 Dec 2000 12:30:21 -0500</li>
+<li><em>References</em>: &lt;<a href="msg01058.html">20001227160107.762871.FMU6828@piglet.prv.splode.com</a>&gt; &lt;<a href="msg01053.html">slrn93t97n.5d4.egnor@ofb.net</a>&gt; &lt;<a href="msg01056.html">200012190847.IAA29234@whitecrow.demon.co.uk</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Noah Friedman writes:
+    Completion is context-sensitive and requires knowledge of grammar
+    and syntax, which vary from shell to shell.
+
+    If you have to teach the window system how to do context-sensitive
+    completion and history for csh, sh, rc, scsh, etc. you've now moved
+    a lot of application-specific knowledge...
+
+The claim has been made that the shell is the best place to do
+command-line editing because of application-specific knowledge.
+
+You could reasonably also claim:
+
+	* The debugger is the best place to do command-line editing
+	because of application-specific knowledge (such as grammar and
+	syntax, variables in the debuggee, ...).
+
+	* The mail client is the best place to do command-line editing
+	(grammar and syntax, email addresses, ...).
+
+	* The ftp client is the best place to do command-line editing
+	(grammar and syntax, remote filename completion, ...).
+
+As you start adding completion to every program, you get complexity and
+code bloat in every program -- except, of course, the ones you haven't spent the
+time adding command-line editing to. If the command-line editor is at a level
+above the shell (I hesitate to say &quot;window system&quot;), then you get that
+editing with *every* program -- even trivial ones like &quot;cat&quot;.
+
+Furthermore, if you have the command-line editing above the shell level,
+and this level sports some sort of completion mechanism (like rk), then
+you can actually have completion mechanisms that can be helpful *across*
+the exec barrier.
+
+For example, when I run the command &quot;telnet foo.com smtp&quot;, rk might
+suggest that the next line I want to type is &quot;ehlo cloud.rain.com&quot;,
+and then &quot;mail from:&quot;.  On the other hand, if I type &quot;telnet foo.com
+http&quot;, rk can suggest &quot;GET /&quot; as the next thing to type.  (Yes, these
+are realistic examples -- I was doing some tiger-team work a few months
+back).
+
+Zsh hackers aside, I hope no one suggests that telnet should include
+command-line editors for every port you might want to type at, but with
+a good higher-level command-line editor, you get this all for free.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01058" href="msg01058.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> Noah Friedman &lt;friedman@splode.com&gt;</li></ul></li>
+<li><strong><a name="01053" href="msg01053.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> egnor@ofb.net (Dan Egnor)</li></ul></li>
+<li><strong><a name="01056" href="msg01056.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> Steve Kilbane &lt;steve@whitecrow.demon.co.uk&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01060.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01062.html">List archive [was Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz]</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01060.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01033.html">Re: Es and autocompletion</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01061"><strong>Date</strong></a></li>
+<li><a href="threads.html#01061"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

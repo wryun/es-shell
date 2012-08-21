@@ -1,0 +1,144 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Fruits of my labor -->
+<!--X-From-R13: "Epbgg Q. Uenl" <tenlNanf.anfn.tbi> -->
+<!--X-Date: Tue, 11 Apr 1995 17:47:11 &#45;0400 -->
+<!--X-Message-Id: 199504112146.OAA06611@hp08.nas.nasa.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Fruits of my labor</title>
+<link rev="made" href="mailto:gray@nas.nasa.gov">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00816.html">Date Prev</a>][<a href="msg00818.html">Date Next</a>][<a href="msg00838.html">Thread Prev</a>][<a href="msg00818.html">Thread Next</a>][<a href="maillist.html#00817">Date Index</a>][<a href="threads.html#00817">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Fruits of my labor</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Fruits of my labor</li>
+<li><em>From</em>: &quot;Scott C. Gray&quot; &lt;<a href="mailto:gray%40nas.nasa.gov">gray@nas.nasa.gov</a>&gt;</li>
+<li><em>Date</em>: Tue, 11 Apr 1995 17:46:48 -0400</li>
+<li><em>Reply-to</em>: <a href="mailto:gray%40nas.nasa.gov">gray@nas.nasa.gov</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+For those of you that really care, here is my little cd replacement.  It is 
+rather large because it replaces all of the functionality of the builtin cd, 
+yet still manages to call only one external program during creation.
+
+# cd [ -[N] | dir ]
+#
+# This replaces the builtin version of cd, absorbing all of its features
+# and adding the ability to jump back to the Nth previous directory. The
+# number of previous directories that cd remembers may be adjusted by
+# incrementing cd-stack-depth.  The size of the stack is actually
+# cd-stack-depth + 1 (if cd-stack-depth is not set, then the stack becomes
+# unabounded).
+
+cd-stack-depth = 3
+let ( cd-stack = .; cwd = `pwd ) {
+   fn cd dir { 
+      if {~ $#dir 0} {
+         if {! ~ $#home 1} {
+            throw error cd &lt;={
+               if {~ $#home 0} {
+                  result 'cd: $home not set'
+               } {
+                  result 'cd: $home contains more than one word'
+               }
+            }
+         }
+         dir = $home
+      } {~ $#dir 1} {
+         if { ~ $dir -* } {
+            let (index = &lt;={%split - $dir}) {
+               if {~ $#index 0} {
+                  index = 1
+               } { ! ~ $index [0-9]* } {
+                  throw error cd 'cd: invalid argument'
+               }
+               dir = $cd-stack($index)
+               echo $dir &gt;[1=2]
+            }
+            if { ~ $#dir 0 } {
+               throw error cd 'cd: stack not that deep'
+            }
+         } {! %is-absolute $dir} {
+            let (old = $dir) {
+               dir = &lt;={%cdpathsearch $dir}
+               if {! ~ $dir $old} {
+                  echo $dir &gt;[1=2]
+               }
+            }
+         }
+      } {
+         throw error cd 'usage: cd [-[N]|[directory]]'
+      }
+
+      if {$&amp;cd $dir} {
+         cd-stack = ($cwd $cd-stack( 1 ... $cd-stack-depth ))
+         cwd = $dir
+      }
+   }
+}
+
+-scott
+--
+   _/    _/   _/_/_/  _/_/_/_/   _/_/_/  Scott C. Gray (gray@nas.nasa.gov)
+  _/_/  _/  _/    _/ _/_/      _/    _/  NASA Ames Research M/S 258-6
+ _/  _/_/  _/_/_/_/     _/_/  _/_/_/_/   For PGP public key, send me mail
+_/    _/  _/    _/ _/_/_/_/  _/    _/    with subject line of &quot;PGP request&quot;.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00816.html">Re: Nifty hack</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00818.html">SIGINT handling</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00838.html">Nifty hack</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00818.html">SIGINT handling</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00817"><strong>Date</strong></a></li>
+<li><a href="threads.html#00817"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

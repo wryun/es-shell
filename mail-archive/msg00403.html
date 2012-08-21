@@ -1,0 +1,121 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: ^Z signal -->
+<!--X-From-R13: crgrNzvafgre.lbex.np.hx -->
+<!--X-Date: Mon, 17 May 1993 09:11:06 &#45;0400 -->
+<!--X-Message-Id: swordfish.737644262@minster.york.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: ^Z signal</title>
+<link rev="made" href="mailto:pete@minster.york.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00402.html">Date Prev</a>][<a href="msg00404.html">Date Next</a>][<a href="msg00415.html">Thread Prev</a>][<a href="msg00404.html">Thread Next</a>][<a href="maillist.html#00403">Date Index</a>][<a href="threads.html#00403">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: ^Z signal</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:rog%40ohm.york.ac.uk">rog@ohm.york.ac.uk</a></li>
+<li><em>Subject</em>: Re: ^Z signal</li>
+<li><em>From</em>: <a href="mailto:pete%40minster.york.ac.uk">pete@minster.york.ac.uk</a></li>
+<li><em>Date</em>: Mon, 17 May 1993 10:03:17 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;From rog@ohm.york.ac.uk Mon May 17 08:12:52 0400 1993
+&gt;
+&gt;I'm in favour of %read, but could we keep things like gnu readline
+&gt;out of it ? If line editing is desired, an external program is really
+&gt;more appropriate - it's only when reading non-interactively that the
+&gt;performance really matters.
+&gt;
+&gt;  cheers,
+&gt;    rog.
+
+A simple %read builtin would save us all a lot of time and would enable
+us to get rid of many sh and rc scripts... but again I must stress
+_KEEP IT SIMPLE_ for three reasons:
+
+(1) Es is already quite a large binary (it's the largest of the six shells
+on our Sparcs; adding fancy prompting and readline will only make it larger
+still...                                                                   
+                                       
+(2) Assuming gnu-readline will work on someone's terminal is not a wise
+thing to do these days. Some of us run decent terminal emulators (9term!)
+which have sensible editing features and do away with the need for tedious
+cursor-addressing; just give us something that reads from whatever file
+descriptor is passed rather than messing around...            
+
+(3) Adding bells and whistles to %read will result in more ``hidden
+parameters'' and special cases that have to be rewritten internally. As
+Alan Perlis said: ``syntactic sugar causes cancer of the semicolon''...    
+
+If people must have line editing then they can use ile, or atty, or any one
+of the other pty-based front ends; they also have the benefit that since
+they grab all the input and pass it on to the shell or whatever it's
+running, they work for _all_ programs, not just the shell.                 
+
+pete
+--
+*Peter Fenelon -- Research Associate -- Software Safety Assessment Procedures*
+Dept. of Computer Science, University of York, York, Y01 5DD (+44/0)904 433388
+EMAIL: pete@minster.york.ac.uk ``You are what you drink and I'm a bitter man''
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00406" href="msg00406.html">^Z signal</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+<li><strong><a name="00404" href="msg00404.html">Re: ^Z signal</a></strong>
+<ul><li><em>From:</em> Richard Brooksby &lt;richard@harlequin.co.uk&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00402.html">Re: ^Z signal</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00404.html">Re: ^Z signal</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00415.html">Re: ^Z signal</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00404.html">Re: ^Z signal</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00403"><strong>Date</strong></a></li>
+<li><a href="threads.html#00403"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

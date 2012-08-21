@@ -1,0 +1,132 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: signal handling, killing background processes started under sub&#45;shells -->
+<!--X-From-R13: Zbera Xnzrf Dvggyr <evggyrNpbzz.zbg.pbz> -->
+<!--X-Date: Tue, 1 Jul 1997 02:09:52 &#45;0400 -->
+<!--X-Message-Id: 9707010545.AA10127@supra.rsch.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>signal handling, killing background processes started under sub-shells</title>
+<link rev="made" href="mailto:rittle@comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00957.html">Date Prev</a>][<a href="msg00959.html">Date Next</a>][<a href="msg00957.html">Thread Prev</a>][<a href="msg00959.html">Thread Next</a>][<a href="maillist.html#00958">Date Index</a>][<a href="threads.html#00958">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>signal handling, killing background processes started under sub-shells</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: signal handling, killing background processes started under sub-shells</li>
+<li><em>From</em>: Loren James Rittle &lt;<a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a>&gt;</li>
+<li><em>Date</em>: Tue, 1 Jul 1997 01:45:10 -0400</li>
+<li><em>Reply-to</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+<li><em>Return-receipt-to</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+#!/usr/local/bin/es
+#
+# This buggy code (I think the code is buggy, I make no claims that es
+# is buggy) was abstracted out of fairly complex es code which manages
+# background processes.  Normally, these background processes are
+# killed after a timeout.  However, the user may send an interrupt
+# signal to the outermost es process.  When the outermost es process
+# is signaled, it should ensure that all children and below are killed
+# before it exits completely.
+#
+# This code doesn't work as one might hope.  Since the background
+# process_that_should_not_exit_until_killed is created by an es
+# sub-shell, the signal handler can't kill it using the obvious code
+# shown below.  Is there any way to ensure that an interrupt signal
+# propagates to all background processes started in all sub-shells?
+#
+# I have found a number of workarounds which all involve forcing all
+# background jobs to be started by the outermost es process.
+#
+# Note: this code does not appear to be buggy, if
+#       '|[2] process_output' is removed (thus making the 'sleep 10'
+#       and the background job direct children of the outermost
+#       es process).
+#
+# Note: even though I note the code is buggy, when run it still doesn't
+#       react as I might expect.  E.g. As shown, 'killed children' is
+#       never printed when the outermost es process is sent the
+#       interrupt signal.
+#
+# 0.9-alpha1, sunos-4.1.4
+#
+# Any comments on this issue welcome, but I expect I have just hit a
+# murky area of es and will resign myself to staying away from complex
+# background job situations... :-)
+
+fn process_that_should_not_exit_until_killed {sleep 10000}
+fn process_output {cat &gt;/dev/null}
+
+local (signals = $signals sighup sigint) \
+{
+  catch @ e {kill &lt;=%apids &gt;[2]/dev/null; echo killed children; throw $e} \
+    {
+      {
+	process_that_should_not_exit_until_killed &amp;
+
+	# After timeout, kill background job (ensuring kill/wait is autonomous)
+	sleep 10
+	signals = $signals -sighup -sigint
+	kill $apid
+	wait
+	signals = $signals sighup sigint
+      } |[2] process_output
+    }
+}
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00957.html">Re: A `new' es available</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00959.html">Small comment on es.</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00957.html">Re: A `new' es available</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00959.html">Small comment on es.</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00958"><strong>Date</strong></a></li>
+<li><a href="threads.html#00958"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

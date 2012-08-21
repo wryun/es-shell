@@ -1,0 +1,146 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es decompression hack -->
+<!--X-From-R13: Xbua ([bfg zbqrea pbzchgref jbhyq oernx vs lbh fgbbq ba gurz) [npxva <wbuaN	pvivy.fh.bm.nh> -->
+<!--X-Date: Mon, 22 Mar 1993 23:39:53 &#45;0500 -->
+<!--X-Message-Id: 199303231412.19901.es.bafuj@civil.su.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9303230034.AA00834@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es decompression hack</title>
+<link rev="made" href="mailto:john@civil.su.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00218.html">Date Prev</a>][<a href="msg00220.html">Date Next</a>][<a href="msg00217.html">Thread Prev</a>][<a href="msg00220.html">Thread Next</a>][<a href="maillist.html#00219">Date Index</a>][<a href="threads.html#00219">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es decompression hack</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: The es Mailing List &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: es decompression hack</li>
+<li><em>From</em>: John (Most modern computers would break if you stood on them) Mackin &lt;john@	civil.su.oz.au&gt;</li>
+<li><em>Date</em>: Mon, 22 Mar 1993 23:12:28 -0500</li>
+<li><em>Cc</em>: David (what's up with the ftp, man?) Hogan &lt;<a href="mailto:dhog%40cs.su.oz.au">dhog@cs.su.oz.au</a>&gt;</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00217.html">9303230034.AA00834@astro.mv.us.adobe.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>    put this in your .esrc (provided you're using 0.8 or later, though
+    one could construct an 0.79 version with test instead of access)
+    and you'll be able to use &lt; with files that don't exist, provided
+    that a compressed .Z version of the files does exist.
+
+Paul,
+
+That, Sir, is truly slick.  A very neat hack indeed.  Top notch stuff!
+
+Now how about _this_.  Think back if you will to my earlier handwave
+on extending syntax for es.  We're going for the moby handwave now.
+
+You all have probably seen at least one program that has this idea
+built into it (i.e. if the input file as named doesn't exist, see if
+tacking on .Z gives one that does and zcat on the fly if so); one
+that springs to mind right away is the X11 image viewer &quot;xv&quot;.
+
+This shouldn't be built into programs.  _It should be done by the
+shell, as a generalisation of Paul's hack:_
+
+#
+# The syntaxer knows what an &quot;argument&quot; is.  Introduce a new
+# hygienic syntactic notion: a &quot;fileargument&quot; is an &quot;argument&quot;
+# that doesn't begin with + or -.
+#
+
+syntax-variable fileargument ::= argument with (not (~ $1 '^(\+|-)'));
+
+#
+# Define a function that'll allow us to declare that certain commands
+# take filearguments (as opposed to, say, commands whose arguments
+# are hostnames/IP addresses, like telnet -- boy are we having fun
+# now, anyone for DNS-based spelling correction?)
+#
+
+syntax-function fc ::=
+	{
+		for (command in $*)
+			let-syntax in $command {
+				argument ::= fileargument
+			}
+	}
+
+#
+# Now we can load up our .esrc with loads of lines like this:
+#
+
+syntax {
+
+fc cat ls more strip size
+...
+
+}
+
+Then, of course, all we have to do is hook Paul's hack into the
+notion of a &quot;fileargument&quot; and voila!!!
+
+(I'm going to get you guys to deliver extensible syntax yet....  grin!)
+
+Cute or what?
+
+OK,
+John.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00217" href="msg00217.html">es decompression hack</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00218.html">patches to es-0.8</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00220.html">Re: es decompression hack</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00217.html">es decompression hack</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00220.html">Re: es decompression hack</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00219"><strong>Date</strong></a></li>
+<li><a href="threads.html#00219"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

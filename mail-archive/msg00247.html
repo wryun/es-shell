@@ -1,0 +1,129 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: a note on notations -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 31 Mar 1993 23:03:28 &#45;0500 -->
+<!--X-Message-Id: 9304010403.AA22974@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: a note on notations</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00246.html">Date Prev</a>][<a href="msg00248.html">Date Next</a>][<a href="msg00242.html">Thread Prev</a>][<a href="msg00248.html">Thread Next</a>][<a href="maillist.html#00247">Date Index</a>][<a href="threads.html#00247">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: a note on notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:john%40civil.su.oz.au">john@civil.su.oz.au</a></li>
+<li><em>Subject</em>: Re: a note on notations</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 31 Mar 1993 23:03:08 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; I believe that a redirection operator that opens for read and
+&gt; write is an excellent idea and definitely belongs in the shell.
+
+i thought i'd said this definitively:  &lt;&gt; is going to mean redirect
+both input and output.  to be consistent with the sh on my machine,
+i'm going to have it require that the file exist and use fd 0 as
+a default.  are there any suggestions (with good justification,
+since i'm doing this largely for cultural compatility reasons) for
+different semantics?
+
+&gt; the &lt;&gt;{ ... } syntax bites the big one.
+
+everyone's agreed on that for a long time.  it's gone.  what will replace
+is still a question.
+
+&gt; [John doesn't like :{} as es syntax, though it must be in dws' smiley book.]
+
+fine, your arguments make sense.  again, for cultural compatibility, it's
+perfectly reasonable to at least allowing : as null command.
+
+[by the way, you mention using ': name; ' as a prompt, and cite the
+bell labs folks.  i had done that too, for a while, and found it hard
+to read through.  with the advent of rc, most of the plan 9 folks seem
+to use 'name=; ' prompts.  i personally use the unadorned '; ' except
+when running as root, when i use '!; ', but i generally don't hop from
+machine to machine that much.]
+
+&gt; [ he doesn't like ${...} either ]
+
+the overloading of $ is just too confusing and inconsistent.  i'm sorry
+i sounded enthusiastic about it before.
+
+&gt; The syntax %{foo} was indirectly suggested.  This gets my vote.
+
+it's probably getting my vote, too.  again, % will be a keyword like @,
+so es %-named functions won't have to be quoted.  but, before i go off
+and start hacking it in, i want opinions.  here are the possible characters,
+based on what's not used yet, either by es or some other, major programs:
+
+	% : , &quot;
+
+% is the most attractive alternative as far as i'm concerned.  any other
+suggestions?
+
+&gt; es has already departed from the path of righteousness in making
+&gt; backslash special again (all in favour of rc's backslashes, shout AYE!);
+
+i probably don't count, but NAY.  i use es' \ notations all the time.
+it's one of es' major features as far as i'm concerned.  that it quotes
+characters is really unimportant to me, but \n and \t, especially with
+a terminal program that doesn't preserve tabs, are real wins.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00246.html">Re: a note on notations (I'm going to be sorry I sent this to the list)</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00248.html">Re: a note on notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00242.html">Re:  a note on notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00248.html">Re: a note on notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00247"><strong>Date</strong></a></li>
+<li><a href="threads.html#00247"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

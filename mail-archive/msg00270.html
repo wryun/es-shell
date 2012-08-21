@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: <> redirection and notations -->
+<!--X-From-R13: Qurg Dnzrl <purgNbqva.W@E.QIDG.Sqh> -->
+<!--X-Date: Thu, 1 Apr 1993 16:38:27 &#45;0500 -->
+<!--X-Message-Id: 9304012129.AA25619.SM@odin.INS.CWRU.Edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9304011958.AA09950@utopia.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: &lt;&gt; redirection and notations</title>
+<link rev="made" href="mailto:chet@odin.INS.CWRU.Edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00269.html">Date Prev</a>][<a href="msg00271.html">Date Next</a>][<a href="msg00269.html">Thread Prev</a>][<a href="msg00273.html">Thread Next</a>][<a href="maillist.html#00270">Date Index</a>][<a href="threads.html#00270">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: &lt;&gt; redirection and notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: Re: &lt;&gt; redirection and notations</li>
+<li><em>From</em>: Chet Ramey &lt;<a href="mailto:chet%40odin.INS.CWRU.Edu">chet@odin.INS.CWRU.Edu</a>&gt;</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 16:29:46 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Message from haahr@mv.us.adobe.com of Thu, 1 Apr 93 11:58:36 PST (id &lt;<a href="msg00269.html">9304011958.AA09950@utopia.mv.us.adobe.com</a>&gt;)</li>
+<li><em>Read-receipt-to</em>: <a href="mailto:chet%40po.CWRU.Edu">chet@po.CWRU.Edu</a></li>
+<li><em>Reply-to</em>: <a href="mailto:chet%40po.CWRU.Edu">chet@po.CWRU.Edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; but /bin/sh on all machines i've tried here require that the file exist,  
+&gt; therefore do not use O_CREAT.  this is consistent with them being Bourne  
+&gt; shells and predating the existence of the O_CREAT flag.
+
+Looking at /bin/sh with strace reveals that sh is trying to open the
+file O_RDONLY, so it's not even doing the right thing.
+
+	...
+read(19, &quot;exec 4&lt;&gt;/tmp/there\n&quot;, 128) = 19
+open(&quot;/tmp/there&quot;, RDONLY, 0) = 3
+fcntl(4, GETFD, 0) = -1 (Bad file number)
+close(4) = -1 (Bad file number)
+fcntl(3, DUPFD, 0x4) = 4
+close(3) = 0
+	...
+
+Chet
+
+
+--
+``The ballpark is quiet now, save for the sound of droplets landing.  That
+  is as it should be.  For today there are two fewer boys of summer.''
+
+Chet Ramey, Case Western Reserve University	Internet: chet@po.CWRU.Edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00269" href="msg00269.html">Re: &lt;&gt; redirection and notations</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@mv.us.adobe.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00269.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00271.html">es-remote problem; how to fix?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00269.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00273.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00270"><strong>Date</strong></a></li>
+<li><a href="threads.html#00270"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: is this my mistake or someone elses? -->
+<!--X-From-R13: "Xrsserl Q. Dbtref" <ebtrewNznvyubfg.pgeba.pbz> -->
+<!--X-Date: Mon, 28 Nov 1994 18:33:17 &#45;0500 -->
+<!--X-Message-Id: 9411282332.AA01078@stealth.ctron.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>is this my mistake or someone elses?</title>
+<link rev="made" href="mailto:rogerj@mailhost.ctron.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00763.html">Date Prev</a>][<a href="msg00765.html">Date Next</a>][<a href="msg00777.html">Thread Prev</a>][<a href="msg00769.html">Thread Next</a>][<a href="maillist.html#00764">Date Index</a>][<a href="threads.html#00764">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>is this my mistake or someone elses?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: is this my mistake or someone elses?</li>
+<li><em>From</em>: &quot;Jeffrey C. Rogers&quot; &lt;<a href="mailto:rogerj%40mailhost.ctron.com">rogerj@mailhost.ctron.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 28 Nov 1994 18:32:53 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+I was implementing a read builtin (to make things like cat in es possible) and 
+ran into a problem with file descriptors. Is it a bug, or is it designed that 
+way?
+
+To elaborate - first my read primitive:
+
+static int max_len_quantum=256,bufsiz=0;
+static unsigned char *buf;
+
+PRIM(readctl) {
+	if (length(list)!=2) 
+		fail(&quot;$&amp;readctl&quot;,&quot;usage: $&amp;readctl bufsiz quant&quot;);
+	max_len_quantum=getnumber(getstr(list-&gt;next-&gt;term));
+	bufsiz=getnumber(getstr(list-&gt;term));
+	if (!bufsiz) 
+		efree(buf);
+	else 
+		buf=erealloc(buf,bufsiz);
+	return NULL;
+	}
+
+static int readchar (int fd) {
+	if (bufsiz==0) {
+	unsigned char c;
+		if (read (fd, &amp;c, 1) == 1) return c;
+		else return EOF;
+		}
+	else {
+	static int buflen;
+	static unsigned char *bufp;
+		if (!buflen) {
+			buflen=read(fd,buf,bufsiz);
+			bufp=buf;
+			}
+		if (!buflen) return EOF;
+		else return buflen--,*(bufp++);
+		}
+}
+
+PRIM(read) {
+int c,fd,l,zfl=0;
+char *line=NULL;
+size_t len=0, max_len=0;
+List *retval;
+
+	if ((l=length(list)) &gt; 1)
+		fail(&quot;$&amp;read&quot;,&quot;usage: $&amp;read [fd]&quot;);
+	if (l)
+		fd = getnumber(getstr(list-&gt;term));
+	else fd=0;
+   do {
+	  c = readchar (fd);
+	  if (!zfl &amp;&amp; !c) zfl=1;
+	  if (len == max_len)
+		 line = (char*) erealloc (line, max_len += max_len_quantum);
+	  if (c == '\n' || c == EOF)
+		 line[len] = 0;
+	  else
+		 line[len] = c;
+	  len++;
+   } while (c != '\n' &amp;&amp; c != EOF);
+	if (c==EOF &amp;&amp; len==1) {efree(line); return NULL;}
+	retval=mklist(mkterm(zfl?gcdup(line):gcndup(line,len-1),NULL),NULL);
+	efree(line); 
+	return retval;
+}
+
+( inserted into prim-io.c, and with the appropriate X(read) at the end.)
+This is from an implementation of read for rc that I had from somewhere, 
+modified to return the string read, instead of setting a variable. (It can do 
+a heck of a job on the gc, judging by how the size blows up when you turn it 
+off). It works pretty well, with the exceptions that it doesn't use readline 
+if you are using it, and it chops any lines that it reads at nulls. (hmmm - 
+using a read primitive, would it be possible to use that to rewrite %parse 
+completely in the shell? If so, how slow and ugly would it be?)
+
+The function I'm using:
+fn shcat {
+   #$&amp;gcdisable
+   fi=&lt;=%newfd
+   for (x=$*) {
+      ## {while {line=&lt;={$&amp;read $fi}; !~ $#line 0} {echo $line }} &lt;[$fi] $x
+      %open $fi $x {while {line=&lt;={$&amp;read $fi}; !~ $#line 0} {echo $line }} 
+      }
+   #$&amp;gcenable
+   }
+
+The $&amp;gc*able just turn the gc on or off; I was testing to see how much faster 
+it would run when not gc-ing and shcat-ing a large file. Not much, and the 
+size blows up and doesn't srhink all the way al the time. (Speaking of which, 
+is there any harm in turning off the gc from the shell level, aside from it 
+not releasing memory? It would fail assertions if they were on when I used the 
+shell level gc controls.) 
+
+
+Now, the actual problem: (transcript)
+; echo &lt;={$&amp;read 5} &lt;[5] /etc/magic
+
+; time echo &lt;={$&amp;read 5} &lt;[5] /etc/magic
+
+     0r     0.0u     0.0s       echo
+; time {echo &lt;={$&amp;read 5} &lt;[5] /etc/magic}
+# Magic file created Thu Dec 24 12:14:18  1992 by winter!root     tty1 Dec 24 
+08:58
+     0r     0.0u     0.0s      {%open 5 &lt;={%one /etc/magic} {echo &lt;={$&amp;read 
+5}}}
+; time echo &lt;={$&amp;read 5 &lt;[5] /etc/magic}
+
+     0r     0.0u     0.0s      echo
+; time {echo &lt;={$&amp;read 5 &lt;[5] /etc/magic}}
+
+     0r     0.0u     0.0s      {echo &lt;={%open 5 &lt;={%one /etc/magic} {$&amp;read 
+5}}}
+; time {echo &lt;={$&amp;read  &lt;[5] /etc/magic}}
+asd
+asd
+     2r     0.0u     0.0s      {echo &lt;={%open 5 &lt;={%one /etc/magic} {$&amp;read}}}
+; time {echo &lt;={$&amp;read 3 &lt;[5] /etc/magic}}
+# Magic file created Thu Dec 24 12:14:18  1992 by winter!root     tty1 Dec 24 
+08:58
+     0r     0.0u     0.0s      {echo &lt;={%open 5 &lt;={%one /etc/magic} {$&amp;read 
+3}}}
+;
+
+My read primitive reads from a given file descriptor, or 0 by default.  So if 
+I call it as {$&amp;read 5}, it should read from fd 5. '&lt;[5] /etc/magic' should 
+open /etc/magic for input and dup2 it to fd 5 (right?). an strace shows that 
+this is not the case. However, it does perform the dup2 when it's forced into 
+a subshell (such as by time, as above).  When run in the same shell context, 
+it only opens the file (usually on fd 3, so the last line works when it 
+shouldn't). 
+
+Should file descriptors be assigned when builtin commands are run, or it it 
+intentional that they are not?
+
+Diversion
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00763.html">path should be in noexport, and a .esrc tip</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00765.html">Re: '{}' feature or bug?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00777.html">Re: Welcome back</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00769.html">Re: is this my mistake or someone elses?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00764"><strong>Date</strong></a></li>
+<li><a href="threads.html#00764"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

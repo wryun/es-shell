@@ -1,0 +1,86 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: trip.es problems -->
+<!--X-From-R13: qzbberNfqac1.GQER.SRG (Rnivq [bber) -->
+<!--X-Date: Fri, 16 Apr 1993 15:29:36 &#45;0400 -->
+<!--X-Message-Id: 9304161927.AA00370@sdnp1.UCSD.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>trip.es problems</title>
+<link rev="made" href="mailto:dmoore@sdnp1.UCSD.EDU">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00307.html">Date Prev</a>][<a href="msg00309.html">Date Next</a>][<a href="msg00307.html">Thread Prev</a>][<a href="msg00309.html">Thread Next</a>][<a href="maillist.html#00308">Date Index</a>][<a href="threads.html#00308">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>trip.es problems</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: trip.es problems</li>
+<li><em>From</em>: <a href="mailto:dmoore%40sdnp1.UCSD.EDU">dmoore@sdnp1.UCSD.EDU</a> (David Moore)</li>
+<li><em>Date</em>: Fri, 16 Apr 1993 15:27:12 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+	At the end of trip.es, it attempts to check heredocs by calling
+to es, however, this doesn't do what is expected if the newly built es
+is first in the path (or in my case, in the path at all).
+
+errorcheck 'incomplete heredoc' {es -c 'cat&lt;&lt;eof'} 'pending'
+
+should be changed to something like
+
+errorcheck 'incomplete heredoc' {$es -c 'cat&lt;&lt;eof'} 'pending'
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00307.html">send me your signal.h files</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00309.html">ES</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00307.html">send me your signal.h files</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00309.html">ES</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00308"><strong>Date</strong></a></li>
+<li><a href="threads.html#00308"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

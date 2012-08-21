@@ -1,0 +1,106 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: distinguishing shells -->
+<!--X-From-R13: Rnir [nfba <qznfbaNcyt.hjngreybb.pn> -->
+<!--X-Date: Fri, 24 Sep 1993 08:47:59 &#45;0400 -->
+<!--X-Message-Id: 93Sep24.084741edt.230427@plg.uwaterloo.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: bill+9170.286082@cloud.rain.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>distinguishing shells</title>
+<link rev="made" href="mailto:dmason@plg.uwaterloo.ca">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00704.html">Date Prev</a>][<a href="msg00706.html">Date Next</a>][<a href="msg00704.html">Thread Prev</a>][<a href="msg00698.html">Thread Next</a>][<a href="maillist.html#00705">Date Index</a>][<a href="threads.html#00705">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>distinguishing shells</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:trost%40cloud.rain.com">trost@cloud.rain.com</a></li>
+<li><em>Subject</em>: distinguishing shells</li>
+<li><em>From</em>: Dave Mason &lt;<a href="mailto:dmason%40plg.uwaterloo.ca">dmason@plg.uwaterloo.ca</a>&gt;</li>
+<li><em>Date</em>: Fri, 24 Sep 1993 08:47:34 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00704.html">bill+9170.286082@cloud.rain.com</a>&gt; (trost@cloud.rain.com)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Cute.  Neither form works from rc, though:
+
+; rc
+; ${0+:} echo This is es.
+syntax error
+; ${0+:} FN={}
+syntax error
+; $FN echo This is sh.
+This is sh.
+
+And only the first form works with es (at least the version I have here):
+; es
+; ${0+:} echo This is es.
+This is es.
+; ${0+:} FN={}
+syntax error
+; $FN echo This is sh.
+This is sh.
+
+(BTW, I made a mistake in my comment about my solution yesterday.  It
+requires false from rc too, but that doesn't seem too onerous.)
+
+../Dave
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00704" href="msg00704.html">Re: distinguishing shells</a></strong>
+<ul><li><em>From:</em> trost@cloud.rain.com (Bill Trost)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00704.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00706.html">Looking for a challenge?  I'm stumped.</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00704.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00698.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00705"><strong>Date</strong></a></li>
+<li><a href="threads.html#00705"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

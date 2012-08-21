@@ -1,0 +1,148 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: everyone's least favorite creatures -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Tue, 11 May 1993 13:46:28 &#45;0400 -->
+<!--X-Message-Id: 9305111746.AA20475@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305111514.AA18990@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>everyone's least favorite creatures</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00365.html">Date Prev</a>][<a href="msg00367.html">Date Next</a>][<a href="msg00363.html">Thread Prev</a>][<a href="msg00365.html">Thread Next</a>][<a href="maillist.html#00366">Date Index</a>][<a href="threads.html#00366">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>everyone's least favorite creatures</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: everyone's least favorite creatures</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Tue, 11 May 1993 14:46:04 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00361.html">9305111514.AA18990@astro.mv.us.adobe.com</a>&gt; (haahr@mv.us.adobe.com )</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Paul Haahr asks:
+&gt;what features of the language would you (everyone on the list) remove?
+
+1) `%cdpathsearch', `%is-absolute', and the version of `cd' which use them.
+   Related things that can be eliminated are `set-cdpath', `set-CDPATH',
+   and the `cdpath' variable.
+
+   I don't see any good reason for making `pwd' a builtin, by the way.
+   `cd' is sort of necessary because of the design of unix (that is, child
+   processes cannot change the environment of the parent), but since any
+   child process can print out the current working directory, it's not
+   necessary for the current process (i.e. the shell) to do it.
+
+2) The `apids', `var', `vars', and `whatis' commands.  Typing convenience
+   isn't a good enough rationale for having them.  If people want them,
+   they can put them in their .esrc (I see no reason why more sample .esrc
+   files can't be in the distribution).  Particularly for `apids' and
+   `var', doing by hand what they do is simply not that much effort. 
+
+   I notice that %background seems to maintain a variable `apid' which may
+   in fact be different from what $&amp;apids returns.  I suggest one or the
+   other be eliminated.
+
+3) Why are `true' and `false' primitives?  Aren't
+
+        fn true { result 0 }
+        fn false { result 1 }
+
+   good enough?  Maybe we don't really need them at all, in fact, since you
+   could just use {result 0} or {result 1} explicitly in place of them.
+
+4) Given that we have catch and throw, do we necessarily need
+   unwind-protect as a primitive?  (Do we need it at all?)  I *think* this
+   is a reliable implementation:
+
+        fn unwind-protect body cleanup {
+           catch @ args { $cleanup; throw $args } { $body }
+           $cleanup
+        }
+
+5) Since you can't change the state of the `-n', `-v', and `-x' flags
+   during the lifetime of the shell invocation, I think they and the
+   various `%eval-noprint', etc. dispatchers ought to be redone.  One idea
+   is to have a single dispatch function called %dispatch which users can
+   redefine to do what the various aforementioned flags normally cause to
+   happen (which is generally thoroughly trivial).
+
+6) Any history-related functions or variables.  Tacking them into the REPL
+   is trivial for those people who really want history mechanisms.
+
+7) I have mixed feelings about getting rid of the read syntax for special
+   characters (e.g. `\n').  But I lean toward eliminating them for the sake
+   of simplicity and reliability.  Sometimes you just *have* to use eval
+   (although, fortunately, it's necessary far less often in es than it is
+   in sh).  When you do, having special read syntaxes for those characters
+   is a major screw.
+
+8) Comments in initial.es suggest you are thinking of providing a getopt
+   builtin of some sort.  Please don't---getopt routines are invariably
+   deficient in various ways.  For example, would your primitive support
+   GNU-style long options (which I would personally require)?
+
+   Getopt can be done in es script, with maybe just a trivial amount of
+   help from sed.  I don't think it's worth adding as a builtin. 
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00361" href="msg00361.html">everyone's least favorite creatures</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00365.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00367.html">Re: %and, %or, and the return value of assignment</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00363.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00365.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00366"><strong>Date</strong></a></li>
+<li><a href="threads.html#00366"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

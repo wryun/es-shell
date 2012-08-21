@@ -1,0 +1,100 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: a feature I wish rc had -->
+<!--X-From-R13: phyyvgbaNfet.fet.ns.zvy (Fbz Qhyyvgba k2278) -->
+<!--X-Date: Tue, 3 Nov 1992 13:06:36 &#45;0500 -->
+<!--X-Message-Id: 9211031110.aa20698@ceres.srg.af.mil -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: a feature I wish rc had</title>
+<link rev="made" href="mailto:culliton@srg.srg.af.mil">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00158.html">Date Prev</a>][<a href="msg00160.html">Date Next</a>][<a href="msg00162.html">Thread Prev</a>][<a href="msg00160.html">Thread Next</a>][<a href="maillist.html#00159">Date Index</a>][<a href="threads.html#00159">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: a feature I wish rc had</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:cks%40hawkwind.utcs.toronto.edu">cks@hawkwind.utcs.toronto.edu</a>, <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: Re: a feature I wish rc had</li>
+<li><em>From</em>: <a href="mailto:culliton%40srg.srg.af.mil">culliton@srg.srg.af.mil</a> (Tom Culliton x2278)</li>
+<li><em>Date</em>: Tue, 3 Nov 1992 11:10:54 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:rc%40hawkwind.utcs.toronto.edu">rc@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;&gt; It would be especially powerful if one could take things
+&gt;&gt; out of implicit lists, ie say 'all filenames of this pattern, except
+&gt;&gt; filenames of that pattern' conveniently.
+	
+&gt;i've always wanted this in a shell, but never found a convenient notation  
+&gt;for it.  if someone can suggest one, it's certainly a potential es feature.
+&gt;
+&gt;i just use ``ls|grep -v'' usually.
+
+I usually use sed to do this kind of list manipulation, for example
+when we have net problems one of the following works quite well to pull
+the NFS mounted partions out of my path.
+
+	path=`{echo $path | sed 's:/usr/share/bin::'}
+
+	eval `{whatis path | sed 's:/usr/share/bin::'}
+
+The second could easily be turned into a general function to do the
+job, but being able to fetch it out of my history makes that more
+bother (and clutter in the environment) than it's worth.
+
+Anybody feel like producing an all builtin function for this? 
+Something like &quot;remove pattern list&quot; or &quot;remove index list&quot;.  It
+shouldn't be too hard.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00158.html">Re: a feature I wish rc had</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00160.html">Re: a feature I wish rc had</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00162.html">Re: a feature I wish rc had</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00160.html">Re: a feature I wish rc had</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00159"><strong>Date</strong></a></li>
+<li><a href="threads.html#00159"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

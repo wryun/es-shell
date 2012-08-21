@@ -1,0 +1,101 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Parser bug? -->
+<!--X-From-R13: "Vnenyq Vnapur&#45;Ayfra" <unapurNvzs.havg.ab> -->
+<!--X-Date: Fri, 26 Jan 1996 07:04:32 &#45;0500 -->
+<!--X-Message-Id: 9601261303.ZM18297@chanur.imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Parser bug?</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00893.html">Date Prev</a>][<a href="msg00895.html">Date Next</a>][<a href="msg00893.html">Thread Prev</a>][<a href="msg00895.html">Thread Next</a>][<a href="maillist.html#00894">Date Index</a>][<a href="threads.html#00894">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Parser bug?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Parser bug?</li>
+<li><em>From</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Fri, 26 Jan 1996 07:03:58 -0500</li>
+<li><em>Sender</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>; echo {a b &lt;{c} d}
+{%readfrom _devfd5 {c} {a b $_devfd5 d}}
+; echo {a (b &lt;{c} d)}
+syntax error
+
+Is there any good reason I cannot use parentheses here?  (I stumbled over
+this in a longer script in which I did something of the form
+
+some-command (-options -more options
+  -yet more options
+  &lt;{some-other-command ...} )
+
+Not a big deal - easy to work around - but can the grammar be tweaked to
+accomodate this?
+
+- Harald
+
+(Weird - I keyed in the above, then forgot to send it before I went to
+lunch - just to come back and find four other messages from the es list!
+ Telepathy?  No - I don't believe it.)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00895" href="msg00895.html">Re: Parser bug?</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00893.html">Re: change between es-0.84 and es-0.9-alpha1</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00895.html">Re: Parser bug?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00893.html">Re: change between es-0.84 and es-0.9-alpha1</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00895.html">Re: Parser bug?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00894"><strong>Date</strong></a></li>
+<li><a href="threads.html#00894"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

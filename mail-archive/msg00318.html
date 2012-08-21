@@ -1,0 +1,137 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Yow! -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Fri, 23 Apr 1993 15:52:57 &#45;0400 -->
+<!--X-Message-Id: 9304231952.AA25290@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Yow!</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00317.html">Date Prev</a>][<a href="msg00319.html">Date Next</a>][<a href="msg00317.html">Thread Prev</a>][<a href="msg00319.html">Thread Next</a>][<a href="maillist.html#00318">Date Index</a>][<a href="threads.html#00318">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Yow!</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Yow!</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Fri, 23 Apr 1993 16:52:44 -0400</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>This has got to be the best unix shell I've ever seen!
+
+A couple of nits, though.  
+
+1) $cdpath is a really egregious creeping feature to make a builtin part of
+the shell, considering how nongeneral it is.  If people really want a
+cdpath-like feature (admittedly, I use such a thing too), one could do:
+
+    fn cd * \
+    {
+       if { ~ $#* 0 } { * = $home }
+
+       if { ~ $1 ./* ../* /* } \
+          { 
+            $&amp;cd $1 ;
+            pwd # I don't like this --noah
+            return 0 ;
+          }
+
+       let (dir = &lt;={ access -1 -d -n $1 $cdpath })
+          if { ~ $dir () } \
+             { throw error $0 $0: $1 not in '$cdpath' } \
+           { 
+             $&amp;cd $dir 
+             pwd # I don't like this --noah
+             return 0
+           }
+    }
+
+Alternately, instead of calling `access' in `cd' directly, one could call
+%cdpathsearch, but I think this doesn't really belong as a builtin hook
+either.
+
+
+2) The man page says for `forever', 
+
+   Runs the command repeatedly, until the shell exits or the command
+   raises an exception.  This is equivalent to a while {true} {cmd} loop
+   except that forever does not catch any exceptions, including break.
+
+It seems like it would be more general to indeed have a looping construct
+that didn't catch any exceptions, but that also allowed a test of some
+sort.  Perhaps `while' could even be implemented in terms of this new
+construct, setting exception handlers first.  
+
+Admittedly, right now you can create your own magic exception and use that
+to get of out of `forever', so it might seem like adding a condition is
+just syntactic sugar.  But I can imagine wanting to avoid the risk of
+shadowing an identically-named tag for another exception handler further
+up. 
+
+3) `local' doesn't seem like a very well-chosen name.  In fact, because
+&quot;local&quot; variables still cause settors to be invoked, get exported, and have
+other dynamic-scope properties, they are far less &quot;local&quot; than lexically
+scoped variables created with `let'.  Perhaps a better name would be
+`fluid-let' or even `dynamic-let'?  (The former would at least be
+consistent with Scheme.)
+
+
+Happy hacking.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00317.html">The gospel is spreading</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00319.html">Re:  Yow!</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00317.html">The gospel is spreading</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00319.html">Re:  Yow!</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00318"><strong>Date</strong></a></li>
+<li><a href="threads.html#00318"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

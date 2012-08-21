@@ -1,0 +1,88 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  command line processing order -->
+<!--X-From-R13: eqzNpspy.pbz (Dvpu [beva) -->
+<!--X-Date: Tue, 5 Jul 1994 14:47:25 &#45;0400 -->
+<!--X-Message-Id: 9407051840.AA23409@cfcl.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  command line processing order</title>
+<link rev="made" href="mailto:rdm@cfcl.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00741.html">Date Prev</a>][<a href="msg00743.html">Date Next</a>][<a href="msg00773.html">Thread Prev</a>][<a href="msg00743.html">Thread Next</a>][<a href="maillist.html#00742">Date Index</a>][<a href="threads.html#00742">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  command line processing order</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:rdm%40cfcl.com">rdm@cfcl.com</a></li>
+<li><em>Subject</em>: Re:  command line processing order</li>
+<li><em>From</em>: <a href="mailto:rdm%40cfcl.com">rdm@cfcl.com</a> (Rich Morin)</li>
+<li><em>Date</em>: Tue, 5 Jul 1994 14:40:47 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Yup, sh goes the Right Thing, but csh sure doesn't:
+
+  rdm@sun4 105: mkdir /tmp/x
+  rdm@sun4 106: cd /tmp/x
+  rdm@sun4 107: touch a b c d
+  rdm@sun4 108: cat * &gt; foo
+  cat: input foo is output
+  rdm@sun4 109: sh
+  $ ls
+  a       b       c       d       foo
+  $ rm foo
+  $ cat * &gt; foo
+  $ 
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00741.html">command line processing order</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00743.html">Re:  command line processing order</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00773.html">Re: command line processing order</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00743.html">Re:  command line processing order</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00742"><strong>Date</strong></a></li>
+<li><a href="threads.html#00742"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

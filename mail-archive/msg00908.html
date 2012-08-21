@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: esdump dumps ...... core! -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 26 Jun 1996 17:03:03 &#45;0400 -->
+<!--X-Message-Id: 199606262101.RAA21487@netcom13.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199606261825.OAA09515@netcom12.netcom.com -->
+<!--X-Reference: 21410.835815041@waldrog.cs.uidaho.edu -->
+<!--X-Reference: 199606261906.OAA14273@piglet.splode.com -->
+<!--X-Reference: 199606261931.OAA09728@woodlawn.uchicago.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: esdump dumps ...... core!</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00907.html">Date Prev</a>][<a href="msg00909.html">Date Next</a>][<a href="msg00907.html">Thread Prev</a>][<a href="msg00923.html">Thread Next</a>][<a href="maillist.html#00908">Date Index</a>][<a href="threads.html#00908">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: esdump dumps ...... core!</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: esdump dumps ...... core!</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 26 Jun 1996 17:01:33 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00907.html">199606261931.OAA09728@woodlawn.uchicago.edu</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00904.html">199606261825.OAA09515@netcom12.netcom.com</a>&gt;	&lt;<a href="msg00905.html">21410.835815041@waldrog.cs.uidaho.edu</a>&gt;	&lt;<a href="msg00906.html">199606261906.OAA14273@piglet.splode.com</a>&gt;	&lt;<a href="msg00907.html">199606261931.OAA09728@woodlawn.uchicago.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Oh yeah, I forgot about the getenv() hack.
+
+I suspect the reason it can't be done until after getopt runs is that
+you don't know until that point as to whether the flag (-p?) which
+prevents importing functions has been used.
+
+Probably the right thing to do is have the replacement getopt just
+search environ until the variables have been initialized, and only then
+start looking at the variable table.
+
+I'll write the code to do that next time I get the chance to hack on es,
+if nobody beats me to it.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00923" href="msg00923.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> &quot;Harald Hanche-Olsen&quot; &lt;hanche@imf.unit.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00904" href="msg00904.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+<li><strong><a name="00905" href="msg00905.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> faried nawaz &lt;nawaz921@cs.uidaho.edu&gt;</li></ul></li>
+<li><strong><a name="00906" href="msg00906.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> friedman@splode.com (Noah Friedman)</li></ul></li>
+<li><strong><a name="00907" href="msg00907.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> Soren Dayton &lt;csdayton@midway.uchicago.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00907.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00909.html">fixed the getenv problem</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00907.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00923.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00908"><strong>Date</strong></a></li>
+<li><a href="threads.html#00908"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

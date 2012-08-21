@@ -1,0 +1,105 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: The primitiveness of pipe -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Thu, 27 May 1993 16:13:03 &#45;0400 -->
+<!--X-Message-Id: 9305272012.AA02282@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>The primitiveness of pipe</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00559.html">Date Prev</a>][<a href="msg00561.html">Date Next</a>][<a href="msg00562.html">Thread Prev</a>][<a href="msg00561.html">Thread Next</a>][<a href="maillist.html#00560">Date Index</a>][<a href="threads.html#00560">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>The primitiveness of pipe</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: The primitiveness of pipe</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Thu, 27 May 1993 16:12:52 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I understand that new feature requests are particularly unwelcome at
+this time, but I just can't resist...
+
+I think someone mentioned the idea of making system calls available
+via some general mechanism, and dynamically loadable modules have been
+talked about.  In the absence of those things there is one system call
+I would dearly have loved to have direct access to:  Namely pipe(2).
+Imagine we had such a primitive, let's call it $&amp;pipe2 so we don't
+confuse it with the current pipe primitive.  pipe2 would open a pipe
+and return the two resulting file descriptors.  It would also do the
+necessary internal book-keeping for the file descriptors.
+
+Then we should be able to rewrite %pipe in terms of $&amp;pipe2 and
+$&amp;background, at least in principle.  We may or may not want to do so.
+
+But we could also do all sorts of things you can usually not do in
+other shells, like open a file descriptor in the current shell which
+is a pipe into (or from) a process running in the background.
+
+Just an idea.  Let it simmer on the back burner.  It doesn't worry me
+if it has to wait until after v.1.0.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00569" href="msg00569.html">Re: The primitiveness of pipe</a></strong>
+<ul><li><em>From:</em> Steven M Rezsutek &lt;steve@baloo.gsfc.nasa.gov&gt;</li></ul></li>
+<li><strong><a name="00561" href="msg00561.html">Re: The primitiveness of pipe</a></strong>
+<ul><li><em>From:</em> John Robert LoVerso &lt;loverso@osf.org&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00559.html">A couple of questions</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00561.html">Re: The primitiveness of pipe</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00562.html">Re:  A couple of questions</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00561.html">Re: The primitiveness of pipe</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00560"><strong>Date</strong></a></li>
+<li><a href="threads.html#00560"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

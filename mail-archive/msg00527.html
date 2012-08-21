@@ -1,0 +1,110 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: word breaks and control&#45;a -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 26 May 1993 14:55:00 &#45;0400 -->
+<!--X-Message-Id: 9305261855.AA07619@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>word breaks and control-a</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00526.html">Date Prev</a>][<a href="msg00528.html">Date Next</a>][<a href="msg00526.html">Thread Prev</a>][<a href="msg00528.html">Thread Next</a>][<a href="maillist.html#00527">Date Index</a>][<a href="threads.html#00527">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>word breaks and control-a</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: word breaks and control-a</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 26 May 1993 14:55:50 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[Noah makes some very good points about backwards compatibility
+and why it can be a bad thing.]
+
+&gt; Why not also fix the same bug in rc?
+
+no reason not to, i guess.  people are sometimes hesitant to upgrade,
+but that's not a convincing reason.
+
+if we do change this, though, my preference is the ``backwards
+compatible'' way i outlined before, because it does not depend
+on a synchronized (``flag day'') release between rc and es.
+the additional cost in terms of lost valid sequences (^b^a and
+^b^a) is truly minimal.
+
+when exporting, the following mapping would occur
+
+	word break	-&gt; ^a
+	^a		-&gt; ^b^a
+	^b		-&gt; ^b^b
+
+and when importing
+
+	^a		-&gt; word break
+	^b^a		-&gt; ^a
+	^b^b		-&gt; ^b
+	^bx		-&gt; ^bx		# where x is anything else
+
+so now the bugs section comment should be
+
+	Woe betide the environment string containing the character control-a
+	or the sequence control-b followed by control-a or control-b.
+
+i propose making this change in es, independent of what happens to rc.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00526.html">Re:  Function names with slashes don't seem to work.</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00528.html">Re:  word breaks and control-a</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00526.html">Re:  Function names with slashes don't seem to work.</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00528.html">Re:  word breaks and control-a</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00527"><strong>Date</strong></a></li>
+<li><a href="threads.html#00527"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

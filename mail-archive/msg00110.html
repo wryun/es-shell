@@ -1,0 +1,118 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es 0.7: ^C at prompt -->
+<!--X-From-R13: Fbal Eybnar <gbalNevxre.pf.pbybenqb.rqh> -->
+<!--X-Date: Wed, 21 Oct 1992 00:35:44 &#45;0400 -->
+<!--X-Message-Id: 199210210434.AA22792@riker.cs.colorado.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199210210412.AA22519@riker.cs.colorado.edu -->
+<!--X-Reference: 92Oct21.002133edt.2619@groucho.cs.psu.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es 0.7: ^C at prompt</title>
+<link rev="made" href="mailto:tony@riker.cs.colorado.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00109.html">Date Prev</a>][<a href="msg00111.html">Date Next</a>][<a href="msg00109.html">Thread Prev</a>][<a href="msg00114.html">Thread Next</a>][<a href="maillist.html#00110">Date Index</a>][<a href="threads.html#00110">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es 0.7: ^C at prompt</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Scott Schwartz &lt;<a href="mailto:schwartz%40groucho.cs.psu.edu">schwartz@groucho.cs.psu.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: es 0.7: ^C at prompt</li>
+<li><em>From</em>: Tony Sloane &lt;<a href="mailto:tony%40riker.cs.colorado.edu">tony@riker.cs.colorado.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 21 Oct 1992 00:34:49 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>References</em>: &lt;<a href="msg00108.html">199210210412.AA22519@riker.cs.colorado.edu</a>&gt;	&lt;<a href="msg00109.html">92Oct21.002133edt.2619@groucho.cs.psu.edu</a>&gt;</li>
+<li><em>Reply-to</em>: <a href="mailto:tony%40cs.colorado.edu">tony@cs.colorado.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre> &gt; | PS.  Are there any plans to make it possible to get at the ~user mechanism in
+ &gt; | some way?  I have a machine that many people don't have logins on but that has
+ &gt; | access to their home directories via amd/NFS.  Thus a passwd file mechanism
+ &gt; | doesn't work for most people in the dept.  I'd like to (say) be able to define
+ &gt; | a function that gets called when doing ~ expansion.
+ &gt; 
+ &gt; Amd supports a home directory map, independent of the passwd file.
+ &gt; /u/schwartz then points to /home/groucho/schwartz, or whatever.  This
+ &gt; is a thing that goes so nicely in the OS, it's a shame to force it on
+ &gt; the shell, especially since other programs often want the short name
+ &gt; for users' homes.
+
+I realize this.  We use it.  The point is that ~user means &quot;the home directory
+of user&quot;.  On our network this is always /homes/user which is fixed up by amd
+to point to the right place.  If the user concerned is not in the passwd file
+on my machine (as many aren't) then ~user as it currently is does not work
+even though /homes/user is accessible from my machine.
+
+Following the es principle of making shell mechanisms available, I'd like to
+be able to say something like:
+
+fn tilde { return /homes/ ^ $1 }
+
+and have tilde called by es to do the expansion.  People who can use the
+default mechanism (ie. all their users are in the passwd file) will not need
+to define tilde.  (&quot;tilde&quot; may not be the best name, BTW.)
+
+Not a big deal, but it'd be nice.
+
+Tony
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00108" href="msg00108.html">es 0.7: ^C at prompt</a></strong>
+<ul><li><em>From:</em> Tony Sloane &lt;tony@riker.cs.colorado.edu&gt;</li></ul></li>
+<li><strong><a name="00109" href="msg00109.html">Re: es 0.7: ^C at prompt</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00109.html">Re: es 0.7: ^C at prompt</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00111.html">Re: es 0.7: ^C at prompt</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00109.html">Re: es 0.7: ^C at prompt</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00114.html">Re: es 0.7: ^C at prompt</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00110"><strong>Date</strong></a></li>
+<li><a href="threads.html#00110"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

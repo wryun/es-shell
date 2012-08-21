@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Help getting es 0.84 up on HP&#45;UX 9? 	(also Solaris) -->
+<!--X-From-R13: Pvyy Febfg <gebfgNpfr.btv.rqh> -->
+<!--X-Date: Mon, 11 Jul 1994 13:35:53 &#45;0400 -->
+<!--X-Message-Id: 9407111735.AA10180@lemond.cse.ogi.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 94Jun3.163704edt.23991@hawkwind.utcs.utoronto.ca -->
+<!--X-Reference: bill+9459.686927@cloud.rain.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Help getting es 0.84 up on HP-UX 9? 	(also Solaris)</title>
+<link rev="made" href="mailto:trost@cse.ogi.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00745.html">Date Prev</a>][<a href="msg00747.html">Date Next</a>][<a href="msg00745.html">Thread Prev</a>][<a href="msg00737.html">Thread Next</a>][<a href="maillist.html#00746">Date Index</a>][<a href="threads.html#00746">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Help getting es 0.84 up on HP-UX 9? 	(also Solaris)</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:S.Rezsutek%40baloo.gsfc.nasa.gov">S.Rezsutek@baloo.gsfc.nasa.gov</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Help getting es 0.84 up on HP-UX 9? 	(also Solaris)</li>
+<li><em>From</em>: Bill Trost &lt;<a href="mailto:trost%40cse.ogi.edu">trost@cse.ogi.edu</a>&gt;</li>
+<li><em>Date</em>: Mon, 11 Jul 1994 13:35:42 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00745.html">bill+9459.686927@cloud.rain.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00735.html">94Jun3.163704edt.23991@hawkwind.utcs.utoronto.ca</a>&gt;	&lt;<a href="msg00745.html">bill+9459.686927@cloud.rain.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Here are the notes I have about building es on a variety of
+architectures.  Remember, folks, you get what you pay for....  (-:
+
+A few warnings/comments:
+
+  * The HP version was probably built under HP-UX 8.x.
+
+  * I see I have no notes for SunOS 5.x.  Another reference I have
+    seems to indicate that the command line used was
+
+	make 'CFLAGS=-g -O -DSOLARIS -DBUILTIN_TIME=0' 'YACC=bison -y' LIBS=''
+
+Sorry about the quoting; it appears I was still using bash at the
+time....  (-:
+
+-----------------
+
+In order to build on a symmetry, the command line used was:
+
+make -j11 -k CFLAGS='-g -O -D_SIZE_T -D_PTRDIFF_T -DSIG_ERR=&quot;((void (*)()) -1)&quot; -DUSE_DIRENT=0' LIBS=-ltcl
+
+
+In order to build on an hp_pa1_1, the command line used was:
+
+make -k CC='c89 -DSYSV_SIGNALS -DHPUX -D_HPUX_SOURCE' CFLAGS='-g' LIBS=
+
+
+To build on a Next, please, I used the command line
+
+  make CC=cc 'CFLAGS=-g -O'
+
+I also was unable to build sigmsgs.c because the Nexts, please, don't
+come with real header files (BOO HISS).  What I did instead is
+&quot;acquire&quot; a signal.h from elsewhere, and modified the Makefile to use
+the signal.h in the current directory instead of the one in
+/usr/include/sys.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00735" href="msg00735.html">Help getting es 0.84 up on HP-UX 9?</a></strong>
+<ul><li><em>From:</em> Steven Rezsutek &lt;S.Rezsutek@baloo.gsfc.nasa.gov&gt;</li></ul></li>
+<li><strong><a name="00745" href="msg00745.html">Help getting es 0.84 up on HP-UX 9?	(also Solaris)</a></strong>
+<ul><li><em>From:</em> trost@cloud.rain.com (Bill Trost)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00745.html">Help getting es 0.84 up on HP-UX 9?	(also Solaris)</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00747.html">'{}' feature or bug?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00745.html">Help getting es 0.84 up on HP-UX 9?	(also Solaris)</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00737.html">es on solaris?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00746"><strong>Date</strong></a></li>
+<li><a href="threads.html#00746"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

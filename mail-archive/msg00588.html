@@ -1,0 +1,129 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: get a list of new files. -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Fri, 28 May 1993 16:58:47 &#45;0400 -->
+<!--X-Message-Id: 9305282058.AA24471@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305281803.AA23496@earth.osf.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>get a list of new files.</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00587.html">Date Prev</a>][<a href="msg00589.html">Date Next</a>][<a href="msg00584.html">Thread Prev</a>][<a href="msg00582.html">Thread Next</a>][<a href="maillist.html#00588">Date Index</a>][<a href="threads.html#00588">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>get a list of new files.</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: get a list of new files.</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Fri, 28 May 1993 17:58:07 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00581.html">9305281803.AA23496@earth.osf.org</a>&gt; (rsalz@osf.org)</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;&gt;fn new-el { return \
+&gt;&gt;	`{bash -c 'for x in *.el; do [ $x -nt ${x}c ] &amp;&amp; echo $x; done'}}
+&gt;
+&gt;echo '.SUFFIXES: .elc .el
+&gt;.el.elc: ; @echo $? ' \
+&gt;	| make -f - `{echo *.el | sed -e s/\.el/.elc/g} \
+&gt;	| sed -e '/is up to date/d'
+
+$alz's example doesn't seem terribly robust:
+    
+    ; fn-make = /usr/local/gnubin/make; rsalz-el
+    add-log.el
+    allout.el
+    ange-ftp.el
+    completion.el
+    make: *** No rule to make target `.elc.elc.elc'.  Stop.
+    default.el
+    # result = 0 1 0
+    ; fn-make = /bin/make; rsalz-el
+    Make: line 1: syntax error.  Stop.
+    # result = 0 1 0
+    ;
+
+As for hanche's example, you don't need bash.  You can use `ls -t', and you
+can still do it with just one external process (example included below).
+
+This may be all academic, anyway.  If all you want to do is recompile .el
+files in a given directory for emacs, why not simply use 
+``M-x byte-recompile-directory'' ?
+
+    fn new-el-files \
+    {
+      let (el-files =; elc-files =)
+        {
+          for (f = `{ ls -td *.el *.elc })
+            if { ~ $f *.elc } \
+                 { elc-files = $elc-files $f } \
+               { access $f^c &amp;&amp; ! ~ $f^c $elc-files } \
+                 { el-files = $el-files $f }
+          result $el-files
+        }   
+    }
+
+If you don't care whether or not the .elc even exists, you can get rid of
+the call to `access' in the loop.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00581" href="msg00581.html">Re:  Confession</a></strong>
+<ul><li><em>From:</em> rsalz@osf.org</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00587.html">Re: newer</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00589.html">Re: Confession</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00584.html">Re: Confession</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00582.html">Re: Confession</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00588"><strong>Date</strong></a></li>
+<li><a href="threads.html#00588"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: esdump dumps ...... core! -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 26 Jun 1996 14:29:57 &#45;0400 -->
+<!--X-Message-Id: 199606261825.OAA09515@netcom12.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199604241606.LAA25941@midway.uchicago.edu -->
+<!--X-Reference: 19782.835645765@waldrog.cs.uidaho.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: esdump dumps ...... core!</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00903.html">Date Prev</a>][<a href="msg00905.html">Date Next</a>][<a href="msg00901.html">Thread Prev</a>][<a href="msg00905.html">Thread Next</a>][<a href="maillist.html#00904">Date Index</a>][<a href="threads.html#00904">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: esdump dumps ...... core!</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: faried nawaz &lt;<a href="mailto:nawaz921%40cs.uidaho.edu">nawaz921@cs.uidaho.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: esdump dumps ...... core!</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 26 Jun 1996 14:25:29 -0400</li>
+<li><em>Cc</em>: Soren Dayton &lt;<a href="mailto:csdayton%40midway.uchicago.edu">csdayton@midway.uchicago.edu</a>&gt;,	<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00901.html">19782.835645765@waldrog.cs.uidaho.edu</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00898.html">199604241606.LAA25941@midway.uchicago.edu</a>&gt;	&lt;<a href="msg00901.html">19782.835645765@waldrog.cs.uidaho.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Faried Nawaz wrote
+&gt; Soren Dayton wrote...
+&gt; 
+&gt;    #0  0x32cb in get (dict=0x0, name=0x1020 &quot;\023&quot;) at dict.c:106
+&gt;    106             unsigned long n = strhash(name), mask = dict-&gt;size - 1;
+&gt;    (gdb) back
+&gt;    #0  0x32cb in get (dict=0x0, name=0x1020 &quot;\023&quot;) at dict.c:106
+&gt;    #1  0x1020 in ?? ()
+&gt;    (gdb) quit
+&gt;    
+&gt;    this is a backtrace from gdb.
+&gt;    
+&gt;    these are the relevant sections of the config.h
+&gt;    
+&gt;    #ifdef __FreeBSD__
+&gt; 
+&gt; I've not been able to get es working with either editline or readline on
+&gt; FreeBSD for a _very_ long time.  I think it has to do with changes made
+&gt; to crt0 many many moons ago (I use -current), but I'm not sure.
+
+Um, because of changes to crt0?  What?  How?  Huh?
+
+The only thing of that might affect this is that crt0 could be defining
+some symbol that es wants to be bss'ed.
+
+I won't be able to track this one down, I suspect.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00905" href="msg00905.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> faried nawaz &lt;nawaz921@cs.uidaho.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00898" href="msg00898.html">esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> Soren Dayton &lt;csdayton@woodlawn.uchicago.edu&gt;</li></ul></li>
+<li><strong><a name="00901" href="msg00901.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> faried nawaz &lt;nawaz921@cs.uidaho.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00903.html">Re: ping</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00905.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00901.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00905.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00904"><strong>Date</strong></a></li>
+<li><a href="threads.html#00904"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

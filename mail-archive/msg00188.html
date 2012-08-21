@@ -1,0 +1,124 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: bugs, bugs, bugs -->
+<!--X-From-R13: wrerzlNfj.bm.nh (Xrerzl Tvgmuneqvatr) -->
+<!--X-Date: Wed, 27 Jan 1993 02:50:55 &#45;0500 -->
+<!--X-Message-Id: 9301270754.AA23006@chao.sw.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>bugs, bugs, bugs</title>
+<link rev="made" href="mailto:jeremy@sw.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00187.html">Date Prev</a>][<a href="msg00189.html">Date Next</a>][<a href="msg00187.html">Thread Prev</a>][<a href="msg00189.html">Thread Next</a>][<a href="maillist.html#00188">Date Index</a>][<a href="threads.html#00188">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>bugs, bugs, bugs</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: bugs, bugs, bugs</li>
+<li><em>From</em>: <a href="mailto:jeremy%40sw.oz.au">jeremy@sw.oz.au</a> (Jeremy Fitzhardinge)</li>
+<li><em>Date</em>: Wed, 27 Jan 1993 02:54:07 -0500</li>
+<li><em>Organization</em>: Softway Pty Ltd</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>OK.  Now that I've read the usenix paper, I have some idea of what es is about.
+Up until now, I'd been basically ignoring es, but since I've just been teaching
+myself ML, it seemed like a good idea to play with es too.  But guess what?
+
+A BUG!
+
+: chao:p4; what es
+es:
+	es version 0.74: 10 Jan 1992
+: chao:p4; prompt=(': es; ' ';; ') ./es
+: es; . path-cache.es
+: es; fn-echo=()
+: es; whatis echo
+gc.c:293: assertion failed (tag != ((void *)0))
+iot instruction--core dumped
+
+Another time (with readline compiled in):
+: es; . path-cache.es
+: es; fn-echo=()
+: es; whatis echo
+gc.c:299: assertion failed (tag-&gt;magic == TAGMAGIC)
+iot instruction--core dumped
+
+path-cache.es is figure 2 from the usenix paper:
+# Path caching.
+
+let (search = $fn-%pathsearch) {
+	fn %pathsearch prog {
+		let (file = &lt;&gt;($search $prog)) {
+			if {~ $#file 1 &amp;&amp; ~ $file /*} {
+				echo cached $prog
+				path-cache = $path-cache $prog
+				fn-$prog = $file
+			}
+		return $file
+		}
+	}
+}
+
+fn recache {
+	for (i = $path-cache)
+		fn-$i =
+	path-cache =
+}
+
+This is on a Sun SparcStation 1 under SunOS 4.1.1, compiled with gcc -V 2.3.3 -O -g.
+
+	J
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00187.html">es 0.79</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00189.html">Re: bugs, bugs, bugs</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00187.html">es 0.79</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00189.html">Re: bugs, bugs, bugs</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00188"><strong>Date</strong></a></li>
+<li><a href="threads.html#00188"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

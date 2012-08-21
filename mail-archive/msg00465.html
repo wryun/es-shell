@@ -1,0 +1,95 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  ^Z kills my shell -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Fri, 21 May 1993 09:29:48 &#45;0400 -->
+<!--X-Message-Id: 9305211330.AA02107@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  ^Z kills my shell</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00464.html">Date Prev</a>][<a href="msg00466.html">Date Next</a>][<a href="msg00466.html">Thread Prev</a>][<a href="msg00467.html">Thread Next</a>][<a href="maillist.html#00465">Date Index</a>][<a href="threads.html#00465">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  ^Z kills my shell</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:cabp09%40ccsun.strath.ac.uk">cabp09@ccsun.strath.ac.uk</a></li>
+<li><em>Subject</em>: Re:  ^Z kills my shell</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Fri, 21 May 1993 09:30:39 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Is this the correct behaviour for es. I accidentally hit ^Z when running
+&gt; an archie search, and the shell blew up (so to speak ...)
+
+correct, yes, but desirable, no.  actually, the shell probably didn't blow
+up; more likely, it just halted waiting for someone to resume it.
+
+here are two ways to avoid this from happening:
+
+	stty susp undef dsusp undef
+
+which unbinds the sending of the suspend signals from control-z and -y.
+i used to do this.  better is
+
+	signals = $signals -sigtstp
+
+which ignores the stop signals in es and all child processes, though
+if you run a job control shell under es job control will just work.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00464.html">^Z kills my shell</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00466.html">Re: ^Z kills my shell</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00466.html">Re: ^Z kills my shell</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00467.html">ile, once again</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00465"><strong>Date</strong></a></li>
+<li><a href="threads.html#00465"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

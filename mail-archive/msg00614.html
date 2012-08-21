@@ -1,0 +1,252 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es 0.84 under 386bsd, patches provided -->
+<!--X-From-R13: qonexreNzhytn.njnqv.pbz.OG (Rnir Pnexre) -->
+<!--X-Date: Sat, 5 Jun 1993 05:21:52 &#45;0400 -->
+<!--X-Message-Id: 9306040249.AA09281@mulga.awadi.com.au.awadi.com.AU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es 0.84 under 386bsd, patches provided</title>
+<link rev="made" href="mailto:dbarker@mulga.awadi.com.AU">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00613.html">Date Prev</a>][<a href="msg00615.html">Date Next</a>][<a href="msg00613.html">Thread Prev</a>][<a href="msg00615.html">Thread Next</a>][<a href="maillist.html#00614">Date Index</a>][<a href="threads.html#00614">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es 0.84 under 386bsd, patches provided</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es 0.84 under 386bsd, patches provided</li>
+<li><em>From</em>: <a href="mailto:dbarker%40mulga.awadi.com.AU">dbarker@mulga.awadi.com.AU</a> (Dave Barker)</li>
+<li><em>Date</em>: Fri, 4 Jun 1993 14:19:56 -0400</li>
+<li><em>Comments</em>: Hyperbole mail buttons accepted, v3.07.</li>
+<li><em>Reply-to</em>: <a href="mailto:dbarker%40awadi.com.AU">dbarker@awadi.com.AU</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+I have es apparently working under the following systems with these
+patches applied:
+
+        386bsd 0.1 with 0.2.2 patchkit and 18 miscellaneous patches.
+        GCC 2.3.3 and 2.4.0
+
+        SunOS 3.1
+        GCC 2.4.0
+
+As far as testing goes, the trip test and casual interactive use
+haven't shown any problems, but I can't claim this stuff is bug free.
+
+Note:
+
+Only the patches to config.h and trip.es are relevant. I've provided
+patches to Makefile, and a new file xmalloc.c just to indicate how I
+built the thing under 386bsd with the readline library from gdb 4.9.
+
+All in all this was pretty trivial stuff. I'm impressed by how clean
+es seem to be.
+
+
+Cheers,
+Dave
+
+
+====8&lt;================================&gt;8====
+*** ./config.h.D1	Fri Apr 30 11:38:57 1993
+--- ./config.h	Sat May 22 01:28:13 1993
+***************
+*** 165,168 ****
+--- 165,187 ----
+  
+  
++ /* 386BSD 0.1 with 0.2.2 patchkit */
++ 
++ #if __386BSD__
++ #ifndef DEVFD
++ #define DEVFD			1
++ #endif
++ #ifndef	USE_SIGACTION
++ #define USE_SIGACTION		1
++ #endif
++ #ifndef	INITIAL_PATH
++ #define	INITIAL_PATH		&quot;/usr/sbin&quot;, &quot;/sbin&quot;, &quot;/usr/bin&quot;, &quot;/bin&quot;, &quot;&quot;
++ #endif
++ #define SIG_ERR			BADSIG
++ #ifndef	REQUIRE_STAT
++ #define REQUIRE_STAT		1
++ #endif
++ #endif
++ 
++ 
+  /* NeXT defaults */
+  
+*** ./trip.es.D1	Fri Apr 30 11:38:51 1993
+--- ./trip.es	Sat May 22 01:10:22 1993
+***************
+*** 206,224 ****
+  	} \
+  'trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: syntax error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: syntax error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: syntax error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: syntax error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: syntax error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: syntax error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: syntax error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: syntax error
+  never succeeded
+  '
+--- 206,224 ----
+  	} \
+  'trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: parse error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: parse error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: parse error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: parse error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: parse error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: parse error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: parse error
+  trying ...
+! caught error $&amp;parse &lt;eval&gt;:1: parse error
+  never succeeded
+  '
+*** ./xmalloc.c.D1	Sat May 22 01:42:37 1993
+--- ./xmalloc.c	Sat May 22 00:47:39 1993
+***************
+*** 0 ****
+--- 1,24 ----
++ #include &quot;config.h&quot;
++ #include &quot;stdenv.h&quot;
++ 
++ void *
++ xmalloc (
++    size_t size
++ ) {
++    return malloc(size);
++ };
++ 
++ void *
++ xrealloc (
++    void *ptr,
++    size_t size
++ ) {
++    return realloc(ptr, size);
++ };
++ 
++ void
++ xfree (
++    void *ptr
++ ) {
++    free(ptr);
++ };
+*** ./Makefile.D1	Fri Apr 30 11:39:41 1993
+--- ./Makefile	Sat May 22 00:53:59 1993
+***************
+*** 24,32 ****
+  
+  SHELL	= /bin/sh
+! CC	= cc
+! #CC	= gcc
+! CFLAGS	= -g -O -Wall
+  LDFLAGS	=
+! LIBS	=
+  
+  HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h stdenv.h syntax.h var.h
+--- 24,32 ----
+  
+  SHELL	= /bin/sh
+! CC	= gcc
+! CFLAGS	= -O2 -m486 -Wall -DREADLINE
+! YACC    = bison -y
+  LDFLAGS	=
+! LIBS	= -lreadline -ltermcap -lmmalloc
+  
+  HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h stdenv.h syntax.h var.h
+***************
+*** 35,44 ****
+  	  prim-ctl.c prim-etc.c prim-io.c prim-sys.c prim.c print.c proc.c \
+  	  sigmsgs.c signal.c split.c status.c str.c syntax.c term.c token.c \
+! 	  tree.c util.c var.c vec.c version.c y.tab.c dump.c
+  OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
+  	  glom.o input.o heredoc.o list.o main.o match.o open.o opt.o \
+  	  prim-ctl.o prim-etc.o prim-io.o prim-sys.o prim.o print.o proc.o \
+  	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
+! 	  tree.o util.o var.o vec.o version.o y.tab.o
+  OTHER	= Makefile parse.y mksignal
+  GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
+--- 35,44 ----
+  	  prim-ctl.c prim-etc.c prim-io.c prim-sys.c prim.c print.c proc.c \
+  	  sigmsgs.c signal.c split.c status.c str.c syntax.c term.c token.c \
+! 	  tree.c util.c var.c vec.c version.c y.tab.c dump.c xmalloc.c
+  OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
+  	  glom.o input.o heredoc.o list.o main.o match.o open.o opt.o \
+  	  prim-ctl.o prim-etc.o prim-io.o prim-sys.o prim.o print.o proc.o \
+  	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
+! 	  tree.o util.o var.o vec.o version.o y.tab.o xmalloc.o
+  OTHER	= Makefile parse.y mksignal
+  GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
+====8&lt;================================&gt;8====
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00613.html">Re: latest ver</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00615.html">here strings</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00613.html">Re: latest ver</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00615.html">here strings</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00614"><strong>Date</strong></a></li>
+<li><a href="threads.html#00614"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

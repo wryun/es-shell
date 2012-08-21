@@ -1,0 +1,153 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es&#45;0.82 -->
+<!--X-From-R13: evggyrNpbzz.zbg.pbz (Zbera Xnzrf Dvggyr) -->
+<!--X-Date: Wed, 14 Apr 1993 18:58:15 &#45;0400 -->
+<!--X-Message-Id: 9304142304.AA02669@supra.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es-0.82</title>
+<link rev="made" href="mailto:rittle@comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00295.html">Date Prev</a>][<a href="msg00297.html">Date Next</a>][<a href="msg00295.html">Thread Prev</a>][<a href="msg00297.html">Thread Next</a>][<a href="maillist.html#00296">Date Index</a>][<a href="threads.html#00296">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es-0.82</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es-0.82</li>
+<li><em>From</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a> (Loren James Rittle)</li>
+<li><em>Date</em>: Wed, 14 Apr 1993 19:04:06 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Es list, Paul, Byron:
+
+I just finished building es-0.82.  Below are some patches that show
+1) a fix to the `gcc -Wall' `Warning Frenzy (tm)' on initial.c, 2) my
+implicit cd hack added to es-0.82's initial.es, 3) a problem between
+the author's target readline package and the GNU readline package I have
+(the latest version on prep.ai.mit.edu as of one month ago).  Is there
+a better readline package that I want to look into?
+
+Only patch 1 should be considered for application to the master es
+source tree.
+
+Regards,
+Loren
+
+The following patch gets rid of about 1000 warning messages when compiled
+under gcc -Wall [v2.3.^(1 2)]:
+
+diff -r es-0.82-orig/dump.c es-0.82/dump.c
+116c116
+&lt; 				&quot;static const Tree_s %s = { n%s, { (char *) %s } };\n&quot;,
+---
+&gt; 				&quot;static const Tree_s %s = { n%s, { {(char *) %s} } };\n&quot;,
+124c124
+&lt; 				&quot;static const Tree_p %s = { n%s, { (Tree *) %s } };\n&quot;,
+---
+&gt; 				&quot;static const Tree_p %s = { n%s, { {(Tree *) %s} } };\n&quot;,
+134c134
+&lt; 				&quot;static const Tree_pp %s = { n%s, { (Tree *) %s, (Tree *) %s } };\n&quot;,
+---
+&gt; 				&quot;static const Tree_pp %s = { n%s, { {(Tree *) %s}, {(Tree *) %s} } };\n&quot;,
+
+--
+
+The following patch is provided for those people that would like to add
+implicit cd to their base interactive es shell:
+
+diff -r es-0.82-orig/initial.es es-0.82/initial.es
+92c92,111
+&lt; 				result = &lt;={$dispatch &lt;={%parse $prompt}}
+---
+&gt; # original:
+&gt; #				result = &lt;={$dispatch &lt;={%parse $prompt}}
+&gt; # replacement to support implicit cd by ljr:
+&gt; 	let (command = &lt;={%parse $prompt}) {
+&gt; 	  if {~ $command \{[!-z]*\}} {
+&gt; 	    let (words = `{echo $command | /bin/sed 's/{\([ -z]*\)}/\1/'}) {
+&gt; 	      catch @ {
+&gt; 		catch @ {} {
+&gt; 		  cd $words
+&gt; 		  command='{}'
+&gt; 		}
+&gt; 	      } {
+&gt; 		if {~ $#words 1} {
+&gt; 		  whatis &gt;/dev/null $words
+&gt; 		}
+&gt; 	      }
+&gt; 	    }
+&gt; 	  }
+&gt; 	  result = &lt;={$dispatch $command}
+&gt; 	}
+
+--
+
+The following patch is provided to show Paul and Byron the nasty hack that
+I have to add every time I get a new es [I believe that I have the latest
+GNU readline package, but maybe not.  Without commenting out access to
+rl_meta_chars, the linker bombs out.  What is rl_meta_chars anyways?]:
+
+diff -r es-0.82-orig/input.c es-0.82/input.c
+33c33
+&lt; extern int rl_meta_chars;
+---
+&gt; /* extern int rl_meta_chars; */
+476c476
+&lt; 	rl_meta_chars = 0;
+---
+&gt; /*	rl_meta_chars = 0; */
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00295.html">last call for ``show stoppers'' in es-0.82</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00297.html">Re:  es-0.82</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00295.html">last call for ``show stoppers'' in es-0.82</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00297.html">Re:  es-0.82</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00296"><strong>Date</strong></a></li>
+<li><a href="threads.html#00296"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

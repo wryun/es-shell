@@ -1,0 +1,140 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: spurious ``wait: No child processes'' messages -->
+<!--X-From-R13: Bnhy Vnnue <unnueNwvirgrpu.pbz> -->
+<!--X-Date: Thu, 14 Dec 2000 00:36:59 &#45;0500 -->
+<!--X-Message-Id: cWe1EN5OT1@iadd.jivetech.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: haahr@jivetech.com -->
+<!--X-Reference: cWdY6U5Eta@iadd.jivetech.com -->
+<!--X-Reference: 20001213231306.5473.qmail@f.bio.cse.psu.edu -->
+<!--X-Reference: cWe19d5OT0@iadd.jivetech.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>spurious ``wait: No child processes'' messages</title>
+<link rev="made" href="mailto:haahr@jivetech.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01025.html">Date Prev</a>][<a href="msg01029.html">Date Next</a>][<a href="msg01027.html">Thread Prev</a>][<a href="msg01029.html">Thread Next</a>][<a href="maillist.html#01026">Date Index</a>][<a href="threads.html#01026">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>spurious ``wait: No child processes'' messages</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Loren James Rittle &lt;<a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a>&gt;,	Scott Schwartz &lt;<a href="mailto:schwartz%40bio.cse.psu.edu">schwartz@bio.cse.psu.edu</a>&gt;,	Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Subject</em>: spurious ``wait: No child processes'' messages</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 13 Dec 2000 19:54:09 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01027.html">cWe19d5OT0@iadd.jivetech.com</a>&gt;</li>
+<li><em>References</em>: &lt;haahr@jivetech.com&gt;	&lt;<a href="msg01024.html">cWdY6U5Eta@iadd.jivetech.com</a>&gt;	&lt;<a href="msg01028.html">20001213231306.5473.qmail@f.bio.cse.psu.edu</a>&gt;	&lt;<a href="msg01027.html">cWe19d5OT0@iadd.jivetech.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I wrote:
+&gt; ... though es still sometimes reports ``wait: No child processes''
+&gt; when processes are interrupted.  No idea what that happens.
+
+Ok, I have a bit of a clue, which leaves me wondering why this ever
+worked before.
+
+The symptom is that es prints ``wait: No child processes'', even though
+there everybody knows there was a process to wait on.
+
+The key routine is:
+
+	/* dowait -- a wait wrapper that interfaces with signals */
+	static int dowait(int *statusp) {
+		int n;
+		interrupted = FALSE;
+		if (!setjmp(slowlabel)) {
+			slow = TRUE;
+			n = interrupted ? -2 :
+	#if HAVE_WAIT3
+				wait3((void *) statusp, 0, &amp;wait_rusage);
+	#else
+				wait((void *) statusp);
+	#endif
+		} else
+			n = -2;
+		slow = FALSE;
+		if (n == -2) {
+			errno = EINTR;
+			n = -1;
+		}
+		return n;
+	}
+
+This time, strace was quite helpful.  Basically, what seems to happen is
+that wait() returns -- in this case, wait4, which is invoked by wait3 --
+but before the result gets propagated anywhere useful, the signal comes
+in.  So, the process has been waited for, but we never do anything
+useful with the status.
+
+Judging from the code, the ``if (slow)'' mechanism is intended to deal
+with this case, but there's a race condition it's facing -- if wait
+returns before the global slow gets set to false, data is lost.  In this
+case, the what's lost is our memory of waiting for the process to exit.
+
+Anyone got any ideas how to fix this?  Or why it worked in the first
+place?
+
+--p
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01024" href="msg01024.html">es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+<li><strong><a name="01028" href="msg01028.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@bio.cse.psu.edu&gt;</li></ul></li>
+<li><strong><a name="01027" href="msg01027.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01025.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01029.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01027.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01029.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01026"><strong>Date</strong></a></li>
+<li><a href="threads.html#01026"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

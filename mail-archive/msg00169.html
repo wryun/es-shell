@@ -1,0 +1,134 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es&#45;0.7 on sun4 -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Tue, 8 Dec 1992 18:08:35 &#45;0500 -->
+<!--X-Message-Id: 9212082305.AA07186@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es-0.7 on sun4</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00168.html">Date Prev</a>][<a href="msg00170.html">Date Next</a>][<a href="msg00167.html">Thread Prev</a>][<a href="msg00168.html">Thread Next</a>][<a href="maillist.html#00169">Date Index</a>][<a href="threads.html#00169">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es-0.7 on sun4</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:peter%40robots.ox.ac.uk">peter@robots.ox.ac.uk</a></li>
+<li><em>Subject</em>: Re: es-0.7 on sun4</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Tue, 8 Dec 1992 18:05:50 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>great stuff.  thanks so for fixing it.  my apologies for not getting to it.
+
+to anyone on the list who has been having the sun4/control-c problem,
+this fix feels right.  for gcc-haters, note that i think that this is
+a bug in my code and gcc is right.  (i hate when that happens.)
+the real fix is just to eliminate all the consts on gcblocked, and that
+will be done in the next release.
+
+&gt; From @prg.ox.ac.uk:peter@robots.oxford.ac.uk Tue Dec  8 14:22:17 1992
+&gt; Received: by astro.mv.us.adobe.com; id AA22849; Tue, 8 Dec 92 14:22:16 -0800
+&gt; Received: by mail-relay-1.mv.us.adobe.com; id AA03186; Tue, 8 Dec 92 14:20:43 -0800
+&gt; Via: uk.ac.oxford.prg; Tue, 8 Dec 1992 22:20:36 +0000
+&gt; Received: from uk.ac.oxford.robots.lucrece.robots (lucrece-gate.robots) 
+&gt;           by prg.oxford.ac.uk id AA14968; Tue, 8 Dec 92 22:20:20 GMT
+&gt; Received: from hotspur.robots.robots 
+&gt;           by uk.ac.oxford.robots.lucrece.robots (4.1/robots.1) id AA16325;
+&gt;           Tue, 8 Dec 92 22:20:19 GMT
+&gt; Date: Tue, 8 Dec 92 22:20:19 GMT
+&gt; From: peter@robots.ox.ac.uk (Peter Ho)
+&gt; Message-Id: &lt;9212082220.AA16325@uk.ac.oxford.robots.lucrece.robots&gt;
+&gt; To: haahr@adobe.com
+&gt; Subject: es-0.7 on sun4
+&gt; Cc: byron@netapp.com
+
+&gt; Hi,
+&gt; 	I decided to have a look at the problem myself as I was getting
+&gt; very jealous of those on the mailing list.  I've found it!  The
+&gt; reason why the loop in sigint() on line 79 of signal.c didn't terminate
+&gt; when gcblocked == 0, was because gcc generated incorrect code due to
+&gt; the variable being declared as extern const int.  The fix is to declare
+&gt; it as extern int.  It won't dump core now when I type ^C at the prompt :-).
+
+&gt; 	Here's the (trivial) patch (with a massive comment so I can remember
+&gt; what I did :-) ).
+
+&gt; 	Hope I wasn't too late for this to be of help,
+&gt; 		Pete.
+
+&gt; *** signal.c.dist	Tue Dec  8 21:01:04 1992
+&gt; --- signal.c	Tue Dec  8 22:10:19 1992
+&gt; ***************
+&gt; *** 70,75 ****
+&gt; --- 70,83 ----
+&gt;   }
+&gt;   
+&gt;   static sigresult sigint(int sig) {
+&gt; + 	/*
+&gt; + 	 * declaring extern const int gcblocked caused SunOS4.1.x + gcc
+&gt; + 	 * problems with updating gcblocked for the loop at wrong time so loop
+&gt; + 	 * was entered even though gcenable() had decremented gcblocked,
+&gt; + 	 * declaring it as non-const solves the problem.
+&gt; + 	 * peter@robots.ox.ac.uk
+&gt; + 	 */
+&gt; + 	extern int gcblocked;
+&gt;   	assert(sig == SIGINT);
+&gt;   	/* this is the newline you see when you hit ^C while typing a command */
+&gt;   	if (sigint_newline)
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00168.html">scm</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00170.html">Multiprocessesing, operators</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00167.html">es-0.7 on sun4</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00168.html">scm</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00169"><strong>Date</strong></a></li>
+<li><a href="threads.html#00169"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

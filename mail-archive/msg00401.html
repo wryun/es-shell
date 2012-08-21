@@ -1,0 +1,179 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: job control -->
+<!--X-From-R13: Rnivqp@vpby <pnoc09Npbzchgre&#45;prager&#45;fha.fgengupylqr.np.hx> -->
+<!--X-Date: Mon, 17 May 1993 08:08:42 &#45;0400 -->
+<!--X-Message-Id: 10968.9305171153@subnode.computer&#45;centre&#45;sun.strathclyde.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>job control</title>
+<link rev="made" href="mailto:cabp09@computer-centre-sun.strathclyde.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00400.html">Date Prev</a>][<a href="msg00402.html">Date Next</a>][<a href="msg00420.html">Thread Prev</a>][<a href="msg00408.html">Thread Next</a>][<a href="maillist.html#00401">Date Index</a>][<a href="threads.html#00401">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>job control</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: job control</li>
+<li><em>From</em>: DavidcNicol &lt;<a href="mailto:cabp09%40computer-centre-sun.strathclyde.ac.uk">cabp09@computer-centre-sun.strathclyde.ac.uk</a>&gt;</li>
+<li><em>Date</em>: Mon, 17 May 1993 07:53:09 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+	Here's my attempt at emulating job control. It uses a list (called
+job-list !) to keep control of the process id's and names, and has a few
+functions for manipulating the list. A spoofed %background adds the process
+id's to the list, and a funtion `kill' removes them and forks a `kill -9'
+if the process was on the list.
+
+	Points:
+
+	1. What about `ls -la &gt; /dev/null &amp;' ? The process is marked down
+	   but is never removed. Kill will find the id, and fork, but
+	   /bin/kill will be mystified !
+	2. What about suspended jobs (I asked this earlier :) ? If the
+	   current process could be suspended (say by catching the signal
+	   and forking a third party suspend program), then other
+	   programs/functions could be used for fg/bg emulation ...
+	3. No, I am NOT missing csh ... I just think this line of programming
+	   is interesting ... Practically all of my csh scripts are gone (
+	   apart from an `ftp' script --- after the exams, perhaps )
+	4. This is my first attempt at functions over 3 lines long ... is
+	   my style and syntax appropriate (just curious)
+	5. I lurve this shell ... have'nt had as much fun debugging a
+	   `script' since first year ;)
+
+	Dave.
+
+ o===============================================o  +----+
+  David McNicol,        | Strathclyde University,   |    |
+  3rd Yr Laser Physics, | SCOTLAND.                 |/--\| &quot;I'm sorry Dave,
+ o===============================================o  ||[]||  but I'm afraid
+  Internet: D.McNicol@ccsun.strath.ac.uk  !talk !   |\--/|  I can't do that&quot;
+     JANET: D.McNicol@uk.ac.strath.ccsun  !to me!   |    |
+ o===============================================o  +----+
+
+	/****************** CUT HERE *********************/
+
+	noexport = $noexport job-list
+	
+	job-list =
+	
+	fn job-show id cmd rest {
+		if {~ $id ()} {
+			if {~ $job-list ()} {
+				echo no jobs
+			} {
+				job-show $job-list
+			}
+		} {
+			echo $id\t$cmd
+			if {!~ $rest ()} {
+				job-show $rest
+			}
+		}
+	}
+	
+	fn jobs { job-show }
+	
+	fn job-add id cmd {
+		job-list = $job-list $id $^cmd
+	}
+	
+	fn job-remove id {
+		let (new-list = $job-list; job-id = ;job-name = ;done = ) {
+			job-list =
+			job-id = $new-list(1)
+			job-name = $new-list(2)
+			new-list = $new-list(3 ...)
+			while {!~ $job-id ()} {
+				if {!~ $id $job-id} {
+					job-list = $job-list $job-id $^job-name
+				} {
+					done = $id
+				}
+				job-id = $new-list(1)
+				job-name = $new-list(2)
+				new-list = $new-list(3 ...)
+			}
+			return $done
+		}
+	}
+	
+	fn %background cmds {
+		let (id = ) {
+			id = &lt;={$&amp;background $cmds}
+			job-add $id $cmds
+			return $id
+		}
+	}
+	
+	fn kill ids {
+		if {~ $ids ()} {
+			echo Usage: kill id ...
+			return ()
+		}
+		while {!~ $ids ()} {
+			if {~ &lt;={job-remove $ids(1)} ()} {
+				echo job $ids(1) not found
+			} {
+				/bin/kill -9 $ids(1)
+			}
+			ids = $ids(2 ...)
+		}
+	}		
+	
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00400.html">^Z signal</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00402.html">Re: ^Z signal</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00420.html">Re: ^Z signal</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00408.html">Scoping rules and function names</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00401"><strong>Date</strong></a></li>
+<li><a href="threads.html#00401"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es bug -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 29 Nov 1994 20:05:55 &#45;0500 -->
+<!--X-Message-Id: 199411300102.UAA15003@netcom4.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199411291853.NAA27507@netcom4.netcom.com -->
+<!--X-Reference: 9409211919.AA02157@busco.lanl.gov -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es bug</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00770.html">Date Prev</a>][<a href="msg00772.html">Date Next</a>][<a href="msg00768.html">Thread Prev</a>][<a href="msg00751.html">Thread Next</a>][<a href="maillist.html#00771">Date Index</a>][<a href="threads.html#00771">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es bug</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a> (es mailing list),	<a href="mailto:tromey%40busco.lanl.gov">tromey@busco.lanl.gov</a> (Tom Tromey)</li>
+<li><em>Subject</em>: Re: es bug</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 29 Nov 1994 20:02:03 -0500</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00768.html">199411291853.NAA27507@netcom4.netcom.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00768.html">199411291853.NAA27507@netcom4.netcom.com</a>&gt;	&lt;<a href="msg00750.html">9409211919.AA02157@busco.lanl.gov</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I wrote:
+&gt; On 21 September 1994, Tom Tromey wrote
+&gt; &gt; I've noticed that &quot;*/&quot; expands to all file names with &quot;/&quot; appended,
+&gt; &gt; instead of just the names of directories.  I think this is a bug --
+&gt; &gt; all the other glob code I've used does the right thing (expands to
+&gt; &gt; just directories).
+&gt; I looked at it a little, and I think that listglob() probably needs to
+&gt; do somethng different when slashcount &gt; 0, but I haven't really thought
+&gt; it through.
+
+I think I found a better way of handling this, by moving the
+is-a-directory? check earlier in dirmatch().  Here's a patch, but I
+don't guarantee that it doesn't break other things.  es with this does
+pass the trip and a few sanity tests I tried, so I'll start running it
+and let the list know if I hit any problems.
+
+Paul
+
+*** glob.c	Tue Nov 29 20:04:04 1994
+--- ../es-0.84/glob.c	Thu Apr 29 22:09:08 1993
+***************
+*** 50,63 ****
+  	static Dirent *dp;
+  	static struct stat s;
+  
+- 	/*
+- 	 * opendir succeeds on regular files on some systems, so the stat call
+- 	 * is necessary (sigh);  the check is done here instead of with the
+- 	 * opendir to handle a trailing slash.
+- 	 */
+- 	if (stat(dirname, &amp;s) == -1 || (s.st_mode &amp; S_IFMT) != S_IFDIR)
+- 		return NULL;	
+- 
+  	if (!haswild(pattern, quote)) {
+  		char *name = str(&quot;%s%s&quot;, prefix, pattern);
+  		if (lstat(name, &amp;s) == -1)
+--- 50,55 ----
+***************
+*** 67,74 ****
+  
+  	assert(gcisblocked());
+  
+! 	dirp = opendir(dirname);
+! 	if (dirp == NULL)
+  		return NULL;	
+  	for (list = NULL, prevp = &amp;list; (dp = readdir(dirp)) != NULL;)
+  		if (match(dp-&gt;d_name, pattern, quote) &amp;&amp; (!ishiddenfile(dp-&gt;d_name) || *pattern == '.')) {
+--- 59,66 ----
+  
+  	assert(gcisblocked());
+  
+! 	/* opendir succeeds on regular files on some systems, so the stat() call is necessary (sigh) */
+! 	if (stat(dirname, &amp;s) == -1 || (s.st_mode &amp; S_IFMT) != S_IFDIR || (dirp = opendir(dirname)) == NULL)
+  		return NULL;	
+  	for (list = NULL, prevp = &amp;list; (dp = readdir(dirp)) != NULL;)
+  		if (match(dp-&gt;d_name, pattern, quote) &amp;&amp; (!ishiddenfile(dp-&gt;d_name) || *pattern == '.')) {
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00768" href="msg00768.html">Re: es bug</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+<li><strong><a name="00750" href="msg00750.html">es bug</a></strong>
+<ul><li><em>From:</em> tromey@busco.lanl.gov (Tom Tromey)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00770.html">Re: is this my mistake or someone elses?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00772.html">Re: path should be in noexport, and a .esrc tip</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00768.html">Re: es bug</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00751.html">Re: es bug</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00771"><strong>Date</strong></a></li>
+<li><a href="threads.html#00771"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

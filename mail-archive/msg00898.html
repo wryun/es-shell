@@ -1,0 +1,113 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: esdump dumps ...... core! -->
+<!--X-From-R13: Ebera Rnlgba <pfqnlgbaNjbbqynja.hpuvpntb.rqh> -->
+<!--X-Date: Mon, 24 Jun 1996 14:58:54 &#45;0400 -->
+<!--X-Message-Id: 199604241606.LAA25941@midway.uchicago.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>esdump dumps ...... core!</title>
+<link rev="made" href="mailto:csdayton@woodlawn.uchicago.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00897.html">Date Prev</a>][<a href="msg00899.html">Date Next</a>][<a href="msg00903.html">Thread Prev</a>][<a href="msg00901.html">Thread Next</a>][<a href="maillist.html#00898">Date Index</a>][<a href="threads.html#00898">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>esdump dumps ...... core!</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: esdump dumps ...... core!</li>
+<li><em>From</em>: Soren Dayton &lt;<a href="mailto:csdayton%40woodlawn.uchicago.edu">csdayton@woodlawn.uchicago.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 24 Apr 1996 12:07:07 -0400</li>
+<li><em>Reply-to</em>: <a href="mailto:csdayton%40midway.uchicago.edu">csdayton@midway.uchicago.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>#0  0x32cb in get (dict=0x0, name=0x1020 &quot;\023&quot;) at dict.c:106
+106             unsigned long n = strhash(name), mask = dict-&gt;size - 1;
+(gdb) back
+#0  0x32cb in get (dict=0x0, name=0x1020 &quot;\023&quot;) at dict.c:106
+#1  0x1020 in ?? ()
+(gdb) quit
+
+
+this is a backtrace from gdb.
+
+these are the relevant sections of the config.h
+
+#ifdef __FreeBSD__
+#ifndef DEVFD
+#define DEVFD                   1
+#endif  
+#ifndef USE_SIGACTION
+#define USE_SIGACTION           1
+#endif  
+#ifndef INITIAL_PATH
+#define INITIAL_PATH           &quot;/usr/local/bin&quot;, &quot;/usr/bin&quot;,&quot;/bin&quot;,&quot;&quot;
+#endif
+#ifndef GETGROUPS_USES_GID_T
+#define GETGROUPS_USES_GID_T    1
+#endif
+#endif
+
+
+anyone have any suggestions?  I have not really looked at it yt (btw,
+this is only with readline)
+
+Soren
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00901" href="msg00901.html">Re: esdump dumps ...... core!</a></strong>
+<ul><li><em>From:</em> faried nawaz &lt;nawaz921@cs.uidaho.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00897.html">ping</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00899.html">sources</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00903.html">Re: ping</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00901.html">Re: esdump dumps ...... core!</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00898"><strong>Date</strong></a></li>
+<li><a href="threads.html#00898"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

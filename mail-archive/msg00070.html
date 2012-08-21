@@ -1,0 +1,118 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es %dup -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Fri, 16 Oct 1992 16:06:23 &#45;0400 -->
+<!--X-Message-Id: 9210162006.AA09622@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es %dup</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00069.html">Date Prev</a>][<a href="msg00071.html">Date Next</a>][<a href="msg00069.html">Thread Prev</a>][<a href="msg00071.html">Thread Next</a>][<a href="maillist.html#00070">Date Index</a>][<a href="threads.html#00070">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es %dup</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: es %dup</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Fri, 16 Oct 1992 16:06:08 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;From es-owner@hawkwind.utcs.toronto.edu Fri Oct 16 12:08:58 1992
+Received: from milton.u.washington.edu by carson.u.washington.edu
+	(5.65/UW-NDC Revision: 2.22 ) id AA07251; Fri, 16 Oct 92 12:08:40 -0700
+Received: from mx1.cac.washington.edu by milton.u.washington.edu
+	(5.65/UW-NDC Revision: 2.22 ) id AA28420; Fri, 16 Oct 92 12:08:35 -0700
+Received: from hawkwind.utcs.utoronto.ca by mx1.cac.washington.edu
+	(5.65/UW-NDC Revision: 2.27 ) id AA26859; Fri, 16 Oct 92 12:08:33 -0700
+Received: from groucho.cs.psu.edu ([130.203.2.10]) by hawkwind.utcs.toronto.edu with SMTP id &lt;2772&gt;; Fri, 16 Oct 1992 15:08:11 -0400
+Received: from localhost by groucho.cs.psu.edu with SMTP id &lt;2613&gt;; Fri, 16 Oct 1992 15:07:33 -0400
+To: Paul Haahr &lt;haahr@mv.us.adobe.com&gt;
+Cc: es@hawkwind.utcs.toronto.edu
+Subject: Re: es %dup 
+In-Reply-To: Your message of &quot;Fri, 16 Oct 92 14:28:36 EDT.&quot;
+             &lt;<a href="msg00067.html">9210161828.AA25790@utopia.mv.us.adobe.com</a>&gt; 
+Date: 	Fri, 16 Oct 1992 15:07:10 -0400
+From: Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;
+Message-Id: &lt;<a href="msg00068.html">92Oct16.150733edt.2613@groucho.cs.psu.edu</a>&gt;
+Status: R
+|   I also think
+| that most shells are not very good at dealing with file descriptors.
+| For instance, if you had a way to ask for an unused descriptor, you
+| wouldn't have to worry about colliding with ones that are already in
+| use.  In other words, if you are going to muck with descriptors,
+| functionality like that of tcl or perl is prefereable to that of sh.
+| Es could easily provide that functionality.  That would make it
+| better than ksh for dealing with coroutines.
+
+The case in question involves re-defining unit 0, which isn't something
+for which you could substitute re-defining any arbitrary unused descriptor.
+I start with unit 0 open on a streams pipe, and need to have the tty open
+on 0 before executing interactive commands.
+
+I have to admit I don't know how perl and tcl would deal with this issue,
+so I'm unable to picture exactly what kind of functionality you mean.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00071" href="msg00071.html">Re: es %dup</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00069.html">Re: es %dup</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00071.html">Re: es %dup</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00069.html">Re: es %dup</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00071.html">Re: es %dup</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00070"><strong>Date</strong></a></li>
+<li><a href="threads.html#00070"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

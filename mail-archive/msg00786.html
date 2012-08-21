@@ -1,0 +1,114 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: extensions to settor variables? -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 30 Nov 1994 13:10:45 &#45;0500 -->
+<!--X-Message-Id: 199411301810.NAA05636@netcom4.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199411301729.MAA28405@penfold.cc.gatech.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: extensions to settor variables?</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00785.html">Date Prev</a>][<a href="msg00787.html">Date Next</a>][<a href="msg00784.html">Thread Prev</a>][<a href="msg00785.html">Thread Next</a>][<a href="maillist.html#00786">Date Index</a>][<a href="threads.html#00786">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: extensions to settor variables?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a> (Arnold Robbins)</li>
+<li><em>Subject</em>: Re: extensions to settor variables?</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 30 Nov 1994 13:10:32 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00782.html">199411301729.MAA28405@penfold.cc.gatech.edu</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00782.html">199411301729.MAA28405@penfold.cc.gatech.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Arnold Robbins writes:
+&gt; I may have mentioned this before on this list.  Ksh-93 takes settor
+&gt; variables two steps further.  You can supply functions that are called
+&gt; when a variable is a) set, b) referenced, and c) unset.  They are called
+&gt; discipline functions in ksh.  The syntax is a bit strange and not worth
+&gt; going through here, but is there interest (on Paul's part in particular)
+&gt; in seeing something like this in es?
+
+Harald took care of (c) unsetting, but I'll say something on (b)
+referencing, or what I'll call getter functions.
+
+There's a bit of a circularity/bootstrapping problem with doing this in
+es, since get-foo is a variable as much as foo is, so to get the value
+of get-foo one would need to use get-get-foo, and so on.  That's not to
+say that some little hack to do the check without a reference when
+you're looking up a getter function couldn't be put in place, but it
+makes the language a little less clean.
+
+There is no such problem with setter functions, because set-foo only has
+to be referenced and not set when setting foo.
+
+By the way, I'm spending the bulk of my time these days working in (and
+on) a language (Dylan, if you're curious), where all slot (aka instance
+variable, aka member) access goes through getter and setter functions.
+My biases say this is a good thing, but I'm not sure it's the right
+thing for es.  At least now.
+
+Perhaps it's worth hacking up and trying out for a while.
+
+Paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00782" href="msg00782.html">extensions to settor variables?</a></strong>
+<ul><li><em>From:</em> arnold@cc.gatech.edu (Arnold Robbins)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00785.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00787.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00784.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00785.html">Re: extensions to settor variables?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00786"><strong>Date</strong></a></li>
+<li><a href="threads.html#00786"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

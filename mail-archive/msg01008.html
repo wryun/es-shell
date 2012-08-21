@@ -1,0 +1,171 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: a few scripts... -->
+<!--X-From-R13: "pyrzrafT" <vab&#45;jnvgvatNtzk.arg> -->
+<!--X-Date: Thu, 8 Jun 2000 00:47:19 &#45;0400 -->
+<!--X-Message-Id: 20000606072223.A736@spotteswoode.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>a few scripts...</title>
+<link rev="made" href="mailto:ino-waiting@gmx.net">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01007.html">Date Prev</a>][<a href="msg01009.html">Date Next</a>][<a href="msg01005.html">Thread Prev</a>][<a href="msg01009.html">Thread Next</a>][<a href="maillist.html#01008">Date Index</a>][<a href="threads.html#01008">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>a few scripts...</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: a few scripts...</li>
+<li><em>From</em>: &quot;clemensF&quot; &lt;<a href="mailto:ino-waiting%40gmx.net">ino-waiting@gmx.net</a>&gt;</li>
+<li><em>Date</em>: Tue, 6 Jun 2000 01:22:23 -0400</li>
+<li><em>Organization</em>: private</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>hi folks.
+
+i collected scripts for my private amusement.  i did them myself, no
+copyright issues.  there may even be rc-scripts in my collection, because i
+linked a static copy of rc(1) including integer x, : and + integer
+operators to provide for a fast little scripter.
+
+1. i use mutt(1) as mua and needed a quick mail-aliases lookup for the
+   &quot;external-query&quot; command.  the program is configured in .muttrc like so:
+   &quot;set query_command=&quot;/l/bin/grepmalias '%s'&quot;, and has to answer with an
+   arbitrary number of rows consisting of &quot;email-address &lt;tab&gt; full-name
+   &lt;tab&gt; comments&quot;:
+
+#!/bin/es
+# grepmalias, greps into mail aliases ino: Fri-02.06.00-03:53
+# does still not work on:
+
+fn aline l {
+	name=(); address=()
+	for (ll=$l) {
+		n = &lt;={~~ $ll \&lt;*\&gt;}
+		!~ $#n 0 &amp;&amp; address = ( $address $n )
+		~ $#n 0 &amp;&amp; {
+			if {~ $ll *@*} {
+				address = ( $address $ll )
+			} {
+				name = ( $name $ll )
+			}
+		}
+	}
+	return ( $address \t $name )
+}
+
+alis = `` \n {pgrep -i $1 ~/mail/.mail_aliases}
+
+echo found $#alis matches
+
+while {!~ $#alis 0} {
+	line = &lt;={%split $^ifs $alis(1)}
+	line = $line(3 ...)
+	alis = $alis(2 ...)
+	outl = &lt;={aline $line}
+	echo $outl
+}
+
+2. saldo is a script called whenever my ppp dialup line terminates.  it is
+   called in /etc/ppp/ppp.linkdown with:  &quot; !bg /l/bin/saldo&quot;.
+
+#!/bin/rc
+# /usr/local/bin/saldo, Mon Feb 21 01:33:48 CET 2000, -ino:
+# switched from sh() to rc() 29.02.2000-Tue-07:23 -ino:
+# hier gez wiaklich loos.
+# the raw connection time should be converted to minutes and logged according
+# to time of day multiplied by the three appropriate rates (5/4/3 to be on the
+# save/expensive side), and the charge for connecting (6feng).
+# die ganze scheisssseee lehrt mir, dass sowohl expr() als auch sed() sich mit
+# dem kuerzestmoeglichen match aus der affaere ziehen wollen!
+# ..und ueber die order of evaluation weiss ich auch nix.
+# kommen die '//' zeilen im log.connect von timing probs in pppctl?
+# ..sei's wie's is:  nach sleep gips no probs no mo'
+# -*- NB:  rechnen (+ addieren,x multen,: diven), geht nur mit mod. rc() -*-
+# -*- NB:  in &quot;/etc/ppp/ppp.conf werden die connex mit &quot;rename &lt;isp&gt;&quot; benannt.
+# begin config section
+# tarife in hundertstel feng, bitte, und incl. mehrwert
+billig=250
+mittel=330
+teuer=722
+tarif-tubfish930 = $teuer
+tarif-inottub = $teuer
+tarif-tubfish933 = $teuer
+tarif-germcity = $mittel
+tarif-germany = $teuer
+tarif-germtranscity = $mittel
+tarif-germtrans = $teuer
+tarif-freenet = $billig
+tarif-LuebeckerNachrichten = $teuer
+tarif-talkline = $teuer
+# end config section, give sleep a chance
+sleep 2
+sex=`{/usr/sbin/pppctl -ppp 3000 show modem | /usr/bin/grep 'time:'}
+isp=`{/usr/sbin/pppctl -ppp 3000 show modem | /usr/bin/grep 'Name:'}
+isp=$isp(2)
+{{~ $#(tarif-^$isp) 0} &amp;&amp; tarif=$teuer} || tarif=$(tarif-^$isp)
+n=$sex(3)
+n1=`{x $n $tarif}
+n1=`{: $n1 6000}
+# n1=`{+ $n1 6} die einwahlgebuehr entfaellt ab april 2000!
+n=`{: $n 60}
+sex=`{/bin/date +%a-%d.%m.%y-%H:%M}
+&gt;&gt; /var/log/saldo.connect \
+echo '    | ' $sex '|' $isp '|' $n min '*' $tarif '|' $n1
+&gt; /dev/speaker echo C
+
+-- 
+clemens
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01007.html">Re: my recent request for help</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01009.html">plan9 building?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01005.html">Re: my recent request for help</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01009.html">plan9 building?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01008"><strong>Date</strong></a></li>
+<li><a href="threads.html#01008"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

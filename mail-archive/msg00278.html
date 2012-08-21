@@ -1,0 +1,107 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: use of sugar -->
+<!--X-From-R13: neabyqNpp.tngrpu.rqh (Oeabyq Dboovaf) -->
+<!--X-Date: Fri, 2 Apr 1993 10:56:15 &#45;0500 -->
+<!--X-Message-Id: 9304021555.AA03576@penfold.cc.gatech.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>use of sugar</title>
+<link rev="made" href="mailto:arnold@cc.gatech.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00277.html">Date Prev</a>][<a href="msg00279.html">Date Next</a>][<a href="msg00275.html">Thread Prev</a>][<a href="msg00279.html">Thread Next</a>][<a href="maillist.html#00278">Date Index</a>][<a href="threads.html#00278">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>use of sugar</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: use of sugar</li>
+<li><em>From</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a> (Arnold Robbins)</li>
+<li><em>Date</em>: Fri, 2 Apr 1993 10:55:56 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Some folks have said, just put in the function and don't waste sugar. I
+can sympathize, and am even willing to do without &lt;&gt;&gt; for rw+append. I do
+want to point out that &lt;&gt; &quot;isn't just for sh compatibility anymore&quot;. It is
+now part of the posix sh spec, and you're going to start seeing it on
+your commercial unix systems from now on.
+
+I was 1/2 serious when i said, &quot;maybe it was never used because it was
+never in the shell.&quot; The old &quot;if all you have is a hammer everything looks
+like a nail.&quot;
+
+I long ago worked on a unix-style system that defined 3 standard inputs,
+3 standard outputs, and I think even 3 standard errors, and the shell had
+a fairly elegant syntax for building non-linear pipelines.  Only VERY recently
+is that even possible in unix with things like
+
+	diff &lt;{pipe1} &lt;{pipe2}
+
+and that's a bit of a hack.  In the aforementioned system, if diff was called
+with no arguemnts, it just read stdin1 and stdin2.
+
+The point is that Unix (and even Plan 9) has unnecessarily limited the
+expressiveness and power of the tools by restricting itself to only one
+stdin and stdout - even if today we had a shell for elegantly building
+non-linear pipelines, NONE of the utilities could take advantage of it!
+
+The same thing with &lt;&gt;. Since you couldn't do it, no-one did it and now
+no-one feels it's necessary.  (Yeah, I know, someone's going to say, &quot;it must
+really not have been necessary since no syntax was provided&quot;.)
+
+Pardon the soap-boxing.
+
+Arnold
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00277.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00279.html">Re:  use of sugar</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00275.html">replacing &lt;&gt;{}</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00279.html">Re:  use of sugar</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00278"><strong>Date</strong></a></li>
+<li><a href="threads.html#00278"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

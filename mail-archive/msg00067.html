@@ -1,0 +1,131 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es %dup -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Fri, 16 Oct 1992 14:29:09 &#45;0400 -->
+<!--X-Message-Id: 9210161828.AA25790@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es %dup</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00066.html">Date Prev</a>][<a href="msg00068.html">Date Next</a>][<a href="msg00066.html">Thread Prev</a>][<a href="msg00068.html">Thread Next</a>][<a href="maillist.html#00067">Date Index</a>][<a href="threads.html#00067">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es %dup</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a></li>
+<li><em>Subject</em>: Re: es %dup</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 16 Oct 1992 14:28:36 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>first off, Donn's right about prim-io.c's incorrect use of mvfd where we meant
+cpfd in prim-io.c:redir(), and we'll fix that in the next version.
+
+second, on the combination of exec {} and %dup:  this raises hard issues.
+Byron and i just talked about it, and neither of has thought about that
+case before, at least in enough depth to figure out what should happen
+in the ideal shell.  (on a side note, es and rc seem to behave the same
+way as most other shells---that is, what happens depends on which file
+descriptor you pick.)
+
+my current feeling is that if a %dup is executed with a file descriptor
+that es is using (for example, the history file or the script es is running),
+es should move the file descriptor it's using around to clear it out for
+the user.  it seems to me that one never want to dup the history file
+and hand it as input to some program, especially since there is no way
+other than trial and error to get at it.
+
+anyhow, i think we will be able to implement those semantics, so expect
+them in 0.7.  here's a question though, what should this do?
+
+	echo ls &gt; foo
+	echo 'exec {&lt;foo}' | es
+
+here's what is does in a couple of cases
+
+;; echo ls &gt; foo
+;; echo 'exec &lt;foo' | rc
+CHANGES         es.h            glom.c          makefile        parse.y         prim.h          stdenv.h        tree.c          y.output
+closure.c       eval.c          heredoc.c       match.c         parse.y-        print.c         str.c           trip.es
+config.h        except.c        initial.es      mkfile          parse.y-old     print.h         syntax.c        util.c
+conv.c          foo             input.c         mkinitial       prim-ctl.c      proc.c          syntax.h        var.c
+dict.c          gc.c            input.h         mksignal        prim-etc.c      signal.c        term.c          vec.c
+doc             gc.h            list.c          obj.next        prim-io.c       split.c         todo            version.c
+errors          glob.c          main.c          open.c          prim.c          status.c        token.c         which.c
+;; echo 'exec &lt;foo' | sh
+CHANGES         es.h            glom.c          makefile        parse.y         prim.h          stdenv.h        tree.c          y.output
+closure.c       eval.c          heredoc.c       match.c         parse.y-        print.c         str.c           trip.es
+config.h        except.c        initial.es      mkfile          parse.y-old     print.h         syntax.c        util.c
+conv.c          foo             input.c         mkinitial       prim-ctl.c      proc.c          syntax.h        var.c
+dict.c          gc.c            input.h         mksignal        prim-etc.c      signal.c        term.c          vec.c
+doc             gc.h            list.c          obj.next        prim-io.c       split.c         todo            version.c
+errors          glob.c          main.c          open.c          prim.c          status.c        token.c         which.c
+;; echo 'exec &lt;foo' | csh
+exec: Too few arguments.
+;; 
+
+now it seems to me like this is wrong:  that is, in these examples, stdin (fd 0)
+is owned by the shell and it shouldn't be touched by the user.
+
+comments, anyone?
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00068" href="msg00068.html">Re: es %dup</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00066.html">es %dup</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00068.html">Re: es %dup</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00066.html">es %dup</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00068.html">Re: es %dup</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00067"><strong>Date</strong></a></li>
+<li><a href="threads.html#00067"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

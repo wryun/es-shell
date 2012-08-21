@@ -1,0 +1,147 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Rant about job control (Was: A thought about some things in es.) -->
+<!--X-From-R13: "Xrerzl Tvgmuneqvatr" <wrerzlNfhrqr.fj.bm.nh> -->
+<!--X-Date: Thu, 11 Jul 1996 01:41:52 &#45;0400 -->
+<!--X-Message-Id: 9607111541.ZM6689@suede.sw.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199607110026.SAA26245@mary&#45;ann.cs.wisc.edu -->
+<!--X-Reference: krisna@cs.wisc.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Rant about job control (Was: A thought about some things in es.)</title>
+<link rev="made" href="mailto:jeremy@suede.sw.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00916.html">Date Prev</a>][<a href="msg00918.html">Date Next</a>][<a href="msg00915.html">Thread Prev</a>][<a href="msg00916.html">Thread Next</a>][<a href="maillist.html#00917">Date Index</a>][<a href="threads.html#00917">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Rant about job control (Was: A thought about some things in es.)</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Krishna Kunchithapadam &lt;<a href="mailto:krisna%40cs.wisc.edu">krisna@cs.wisc.edu</a>&gt;,	<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Rant about job control (Was: A thought about some things in es.)</li>
+<li><em>From</em>: &quot;Jeremy Fitzhardinge&quot; &lt;<a href="mailto:jeremy%40suede.sw.oz.au">jeremy@suede.sw.oz.au</a>&gt;</li>
+<li><em>Date</em>: Thu, 11 Jul 1996 16:41:28 -0400</li>
+<li><em>In-reply-to</em>: Krishna Kunchithapadam &lt;krisna@cs.wisc.edu&gt;        &quot;Re: A thought about some things in es.&quot; (Jul 10,  8:26pm)</li>
+<li><em>References</em>: &lt;<a href="msg00913.html">199607110026.SAA26245@mary-ann.cs.wisc.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>On Jul 10,  8:26pm, Krishna Kunchithapadam wrote:
+&gt; But why would anyone be _more_ happy that a kernel does not
+&gt; provide any support for job-control?  Does not providing job-
+&gt; control make the kernel design any cleaner (in a manner visible
+&gt; to programmers and/or users)?  Faster?  Or is it something else
+&gt; altogether?
+
+Oh, YES, I'd love to completely lose job control.
+
+We do a product for checkpoint/restart of processes and process groups
+(Hibernator, now on SGI's Irix 6.2, whahoo).  We can cope with lots of
+things:  mmap, threads, pipes, files, restore pids, etc, but there's
+just no way of making a restored interactive program work sensibly with
+job control after restart.
+
+Well, there's lots of ways, but there's no way of working out which one
+to use automatically, since it depends on what your shell is, and what
+you're doing.  We ended up having to add a -j option to restart to say
+&quot;this is an interactive program and I'm using job control&quot;, and that's
+just a compromise between working well and forcing the user to know
+much more than they wanted to about sessions/process groups/tty
+drivers/etc, etc.
+
+Job control is a mess in both conception and implementation.
+
+Even worse is when you compare the subtly different mechanisms around:
+BSD, SYSV, POSIX, and random vendor extentions.  And *then* you get the
+amalgam systems which want to please everyone, so you get things like
+&quot;posix semantics until you use a BSD call, or use BSD libraries, unless
+you use...&quot;.
+
+And just look at the goo job control introduces:
+- new tty drivers
+- SIGTSTP, SIGTTIN, SIGTTOU
+- new process group semantics
+- sessions (or semantically overloaded process groups)
+- a mass of new session and process group system calls
+- rewrites of all shells and interactive programs wanting to use them
+
+The last one is the killer.  The introduce a whole pile of stuff to get
+some facilities of marginal value.  That would have been vaguely
+acceptible if it had been transparent to user apps, but no, you need to
+change all *those* too.  And its almost impossible to do portably,
+because everyone does it differently, or has different bugs in their
+&quot;standard&quot; implementations.  It's really hard to think of a worse
+way to multiplex terminals.
+
+The implication of all this is that job control is worse than Irix's
+horrific threads/memory sharing &quot;model&quot; (which we can mostly cope
+with), which is a truly astounding thought.  At least you can mostly
+ignore sproc if you're not using it.
+
+&gt; I use job-control all the time, even though I am on a windowing
+&gt; system.  Very often, it is much more convenient for me (in terms
+&gt; of keystrokes and response time) to suspend an editor, do a
+&gt; &quot;make&quot;, and jump back to the editor, all in the same window.
+
+Plan 9 window systems typically pop up new windows instantly,
+so there's no speed advantage to not doing so.  Something like
+&quot;screen&quot; is a reasonable alternative for Unix hosts which
+are too burdened with X to do real work.
+
+	J
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00913" href="msg00913.html">Re: A thought about some things in es.</a></strong>
+<ul><li><em>From:</em> Krishna Kunchithapadam &lt;krisna@cs.wisc.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00916.html">Re: A thought about some things in es.</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00918.html">Re: A thought about some things in es.</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00915.html">Re: A thought about some things in es.</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00916.html">Re: A thought about some things in es.</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00917"><strong>Date</strong></a></li>
+<li><a href="threads.html#00917"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

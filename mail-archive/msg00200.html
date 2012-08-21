@@ -1,0 +1,116 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: for -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Mon, 8 Feb 1993 16:35:47 &#45;0500 -->
+<!--X-Message-Id: 9302082134.AA19899@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: for</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00199.html">Date Prev</a>][<a href="msg00201.html">Date Next</a>][<a href="msg00201.html">Thread Prev</a>][<a href="msg00202.html">Thread Next</a>][<a href="maillist.html#00200">Date Index</a>][<a href="threads.html#00200">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: for</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:rsalz%40osf.org">rsalz@osf.org</a></li>
+<li><em>Subject</em>: Re: for</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 8 Feb 1993 16:34:04 -0500</li>
+<li><em>Cc</em>: &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; &gt;but also add some precedence rules and have the grammar reconfigure itself  
+
+&gt; &gt;on the fly.  i'd call it close to state of the art, as well as a substantial  
+
+&gt; &gt;redesign for our current yacc-driven interpreter.
+
+&gt; Look through the comp.compilers archives.  This kind of thing was done
+&gt; in the 1970's.  Current beliefs are, apparently, that this is Not Good.
+
+for a general purpose programming language, i would agree.  but go look at the  
+parse.y from es (or even the much cleaner one from rc) and tell me if you think  
+that it's obviously the right thing.  the syntax rewriting we're doing right  
+now happens in a very ad hoc way, and i think it would be a Good Thing if we  
+could generalize it.
+
+&gt; If you're gonna provide macros, then use macros for everything, throw
+&gt; away all of the current syntax (rather, rewrite it in terms of the macros)
+&gt; and use a single notation throughout.
+
+that's what we'd do.  i'd hoped i'd conveyed that in me previous message.
+
+&gt; Do macros really provide that much more than functions + es's quoting
+&gt; rules + eval?  I dunno.
+
+i dunno either, but this whole discussion got restarted by someone suggesting  
+moving for outside of the grammar, and you really do that (and keep the same  
+semantics) without adding some syntactic extension mechanism.  if you want to  
+call that mechanism macros, fine.
+
+&gt; I do know that I'd hate to see defmacro and , and
+&gt; ` without good reason.
+
+well, there are more attractice schemes (npi) than defmacro, and the  
+extend-syntax one i've been referring to is real nice.
+
+please note, this is all very speculative.  until we either find or invent a  
+system that allows us to replace all our current rewriting without seriously  
+affecting the user-visible syntax, we're not going to add anything.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00199.html">Re: for</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00201.html">Re: for</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00201.html">Re: for</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00202.html">anonymous lists</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00200"><strong>Date</strong></a></li>
+<li><a href="threads.html#00200"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

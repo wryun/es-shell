@@ -1,0 +1,158 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Features to remove: return and noreturn -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Mon, 31 May 1993 23:44:57 &#45;0400 -->
+<!--X-Message-Id: 9305312157.AA11350@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Features to remove: return and noreturn</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00599.html">Date Prev</a>][<a href="msg00601.html">Date Next</a>][<a href="msg00607.html">Thread Prev</a>][<a href="msg00605.html">Thread Next</a>][<a href="maillist.html#00600">Date Index</a>][<a href="threads.html#00600">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Features to remove: return and noreturn</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Features to remove: return and noreturn</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Mon, 31 May 1993 17:57:02 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I understand that $&amp;noreturn is a relatively new feature of the es
+landscape, so I'll probably attract a lot of flamage when I propose to
+get rid of it.  Not only that, I'll propose to throw away return as
+well!  Don't get out the old flame throwers yet -- please listen me
+out -- the reason is this: There is already a perfectly decent catch
+and throw mechanism in place; and the return mechanism is nothing but
+using throw with the extra magic that functions capture thrown
+returns.  Unless of course they are being run with $&amp;noreturn.  I find
+this kludgy and confusing.
+
+It can also cause subtle errors:
+
+fn foo { ...
+        # deep inside multiple nesting levels:
+        return $bar
+        ....}
+
+Now the writer finds that e can more efficiently, or perhaps more
+elegantly, express the foo function by using an auxiliary function:
+
+fn foo { let (aux = @ args { .... }) blah blah; $aux $stuff; ...}
+
+However, in copying a healthy chunk of code into the body of aux, e
+includes the return statement of the original foo, breaking the code.
+
+Now, of course I do not intend to force the user to deal with raw
+catch and throw.  All we need is a convenience function.  I'd call it
+tag, but other suggestions are welcome:
+
+fn tag name cmd {
+  catch @ e x {if {~ $e $name} {result $x} {throw $e $x}} \
+        {local (fn $name x {throw $name $x}) $cmd}}
+
+Now, local and non-local returns are handled in exactly the same way,
+namely by tagging the function and by using the tag to return values.
+For example, here is a function that given three arguments will return
+one of them if the two other are equal:
+
+fn f a b c {
+  tag retvrn {let (g = @ a b c {if {~ $a $b} {retvrn $c}})
+                {$g $a $b $c; $g $b $c $a; $g $c $a $b; result}}}
+
+At the minimal price of declaring the return tag, the user is given
+the freedom of not having to worry about the number of levels his
+returns have to ascend.  Besides, I would assume that many present
+uses of return could easily be replaced with result, perhaps after
+some rewriting:
+
+fn foo {                              fn foo {
+  if {test} {return bar}    --&gt;      if {test} {result bar} {
+  blah blah ...}		          blah blah ...}}
+
+
+At the risk of distracting you away from the above suggestion, let me
+take another look at my suggestion to get rid of `do', which met with
+such resistance.  If people want do for its convenience I guess it
+stays in, but there is still no reason why we could not throw away at
+least the many-variable do and let the simple case be syntactic sugar:
+
+Rewrite    do (x = x1 x2 ...) {cmd}   as    %do @ x {cmd} x1 x2 ...
+
+and define the hook function %do along the lines of
+
+fn %do fun list {let (x=) {while {x list=$list; !~ $#x 0} {$fun $x}}}
+
+assuming, of course, the multiple assignment feature that Paul has
+promised us.
+
+
+Summary of suggestions:
+
+1.  Functions should no longer catch `return' exceptions.
+2.  Hence $&amp;noreturn is obsolete.
+3.  Provide the `tag' function, written in es, for convenience.
+4.  Throw away multiple-list `do' and re-implement the single list
+    `do' as syntactic sugar.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00605" href="msg00605.html">Re: Features to remove: return and noreturn</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00599.html">free carets</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00601.html">Re:  free carets</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00607.html">Re:  free carets</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00605.html">Re: Features to remove: return and noreturn</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00600"><strong>Date</strong></a></li>
+<li><a href="threads.html#00600"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

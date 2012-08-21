@@ -1,0 +1,120 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: lexically scoped functions -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Sat, 24 Apr 1993 21:07:13 &#45;0400 -->
+<!--X-Message-Id: 9304250106.AA16519@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>lexically scoped functions</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00319.html">Date Prev</a>][<a href="msg00321.html">Date Next</a>][<a href="msg00323.html">Thread Prev</a>][<a href="msg00321.html">Thread Next</a>][<a href="maillist.html#00320">Date Index</a>][<a href="threads.html#00320">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>lexically scoped functions</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: lexically scoped functions</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Sat, 24 Apr 1993 22:06:47 -0400</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Currently in es, you can not define a function that has lexical scope.  For
+example, if you do
+
+   let (fn foo { echo foo }) { foo }
+
+you get a complaint that the function is undefined (assuming there is no
+more global definition of foo). 
+
+I asked Paul about this, and he says that at one time he had convinced
+himself that lexical scoping for function names was not desirable, but no
+longer remembers why now.
+
+Here's why I think it's a useful feature.  Dynamically scoped functions may
+have the undesirable property of shadowing functions where you don't want
+them to.  Consider the following example:
+
+
+      fn frobme  with some args { echo frobme $with $some $args }
+
+      fn doit { 
+         frobme harder $*
+      }
+
+      local (fn frobme { rm $* }) {
+         frobme /tmp/*~
+         doit to me baby
+      }
+
+
+Now, if internals of `doit' are unknown, you may unwittingly redefine some
+function it relies upon to do something utterly different from your local
+version.  In the above example, the consequences could be disasterous.
+
+Certainly dynamic scope for functions is useful at times, but I think
+lexical scope should also be allowed (it is certainly useful enough to
+appear in most lexically scoped languages I know of).
+
+What do people think?
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00321" href="msg00321.html">Re: lexically scoped functions</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00319.html">Re:  Yow!</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00321.html">Re: lexically scoped functions</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00323.html">Re:  Yow!</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00321.html">Re: lexically scoped functions</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00320"><strong>Date</strong></a></li>
+<li><a href="threads.html#00320"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

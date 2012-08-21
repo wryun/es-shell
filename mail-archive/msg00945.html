@@ -1,0 +1,113 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Rare mishandling of interrupt signal -->
+<!--X-From-R13: Zbera Xnzrf Dvggyr <evggyrNpbzz.zbg.pbz> -->
+<!--X-Date: Thu, 27 Mar 1997 04:27:22 &#45;0500 -->
+<!--X-Message-Id: 9703270710.AA03449@supra.rsch.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Rare mishandling of interrupt signal</title>
+<link rev="made" href="mailto:rittle@comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00944.html">Date Prev</a>][<a href="msg00946.html">Date Next</a>][<a href="msg00948.html">Thread Prev</a>][<a href="msg00953.html">Thread Next</a>][<a href="maillist.html#00945">Date Index</a>][<a href="threads.html#00945">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Rare mishandling of interrupt signal</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Rare mishandling of interrupt signal</li>
+<li><em>From</em>: Loren James Rittle &lt;<a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a>&gt;</li>
+<li><em>Date</em>: Thu, 27 Mar 1997 02:10:27 -0500</li>
+<li><em>Reply-to</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>While testing es interrupt handling under SYS V machines, I found a
+reproducible method to crash es-0.9-alpha1 on all platforms I have
+access to when they are linked against either plain readline-2.0 or
+the readline from the latest bash.
+
+Has anyone else ever noticed this?
+
+; while {sleep 1} {sleep 1}
+[enter tty interrupt char]
+; [enter tty interrupt char at prompt]
+&lt;es dies&gt;
+
+Or as run under the debugger:
+
+; gdb es
+(gdb) handle SIGINT noprint pass nostop
+(gdb) run
+; while {sleep 1} {sleep 1}
+[enter tty interrupt char]
+; [enter tty interrupt char at prompt]
+Program exited normally.
+(gdb)
+
+After the while loop is broken with the tty interrupt char, the shell
+seems to act properly until a tty interrupt char is entered while at
+the shell prompt.  E.g. as long as the tty interrupt char is entered
+while a program is running under the shell, the es shell properly
+kills interactive programs started under it and returns to the prompt.
+
+Here be dragons!  I wish I knew UNIX signal handling well enough to
+even think about looking into this problem. :-)
+
+FYI, es-0.84 (sunos 4.1.4, gcc 2.x, readline-2.0) appears to have this
+problem as well.
+
+Regards,
+Loren
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00944.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00946.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00948.html">Re: Bug or feature?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00953.html">A `new' es available</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00945"><strong>Date</strong></a></li>
+<li><a href="threads.html#00945"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: compiling es -->
+<!--X-From-R13: Xbua (_Kbh_ uvqr, gurl frrx.) [npxva <wbuaNpvivy.fh.bm.nh> -->
+<!--X-Date: Fri, 2 Oct 1992 17:08:41 &#45;0400 -->
+<!--X-Message-Id: 199210030655.13972.es.baban@civil.su.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>compiling es</title>
+<link rev="made" href="mailto:john@civil.su.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00001.html">Date Prev</a>][<a href="msg00003.html">Date Next</a>][<a href="msg00019.html">Thread Prev</a>][<a href="msg00020.html">Thread Next</a>][<a href="maillist.html#00002">Date Index</a>][<a href="threads.html#00002">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>compiling es</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: The es Mailing List &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: compiling es</li>
+<li><em>From</em>: John (_You_ hide, they seek.) Mackin &lt;<a href="mailto:john%40civil.su.oz.au">john@civil.su.oz.au</a>&gt;</li>
+<li><em>Date</em>: Fri, 2 Oct 1992 16:55:08 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Well, one of the nice things about rc is that it wasn't written in
+ANSI C (`So What?'), but rather in real C with prototypes, so that
+if you ran it through that neat unproto device it would just compile.
+
+I'd really like to vote in favour of es coming around to that point of
+view.  `Use gcc' is not, in general, a satisfactory solution.  gcc was
+designed and built with CISC machines in mind.  Sure, if you are compiling
+for a 68000 or a VAX, it might well produce better code than any compiler
+besides Ken's new one -- but who _is_, these days?  These are RISC days,
+and while I am not prepared to flatly state that it is not possible for
+gcc to generate good code for (say) the MIPS architecture, in theory
+that is, the fact of the existing matter is that MIPS's compiler
+produces _much_ better code than gcc (as well as being more reliable
+and generally better-behaved).
+
+Please?
+
+That said, luckily Noel had compiled gcc on my machine already (_I_
+wasn't gonna do it!) so I was able to compile es; further comments
+pertain to gcc 2.2.2 running on Ultrix 4.2.
+
+I needed to re-order #include's in two places in order to stop
+warnings about NULL being redefined -- some include files are
+smarter than others.  In es.h, &lt;string.h&gt; must come before
+&lt;stddef.h&gt;; and in which.c, &lt;sys/param.h&gt; must come before &quot;es.h&quot;.
+
+OK,
+John.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00020" href="msg00020.html">C versus gcc</a></strong>
+<ul><li><em>From:</em> noel@cain.anu.edu.au</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00001.html">Initial reaction</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00003.html">bottomhandler == NULL</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00019.html">Re: Initial reaction</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00020.html">C versus gcc</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00002"><strong>Date</strong></a></li>
+<li><a href="threads.html#00002"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

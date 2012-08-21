@@ -1,0 +1,168 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es dumps core, aargh... -->
+<!--X-From-R13: Vnenyq Vnapur&#45;Ayfra <unapurNzngu.agah.ab> -->
+<!--X-Date: Sat, 10 Oct 1998 19:03:29 &#45;0400 -->
+<!--X-Message-Id: 19981010211744M.hanche@math.ntnu.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es dumps core, aargh...</title>
+<link rev="made" href="mailto:hanche@math.ntnu.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00985.html">Date Prev</a>][<a href="msg00987.html">Date Next</a>][<a href="msg00984.html">Thread Prev</a>][<a href="msg00987.html">Thread Next</a>][<a href="maillist.html#00988">Date Index</a>][<a href="threads.html#00988">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es dumps core, aargh...</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es dumps core, aargh...</li>
+<li><em>From</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Date</em>: Sat, 10 Oct 1998 15:17:44 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>All of a sudden, es has started dumping core on me when I run a
+certain script on a DEC alpha (OSF 1 V3.2).
+
+A session with gdb reveals that this happens when es tries to run an
+external program:  While building the environment for the program, it
+enters an infinite call loop
+
+Cconv -&gt; enclose -&gt; enclose -&gt; fmtprint -&gt; printfmt -&gt; Lconv -&gt; getstr
+-&gt; str -&gt; strv -&gt; printfmt -&gt; Cconv ...
+
+until it runs out of stack space.  Below is a piece of the traceback,
+showing where the loop starts.  I tried tracing the var variable in
+the str procedure, at frame 33567, in the hopes of finding a cycle in
+the data structure or something, but I could not go very far before
+gdb failed (apparently, gdb could not figure out what a struct Term
+was, so it would not print its fields for me...)
+
+Anyway, here is the offending script, after I peeled away all kinds of
+irrelevancies (I even removed the external program run, replacing it
+by a simple echo of the offending variable):
+
+#!/store/bin/es -p
+fn v {echo + $* &gt;[1=2] ; $*}
+fn arch arch host wrap args {
+    arches=$arches $arch
+    if ({~ $wrap () || ~ $wrap -} {wrap=@{$*}})
+    do.$arch=$wrap $arch $host $args}
+arches=
+v arch foo bar - yow
+v @{echo $(do.$1)} foo
+echo We never get here.
+
+and here is the output:
+
+; es -p ./test
++ arch foo bar - yow
++ @ * {echo $(do.^$1)} foo
+segmentation violation
+
+After I got this far in my debugging effort, I found that I could
+avoid the problem by declaring
+fn just-do-it {$*}
+and replacing the @{*} inside the arch function by just-do-it.
+
+Problem solved for now, but I wonder...  Has anybody else seen this?
+
+- Harald
+
+PS.  Excerpt from the stack trace:
+
+#22548 0x120010b88 in Cconv (f=0x11fff60f0) at conv.c:223
+#22549 0x12002a284 in printfmt (format=0x11fff60f0, fmt=0x14000b0e0 &quot;%C&quot;)
+    at print.c:252
+#22550 0x12002d890 in strv (fmt=0x14000b0e0 &quot;%C&quot;, args={
+      __base = 0x11fff61c0 &quot;&#xE0;&#xB0;&quot;, __offset = 8}) at str.c:35
+#22551 0x12002d9c0 in str (fmt=0x14000b0e0 &quot;%C&quot;) at str.c:47
+#22552 0x12002f838 in getstr (term=0x14005c6d0) at term.c:67
+#22553 0x12000fe4c in Lconv (f=0x11fff6480) at conv.c:17
+#22554 0x12002a284 in printfmt (format=0x11fff6480, fmt=0x140007c60 &quot;%S=%#L%s&quot;)
+    at print.c:252
+#22555 0x12002a400 in fmtprint (format=0x11fff6480, fmt=0x140007c60 &quot;%S=%#L%s&quot;)
+    at print.c:280
+#22556 0x120010a38 in enclose (f=0x11fff6480, binding=0x14005eb88, 
+    sep=0x140007b00 &quot;;&quot;) at conv.c:182
+#22557 0x120010a08 in enclose (f=0x11fff6480, binding=0x14005e2f0, 
+    sep=0x140007a68 &quot;&quot;) at conv.c:181
+#22558 0x120010b88 in Cconv (f=0x11fff6480) at conv.c:223
+#22559 0x12002a284 in printfmt (format=0x11fff6480, fmt=0x14000b0e0 &quot;%C&quot;)
+    at print.c:252
+#22560 0x12002d890 in strv (fmt=0x14000b0e0 &quot;%C&quot;, args={
+      __base = 0x11fff6550 &quot;&#xE0;&#xB0;&quot;, __offset = 8}) at str.c:35
+#22561 0x12002d9c0 in str (fmt=0x14000b0e0 &quot;%C&quot;) at str.c:47
+#22562 0x12002f838 in getstr (term=0x14005c6d0) at term.c:67
+#22563 0x120011b50 in Wconv (f=0x11fff6670) at conv.c:364
+#22564 0x12002a284 in printfmt (format=0x11fff6670, fmt=0x14000ba90 &quot;%F=%W&quot;)
+    at print.c:252
+#22565 0x12002d890 in strv (fmt=0x14000ba90 &quot;%F=%W&quot;, args={
+      __base = 0x11fff6740 &quot;\220&#xBA;&quot;, __offset = 8}) at str.c:35
+#22566 0x12002d9c0 in str (fmt=0x14000ba90 &quot;%F=%W&quot;) at str.c:47
+#22567 0x120033b5c in mkenv0 (dummy=0x0, key=0x14005a648 &quot;do.linuxelf&quot;, 
+    value=0x14005a660) at var.c:276
+#22568 0x120012dc4 in dictforall (dp=0x140063ac8, proc=0x120033a18 &lt;mkenv0&gt;, 
+    arg=0x0) at dict.c:199
+#22569 0x120033d78 in mkenv () at var.c:293
+#22570 0x1200131e8 in forkexec (file=0x14006ec30 &quot;/store/gnu/bin/mkdir&quot;, 
+    list=0x14006e760, inchild=FALSE) at eval.c:30
+#22571 0x120015c3c in eval (list0=0x14006e760, binding0=0x0, flags=0)
+    at eval.c:452
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00987" href="msg00987.html">Re: es dumps core, aargh...</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@math.ntnu.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00985.html">Re: Two bugs in es 0.9 alpha-2</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00987.html">Re: es dumps core, aargh...</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00984.html">Re: Ported es to GNU Win32 + HPUX10.01</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00987.html">Re: es dumps core, aargh...</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00988"><strong>Date</strong></a></li>
+<li><a href="threads.html#00988"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

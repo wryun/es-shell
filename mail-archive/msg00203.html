@@ -1,0 +1,133 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: anonymous lists -->
+<!--X-From-R13: Oyna Ingfba <nynaNbyqc.nfgeb.jvfp.rqh> -->
+<!--X-Date: Fri, 12 Feb 1993 13:46:08 &#45;0500 -->
+<!--X-Message-Id: 9302121845.AA11203@oldp.astro.wisc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: anonymous lists</title>
+<link rev="made" href="mailto:alan@oldp.astro.wisc.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00202.html">Date Prev</a>][<a href="msg00204.html">Date Next</a>][<a href="msg00202.html">Thread Prev</a>][<a href="msg00204.html">Thread Next</a>][<a href="maillist.html#00203">Date Index</a>][<a href="threads.html#00203">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: anonymous lists</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: anonymous lists</li>
+<li><em>From</em>: Alan Watson &lt;<a href="mailto:alan%40oldp.astro.wisc.edu">alan@oldp.astro.wisc.edu</a>&gt;</li>
+<li><em>Date</em>: Fri, 12 Feb 1993 13:45:55 -0500</li>
+<li><em>Cc</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Sorry -- I slipped back into rc notation which obviously caused some
+confusion.
+
+(a) I don't want heirarchical lists.  (Well, I do but that wasn't what
+I was suggesting.)
+
+(b) Why are the following different?  Why is a list treated one way on
+the RHS of assignment, but instantly flattened in any other context?
+
+	; bar = (a b c d); foo bar
+	; foo (a b c d)
+
+(c) Consequently, I want the following to behave differently:
+
+	; foo a b c d			# pass 4 args: a, b, c, and d
+	; foo (a b c d)			# pass 1 arg: the list (a b c d)
+
+I only want lists to be flattened if I EXPLICITY ask for it with $.  I
+think this is both more useful and more consistent.
+
+(d) I'm not sure if I want:
+
+	; foo $(a b c d)
+
+to be the same as:
+
+	; foo 'a' 'b' 'c' 'd'
+
+or:
+
+	; foo 'a b c d'
+
+Perhaps we could introduce another flattening operator, so that $(a b
+c d) returns 'a' 'b' 'c' 'd', and %(a b c d) returns 'a b c d'.
+Notice the change in terminology: $ is now a flattening operator
+rather than an evaluation operator, as it is the only way to flatten a
+list (other than picking the elements out one by one).
+
+(e) More radically, I would like to see `{...} return a list, for
+example:
+
+	`{ echo a; echo b ; echo c ; echo d }
+
+returns (a b c d), and needs to be explicitly flattened:
+
+	; echo 	`{ echo a; echo b ; echo c ; echo d }
+	('a' 'b' 'c' 'd')
+	; echo $`{ echo a; echo b ; echo c ; echo d }
+	a b c d
+
+In summary, I'm suggesting making the primary data-type of es the list
+rather than the string.  No list should be flattened unless EXPLICITY
+preceded by $ (or %).
+
+Am I making myself any clearer, or is this still not making any sense?
+
+Alan.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00202.html">anonymous lists</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00204.html">Re: anonymous lists</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00202.html">anonymous lists</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00204.html">Re: anonymous lists</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00203"><strong>Date</strong></a></li>
+<li><a href="threads.html#00203"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

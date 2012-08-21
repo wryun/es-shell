@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: change between es&#45;0.84 and es&#45;0.9&#45;alpha1 -->
+<!--X-From-R13: Bnhy Vnnue <unnueNargpbz.pbz> -->
+<!--X-Date: Fri, 5 Jan 1996 06:32:26 &#45;0500 -->
+<!--X-Message-Id: cMXgLv4IJF@zaphod.long.harlequin.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9601042311.AA16523@supra.comm.mot.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: change between es-0.84 and es-0.9-alpha1</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00892.html">Date Prev</a>][<a href="msg00894.html">Date Next</a>][<a href="msg00892.html">Thread Prev</a>][<a href="msg00894.html">Thread Next</a>][<a href="maillist.html#00893">Date Index</a>][<a href="threads.html#00893">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: change between es-0.84 and es-0.9-alpha1</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a> (Loren James Rittle)</li>
+<li><em>Subject</em>: Re: change between es-0.84 and es-0.9-alpha1</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40netcom.com">haahr@netcom.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 5 Jan 1996 06:30:39 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:rittle%40il02dns1.comm.mot.com">rittle@il02dns1.comm.mot.com</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00892.html">9601042311.AA16523@supra.comm.mot.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00892.html">9601042311.AA16523@supra.comm.mot.com</a>&gt;</li>
+<li><em>Reply-to</em>: Paul Haahr &lt;<a href="mailto:haahr%40netcom.com">haahr@netcom.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Loren James Rittle wrote
+&gt; ; p = a || echo y
+&gt; only prints 'y' under es-0.9-alpha1.
+&gt; 
+&gt; ; {p = a; true} || echo y
+&gt; is the workaround that works the same under both versions of es.
+
+Yes.
+
+&gt; CHANGES from es-0.9-alpha1 said that 'pp = &lt;={p = a}' now assigns a to
+&gt; pp rather than 0.  I suspect that this change is what is affecting my
+&gt; usage.
+
+Yes.  It's that old ``0 is true, anything else is false'' rule of Unix
+shells.  It's (imho) the wrong thing, but it's a fact of life.
+
+&gt; Of course, I didn't use something as simple as 'p = a || echo y' in es
+&gt; programs.  I did use:
+&gt; {~ $a test1 &amp;&amp;
+&gt;   p = big_nasty_expression} ||
+&gt; {~ $a test2 &amp;&amp;
+&gt;   p = another_big_nasty_expression} ||
+&gt; {~ $a test3 &amp;&amp;
+&gt;   p = another_big_nasty_expression} ||
+&gt; {default_big_nasty_expression}
+&gt; 
+&gt; as an idiom for a C-style switch statement.  Yes, I now know this thinking
+&gt; was stylistically bad, thus I converted to a lisp-style 'if' form:
+&gt; if {~ $a test1} \
+&gt;      {p = big_nasty_expression} \
+&gt;    {~ $a test2} \
+&gt;      {p = another_big_nasty_expression} \
+&gt;    {~ $a test3} \
+&gt;      {p = another_big_nasty_expression} \
+&gt;   {default_big_nasty_expression}
+
+Seems much cleaner to me.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00892" href="msg00892.html">change between es-0.84 and es-0.9-alpha1</a></strong>
+<ul><li><em>From:</em> rittle@comm.mot.com (Loren James Rittle)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00892.html">change between es-0.84 and es-0.9-alpha1</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00894.html">Parser bug?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00892.html">change between es-0.84 and es-0.9-alpha1</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00894.html">Parser bug?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00893"><strong>Date</strong></a></li>
+<li><a href="threads.html#00893"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

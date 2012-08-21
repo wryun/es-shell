@@ -1,0 +1,118 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Problems with ~ and ~~ -->
+<!--X-From-R13: Bnhy Vnnue <unnueNwvirgrpu.pbz> -->
+<!--X-Date: Thu, 14 Dec 2000 16:35:44 &#45;0500 -->
+<!--X-Message-Id: cWejMO5YR6@iadd.jivetech.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 20001214202053.A675@bree.net -->
+<!--X-Reference: 20001214212036I.hanche@math.ntnu.no -->
+<!--X-Reference: 20001214220633.A1355@bree.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Problems with ~ and ~~</title>
+<link rev="made" href="mailto:haahr@jivetech.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01043.html">Date Prev</a>][<a href="msg01045.html">Date Next</a>][<a href="msg01041.html">Thread Prev</a>][<a href="msg01050.html">Thread Next</a>][<a href="maillist.html#01044">Date Index</a>][<a href="threads.html#01044">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Problems with ~ and ~~</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: DaVinci &lt;<a href="mailto:bombadil%40wanadoo.es">bombadil@wanadoo.es</a>&gt;</li>
+<li><em>Subject</em>: Re: Problems with ~ and ~~</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a>&gt;</li>
+<li><em>Date</em>: Thu, 14 Dec 2000 16:31:30 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01041.html">20001214220633.A1355@bree.net</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg01036.html">20001214202053.A675@bree.net</a>&gt;	&lt;<a href="msg01040.html">20001214212036I.hanche@math.ntnu.no</a>&gt;	&lt;<a href="msg01041.html">20001214220633.A1355@bree.net</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; &gt; ; a = &lt;={~~ (foo.c foo.x bar.h) *.[ch]}
+&gt; &gt; ; echo $a
+&gt; &gt; foo c bar h
+&gt; &gt; 
+&gt; &gt; You only assigned a command to a.  The &lt;= in front evaluates the
+&gt; &gt; command and substitutes the result in the command line.
+&gt; 
+&gt;  I don't understand well &lt;= role. Man page says that it is for return
+&gt;  value of external command. Doesn't make more sense using `{} or eval
+&gt;  in this case?...
+
+` and &lt;= are very similar.  Both evaluate their arguments, and both fill
+in values that can be used as command arguments.  ` gets its values from
+the output of its argument.  &lt;= gets its values from the ``return value''
+of its argument;  the return value of an external command is its exit
+status (or exit signal), but the return value of an internal function can
+be anything.
+
+It's a fairly messy distinction.  I'm very unhappy with it.  If Unix
+didn't have exit statuses, it would probably never have happened.
+Instead, I generalized exit statuses in a way they shouldn't have been.
+
+Making ~~ print its results would probably have been the right thing;  it
+doesn't, if I remember correctly, because I was concerned about quoting
+issues and separators and things like that.  If it had just printed its
+results, you could have used ` and it would be easier to see results.
+
+--p
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01036" href="msg01036.html">Problems with ~ and ~~</a></strong>
+<ul><li><em>From:</em> DaVinci &lt;bombadil@wanadoo.es&gt;</li></ul></li>
+<li><strong><a name="01040" href="msg01040.html">Re: Problems with ~ and ~~</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@math.ntnu.no&gt;</li></ul></li>
+<li><strong><a name="01041" href="msg01041.html">Re: Problems with ~ and ~~</a></strong>
+<ul><li><em>From:</em> DaVinci &lt;bombadil@wanadoo.es&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01043.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01045.html">Re: Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01041.html">Re: Problems with ~ and ~~</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01050.html">Re: Problems with ~ and ~~</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01044"><strong>Date</strong></a></li>
+<li><a href="threads.html#01044"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

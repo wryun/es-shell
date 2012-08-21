@@ -1,0 +1,98 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es bug -->
+<!--X-From-R13: Rnivq [p@no <zpanoNanf.anfn.tbi> -->
+<!--X-Date: Thu, 22 Sep 1994 13:25:20 &#45;0400 -->
+<!--X-Message-Id: 199409221725.KAA15962@dinsdale.nas.nasa.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es bug</title>
+<link rev="made" href="mailto:mcnab@nas.nasa.gov">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00752.html">Date Prev</a>][<a href="msg00754.html">Date Next</a>][<a href="msg00751.html">Thread Prev</a>][<a href="msg00754.html">Thread Next</a>][<a href="maillist.html#00753">Date Index</a>][<a href="threads.html#00753">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es bug</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: es bug</li>
+<li><em>From</em>: David McNab &lt;<a href="mailto:mcnab%40nas.nasa.gov">mcnab@nas.nasa.gov</a>&gt;</li>
+<li><em>Date</em>: Thu, 22 Sep 1994 13:25:06 -0400</li>
+<li><em>In-reply-to</em>: Your message of Wed, 21 Sep 1994 15:19:43 -0400 </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Tom (tromey@busco.lanl.gov) wrote:
+|I've noticed that &quot;*/&quot; expands to all file names with &quot;/&quot; appended,
+|instead of just the names of directories.  I think this is a bug --
+|all the other glob code I've used does the right thing (expands to
+|just directories).
+
+I don't think this is a bug.  The suffixes that ls(1) adds
+when -F is turned on -- for example &quot;/&quot; for a directory --
+are not part of the file names, they're just shorthand to
+help one read a directory listing.  Since there is no file
+&quot;*/&quot; in the directory, es(1) doesn't expand the &quot;*&quot;.  Same
+thing happens if you type &quot;echo h*t&quot; and there is no file
+matching &quot;h*t&quot; -- you get &quot;h*t&quot; echoed back.
+
+David McNab
+Parallel Systems Support
+CSC at NAS, NASA/Ames
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00754" href="msg00754.html">Re: es bug</a></strong>
+<ul><li><em>From:</em> tromey@busco.lanl.gov (Tom Tromey)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00752.html">Re: es wildcard expansion problems</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00754.html">Re: es bug</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00751.html">Re: es bug</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00754.html">Re: es bug</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00753"><strong>Date</strong></a></li>
+<li><a href="threads.html#00753"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

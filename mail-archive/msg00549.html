@@ -1,0 +1,113 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Globbing -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Thu, 27 May 1993 02:49:50 &#45;0400 -->
+<!--X-Message-Id: 9305270649.AA05267@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Globbing</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00548.html">Date Prev</a>][<a href="msg00550.html">Date Next</a>][<a href="msg00545.html">Thread Prev</a>][<a href="msg00550.html">Thread Next</a>][<a href="maillist.html#00549">Date Index</a>][<a href="threads.html#00549">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Globbing</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:schwartz%40groucho.cs.psu.edu">schwartz@groucho.cs.psu.edu</a></li>
+<li><em>Subject</em>: Re: Globbing</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Thu, 27 May 1993 02:49:38 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Scott writes
+&gt; Zalman writes:
+&gt; | Maybe not, but writing a program which depends on this should be  
+&gt; | punishable by death. 
+&gt; &quot;noglob considered harmful&quot;, eh?  :-)
+
+yes, because it's not the convention.  an operating system is more
+than a system call interface.  it's a large set of conventions.
+
+my way of thinking says
+	(a) you can change the shell
+but
+	(b) you can't change all the programs it invokes.
+if you don't believe (b), fine.  you're not in unix anymore, which
+is perfectly reasonable, but not what rc and es are doing.
+
+&gt; | (In case the list hasn't gathered yet, I take a very dim view of
+&gt; | communicating dynamic data from one program to another via environment
+&gt; | variables. Too many failure mechanisms otherwise. Env vars should be
+&gt; | used for more or less long-lived parameters that the user knows about.)
+&gt; Granted there are problems, but similarly argv is subject to so much
+&gt; processing that only very limited things can be communicated that way.
+
+i disagree very strongly.  many programs accept as argv elements programs
+in a turing complete language.  what's very limited?  i'll pass several
+hundred line awk scripts that way.  the es unparsing mechanism takes
+real advantage of the fact that argv is a literal once you get out of
+the shell.
+
+the simplified quoting rules in rc and es help a lot.  i don't worry
+about any characters between ' and ' except for ', which is simple to
+handle.
+
+i second Zalman's comments about shells that don't understand this
+convention and stale argv values.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00548.html">Re:  umask</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00550.html">Re: Globbing</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00545.html">Re: Globbing</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00550.html">Re: Globbing</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00549"><strong>Date</strong></a></li>
+<li><a href="threads.html#00549"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

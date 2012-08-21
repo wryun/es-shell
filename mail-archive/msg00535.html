@@ -1,0 +1,116 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  Globbing -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 26 May 1993 18:28:02 &#45;0400 -->
+<!--X-Message-Id: 9305262228.AA20620@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  Globbing</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00534.html">Date Prev</a>][<a href="msg00536.html">Date Next</a>][<a href="msg00534.html">Thread Prev</a>][<a href="msg00536.html">Thread Next</a>][<a href="maillist.html#00535">Date Index</a>][<a href="threads.html#00535">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  Globbing</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a></li>
+<li><em>Subject</em>: Re:  Globbing</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 26 May 1993 18:28:50 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Is this for `cultural compatibility' or do people want it this way?
+
+i want it this way:
+	+ it matches my instict
+	+ it's rc (and sh) compatible
+	+ it's easy to understand and explain
+
+&gt; I
+&gt; don't like it, because it leads to disturbing error messages when I
+&gt; say rm *.^(aux dvi log toc idx ind) for example.
+
+use rm -f.
+
+&gt; But since we will
+&gt; probably never agree on what should happen, maybe I might suggest
+&gt; adding a hook?  Yes, another feeping creature.  The hook might be
+&gt; called with any unmatched wildcard containing names as arguments, and
+&gt; whatever it returns will be substituted in its place.  Then the
+&gt; current behaviour can be gotten by assigning $&amp;result to this hook; I
+&gt; might wish to assign {result ()} to it; and others might want the hook
+&gt; to throw an error (even I might want that behaviour locally, in some
+&gt; functions) or send mail to their Congress Creature.
+
+opinions?  i'd prefer not to add this
+	%glob-failure
+hook, but i guess i could live with it.  (and it would appease those
+former csh-users who want *: no match.  somebody wanted ignoreeof,
+maybe somebody wants nomatch?  i don't know.  sheesh, we never should
+have advertised customizability.)
+
+i have no strong feelings on the matter.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00539" href="msg00539.html">Re: Globbing</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+<li><strong><a name="00536" href="msg00536.html">Re:  Globbing</a></strong>
+<ul><li><em>From:</em> friedman@gnu.ai.mit.edu (Noah Friedman)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00534.html">Globbing</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00536.html">Re:  Globbing</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00534.html">Globbing</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00536.html">Re:  Globbing</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00535"><strong>Date</strong></a></li>
+<li><a href="threads.html#00535"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

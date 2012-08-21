@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: everyone's least favorite creatures -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 11 May 1993 13:05:14 &#45;0400 -->
+<!--X-Message-Id: 9305111705.AA06846@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: everyone's least favorite creatures</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00364.html">Date Prev</a>][<a href="msg00366.html">Date Next</a>][<a href="msg00366.html">Thread Prev</a>][<a href="msg00368.html">Thread Next</a>][<a href="maillist.html#00365">Date Index</a>][<a href="threads.html#00365">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: everyone's least favorite creatures</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: everyone's least favorite creatures</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 11 May 1993 13:05:58 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; &gt; i'll admit up front that i'll probably reply to a good number of
+&gt; &gt; good suggestions with ``NO! we NEED that!''
+
+&gt; `Needing' something isn't a reason to put it in initial.es if it can
+&gt; by synthesized from primitive stuff.  It's a reason to have a custom
+&gt; environment full of things you need.
+
+that's not what i meant by needing.  what i meant, and i can see how
+it might have been hard to figure this out from what i said, was that
+there are a number of features which appear to be completely gratuitous,
+but which we needed to implement some of the required functionality of
+the shell.
+
+for example, %fsplit is not really necessary as a shell feature.
+on the other hand, we needed it in order to do path/PATH and
+cdpath/CDPATH aliasing at ``user'' level.  does that make it
+a creeping feature?
+
+now, what is ``required functionality of the shell''?  that's somewhat
+vague, but, personally, i consider it equivalent shell-like functionality
+to rc.  that is, all of the redirections, pipes, backgrounding, ||, &amp;&amp;,
+path searching, the environment, etc.  in cases, es has gone further
+towards matching traditional shells than rc (e.g., ~user expansion) and in
+cases it does less (e.g., exec {&gt;foo} instead of exec &gt; foo).
+
+&gt; You might consider the dumping (or encapsulation) of the environment
+&gt; to be a meta-need for satisfying needs.
+
+i think that Noah's package stuff (and to a lesser extent, the autoloading
+hack in the sample .esrc) go a long way to addressing this need.
+
+on a related note, we keep hearing suggestions about dynamic loading of
+c code, but are hesitant to make it an official part of es, for a number
+of reasons, including
+
+	+ portability across unix versions is hard (though not impossible).
+	  note that this is the reason that Ousterhout gives for tcl not
+	  supporting dynamic linking, and, imho, tcl is a much better
+	  candidate for dynamic linking than es, at least in its current
+	  implementation.
+
+	+ the details of writing es primitives (i.e., c code that works
+	  with es) is constantly changing.  there will be a rev in the
+	  next major release to support lexical scoping of function names,
+	  for example.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00364.html">Re: %and, %or, and the return value of assignment</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00366.html">everyone's least favorite creatures</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00366.html">everyone's least favorite creatures</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00368.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00365"><strong>Date</strong></a></li>
+<li><a href="threads.html#00365"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

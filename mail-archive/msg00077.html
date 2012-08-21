@@ -1,0 +1,172 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: redirection &#38; fork -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Fri, 16 Oct 1992 21:11:46 &#45;0400 -->
+<!--X-Message-Id: 9210170111.AA05168@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>redirection &amp; fork</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00076.html">Date Prev</a>][<a href="msg00078.html">Date Next</a>][<a href="msg00082.html">Thread Prev</a>][<a href="msg00078.html">Thread Next</a>][<a href="maillist.html#00077">Date Index</a>][<a href="threads.html#00077">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>redirection &amp; fork</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: redirection &amp; fork</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Fri, 16 Oct 1992 21:11:37 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>If there's work being done on redirection, here's another request.
+I think I know how far I'll get with this one, but anyway:
+
+This causes a fork:
+	echo ouch &gt;[1=2]
+
+As it does in rc, but modern Bourne shells manage this one without forking.
+That makes for a pretty substantial performance boost.  I was just looking
+at an es-based application, checking the number of processes created, and
+this echo thing is about half of it.  I just want to write to a particular
+unit, so something like &quot;echo -u2&quot; would be excellent, actually easier to
+use since that way &quot;2&quot; can be a variable without needing to &quot;eval&quot; everything.
+And of course when &quot;read&quot; comes along it could use the same syntax.
+
+Sample patch demonstrating &quot;echo -u&quot; follows.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+-------------------------------
+*** prim-etc.c.dist	Thu Oct  1 00:25:38 1992
+--- prim-etc.c	Fri Oct 16 17:59:51 1992
+***************
+*** 21,36 ****
+  
+  PRIM(echo) {
+  	const char *eol = &quot;\n&quot;;
+  	if (list != NULL) {
+  		const char *opt;
+  		assert(list-&gt;term != NULL);
+  		opt = list-&gt;term-&gt;str;
+! 		if (opt != NULL &amp;&amp; opt[0] == '-' &amp;&amp; opt[2] == '\0') {
+  			switch (opt[1]) {
+  			case 'n':
+  				eol = &quot;&quot;;
+  				list = list-&gt;next;
+  				break;
+  			case '-':
+  				list = list-&gt;next;
+  				break;
+--- 21,54 ----
+  
+  PRIM(echo) {
+  	const char *eol = &quot;\n&quot;;
++ 	int unit = 1;
+  	if (list != NULL) {
+  		const char *opt;
+  		assert(list-&gt;term != NULL);
+  		opt = list-&gt;term-&gt;str;
+! 		if (opt != NULL &amp;&amp; opt[0] == '-' /*&amp;&amp; opt[2] == '\0'*/) {
+  			switch (opt[1]) {
+  			case 'n':
+  				eol = &quot;&quot;;
+  				list = list-&gt;next;
+  				break;
++ 			case 'u':
++ 				unit = atoi (&amp;opt[2]);
++ 				if (unit == 0) {
++ 					int i;
++ 					for (i=2; opt[i]; ++i)
++ 						if (opt[i] != '0') break;
++ 					if ((i == 2) || opt[i]) {
++ 						/*eprint(&quot;invalid descriptor \&quot;%s\&quot;\n&quot;, &amp;opt[2]);
++ 						return false;*/
++ 						unit = 1;
++ 					}
++ 					else {
++ 						list = list-&gt;next;
++ 					}
++ 				}
++ 				else list = list-&gt;next;
++ 				break;
+  			case '-':
+  				list = list-&gt;next;
+  				break;
+***************
+*** 39,45 ****
+  			}
+  		}
+  	}
+! 	print(&quot;%L%s&quot;, list, &quot; &quot;, eol);
+  	return true;
+  }
+  
+--- 57,63 ----
+  			}
+  		}
+  	}
+! 	fprint(unit, &quot;%L%s&quot;, list, &quot; &quot;, eol);
+  	return true;
+  }
+  
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00078" href="msg00078.html">Re: redirection &amp; fork</a></strong>
+<ul><li><em>From:</em> Chris Siebenmann &lt;cks&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00076.html">Re: whatis</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00078.html">Re: redirection &amp; fork</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00082.html">Re: whatis</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00078.html">Re: redirection &amp; fork</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00077"><strong>Date</strong></a></li>
+<li><a href="threads.html#00077"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

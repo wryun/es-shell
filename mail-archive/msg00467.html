@@ -1,0 +1,117 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: ile, once again -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Fri, 21 May 1993 17:25:52 &#45;0400 -->
+<!--X-Message-Id: 9305212123.AA16162@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>ile, once again</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00466.html">Date Prev</a>][<a href="msg00468.html">Date Next</a>][<a href="msg00465.html">Thread Prev</a>][<a href="msg00468.html">Thread Next</a>][<a href="maillist.html#00467">Date Index</a>][<a href="threads.html#00467">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>ile, once again</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: ile, once again</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Fri, 21 May 1993 17:23:23 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I just discovered a nasty bug in ile, after having wasted HOURS trying
+to figure out why I seemed to be getting inconsistent results and all
+sorts of parsing errors in es.  I thought I was being really dense,
+but not this time.  If you run es within ile within an xterm and paste
+things into the xterm, some data may be lost.  For example, after
+pasting the text
+
+echo '
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 2
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 3
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 4
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 5
+'
+
+the xterm looked like this:
+
+; echo '
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 2
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 3
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 4
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 5
+'
+
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 2
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 3
+abcdefghijklmnopqrstuvxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 4
+
+; 
+
+Aaargh.  Back to the hunt for the right solution to the input editing
+problem.  And no, I don't see X cutting and pasting as a substitute
+for command line editing.  I like to keep my hands on the keyboard
+most of the time...
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00468" href="msg00468.html">ile, once again</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00466.html">Re: ^Z kills my shell</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00468.html">ile, once again</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00465.html">Re:  ^Z kills my shell</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00468.html">ile, once again</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00467"><strong>Date</strong></a></li>
+<li><a href="threads.html#00467"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

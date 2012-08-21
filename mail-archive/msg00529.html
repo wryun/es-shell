@@ -1,0 +1,129 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: heirarchical lists, one more time. -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Wed, 26 May 1993 15:25:23 &#45;0400 -->
+<!--X-Message-Id: 9305261925.AA00414@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305261825.AA17370@earth.osf.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: heirarchical lists, one more time.</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00528.html">Date Prev</a>][<a href="msg00530.html">Date Next</a>][<a href="msg00525.html">Thread Prev</a>][<a href="msg00517.html">Thread Next</a>][<a href="maillist.html#00529">Date Index</a>][<a href="threads.html#00529">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: heirarchical lists, one more time.</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:rsalz%40osf.org">rsalz@osf.org</a></li>
+<li><em>Subject</em>: Re: heirarchical lists, one more time.</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Wed, 26 May 1993 16:24:58 -0400</li>
+<li><em>Cc</em>: <a href="mailto:rc%40hawkwind.utcs.toronto.edu">rc@hawkwind.utcs.toronto.edu</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;9305261825.AA17370@earth.osf.org&gt; (rsalz@osf.org)</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;&gt; You could decide never to improve any program once it's written, I guess,
+&gt;&gt; but I think that would also be an unfortunate choice.
+&gt;
+&gt;Yeah, well
+&gt;    -	That's why you get source
+&gt;    -	That's why you have alpha and beta tests
+&gt;    -	Byron and Paul have been VERY good about announcing UI freeze dates
+
+I could fix the problem for myself, but I don't think distributing Noah's
+Own Version of rc will really help solve the general problem.  Having N
+different flavors of the same shell is as bad as having N different flavors
+of unix.  It has the baggage problem I spoke of. 
+
+Alpha and beta tests don't seem to matter in this case.  It was a
+documented &quot;feature&quot; that no one bothered to fix right the first time.
+Well, I don't think documenting arbitrary limitations in a program is an
+acceptable way of handling the problem.  The GNU utilities could have
+compromised by having fixed buffer and line length limits just like most
+standard unix utilities do only making them larger.  But that would have
+just put off the problem a little longer, and still failed to come through
+for someone's special case.  That is at least one reason why people are
+using abominations like perl: Larry was very careful not to leave stupid
+arbitrary limitations in it.
+
+Of course, one can criticize that GNU programs are consequently larger and
+consume more resources, but I don't think this is a serious concern for rc
+and es because fixing them would consume a negligable amount of resources
+(namely, a couple more cycles and a few more bytes in the environment for a
+pathological case).
+
+I don't see what the UI has to do with fixing a quoting bug in the
+environment that you propagate.  Who actually uses the particular
+implementation of array propagation to any particular advantage?  I thought
+this was supposed to be transparent.
+
+Let's ask the rc/es user community: Do any of you actually *rely* on the ^A
+bug?  Or do you just figure it'll never hit you?  I have enough experience
+to know that it will hit *me* someday, because I abuse shells and find lots
+of bugs all the time.  
+
+I am not suggesting this has to be fixed right this instance with a new
+release tomorrow, but I am reminding everyone that these problems will be
+harder to fix later.  
+
+Since both rc and es are relatively new to the unix world and have
+comparatively small usage (compared with, say, csh), maintaining
+interoperability between them is not too painful.  It seems like the best
+thing to do would be to coordinate a future date at which a version of rc
+and es would both be released simultaneously with this bug fix. 
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00528.html">Re:  word breaks and control-a</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00530.html">Re:  word breaks and control-a</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00525.html">Re: heirarchical lists, one more time.</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00517.html">hierarchal lists</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00529"><strong>Date</strong></a></li>
+<li><a href="threads.html#00529"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

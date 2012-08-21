@@ -1,0 +1,133 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: let and for vs. lambda variations -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 8 Jun 1993 13:05:27 &#45;0400 -->
+<!--X-Message-Id: 9306081706.AA21418@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: let and for vs. lambda variations</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00627.html">Date Prev</a>][<a href="msg00629.html">Date Next</a>][<a href="msg00625.html">Thread Prev</a>][<a href="msg00629.html">Thread Next</a>][<a href="maillist.html#00628">Date Index</a>][<a href="threads.html#00628">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: let and for vs. lambda variations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: let and for vs. lambda variations</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 8 Jun 1993 13:06:14 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>i'm wrong.  (and Harald's wrong, but only because he believed part
+of what i wrote.)
+
+you can't do any of this rewriting (let-&gt;lambda, for example) because
+you can write
+
+	let ($var = ...) { ... }
+
+in es, but
+
+	@ $var { ... } ...
+
+is illegal.  (for those who care, the parameter list is restricted to
+quoted or unquoted words only, and is not glommed.)
+
+i don't want to relax this restriction (it makes the grammar ambiguous
+if it is relaxed, that is, if arbitrary words are allowed in parameter
+lists), which i'm going to take as a good reason to keep let and friends.
+
+as for implementing local as a function (modulo whatever syntax it needs),
+i don't think it can be done, because of the interactions between dynamic
+binding, lexical binding, and dynamic variable references (i.e., $$x).
+
+for example, if
+
+	local (var = foo bar) echo $var
+
+is rewritten as
+
+	%local {echo $var} var foo bar
+
+with this definition of 
+
+	fn %local fun var list {
+		let (old=$$var) {
+			unwind-protect {
+				$var = $list
+				$fun
+			} {
+				$var = $old
+			}
+		}
+	}
+
+you get a ``multi-word variable name'' error.  if you change the
+``foo bar'' to a single word, you have different problems.
+
+name space collisions are real problems.  es semantics are a little
+weird here, because you can refer to lexically scoped variables
+with constructs that cannot be fully known at translation time.
+(the infamous $$x or $(`foo) operations.)
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00629" href="msg00629.html">Re: let and for vs. lambda variations</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00627.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00629.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00625.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00629.html">Re: let and for vs. lambda variations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00628"><strong>Date</strong></a></li>
+<li><a href="threads.html#00628"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

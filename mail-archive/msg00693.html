@@ -1,0 +1,191 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Scheme shell (Was: who needs es..?) -->
+<!--X-From-R13: Epbgg Epujnegm <fpujnegmNtebhpub.pfr.cfh.rqh> -->
+<!--X-Date: Sun, 22 Aug 1993 23:21:06 &#45;0400 -->
+<!--X-Message-Id: 93Aug22.231945edt.2620@groucho.cse.psu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9308202036.AA11365@thurio.robots.ox.ac.uk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Scheme shell (Was: who needs es..?)</title>
+<link rev="made" href="mailto:schwartz@groucho.cse.psu.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00692.html">Date Prev</a>][<a href="msg00694.html">Date Next</a>][<a href="msg00692.html">Thread Prev</a>][<a href="msg00694.html">Thread Next</a>][<a href="maillist.html#00693">Date Index</a>][<a href="threads.html#00693">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Scheme shell (Was: who needs es..?)</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:peter%40robots.ox.ac.uk">peter@robots.ox.ac.uk</a></li>
+<li><em>Subject</em>: Re: Scheme shell (Was: who needs es..?)</li>
+<li><em>From</em>: Scott Schwartz &lt;<a href="mailto:schwartz%40groucho.cse.psu.edu">schwartz@groucho.cse.psu.edu</a>&gt;</li>
+<li><em>Date</em>: Sun, 22 Aug 1993 23:20:11 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Fri, 20 Aug 1993 16:36:54 EDT.&quot;             &lt;<a href="msg00692.html">9308202036.AA11365@thurio.robots.ox.ac.uk</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+| Didn't someone post something about the development of a scheme shell on
+| this list?  Has anyone got a progress report on this?
+
+Oh, I probably babled something to that effect at one time.  I know of
+a few other people who've tinkered with that kind of thing, too.  In
+terms of shell syntax, es probably can't be beat, but if you don't
+mind S-expressions, scheme is ok.
+
+Just for fun, here's an ls like thing that I never got around to
+finishing:
+
+#!/bin/scm -f
+;;; $Id: sls,v 1.3 1993/03/06 22:44:32 schwartz Exp $
+
+(define (mode-type mode)
+  (case (logand #o170000 mode)
+    ((#o040000) &quot;d&quot;)
+    ((#o020000) &quot;c&quot;)
+    ((#o060000) &quot;b&quot;)
+    ((#o100000) &quot;-&quot;)
+    ((#o120000) &quot;l&quot;)
+    ((#o140000) &quot;s&quot;)
+    ((#o010000) &quot;p&quot;)
+    (else &quot;?&quot;)
+  )
+)
+
+(define (mode-rwx mode)
+  (string-append
+    (if (zero? (logand #o4 mode)) &quot;-&quot; &quot;r&quot;)
+    (if (zero? (logand #o2 mode)) &quot;-&quot; &quot;w&quot;)
+    (if (zero? (logand #o1 mode)) &quot;-&quot; &quot;x&quot;)
+  )
+)
+
+(define (mode-string mode)
+  (string-append
+    (mode-type mode)
+    (mode-rwx (ash mode -6))
+    (mode-rwx (ash mode -3))
+    (mode-rwx (ash mode -0))
+  )
+)
+ 
+(define (uid-string uid)
+  uid
+)
+
+(define (gid-string gid)
+  gid
+)
+
+(define (date-string date)
+  date
+)
+
+(define (path-string path)
+  path
+)
+
+; (require 'format)
+
+(define (ls-ld path)
+  (let ( (st (unix:stat path)) )
+    ; (format #f &quot;~a ~d~t~a~t~a~t~d~t~d ~a ~%&quot; 
+    (list
+         (mode-string (vector-ref st 2))
+	 (vector-ref st 3)
+	 (uid-string (vector-ref st 4))
+	 (gid-string (vector-ref st 5))
+	 (vector-ref st 7)
+	 (date-string (vector-ref st 9))
+         (path-string path)
+    )
+  )
+)
+
+(define (display-ls lst)
+     (display-list
+         (list-ref lst 0) &quot; &quot;
+         (list-ref lst 1) &quot;\t&quot;
+         (list-ref lst 2) &quot;\t&quot;
+         (list-ref lst 3) &quot;\t&quot;
+         (list-ref lst 4) &quot;\t&quot;
+         (list-ref lst 5) &quot; &quot;
+         (list-ref lst 6) &quot;\n&quot;
+      )
+)
+
+(require 'sort)
+
+(define (ls p)
+    (define (prefix f) (string-append p &quot;/&quot; f))
+    (for-each display-ls
+	(map ls-ld 
+	    (map prefix 
+	        (sort! (map car (unix:directory p)) string&lt;?)
+	    )
+        )
+    )
+)
+
+(if (zero? (length *argv*))
+  (ls &quot;.&quot;)
+  (for-each ls *argv*)
+)
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00692" href="msg00692.html">Scheme shell (Was: who needs es..?)</a></strong>
+<ul><li><em>From:</em> peter@robots.oxford.ac.uk</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00692.html">Scheme shell (Was: who needs es..?)</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00694.html">[no subject]</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00692.html">Scheme shell (Was: who needs es..?)</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00694.html">[no subject]</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00693"><strong>Date</strong></a></li>
+<li><a href="threads.html#00693"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

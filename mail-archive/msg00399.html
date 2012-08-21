@@ -1,0 +1,105 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: read -->
+<!--X-From-R13: fgrirNtrp&#45;rcy.pb.hx (Egrir_Yvyonar) -->
+<!--X-Date: Mon, 17 May 1993 04:19:28 &#45;0400 -->
+<!--X-Message-Id: 9305170820.AA05971@zombie.gec&#45;epl.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: read</title>
+<link rev="made" href="mailto:steve@gec-epl.co.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00398.html">Date Prev</a>][<a href="msg00400.html">Date Next</a>][<a href="msg00395.html">Thread Prev</a>][<a href="msg00400.html">Thread Next</a>][<a href="maillist.html#00399">Date Index</a>][<a href="threads.html#00399">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: read</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: read</li>
+<li><em>From</em>: <a href="mailto:steve%40gec-epl.co.uk">steve@gec-epl.co.uk</a> (Steve_Kilbane)</li>
+<li><em>Date</em>: Mon, 17 May 1993 04:20:11 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; 	+ don't strip the trailing newline
+
+i'd stick to stripping the delimiter. otherwise, you're heading into perl
+territory.
+
+&gt; 	+ let %read take a prompt argument, ala %parse
+&gt; 	+ use readline/editline if appropriate
+
+i guess so. although i'm not a fan of either, the world in general would
+probably want this.
+
+&gt; 	+ don't hardcode the line delimiter as \n
+
+definitely a good idea.
+
+&gt; 	+ not including any such builtin and dropping the idea entirely
+
+well, i dunno. read's been a religious issue with me (and rog) since rc 1.2,
+but that's because it's merely the best example of a more general problem -
+that of getting the status of a backquote command. i can understand the
+desire for a read builtin (one less fork/exec, and it compliments a builtin
+echo), but i'd hate the opportunity of fixing &lt;=+` to go by. $&amp;backquote
+putting status in the first element seems like the best way so far. i'd
+suggest adding an extra arg to $&amp;backquote:
+
+  $&amp;backquote statusvar separators cmd args
+
+but of course that doesn't work with es's scoping rules either :-(.
+
+steve.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00398.html">Re:  Catching both the exit status and the output</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00400.html">^Z signal</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00395.html">Re: Q: emacs inferior es echoing lines -- cause?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00400.html">^Z signal</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00399"><strong>Date</strong></a></li>
+<li><a href="threads.html#00399"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

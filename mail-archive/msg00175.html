@@ -1,0 +1,128 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  es signal catching -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Mon, 21 Dec 1992 18:47:11 &#45;0500 -->
+<!--X-Message-Id: 9212212346.AA10831@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  es signal catching</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00174.html">Date Prev</a>][<a href="msg00176.html">Date Next</a>][<a href="msg00174.html">Thread Prev</a>][<a href="msg00176.html">Thread Next</a>][<a href="maillist.html#00175">Date Index</a>][<a href="threads.html#00175">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  es signal catching</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>, <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: Re:  es signal catching</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Mon, 21 Dec 1992 18:46:51 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>|&gt; It seems to me that I want to be able to &quot;catch&quot; these exceptions in the
+|&gt; doit() loop, but I can't see how to do that.
+
+| the other thing you have to do is add the signals you want to
+| catch to the list $signals.  no promises that it works, but it
+| has been tested a little.  please let me know whether it works.
+
+Well, yes, that part I (sort of) had figured out, and it works as far
+as it goes:
+
+	;; signals = ($signals sigusr1)
+	;; kill -USR1 $pid
+	uncaught exception: signal sigusr1
+	;;
+
+So, since it's not getting any clearer to me how to install a signal handler
+for the main read/eval loop, I added a couple of lines to doit() to see if I
+could add support for rc's &quot;fn sigxxx&quot; convention.  It seems to work, and I
+include the code below.  Still, I would much rather use es as distributed,
+if anyone can clue me in as to how.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+-------------------------------
+	caveat:
+	The following was done in haste, by someone who has virtually no
+	idea how es' memory management works.
+----------------------------------------
+*** input.c.v2	Tue Oct 20 15:59:01 1992
+--- input.c	Mon Dec 21 15:36:16 1992
+***************
+*** 299,304 ****
+--- 299,305 ----
+  		execit = FALSE;
+  
+  	while ((e = pushhandler(&amp;h)) != NULL) {
++ 		List *signalfunc;
+  		if (!interactive) {
+  			popinput();
+  			throw(e);
+***************
+*** 305,310 ****
+--- 306,313 ----
+  		}
+  		if (streq(getstr(e-&gt;term), &quot;error&quot;))
+  			eprint(&quot;%L\n&quot;, e-&gt;next, &quot; &quot;);
++ 		else if (streq(getstr(e-&gt;term), &quot;signal&quot;) &amp;&amp; (signalfunc = varlookup2 (&quot;fn-&quot;, e-&gt;next-&gt;term-&gt;str)))
++ 			eval(mklist(signalfunc-&gt;term, e-&gt;next), NULL, TRUE, exitonfalse);
+  		else if (!issilentsignal(e))
+  			eprint(&quot;uncaught exception: %L\n&quot;, e, &quot; &quot;);
+  	}
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00174.html">Re:  es signal catching</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00176.html">Re:  es signal catching</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00174.html">Re:  es signal catching</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00176.html">Re:  es signal catching</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00175"><strong>Date</strong></a></li>
+<li><a href="threads.html#00175"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

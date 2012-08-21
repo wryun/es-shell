@@ -1,0 +1,112 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Globbing -->
+<!--X-From-R13: Epbgg Epujnegm <fpujnegmNtebhpub.pf.cfh.rqh> -->
+<!--X-Date: Wed, 26 May 1993 23:23:57 &#45;0400 -->
+<!--X-Message-Id: 93May26.232219edt.2591@groucho.cs.psu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305270040.AA04720@cartier.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Globbing</title>
+<link rev="made" href="mailto:schwartz@groucho.cs.psu.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00546.html">Date Prev</a>][<a href="msg00548.html">Date Next</a>][<a href="msg00546.html">Thread Prev</a>][<a href="msg00545.html">Thread Next</a>][<a href="maillist.html#00547">Date Index</a>][<a href="threads.html#00547">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Globbing</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Zalman Stern &lt;<a href="mailto:zstern%40mv.us.adobe.com">zstern@mv.us.adobe.com</a>&gt;</li>
+<li><em>Subject</em>: Re: Globbing</li>
+<li><em>From</em>: Scott Schwartz &lt;<a href="mailto:schwartz%40groucho.cs.psu.edu">schwartz@groucho.cs.psu.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 26 May 1993 23:23:15 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Wed, 26 May 1993 20:40:36 EDT.&quot;             &lt;<a href="msg00544.html">9305270040.AA04720@cartier.mv.us.adobe.com</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Zalman writes:
+| Maybe not, but writing a program which depends on this should be  
+| punishable by death. 
+
+&quot;noglob considered harmful&quot;, eh?  :-)
+
+| (In case the list hasn't gathered yet, I take a very dim view of
+| communicating dynamic data from one program to another via environment
+| variables. Too many failure mechanisms otherwise. Env vars should be
+| used for more or less long-lived parameters that the user knows about.)
+
+Granted there are problems, but similarly argv is subject to so much
+processing that only very limited things can be communicated that way.
+
+| How is your &quot;self-globbing&quot; program going to work when invoked by a  
+| shell that doesn't know to set this environment variable? 
+
+Use argv.
+
+| How is it going to work when exec'ed from another program that was
+| exec'ed from es (and hence has a stale value sitting in the faux argv
+| environment variable)?
+
+Maybe it would notice that argv[0] didn't match the first token of the
+variable.  But more likely, it would probably do something horrible.  :-)
+
+Anyway, as I said, I'm not really lobbying for this, but just tossing
+out ideas to kick around.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00544" href="msg00544.html">Re: Globbing</a></strong>
+<ul><li><em>From:</em> Zalman Stern &lt;zstern@mv.us.adobe.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00546.html">Re: Globbing</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00548.html">Re:  umask</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00546.html">Re: Globbing</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00545.html">Re: Globbing</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00547"><strong>Date</strong></a></li>
+<li><a href="threads.html#00547"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

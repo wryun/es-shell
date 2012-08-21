@@ -1,0 +1,162 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Two bugs in es 0.9 alpha&#45;2 -->
+<!--X-From-R13: Vnenyq Vnapur&#45;Ayfra <unapurNzngu.agah.ab> -->
+<!--X-Date: Mon, 13 Apr 1998 19:34:25 &#45;0400 -->
+<!--X-Message-Id: 19980410184344Q.hanche@math.ntnu.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: m0y46Py&#45;000vYTC@pfirsich.compot.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Two bugs in es 0.9 alpha-2</title>
+<link rev="made" href="mailto:hanche@math.ntnu.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00986.html">Date Prev</a>][<a href="msg00988.html">Date Next</a>][<a href="msg00981.html">Thread Prev</a>][<a href="msg00982.html">Thread Next</a>][<a href="maillist.html#00985">Date Index</a>][<a href="threads.html#00985">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Two bugs in es 0.9 alpha-2</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: Two bugs in es 0.9 alpha-2</li>
+<li><em>From</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Date</em>: Fri, 10 Apr 1998 12:43:44 -0400</li>
+<li><em>In-reply-to</em>: Your message of &quot;Sun, 15 Feb 1998 10:55:46 -0500&quot;	&lt;<a href="msg00981.html">m0y46Py-000vYTC@pfirsich.compot.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00981.html">m0y46Py-000vYTC@pfirsich.compot.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>(The message I am responding to is almost two months old.  This is not
+too untypical of the level of activity on this list.)
+
+- &quot;J. F. Wittenberger&quot; &lt;jerry@pfirsich.compot.com&gt;:
+
+| a) This is a little arguable, but I consider it a bug, because the
+| former version and all shells I know handle it different:
+| 
+| I tried to get the name a script was called by hence I did:
+| 
+| NAME=`{basename $0}
+| 
+| giving me a value of `%backquote' for `$NAME'.  puh.
+
+Um, yes, this happens because %backquote changed from being just plain
+$&amp;backquote to being a function, in which $0 is the name of that
+function.  Since this is documented, sort of, I personally would
+hesitate to call it a bug.  More precisely, the man page states
+
+       If,  as the most common case, a function variable is bound
+       to a lambda, when the function is invoked, the variable $0
+       is bound (dynamically, see below) to the name of the func-
+       tion.
+
+Note that the dynamical nature of this binding is what causes the
+problem.  To see what your snippet of code is really doing, say
+
+; echo {NAME=`{basename $0}}
+{NAME=&lt;={%backquote &lt;={%flatten '' $ifs} {basename $0}}}
+
+and initial.es says
+
+fn %backquote {
+	let ((status output) = &lt;={ $&amp;backquote $* }) {
+		bqstatus = $status
+		result $output
+	}
+}
+
+so by the time $&amp;backquote gets to evaluate {basename $0}, $0 has
+already been dynamically bound to %backquote.
+
+| Workaround:
+| 
+| NAME=$0; NAME=`{basename $NAME} # ugly hack
+
+No need to fork to get this.  You can do it with es builtins:
+
+@{NAME=$*($#*)} &lt;={%fsplit / $0}
+
+or the somewhat more conventional
+
+let(x=&lt;={%fsplit / $0}) NAME=$x($#x)
+
+| b) After running quite a ugly script (I use es or prototyping an
+| application) I do smth like
+| 
+| fn quit  { echo quit; exit 0; }
+| 
+|    ..... {
+|    ...
+|    quit
+|    }
+|   ...
+|   ....
+| 
+| when the quit gets executed I get a segmentation violation.
+
+Uh.  I too have es dying on me occasionally.  But every time the
+problem goes away when I try to isolate it in order to provide a
+meaningful error report.  I would conjecture that this problem falls
+into that same category.  To fix it, I suspect nothing will less than
+a complete, careful review of the source code (preferably by someone
+other than its author) will work.  Or maybe someone can run it under
+purify and see what happens?  (Our purify license just ran out.  If it
+gets renewed, and if I find the time, maybe I'll give it a try
+myself.)
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00981" href="msg00981.html">Two bugs in es 0.9 alpha-2</a></strong>
+<ul><li><em>From:</em> &quot;J. F. Wittenberger&quot; &lt;jerry@pfirsich.compot.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00986.html">Re: Bug in es %read</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00988.html">es dumps core, aargh...</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00981.html">Two bugs in es 0.9 alpha-2</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00982.html">Bug in es %read</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00985"><strong>Date</strong></a></li>
+<li><a href="threads.html#00985"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

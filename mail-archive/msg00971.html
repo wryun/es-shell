@@ -1,0 +1,133 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: 99 bottles of beer on the wall in es -->
+<!--X-From-R13: Xrsserl Dbtref <webtrefNqniebf.pgeba.pbz> -->
+<!--X-Date: Wed, 10 Sep 1997 02:56:47 &#45;0400 -->
+<!--X-Message-Id: 199709100023.UAA28747@davros.ctron -->
+<!--X-Content-Type: multipart/mixed -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>99 bottles of beer on the wall in es</title>
+<link rev="made" href="mailto:jrogers@davros.ctron.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00970.html">Date Prev</a>][<a href="msg00972.html">Date Next</a>][<a href="msg00977.html">Thread Prev</a>][<a href="msg00972.html">Thread Next</a>][<a href="maillist.html#00971">Date Index</a>][<a href="threads.html#00971">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>99 bottles of beer on the wall in es</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: 99 bottles of beer on the wall in es</li>
+<li><em>From</em>: Jeffrey Rogers &lt;<a href="mailto:jrogers%40davros.ctron.com">jrogers@davros.ctron.com</a>&gt;</li>
+<li><em>Date</em>: Tue, 9 Sep 1997 20:23:06 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>While reading the 99 bottles of beer on the wall page 
+(<a  rel="nofollow" href="http://www.ionet.net/~timtroyr/funhouse/beer.html">http://www.ionet.net/~timtroyr/funhouse/beer.html</a>)  I noted that there was no 
+es version there.  (no rc version either, but that would be rather close to 
+bourne shell.  Not that es couldn't be close, but that's no fun).  So, I came 
+up with the following.  Can anyone suggest ways to make it better, or 
+especially to show off more of es's features? (or tell me why this doesn't do 
+a good job of that)
+
+-J
+
+--
+&lt;insert silly .sig here&gt;
+
+
+</pre><pre>ow='on the wall'
+b=bottle
+n='
+'
+
+let(
+	t=9 8 7 6 5 4 3 2 1
+	o=9 8 7 6 5 4 3 2 1 0
+	c=
+	r=x 
+	) {
+	c=$t$o $o
+	fn-ne=@ {
+		if {~ $#c 0} {throw no}
+		if {~ $#c 1} {c=no}
+		return $c(1)
+		}
+	fn-bb=@ {
+		return $b ^ &lt;=@{
+			unwind-protect {
+				if {! ~ $#c 2} {return s} {return ''}
+				} {
+				if {~ $#r 0} {
+					r=x x x 
+					c=$c(2 ...)
+					}
+				r=$r(2 ...)
+				}
+			} of beer
+		}
+	}
+
+catch @ e { 
+	echo all done
+	} {
+	forever {
+		echo '' &lt;=ne &lt;=bb $ow,$n &lt;=ne &lt;=bb $n if &lt;=@{
+			if {~ &lt;=ne no} {
+				return that $b
+				} {
+				return one of those $b^s
+				}
+			} should happen to fall $n &lt;=ne &lt;=bb $ow $n
+		}
+	} 
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00970.html">Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00972.html">Adventure shell</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00977.html">Re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00972.html">Adventure shell</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00971"><strong>Date</strong></a></li>
+<li><a href="threads.html#00971"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

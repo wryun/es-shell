@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Doing away with "for" -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Wed, 19 May 1993 15:53:43 &#45;0400 -->
+<!--X-Message-Id: 9305191953.AA11211@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 93May19.145527edt.2610@groucho.cs.psu.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Doing away with &quot;for&quot;</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00454.html">Date Prev</a>][<a href="msg00456.html">Date Next</a>][<a href="msg00454.html">Thread Prev</a>][<a href="msg00449.html">Thread Next</a>][<a href="maillist.html#00455">Date Index</a>][<a href="threads.html#00455">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Doing away with &quot;for&quot;</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:schwartz%40groucho.cs.psu.edu">schwartz@groucho.cs.psu.edu</a></li>
+<li><em>Subject</em>: Doing away with &quot;for&quot;</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Wed, 19 May 1993 15:53:27 -0400</li>
+<li><em>Cc</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Scott Schwartz's message of Wed, 19 May 1993 14:56:24 -0400 &lt;<a href="msg00454.html">93May19.145527edt.2610@groucho.cs.psu.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>|&gt; | you can implement peano numbers 
+
+|&gt; Church numerals.  Peano arithmatic.  Grok lambda. :-)
+
+Sure!  Like this, you mean:
+
+; fn Compose f g {result @ x {$f &lt;={$g $x}}}
+; fn Succ n {result @ f {Compose &lt;={$n $f} $f}}
+; fn Plus m n {&lt;={$m Succ} $n}
+; fn Prod m n {result @ f {$m &lt;={$n $f}}}
+; fn Power m n {$m $n}
+; One  =  $&amp;result
+; Two  =&lt;={Succ $One}
+; Three=&lt;={Succ $Two}
+; Nine =&lt;={Prod $Three $Three}
+; Twelve=&lt;={Plus $Three $Nine}
+; Twenty-Seven=&lt;={Power $Three $Three}
+; dots=@ x {result . $x}
+; each @ x {echo &lt;={&lt;={$$x $dots} $x}} Three Nine Twelve Twenty-Seven
+. . . Three
+. . . . . . . . . Nine
+. . . . . . . . . . . . Twelve
+. . . . . . . . . . . . . . . . . . . . . . . . . . . Twenty-Seven
+; 
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00454" href="msg00454.html">Re: Doing away with &quot;for&quot;</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00454.html">Re: Doing away with &quot;for&quot;</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00456.html">Re: login shells ...</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00454.html">Re: Doing away with &quot;for&quot;</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00449.html">login shells ...</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00455"><strong>Date</strong></a></li>
+<li><a href="threads.html#00455"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

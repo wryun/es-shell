@@ -1,0 +1,174 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  Yow! -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Fri, 23 Apr 1993 21:49:47 &#45;0400 -->
+<!--X-Message-Id: 9304240150.AA28658@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  Yow!</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00318.html">Date Prev</a>][<a href="msg00320.html">Date Next</a>][<a href="msg00318.html">Thread Prev</a>][<a href="msg00322.html">Thread Next</a>][<a href="maillist.html#00319">Date Index</a>][<a href="threads.html#00319">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  Yow!</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Subject</em>: Re:  Yow!</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Fri, 23 Apr 1993 21:50:18 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; This has got to be the best unix shell I've ever seen!
+
+thank you, thank you.  :-)
+
+&gt; 1) $cdpath is a really egregious creeping feature to make a builtin part of
+&gt; the shell, considering how nongeneral it is.  If people really want a
+&gt; cdpath-like feature (admittedly, I use such a thing too), one could do:
+
+i'm not sure what you mean by non-general, but i do agree that the
+primitive $&amp;cd probably shouldn't do path-searching.  i still think
+it should be in the ``default'' shell configuration, but the call
+to %cdpathsearch should probably be from a function defined in
+initial.es rather than the primitive.  comments, anyone?
+
+&gt; Alternately, instead of calling `access' in `cd' directly, one could call
+&gt; %cdpathsearch, but I think this doesn't really belong as a builtin hook
+&gt; either.
+
+i've become convinced after listening to what people on this list want
+to do, the more hooks, the better.  (this could be taken to ludicrous
+extremes, of course.)
+
+&gt; 2) The man page says for `forever', 
+&gt;	...
+&gt; It seems like it would be more general to indeed have a looping construct
+&gt; that didn't catch any exceptions, but that also allowed a test of some
+&gt; sort.  Perhaps `while' could even be implemented in terms of this new
+&gt; construct, setting exception handlers first.
+
+when we were first doing things, the reason that we didn't do it
+that way was that if we made while a function, then it would also
+catch the return exception, which seemed like a mistake.  i believe
+that the new $&amp;noreturn primitive eliminated that problem and while
+could be written as
+
+	fn-while = $&amp;noreturn @ cond body {
+		catch @ e value {
+			if {!~ $e break} {
+				throw $e $value
+			}
+			result $value
+		} {
+			let (result = &lt;=true)
+				forever {
+					if {!$cond} {
+						throw break $result
+					} {
+						result = &lt;=$body
+					}
+				}
+		}
+	}
+
+&gt; Admittedly, right now you can create your own magic exception and use that
+&gt; to get of out of `forever',
+
+which is exactly what we did with the eof exception.
+
+&gt; so it might seem like adding a condition is
+&gt; just syntactic sugar.  But I can imagine wanting to avoid the risk of
+&gt; shadowing an identically-named tag for another exception handler further
+&gt; up.
+
+we have no formal mechanism for reserving exception names, other than
+those that are in the man page.  on the other hand, the same problem
+is more pronounced w.r.t. function names.
+
+&gt; 3) `local' doesn't seem like a very well-chosen name.  In fact, because
+&gt; &quot;local&quot; variables still cause settors to be invoked, get exported, and have
+&gt; other dynamic-scope properties, they are far less &quot;local&quot; than lexically
+&gt; scoped variables created with `let'.  Perhaps a better name would be
+&gt; `fluid-let' or even `dynamic-let'?  (The former would at least be
+&gt; consistent with Scheme.)
+
+``let'' and ``local'' switched meanings between 0.79 and 0.8, mainly
+to follow scheme's use of ``let.''  (at the time i was hesitant
+because we had a user base of ~10 people;  in retrospect i think
+that this is a very good change.)  i was informed that at least
+perl used ``local'' for ``fluid-let.''
+
+when we swapped ``let'' and ``local'', we had considered using
+``fluid-let'' for dynamic binding.  as i remember, our reasoning
+at the time was:
+
+	+ for those who aren't scheme-aware it's probably
+	  more confusing than ``local.''
+	+ local is consistent with the traditional name for that
+	  type of binding in other shells, ``local assignment.''
+	+ i like short, unhyphenated keywords
+
+now that the paper's been published, we're very reluctant to change
+something so central to the language.
+
+thanks for your comments.  if i find the time, both (1) and (2)
+will be incorporated in the 0.84 release;  otherwise, expect them
+in 0.85.  any more feedback would be appreciated.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00318.html">Yow!</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00320.html">lexically scoped functions</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00318.html">Yow!</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00322.html">Re:  Yow!</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00319"><strong>Date</strong></a></li>
+<li><a href="threads.html#00319"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

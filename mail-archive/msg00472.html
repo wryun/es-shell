@@ -1,0 +1,89 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es should call rl_reset_terminal() when $TERM is set -->
+<!--X-From-R13: Quevf Evroraznaa <pxf> -->
+<!--X-Date: Sat, 22 May 1993 02:10:27 &#45;0400 -->
+<!--X-Message-Id: 93May22.021027edt.2230@hawkwind.utcs.toronto.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305220405.AA13226@paris -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es should call rl_reset_terminal() when $TERM is set</title>
+<link rev="made" href="mailto:cks">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00471.html">Date Prev</a>][<a href="msg00473.html">Date Next</a>][<a href="msg00471.html">Thread Prev</a>][<a href="msg00473.html">Thread Next</a>][<a href="maillist.html#00472">Date Index</a>][<a href="threads.html#00472">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es should call rl_reset_terminal() when $TERM is set</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: es</li>
+<li><em>Subject</em>: Re: es should call rl_reset_terminal() when $TERM is set</li>
+<li><em>From</em>: Chris Siebenmann &lt;cks&gt;</li>
+<li><em>Date</em>: Sat, 22 May 1993 02:10:19 -0400</li>
+<li><em>In-reply-to</em>: ckclark's message of Sat, 22 May 93 00:05:16 -0400.             &lt;9305220405.AA13226@paris&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre> I'll disagree slightly here. Es (and rc) should call rl_reset_terminal()
+just before calling readline itself, and merely set a flag to do this
+when $TERM or $TERMCAP is changed. Making this modification to bash noticably
+lowered the startup time in my environment back when I played with it,
+and it's an obvious optimization.
+
+	- cks
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00471" href="msg00471.html">es should call rl_reset_terminal() when $TERM is set</a></strong>
+<ul><li><em>From:</em> Calvin Clark &lt;ckclark@MIT.EDU&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00471.html">es should call rl_reset_terminal() when $TERM is set</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00473.html">readline trubble</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00471.html">es should call rl_reset_terminal() when $TERM is set</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00473.html">readline trubble</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00472"><strong>Date</strong></a></li>
+<li><a href="threads.html#00472"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: anonymous lists -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Fri, 12 Feb 1993 18:34:18 &#45;0500 -->
+<!--X-Message-Id: 9302122332.AA02929@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: anonymous lists</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00204.html">Date Prev</a>][<a href="msg00206.html">Date Next</a>][<a href="msg00204.html">Thread Prev</a>][<a href="msg00206.html">Thread Next</a>][<a href="maillist.html#00205">Date Index</a>][<a href="threads.html#00205">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: anonymous lists</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:alan%40oldp.astro.wisc.edu">alan@oldp.astro.wisc.edu</a></li>
+<li><em>Subject</em>: Re: anonymous lists</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 12 Feb 1993 18:32:21 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Sorry -- I slipped back into rc notation which obviously caused some
+&gt; confusion.
+
+understandable; they're so close that confusion is too easy.
+
+&gt; (a) I don't want heirarchical lists.  (Well, I do but that wasn't what
+&gt; I was suggesting.)
+
+i don't.  not in a shell that has to interact with unix execs and
+the flat argvs.
+
+&gt; (b) Why are the following different?  Why is a list treated one way on
+&gt; the RHS of assignment, but instantly flattened in any other context?
+&gt; 	; bar = (a b c d); foo bar
+&gt; 	; foo (a b c d)
+
+i assume you mean ``foo $bar''.  lists are not treated differently in
+assigments:  they are always flattened.
+
+&gt; (c) Consequently, I want the following to behave differently:
+&gt; 	; foo a b c d			# pass 4 args: a, b, c, and d
+&gt; 	; foo (a b c d)			# pass 1 arg: the list (a b c d)
+
+that's heirarchical lists.  tell me what this means if foo is an external
+program rather than an es function.
+
+&gt; I only want lists to be flattened if I EXPLICITY ask for it with $.  I
+&gt; think this is both more useful and more consistent.
+
+right now, $ means variable dereference and nothing else.  i think you're
+confused about es notation.
+
+&gt; (d) I'm not sure if I want:
+&gt; 	; foo $(a b c d)
+&gt; to be the same as:
+&gt; 	; foo 'a' 'b' 'c' 'd'
+&gt; or:
+&gt; 	; foo 'a b c d'
+
+how about
+	; echo $(a b c d)
+	multi-word variable name
+	; 
+which are the current semantics?
+
+&gt; Perhaps we could introduce another flattening operator, so that $(a b
+&gt; c d) returns 'a' 'b' 'c' 'd', and %(a b c d) returns 'a b c d'.
+&gt; Notice the change in terminology: $ is now a flattening operator
+&gt; rather than an evaluation operator, as it is the only way to flatten a
+&gt; list (other than picking the elements out one by one).
+
+if a language has hierarchical lists, it needs a flattening operator
+or function.  since es doesn't, it doesn't.
+
+&gt; (e) More radically, I would like to see `{...} return a list, for
+&gt; example:
+&gt; 	`{ echo a; echo b ; echo c ; echo d }
+&gt; returns (a b c d), and needs to be explicitly flattened:
+
+it already does; nothing radical about that.
+	; x = `{ echo a; echo b ; echo c ; echo d }
+	; echo $#x
+	4
+	; echo $x
+	a b c d
+	; 
+
+&gt; In summary, I'm suggesting making the primary data-type of es the list
+&gt; rather than the string.  No list should be flattened unless EXPLICITY
+&gt; preceded by $ (or %).
+
+it is already the list, but the elements of the list can only be strings
+and code fragments (or their first cousin, lambdas).
+
+&gt; Am I making myself any clearer, or is this still not making any sense?
+
+actually, not much.  i think you're confused by what the es documentation
+(such as it is) means by flat lists:  lists that have multiple elements,
+not strings.  a list can be further flattened into a string, but that's
+a whole 'nother story.
+
+i'm sure that this didn't resolve your question, but maybe we're close to
+similar terminology now.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00204.html">Re: anonymous lists</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00206.html">Re: anonymous lists</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00204.html">Re: anonymous lists</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00206.html">Re: anonymous lists</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00205"><strong>Date</strong></a></li>
+<li><a href="threads.html#00205"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

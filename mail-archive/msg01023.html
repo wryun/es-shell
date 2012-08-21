@@ -1,0 +1,178 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Possible fix for the signal&#45;handling problem in es&#45;0.9&#45;beta1.tar.gz -->
+<!--X-From-R13: Bnhy Vnnue <unnueNwvirgrpu.pbz> -->
+<!--X-Date: Wed, 13 Dec 2000 18:05:26 &#45;0500 -->
+<!--X-Message-Id: cWdZSI5Et9@iadd.jivetech.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 200012080119.eB81JDe98193@latour.rsch.comm.mot.com -->
+<!--X-Reference: cWdHfF5Et0@iadd.jivetech.com -->
+<!--X-Reference: 200012130910.eBD9ApC75012@latour.rsch.comm.mot.com -->
+<!--X-Reference: 20001213200216D.hanche@math.ntnu.no -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</title>
+<link rev="made" href="mailto:haahr@jivetech.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01022.html">Date Prev</a>][<a href="msg01024.html">Date Next</a>][<a href="msg01022.html">Thread Prev</a>][<a href="msg01049.html">Thread Next</a>][<a href="maillist.html#01023">Date Index</a>][<a href="threads.html#01023">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:rittle%40rsch.comm.mot.com">rittle@rsch.comm.mot.com</a>, Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Subject</em>: Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 13 Dec 2000 14:27:40 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, Noah Friedman &lt;<a href="mailto:friedman%40netscape.com">friedman@netscape.com</a>&gt;,	Soren Dayton &lt;<a href="mailto:csdayton%40cs.uchicago.edu">csdayton@cs.uchicago.edu</a>&gt;</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01020.html">200012130910.eBD9ApC75012@latour.rsch.comm.mot.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg01018.html">200012080119.eB81JDe98193@latour.rsch.comm.mot.com</a>&gt;	&lt;<a href="msg01021.html">cWdHfF5Et0@iadd.jivetech.com</a>&gt;	&lt;<a href="msg01020.html">200012130910.eBD9ApC75012@latour.rsch.comm.mot.com</a>&gt;	&lt;<a href="msg01022.html">20001213200216D.hanche@math.ntnu.no</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Loren wrote:
+
+&gt; It is always great to hear from the author of the software that they
+&gt; still run it. ;-)
+
+I guess that wasn't exactly the confidence-boosting statement I intended
+it to be.
+
+&gt; &gt; but I've been meaning to fix the damn control-C on Linux bug for a
+&gt; &gt; long time.
+&gt; 
+&gt; OK, the signal-handling code for interactive use could still use some
+&gt; minor tuning. ;-)
+
+To put it mildly.
+
+&gt; Of course, I could never do the amount of work on es that you did, but
+&gt; as a small token of my gratitude, I have finally attempted to debug
+&gt; this problem in earnest and produce a patch for it.  It works for me
+&gt; on FreeBSD, OSF1 and Solaris (sorry, can't test Linux at the moment).
+
+Unfortunately, it doesn't appear to fix the bug I've been seeing on
+Linux.
+
+&gt; If you are referring to the same long-standing bug that I am aware of
+&gt; (and that I can reproduce on Linux, Solaris, FreeBSD and OSF1), then
+&gt; it is not Linux-specific.  I assume that Linux also configures to
+&gt; HAVE_SIGACTION=1
+
+It does.
+
+&gt; (even if it doesn't, I have also found an unrelated regression that
+&gt; affects platforms that configure to HAVE_SIGACTION=0, SYSV_SIGNALS=1).
+&gt; If so, then you may enjoy this analysis and possible patch.
+&gt; 
+&gt; Below is a patch that was found tonight by manual inspection after
+&gt; getting a handle on the failure mode.  I found that the file-scoped
+&gt; variable ``blocked'' in signal.c became non-zero forever after the
+&gt; first interrupt was processed inside a shell-level while loop.  Thus,
+&gt; clearly, an imbalance in calls to blocksignals()/unblocksignals() must
+&gt; be present in some code path.
+
+That makes a lot of sense as an explanation.  However, I still get the
+symptoms, which is an unexpected ``wait: No child processes'' on the
+first interrupt, and no effect from the second interrupt.
+
+&gt; I hope I am not just trading the obvious fix of the call pairing for a
+&gt; race condition in some other case (I figure that you can judge this
+&gt; far faster than I).
+
+Alas, it's been so long since I looked at es's signal handling, I have
+no sense of what is supposed to happen.
+
+&gt; Although perhaps benign whenever HAVE_SIGACTION=1, I also removed the
+&gt; gratuitous signal() call in catcher() when SYSV_SIGNALS=0 and,
+&gt; conversely, added the needed signal() call in catcher() when
+&gt; SYSV_SIGNALS=1.  According to my local CVS archive of es, someone
+&gt; clearly hosed this between ES-0_9-ALPHA1 and ES-0_9-BETA1.
+
+Interesting.  No memory at all of what that code does.
+
+
+Harald wrote
+
+&gt; (Actually, I recruited yet another es user recently, perhaps in the
+&gt; process doubling the number of es users in Norway.)
+
+(Does that leave Norway with the highest per-capita es usage?)
+
+&gt; I wonder which 0.9-beta1 version you have patched, though:  I think
+&gt; there are two of them out there.
+
+Oh, that's scary.
+
+Perhaps after three years of our rigorous testing we should pull it out
+of beta and declare es-0.9 ready for usa?  Our fans have been waiting.
+
+:-)
+
+--p
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01049" href="msg01049.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01018" href="msg01018.html">Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="01021" href="msg01021.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+<li><strong><a name="01020" href="msg01020.html">Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="01022" href="msg01022.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@math.ntnu.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01022.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01024.html">es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01022.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01049.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01023"><strong>Date</strong></a></li>
+<li><a href="threads.html#01023"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

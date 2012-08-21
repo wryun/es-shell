@@ -1,0 +1,124 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: a note on notations -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Thu, 1 Apr 1993 01:52:44 &#45;0500 -->
+<!--X-Message-Id: 9304010652.AA02630@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: a note on notations</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00249.html">Date Prev</a>][<a href="msg00251.html">Date Next</a>][<a href="msg00249.html">Thread Prev</a>][<a href="msg00251.html">Thread Next</a>][<a href="maillist.html#00250">Date Index</a>][<a href="threads.html#00250">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: a note on notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:alan%40oldp.astro.wisc.edu">alan@oldp.astro.wisc.edu</a></li>
+<li><em>Subject</em>: Re: a note on notations</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 01:52:46 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; I have though of something which goes against both $ and %.  In
+&gt; practice, &lt;&gt;{foo} is loosely related to `{foo}, so one should be able
+&gt; to replace it with &lt;&gt;foo.
+
+checkout the grammar.  &lt;&gt;foo works just fine in es-.08; it's used all
+over the place in initial.es, normally as &lt;&gt;$&amp;primitives.
+
+&gt; This cannot be the case for either $ or %
+&gt; as $foo and %foo already have essential meanings.
+
+no, but
+	; echo % true
+	0
+	; echo %(false)
+	1
+	; 
+[note that the fact that i have an implementation of % replacing &lt;&gt; does
+not mean that's what it's going to be.  i just wanted to try it out.]
+
+&gt; There isn't much
+&gt; left on the keyboard. 
+
+amen.
+
+&gt; Mind you, I think `foo is an ugly short cut, and I'd be very happy to 
+&gt; see it dropped from es (and ``, for that matter).
+
+i disagree.  i can't tell you how many times Byron and I have congratulated
+ourselves on how nicely this addition to rc (later brought to es) works.
+
+&gt; While we're messing about with es' tokens, is there anyone else who
+&gt; finds $&amp;foo both ugly and visually confusing and would rather have it
+&gt; replaced with %%foo (for `doubly primitive')?  Does applying a
+&gt; primitive really have enything to do with `lookup' or `evaluation'?
+
+$&amp; has everything to do with lookup:  it looks up a procedure pointer
+in a dictionary of primitives.  see prim.c.
+
+$&amp; is one of those things that you should almost never type.  it's almost
+always better to use $fn-%create for $&amp;create, because then you get the
+current definition, which may be spoofed.  that $&amp; is ugly doesn't bother
+me because 90% of its uses should be in initial.es.
+
+also, as a side note, $&amp; would otherwise be illegal syntax in es, which is
+why we felt comfortable using it for primitives.  we sacrificed no useful
+sequence, unlike : and %.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00249.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00251.html">Re: a note on notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00249.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00251.html">Re: a note on notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00250"><strong>Date</strong></a></li>
+<li><a href="threads.html#00250"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

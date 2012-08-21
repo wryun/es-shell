@@ -1,0 +1,102 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: nuking ` -->
+<!--X-From-R13: neabyqNpp.tngrpu.rqh (Oeabyq Dboovaf) -->
+<!--X-Date: Fri, 19 Feb 1993 13:10:09 &#45;0500 -->
+<!--X-Message-Id: 9302191809.AA00806@penfold.cc.gatech.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>nuking `</title>
+<link rev="made" href="mailto:arnold@cc.gatech.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00211.html">Date Prev</a>][<a href="msg00213.html">Date Next</a>][<a href="msg00210.html">Thread Prev</a>][<a href="msg00214.html">Thread Next</a>][<a href="maillist.html#00212">Date Index</a>][<a href="threads.html#00212">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>nuking `</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: nuking `</li>
+<li><em>From</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a> (Arnold Robbins)</li>
+<li><em>Date</em>: Fri, 19 Feb 1993 13:09:45 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Greetings all.
+
+I'd like to suggest that es replace `{....} with ${...}.  $ means value
+of a variable, and `{} means value of running the code, so I think it's
+more uniform to use ${...}.
+
+David Korn introduced $(...) to replace `...`, largely because of quoting
+issues, but I find it very mnemonic: (...) runs stuff in a subshell,
+and $(..) runs stuff in a subshell and returns the result.  I think the
+same simplification could be applied to good end in es.  Espcially since
+braces tie chunks of code together.
+
+Those who want:
+
+	; {x} = foo
+	; echo ${x}
+	foo
+
+could instead do like rc
+
+	; echo $'{x}'
+	foo
+
+(Please put aside any prejudices against bloat in ksh and just consider
+the syntactic and learning-curve/readability issues for es.)
+
+Arnold
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00211.html">Re:  syntax</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00213.html">Some comments about how the Eighth Edition version of upas worked</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00210.html">Re:  syntax</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00214.html">es 0.8 is now released</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00212"><strong>Date</strong></a></li>
+<li><a href="threads.html#00212"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

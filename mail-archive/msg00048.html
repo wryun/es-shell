@@ -1,0 +1,97 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: whatis loop -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Mon, 12 Oct 1992 21:56:57 &#45;0400 -->
+<!--X-Message-Id: 9210130156.AA12074@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>whatis loop</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00047.html">Date Prev</a>][<a href="msg00049.html">Date Next</a>][<a href="msg00047.html">Thread Prev</a>][<a href="msg00049.html">Thread Next</a>][<a href="maillist.html#00048">Date Index</a>][<a href="threads.html#00048">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>whatis loop</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: whatis loop</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Mon, 12 Oct 1992 21:56:48 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>This caused &quot;es&quot; to go to infinite recursion:
+
+	;; local (fn-a = ()) {
+		fn-a = @{echo hey}
+		fn-c = @{a}
+	}
+	;; whatis c
+
+Stack trace at randomly selected starting point:
+
+#771 0x119ce in strv (fmt=(char *) 0x11e4d &quot;%C&quot;, args=(char *) 0x3ffc0f8c &quot;p\252\002&quot;) (str.c line 30)
+#772 0x11a13 in str (fmt=(char *) 0x11e4d &quot;%C&quot;, 174704) (str.c line 42)
+#773 0x11f0c in getstr (term=(struct Term *) 0x2aa7c) (term.c line 22)
+#774 0xdab in Lconv (f=(struct Format *) 0x3ffc104c) (conv.c line 21)
+#775 0x10685 in printfmt (format=(struct Format *) 0x3ffc104c, fmt=(char *) 0x14f7 &quot;%S=(%#L) &quot;) (print.c line 250)
+#776 0x106e5 in fmtprint (format=(struct Format *) 0x3ffc104c, fmt=(char *) 0x14f7 &quot;%S=(%#L) &quot;, 173980, 174728, 5365) (print.c line 271)
+#777 0x1591 in Cconv (f=(struct Format *) 0x3ffc104c) (conv.c line 188)
+#778 0x10685 in printfmt (format=(struct Format *) 0x3ffc104c, fmt=(char *) 0x11e4d &quot;%C&quot;) (print.c line 250)
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00047.html">Re: let vs. local</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00049.html">Re: whatis loop</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00047.html">Re: let vs. local</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00049.html">Re: whatis loop</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00048"><strong>Date</strong></a></li>
+<li><a href="threads.html#00048"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

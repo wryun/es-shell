@@ -1,0 +1,323 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  creature = `feep -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 25 May 1993 13:02:51 &#45;0400 -->
+<!--X-Message-Id: 9305251703.AA19072@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  creature = `feep</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00507.html">Date Prev</a>][<a href="msg00509.html">Date Next</a>][<a href="msg00498.html">Thread Prev</a>][<a href="msg00511.html">Thread Next</a>][<a href="maillist.html#00508">Date Index</a>][<a href="threads.html#00508">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  creature = `feep</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re:  creature = `feep</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 25 May 1993 13:03:52 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; &gt;when pushed, i would get backgrounding out of es before many of the other
+&gt; &gt;constructs under discussion, and replace it with an external program that
+&gt; &gt;forked and returned right away.)
+&gt; I might agree with this except that it creates a dependency on a
+&gt; nonstandard external program.  It would also preclude the possibility of
+&gt; implementing some kind of job control mechanism within the shell (although
+&gt; I am finding myself less and less interested in actually implementing one).
+
+don't worry.  it's (mainly) just a straw man.  i think backgrounding stays
+for rc compatibility.
+
+&gt; &gt;a lot of the suggestions have...been effectively ``move this from a
+&gt; &gt;primitive to initial.es'' and that's fine...but...it does nothing for the
+&gt; &gt;conceptual size of the shell, which is what is most troubling.
+&gt; I suggested going from primitives to initial.es because that is a first
+&gt; step toward eliminating them altogether (at the very least, if I have my
+&gt; own initial.es I don't get those unwanted builtins).  If they remain C
+&gt; primitives, it is harder to be convinced thay they can be eliminated
+&gt; because no one has tried to implement them using other existing parts of
+&gt; the language. 
+
+reasonable approach.  on a case by case basis, it should be considered.
+
+&gt; &gt;	; echo &lt;={%fsplit '' foo}
+&gt; &gt;	f o o
+&gt; Unless you forego %fsplit entirely, I think this is not only a very useful
+&gt; hack (for example, getopt can be implemented without needing to run sed),
+&gt; but even sort of sensible if you take it that there is an &quot;empty&quot; space
+&gt; between each of the characters in a string.  If it doesn't take much code,
+&gt; keep it.
+
+it certainly makes es more complete, but i don't think it's gotten much use.
+i still consider it a toss-up, but will probably stay.
+
+&gt; 1) Anything related to &quot;cdpath&quot; searching.  I can't believe there aren't
+&gt;    more people who agree with me on this even if they think the rest of my
+&gt;    suggestions are out in left field.
+
+ok, i'm beginning to lean towards moving this out of the shell, as long as
+there is a good examples file.  it definitely goes back in my .esrc but that
+does seem reasonable.  i still want to hear more opinions on this.
+
+&gt; 2) true and false.  Really.  {result 0} and {result 1} are short enough to
+&gt;    use explicitly.  How often do people actually need to refer to `true'
+&gt;    and `false' values explicitly anyway?  Out of a couple thousand lines of
+&gt;    es script so far I've only used `result 0' a total of five times, and
+&gt;    didn't use `true' or `false' even once.
+
+i use them extensively in scripts.  besides, they're completely upwards
+compatible with their /bin equivalents, only 1000x faster, so they add
+no conceptual baggage.  (and result 0 and result 1 are short enough, but
+not clear enough.  can you think of anything other than unix shells where
+0 is true?  i consider this a unix bug at least as serious as the spelling
+of creat.)
+
+&gt; 3) The `apids', `var', `vars', and `whatis' commands.
+&gt;    Paul said:
+&gt;    &gt;vars: it's more than the others.  it actually does something useful.
+&gt;    How often do people really use it?  I have never used it even once.  I
+&gt;    also find it hard to imagine anyone's scripts depending on it, so if
+&gt;    it's primarily an interactive feature it ought to be sufficient just to
+&gt;    drop it in your .esrc.
+
+i don't buy the ``primarily an interactive feature'' so it doesn't belong
+argument.  
+
+&gt;    By the way, even if you do keep `whatis' around, why is %whatis a
+&gt;    primitive?  Doesn't it essentially just do
+&gt;       fn %whatis arg \
+&gt;       { 
+&gt;         if { ~ $(fn-$arg) () } \
+&gt;              { %pathsearch $arg } \
+&gt;            { result $(fn-$arg) } 
+&gt;       }
+&gt;    ?
+
+well, there's an isabsolute test in there also.  perhaps it should go.
+right now, it duplicates code in eval; my feeling is that it should be
+a hook that's kind of like a super-pathsearch.  jury is out, but this
+is much more an implementation issue than a bloat one.
+
+&gt; 4) The various dispatch functions.  Just have a single user-definable
+&gt;    %dispatch.  If `.' needs some way of defining a local dispatcher, you
+&gt;    can do
+&gt;       local (fn-%dispatch = $my-dispatcher) . file args...
+&gt;    Maybe encapsulate this in a function if you do it that often.  I have
+&gt;    yet to take advantage of the local dispatcher for `.', personally.
+
+i like this more and more.  i need to think about it.
+
+``. -i'' is quite useful, and esdebug uses this stuff, too.
+
+&gt; More things to consider removing, though I would push less hard for these:
+&gt; 1) The `` syntactic sugar. 
+&gt;          pwent = `` ':' { grep '^friedman:' /etc/passwd }
+&gt;    is equivalent to
+&gt;          pwent = &lt;={ %fsplit ':' `{ grep '^friedman:' /etc/passwd } }
+&gt;    or even
+&gt;          local (ifs = ':') pwent = `{ grep '^friedman:' /etc/passwd }
+&gt;    I realize this is mostly a cultural compatibility issue with rc.  I
+&gt;    still think it's unnecessarily redundant. 
+
+on the other hand, a line that has two different ifs strings is trivial to
+do with `` but ugly (not impossible, but ugly) with ifs.  `` is a generaliztion
+of `, so it stays.
+
+&gt; 2) `for'.  Harald's `each' definition is just as good (although you need to
+&gt;    use $&amp;noreturn to get the equivalent semantics of `for').  
+&gt;    Since the strongest, most essential feature of es is lambda, I think it
+&gt;    should be relied upon more heavily instead of making the grammar larger.
+
+this reminds of a note from the haskell mailing list.
+
+	Phil Wadler says:
+	
+		You are quite right.  I'd forgotten about local rebinding,
+		because I feel that all local rebinding should be disallowed.
+		Anyone want to start a movement to eliminate local
+		rebinding?  (1/2 :-)  Cheers,  -- P
+	
+	And *I* think we should stop using names altogether and program in
+	terms of SKI combinators!  Since these constructs have well-known,
+	unchanging meanings there is little chance that a program will be
+	misunderstood*.  I don't know about the rest of the people reading
+	this, but I find the notation S(S(S(KS)K))((S(S(KS)K))(KI)) =
+	(S(S(KS)K))(S(S(KS)K))(KI) to be much more precise than the n+k
+	equivalent, 1 + 1 = 2.  The similarity of the latter notation to the
+	informal numerals of everyday life is an open invitation to sloppy
+	reasoning leading to widespread program bugs.  Besides, anybody who
+	can't handle needless complexity shouldn't be fooling around with
+	dangerous machines such as computers.
+	
+		-- Dan Rabin (rabin-dan@cs.yale.edu)
+
+yes, lambda is the most general form.  but es does have syntax for people's
+convenience.  for is so simple i really do use it a lot.  and, it matches
+peoples' expectations coming from other shells.  (i know that the cultural
+compatibility argument can be taken too far.  tell me if you think i'm doing
+that.)
+
+&gt; 3) `eval'. 
+&gt;    As has been pointed out, you really almost never need eval in rc and es
+&gt;    (by contrast, in the bourne shell you need it a lot).
+
+&gt; 4) unwind-protect.  
+&gt;    I find that most of the time I want to catch exceptions I want to
+&gt;    examine what they are, so I use `unwind-protect' very rarely.
+
+yes, but it's useful for code that needs to cleanup for itself:
+
+	signals = $signals sigint sighup
+	tmp = /tmp/foo.$pid
+	unwind-protect {
+		cat &gt; $tmp
+		...
+	} {
+		rm -f $tmp
+	}
+
+you are just about guaranteed that the rm is going to happen.  (exit or exec
+are the only ways it doesn't, and i'm considering changing exit to an exception
+from just doing the exit(2) call inline.)
+
+&gt;    Implementing unwind-protect is not complicated (but thanks for reminding
+&gt;    me that it shouldn't catch return).
+&gt;        fn-unwind-protect = $&amp;noreturn @ body cleanup \
+&gt;        {
+&gt;          catch @ args { $cleanup; throw $args } { $body }
+&gt;          $cleanup
+&gt;        }
+
+actually, it's not that easy, either, in case the $cleanup code
+raises a ``restart'' exception.  and the result of the unwind-protect
+is supposed to be the result of the body.  i think it has to be
+
+	fn-unwind-protect = $&amp;noreturn @ body cleanup {
+		let (exception = ) {
+			let (
+				result = &lt;= catch @ e {
+					exception = $e
+				} {
+					$body
+				}
+			) {
+				$cleanup
+				if {!~ $#exception 0} {
+					throw $exception
+				}
+				result $result
+			}
+		}
+	}
+
+&gt; Features I think should at least be moved into initial.es:
+&gt; 1) $&amp;flatten and $&amp;split.  They are easy to implement in es script.
+&gt;    Someone raised a performance issue with regards to doing them in es
+&gt;    script.  It's true that they run substantially slower (particularly for
+&gt;    large arrays), but this is an indication that es ought to be made faster
+&gt;    somehow, not that you should bloat it with more primitives just in the
+&gt;    name of &quot;efficiency&quot;.
+
+agreed, but there's a balance here.  we hope to make es substantially faster
+when it moves to a properly tail-recursive implementation.  for now, it's
+not going to happen, so the performance argument wins.
+
+&gt;    That way lies GNU Emacs.
+
+interesting comment, given its source.  :-)
+
+&gt; Features not to *add*, at least not right away:
+&gt; 1) Hierarchical list support.  This is a wonderful idea that is now plainly
+&gt;    obvious (:-)) but so much of the syntax required to implement them has
+&gt;    to be inlined, and `wrap' performs so little of the work that I hardly
+&gt;    see any justification for adding it at all.
+
+i'm not sure i agree.  wrap will probably go in in 0.9, but with a BUGS
+section comment that it might disappear if someone 
+
+&gt; 2) Arithmetic.  You've given me some ideas that probably make it
+&gt;    unnecessary for my purposes, so I retract my suggestion of adding it.
+
+&gt; 3) First class environments. 
+&gt;    Before anyone starts seriously thinking about implementing this as yet
+&gt;    another primitive feature, consider implementing them in terms of the
+&gt;    existing closure mechanism instead.  I have very little time right now
+&gt;    to think about it, but I have a hunch it's workable. 
+
+first class environments will not appear before 1.0;  when/if they appear,
+they will piggy-back off of closures.  (in fact, all a closure is is the
+combination of a first-class environment with a lambda.)
+
+&gt; Well, I swore to myself I'd put off thinking about es until the end of the
+&gt; week.  I have such a weak constitution.   Flame away.  :-)
+
+flaming :-)  and i have as weak a constitution.  i've been answering mail for
+more than an hour this morning.
+
+paul
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00522" href="msg00522.html">Re: creature = `feep</a></strong>
+<ul><li><em>From:</em> Richard Brooksby &lt;richard@harlequin.co.uk&gt;</li></ul></li>
+<li><strong><a name="00512" href="msg00512.html">Re: creature = `feep</a></strong>
+<ul><li><em>From:</em> Steven M Rezsutek &lt;steve@baloo.gsfc.nasa.gov&gt;</li></ul></li>
+<li><strong><a name="00511" href="msg00511.html">Re:  creature = `feep</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00507.html">creature = `feep</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00509.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00498.html">Re: creature = `feep</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00511.html">Re:  creature = `feep</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00508"><strong>Date</strong></a></li>
+<li><a href="threads.html#00508"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

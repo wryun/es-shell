@@ -1,0 +1,146 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: 0.84 -->
+<!--X-From-R13: nyxNrg.zfp.rqh (Oagubal Z. Yvzonyy) -->
+<!--X-Date: Sat, 19 Mar 1994 23:25:28 &#45;0500 -->
+<!--X-Message-Id: 9403200425.AA04544@et.msc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>0.84</title>
+<link rev="made" href="mailto:alk@et.msc.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00731.html">Date Prev</a>][<a href="msg00733.html">Date Next</a>][<a href="msg00730.html">Thread Prev</a>][<a href="msg00733.html">Thread Next</a>][<a href="maillist.html#00732">Date Index</a>][<a href="threads.html#00732">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>0.84</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: 0.84</li>
+<li><em>From</em>: <a href="mailto:alk%40et.msc.edu">alk@et.msc.edu</a> (Anthony L. Kimball)</li>
+<li><em>Date</em>: Sat, 19 Mar 1994 23:25:07 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+This is a rude hack to make es allow commands to have arguments with
+embedded '='.  I don't know yacc very well (and me a professional compiler
+hack!) so I probably changed more than I had to in parse.y
+
+
+; diff  ../parse.y parse.y 
+40,41c40,41
+&lt; end	: NL			{ if (!readheredocs(FALSE)) { first_reset(); YYABORT; } }
+&lt; 	| ENDFILE		{ if (!readheredocs(TRUE)) { first_reset(); YYABORT; } }
+---
+&gt; end	: NL			{ if (!readheredocs(FALSE)) YYABORT; }
+&gt; 	| ENDFILE		{ if (!readheredocs(TRUE)) YYABORT; }
+49,50c49,50
+&lt; cmdsa	: cmd ';'		{ $$ = $1; first_reset(); }
+&lt; 	| cmd '&amp;'		{ $$ = prefix(&quot;%background&quot;, mk(nList, thunkify($1), NULL)); first_reset(); }
+---
+&gt; cmdsa	: cmd ';'		{ $$ = $1; }
+&gt; 	| cmd '&amp;'		{ $$ = prefix(&quot;%background&quot;, mk(nList, thunkify($1), NULL)); }
+53c53
+&lt; 	| cmd NL		{ $$ = $1; if (!readheredocs(FALSE)) { first_reset();  YYABORT; } else { first_reset(); } }
+---
+&gt; 	| cmd NL		{ $$ = $1; if (!readheredocs(FALSE)) YYABORT; }
+56,57c56,57
+&lt; 	| simple				{ $$ = redirect($1); if ($$ == &amp;errornode) { first_reset(); YYABORT; } }
+&lt; 	| redir cmd	%prec '!'		{ $$ = redirect(mk(nRedir, $1, $2)); if ($$ == &amp;errornode) { first_reset(); YYABORT; } }
+---
+&gt; 	| simple				{ $$ = redirect($1); if ($$ == &amp;errornode) YYABORT; }
+&gt; 	| redir cmd	%prec '!'		{ $$ = redirect(mk(nRedir, $1, $2)); if ($$ == &amp;errornode) YYABORT; }
+87,88c87,88
+&lt; first	: comword			{ $$ = $1; first_set(); }
+&lt; 	| first '^' sword		{ $$ = mk(nConcat, $1, $3); first_set(); }
+---
+&gt; first	: comword			{ $$ = $1; }
+&gt; 	| first '^' sword		{ $$ = mk(nConcat, $1, $3); }
+; diff  ../token.c token.c
+15,16d14
+&lt; static Boolean first_seen = FALSE;
+&lt; 
+31c29
+&lt;  char nw[] = {
+---
+&gt; const char nw[] = {
+50c48
+&lt;  char dnw[] = {
+---
+&gt; const char dnw[] = {
+70,77d67
+&lt; void first_set() {
+&lt;   first_seen = TRUE;
+&lt; }
+&lt; 
+&lt; void first_reset() {
+&lt;   first_seen = FALSE;
+&lt; }
+&lt; 
+160c150
+&lt; 	char *meta;
+---
+&gt; 	const char *meta;		/* allow optimizing compilers like gcc to load these	*/
+185d174
+&lt; 		if (first_seen) meta[(unsigned char)'='] = 0;
+191d179
+&lt; 		meta[(unsigned char)'='] = 1;
+332d319
+&lt; 		first_seen = FALSE;
+; diff  ../input.h input.h
+36c36
+&lt; extern char dnw[];
+---
+&gt; extern const char dnw[];
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00731.html">ftp es?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00733.html">an apparend es bug</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00730.html">Re: trapping exit</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00733.html">an apparend es bug</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00732"><strong>Date</strong></a></li>
+<li><a href="threads.html#00732"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

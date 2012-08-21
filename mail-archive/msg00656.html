@@ -1,0 +1,136 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Features to remove: return and noreturn -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Wed, 16 Jun 1993 14:26:44 &#45;0400 -->
+<!--X-Message-Id: 9306161826.AA24403@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9306160118.AA08851@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Features to remove: return and noreturn</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00655.html">Date Prev</a>][<a href="msg00657.html">Date Next</a>][<a href="msg00646.html">Thread Prev</a>][<a href="msg00659.html">Thread Next</a>][<a href="maillist.html#00656">Date Index</a>][<a href="threads.html#00656">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Features to remove: return and noreturn</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: Re: Features to remove: return and noreturn</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Wed, 16 Jun 1993 14:26:26 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00646.html">9306160118.AA08851@astro.mv.us.adobe.com</a>&gt; (haahr@mv.us.adobe.com)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Paul&gt; (a) return is only half of the problem.  break is the other half.
+Paul&gt;     as far as i'm concerned, getting rid of return implies getting
+Paul&gt;     rid of break.  (i don't think that's necessarily a bad thing.)
+
+I agree.  I thought about including break in my proposal, but rejected
+it for some reason I cannot now remember or guess at (so it was
+probably not a good reason).
+
+Paul&gt; (c) tag doesn't, however, address the fundamental problem with
+Paul&gt;     break and return, which is that they have completely dynamic
+Paul&gt;     behavior, and don't follow lexical scope.  if you use the
+Paul&gt;     same tag name in two places, you have exactly the same problem
+Paul&gt;     as you do with break or return.
+
+Of course there are times when you want dynamic rather than lexical
+behaviour, but I can certainly see why you would prefer the latter by
+default.  I suppose something that follows lexical scoping rules can
+be kludged given a command %make-unique-identifier:
+
+  let (lexical-tag = &lt;={%make-unique-identifier})
+    tag $lexical-tag {
+       .....
+       throw $lexical-tag $answer ...}
+
+Gack.  This reminds me of lisp macros using (gensym).
+
+Paul&gt; (d) John and Scott were right in critizing es back in october for
+Paul&gt; 	(1) not having first-class continuations
+
+We're not talking about something as powerful as Scheme's
+call-with-current-continuation here, are we?
+
+Paul&gt; (g) what i think i want, at the moment, is the current dynamic behavior,
+Paul&gt;     except that break and return would be bound lexically over their
+Paul&gt;     bodies to things like
+Paul&gt;     	throw break while-0x12345678
+Paul&gt;     where the word after the word ``break'' in the exception would be
+Paul&gt;     a unique (or ``unique-enough'') tag that would allow the ``right''
+Paul&gt;     catch routine to catch the tag, and all others to ignore it.
+
+It would also tend to violate the current (desired, I presume?)
+feature of the language that function names are not looked up
+lexically but only dynamically:
+
+	; fn foo {echo outer}
+	; let (fn foo {echo inner}) {foo; $fn-foo}
+	outer
+	inner
+
+Enough said for now, I think.  This requires more thought, still, and
+I am curious to hear what other people might say.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00646" href="msg00646.html">Re: Features to remove: return and noreturn</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00655.html">'=' in variable names</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00657.html">Re: '=' in variable names</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00646.html">Re: Features to remove: return and noreturn</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00659.html">Re: Features to remove: return and noreturn</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00656"><strong>Date</strong></a></li>
+<li><a href="threads.html#00656"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

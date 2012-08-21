@@ -1,0 +1,245 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: pushd/popd/dirs for es -->
+<!--X-From-R13: @bnu Tevrqzna <sevrqznaNtah.nv.zvg.rqh> -->
+<!--X-Date: Sat, 1 May 1993 00:06:06 &#45;0400 -->
+<!--X-Message-Id: 9305010051.AA02798@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9304291727.AA20131@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>pushd/popd/dirs for es</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00331.html">Date Prev</a>][<a href="msg00333.html">Date Next</a>][<a href="msg00328.html">Thread Prev</a>][<a href="msg00333.html">Thread Next</a>][<a href="maillist.html#00332">Date Index</a>][<a href="threads.html#00332">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>pushd/popd/dirs for es</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: pushd/popd/dirs for es</li>
+<li><em>From</em>: Noah Friedman &lt;<a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a>&gt;</li>
+<li><em>Date</em>: Fri, 30 Apr 1993 21:51:56 -0400</li>
+<li><em>Cc</em>: es</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00328.html">9304291727.AA20131@astro.mv.us.adobe.com</a>&gt; (haahr@mv.us.adobe.com )</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Resent-date</em>: Sat, 1 May 1993 00:05:54 -0400</li>
+<li><em>Resent-from</em>: Chris Siebenmann &lt;cks&gt;</li>
+<li><em>Resent-message-id</em>: &lt;<a href="mailto:93May1.000606edt.2783%40hawkwind.utcs.toronto.edu">93May1.000606edt.2783@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Resent-to</em>: es</li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I wrote a version of pushd/popd that uses no external programs at all
+except to call an external `pwd' once when it is loaded.  Afterward, `pwd'
+is a shell function that merely prints $dirstack(1).  Canonicalization of
+the pwd is done internally.  It's very fast.
+
+I think this implementation is consistent with csh behavior. 
+
+I have not said anything to the mailing list about it before before, but I
+mentioned to Paul Haahr that I'm in the process of writing a library of
+useful stuff for es that I intend to announce when finished.  This is one
+of the things in it.
+
+#
+# dirs.es, 26-Apr-93 Noah Friedman &lt;friedman@prep.ai.mit.edu&gt;
+# last modified 28-Apr-93
+#
+# Directory tracking stuff and directory stacks.
+#
+# Public domain.
+#
+
+# Because shared lexically scoped environments become separate across shell
+# invocations (at least as of 0.83), we have just one function that
+# performs all operations on the dirstack variable.  Other routines merely
+# access it indirectly.
+# Attempt to preserve old value of dirstack if this file is reloaded.
+let (dirstack = `{ if { !~ $#fn-dirs 0 } dirs pwd } ) 
+  {
+    fn dirs:access-dirstack \
+    {
+      # Ops basically listed in order of most likely frequency. 
+      # `set1' and `set' are currently unused, but provided in case I need
+      # to repair damage manually. 
+      if { ~ $1 pwd } \
+           { echo $dirstack(1) } \
+         { ~ $1 chdir } \
+           { dirstack = &lt;={ expand-file-name $2 $dirstack(1) } $dirstack(2 ...) } \
+         { ~ $1 dirs } \
+           { echo $dirstack } \
+         { ~ $1 push } \
+           { dirstack = &lt;={ expand-file-name $2 $dirstack(1) } $dirstack } \
+         { ~ $1 swap } \
+           {           
+             ~ $#dirstack 1 &amp;&amp; throw error $0 pushd: No other directory
+             # This shouldn't be here, but it's faster &amp; convenient.
+             local (cdpath = '') { $&amp;cd $dirstack(2) }
+             dirstack = $dirstack(2) $dirstack(1) $dirstack(3 ...)
+           } \
+         { ~ $1 pop } \
+           { 
+             # Do not actually want to pop last element off dirstack. 
+             ~ $#dirstack 1 &amp;&amp; throw error $0 popd: Directory stack empty
+             dirstack = $dirstack(2 ...) 
+           } \
+         { ~ $1 set1 } \
+            { dirstack = $2 $dirstack(2 ...) } \
+         { ~ $1 set } \
+            { dirstack = $*(2 ...) } \
+         { throw error $0 $0: $1: invalid op. }
+    }
+  }
+
+fn chdir \
+{
+   ~ $#* 0 &amp;&amp; * = $home 
+
+   if { ~ $1 ./* ../* /* } \
+        {
+          local (cdpath = '') { $&amp;cd $1 }
+          dirs:access-dirstack chdir $1
+        } \
+      {
+        let (dir =)
+          {
+            dir = &lt;={ access -1 -d -n $1 $cdpath } ;
+            ~ $#dir 0 &amp;&amp; throw error $0 $0: $*(1) not in '$cdpath'
+            local (cdpath = '') { $&amp;cd $dir }
+            dirs:access-dirstack chdir $dir
+          }
+      }
+}
+
+fn popd \
+{
+   ~ $#dirstack 1 &amp;&amp; throw error $0 $0: Directory stack empty
+   dirs:access-dirstack pop
+   local (cdpath = '') { $&amp;cd `pwd }
+}
+
+fn pushd \
+{
+   if { ~ $#* 0 } \
+        { dirs:access-dirstack swap } \
+      { ~ $1 ./* ../* /* } \
+        {
+          local (cdpath = '') { $&amp;cd $1 }
+          dirs:access-dirstack push $1 
+        } \
+      {
+        let (dir =)
+          {
+            dir = &lt;={ access -1 -d -n $1 $cdpath } ;
+            ~ $#dir 0 &amp;&amp; throw error $0 $0: $*(1) not in '$cdpath'
+            local (cdpath = '') { $&amp;cd $dir }
+            dirs:access-dirstack push $1 
+          }
+      }
+}
+
+#:docstring expand-file-name:
+# Usage: expand-file-name filename {cwd}
+#
+# Convert filename to absolute (canonicalize it), and return result.
+#
+# Filenames containing . or .. as components are simplified.
+# Second arg is directory to be considered the &quot;current working directory&quot;
+# for the purposes of resolving &quot;./foo&quot; or &quot;foo&quot; if not the default cwd. 
+#:end docstring:
+fn expand-file-name \
+{
+  if { !~ $1 /* } \
+       { 
+         if { ~ $2 () } \
+              { * = `pwd^/$1 } \
+            { * = $2^/^$1 }
+       }
+  let (list = &lt;={ %split '/' $1 }; nlist =; dotdot =)
+    {
+      # Reverse list. 
+      for (elt = $list) { nlist = $elt $nlist }
+      list = $nlist
+      nlist =
+
+      for (elt = $list)
+        if { ~ $elt '.' } \
+             { true } \
+           { ~ $elt '..' } \
+             { dotdot = t $dotdot } \
+           { ~ $#dotdot 0 } \
+             { nlist = $elt $nlist } \
+           { dotdot = $dotdot(2 ...) }
+
+      ~ $#nlist 0 &amp;&amp; nlist = ''
+      %flatten '/' '' $nlist
+    }
+}
+
+# Aliases
+fn-[d = pushd
+fn-]d = popd
+fn-cd = chdir
+fn-dirs = dirs:access-dirstack dirs
+fn-pwd = dirs:access-dirstack pwd
+
+# eof
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00328" href="msg00328.html">pushd/popd/dirs for es</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00331.html">%read and %write</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00333.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00328.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00333.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00332"><strong>Date</strong></a></li>
+<li><a href="threads.html#00332"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

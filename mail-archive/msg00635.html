@@ -1,0 +1,136 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es 0.84 assertion failure under UTek 4.0 -->
+<!--X-From-R13: gebfgNpybhq.enva.pbz (Pvyy Febfg) -->
+<!--X-Date: Thu, 10 Jun 1993 14:51:31 &#45;0400 -->
+<!--X-Message-Id: m0o3rhh&#45;0008RQC@cloud.rain.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es 0.84 assertion failure under UTek 4.0</title>
+<link rev="made" href="mailto:trost@cloud.rain.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00634.html">Date Prev</a>][<a href="msg00636.html">Date Next</a>][<a href="msg00631.html">Thread Prev</a>][<a href="msg00636.html">Thread Next</a>][<a href="maillist.html#00635">Date Index</a>][<a href="threads.html#00635">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es 0.84 assertion failure under UTek 4.0</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es 0.84 assertion failure under UTek 4.0</li>
+<li><em>From</em>: <a href="mailto:trost%40cloud.rain.com">trost@cloud.rain.com</a> (Bill Trost)</li>
+<li><em>Date</em>: Thu, 10 Jun 1993 14:50:00 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[For those who don't know, UTek is the operating system for the
+Tektronix 431[5-9] series 68020-based workstations]
+
+Ugh...I got this assertion failure after a few simple commands.
+However, I'm running with the path-caching stuff and an experimental
+history mechanism.
+
+    match.c:139: assertion failed (q != ((void *)0))
+
+The great part of this is -- the call stack is over 100 frames deep!
+I'm providing a few variables of interest, and some portion of the
+call stack.  I'd appreciate it if someone pointed to where I should
+look next to see where this problem's coming from.
+
+Oh, yes -- this is with gcc 1.36 (best I can do at the moment), with
+or without optimization.  Oddly enough, using gdb breakpoints changes
+the program's behavior if the program is compiled without
+optimization, but not when it's compiled *with* it.  Urph.
+
+(gdb) p subject
+$22 = (struct List *) 0x6e0d4
+(gdb) p pattern
+$23 = (struct List *) 0x6e0c8
+(gdb) p quote
+$24 = (struct StrList *) 0x6b3d0
+(gdb) p s
+$25 = (struct List *) 0x6e0d4
+(gdb) p p
+$26 = (struct List *) 0x74964
+(gdb) p q
+$27 = (struct StrList *) 0x0
+(gdb) p *p
+$28 = {term = 0x73f00, next = 0x0}
+(gdb) p *p-&gt;term
+$29 = {str = 0x0, closure = 0x74030}
+(gdb) where
+#0  0x2206c in abort ()
+#1  0xea32 in listmatch (subject=(struct List *) 0x6e0d4, pattern=(struct List *) 0x6e0c8, quote=(struct StrList *) 0x6b3d0) (match.c line 139)
+#2  0x50b8 in walk (tree0=(struct Tree *) 0x5e5e0, binding0=(struct Binding *) 0x69f7c, flags=0) (eval.c line 253)
+#3  0x3da2 in eval (list=(struct List *) 0x6b07c, binding0=(struct Binding *) 0x6af88, flags=0) (eval.c line 111)
+#4  0x4ff4 in walk (tree0=(struct Tree *) 0x1e3ca, binding0=(struct Binding *) 0x6af88, flags=0) (eval.c line 241)
+#5  0x3da2 in eval (list=(struct List *) 0x6b058, binding0=(struct Binding *) 0x0, flags=0) (eval.c line 111)
+#6  0x461c in eval1 (term=(struct Term *) 0x6afc8, flags=0) (eval.c line 186)
+#7  0xf8c8 in prim_if (...) (...)
+#8  0x14802 in prim (...) (...)
+#9  0x3d7c in eval (list=(struct List *) 0x6b04c, binding0=(struct Binding *) 0x6af88, flags=0) (eval.c line 108)
+#10 0x4ff4 in walk (tree0=(struct Tree *) 0x1e3f2, binding0=(struct Binding *) 0x6af88, flags=0) (eval.c line 241)
+#11 0x11d7e in prim_noreturn (...) (...)
+...
+#97 0x4ff4 in walk (tree0=(struct Tree *) 0x21b64, binding0=(struct Binding *) 0x53960, flags=4) (eval.c line 241)
+#98 0x3da2 in eval (list=(struct List *) 0x53988, binding0=(struct Binding *) 0x53960, flags=4) (eval.c line 111)
+#99 0x4ff4 in walk (tree0=(struct Tree *) 0x21bc0, binding0=(struct Binding *) 0x538f0, flags=4) (eval.c line 241)
+#100 0x3f0a in eval (list=(struct List *) 0x21bfc, binding0=(struct Binding *) 0x0, flags=4) (eval.c line 128)
+#101 0xc18c in runinput (...) (...)
+#102 0xc310 in runfd (...) (...)
+#103 0xe224 in main (...) (...)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00636" href="msg00636.html">Re: es 0.84 assertion failure under UTek 4.0</a></strong>
+<ul><li><em>From:</em> trost@cloud.rain.com (Bill Trost)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00634.html">Re:  Removing true and false</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00636.html">Re: es 0.84 assertion failure under UTek 4.0</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00631.html">true and false</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00636.html">Re: es 0.84 assertion failure under UTek 4.0</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00635"><strong>Date</strong></a></li>
+<li><a href="threads.html#00635"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

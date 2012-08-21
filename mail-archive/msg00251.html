@@ -1,0 +1,132 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: a note on notations -->
+<!--X-From-R13: Oyna Ingfba <nynaNbyqc.nfgeb.jvfp.rqh> -->
+<!--X-Date: Thu, 1 Apr 1993 02:42:51 &#45;0500 -->
+<!--X-Message-Id: 9304010742.AA07573@oldp.astro.wisc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: a note on notations</title>
+<link rev="made" href="mailto:alan@oldp.astro.wisc.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00250.html">Date Prev</a>][<a href="msg00252.html">Date Next</a>][<a href="msg00250.html">Thread Prev</a>][<a href="msg00252.html">Thread Next</a>][<a href="maillist.html#00251">Date Index</a>][<a href="threads.html#00251">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: a note on notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Subject</em>: Re: a note on notations</li>
+<li><em>From</em>: Alan Watson &lt;<a href="mailto:alan%40oldp.astro.wisc.edu">alan@oldp.astro.wisc.edu</a>&gt;</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 02:42:25 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; &lt;&gt;foo works just fine in es-.08; it's used all
+&gt; over the place in initial.es, normally as &lt;&gt;$&amp;primitives.
+
+Oops.  I'm suffering from the ol' rc/es schizophrenia again.
+
+&gt; &gt; This cannot be the case for either $ or %
+&gt; &gt; as $foo and %foo already have essential meanings.
+&gt; 
+&gt; no, but
+&gt;	 ; echo % true
+&gt;	 0
+&gt;	 ; echo %(false)
+&gt;	 1
+&gt;	 ; 
+
+Maybe I'm just really dumb, but this particular overloading looks like
+it could get very confusing indeed.  And notice that
+
+	; echo `ls
+
+works, but
+
+	; echo %ls
+
+doesn't. 
+
+However, since you and Byron both think that `foo is a good idea, my
+chances of getting you to drop it and only allow `{foo} and &lt;&gt;{foo} (or
+%{foo} or ${foo} or whatever) are about as small as my chances of
+getting John to compile es with readline using gcc (but perhaps the
+effort is not quite so misguided).
+
+Think about what `foo actually gives you over `{foo}, and think about
+the benefit of the visual simplification of insisting on enclosing {}
+for both ` and &lt;&gt;.  You GAIN two distict constructs (namely, `foo and
+&lt;&gt;foo) for further expansion -- if we're running out of characters at
+v0.8, how much more will we need them in v1.8?  There are many
+constructs I avoid in rc and es because more visually distinctive but
+otherwise equivalent constructs exist -- readability is damned
+important -- and `foo falls into this category.
+
+&gt; $&amp; has everything to do with lookup:  it looks up a procedure pointer
+&gt; in a dictionary of primitives.  see prim.c.
+
+Just because you chose to implement it as a lookup doesn't mean it
+intrinsically has ANYTHING to do with lookup in the sense that $foo
+does.  The $&amp; primitives are primitives -- end of story.  Is there
+anything in their semantics which forces them to be implemented in 
+the same manner as a generic $foo?  Am I just being dumb?
+
+%%foo is at least clearly related to %foo; $&amp;foo is not.
+
+Finally, if you take away my ability to use % as a command name, I'm
+going to be spitting PASTEL PINK comets with BRIGHT ORANGE spots and
+LIME GREEN stripes.  Take a look at my email address if you doubt
+it...
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00250.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00252.html">Re: a note on notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00250.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00252.html">Re: a note on notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00251"><strong>Date</strong></a></li>
+<li><a href="threads.html#00251"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

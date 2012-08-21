@@ -1,0 +1,160 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: creature = `feep -->
+<!--X-From-R13: "Zbera X. Dvggyr" <evggyrNpbzz.zbg.pbz> -->
+<!--X-Date: Tue, 25 May 1993 19:21:39 &#45;0400 -->
+<!--X-Message-Id: 9305252319.AA25987@supra.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305250958.AA08408@nutrimat.gnu.ai.mit.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: creature = `feep</title>
+<link rev="made" href="mailto:rittle@comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00519.html">Date Prev</a>][<a href="msg00521.html">Date Next</a>][<a href="msg00507.html">Thread Prev</a>][<a href="msg00493.html">Thread Next</a>][<a href="maillist.html#00520">Date Index</a>][<a href="threads.html#00520">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: creature = `feep</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Subject</em>: Re: creature = `feep</li>
+<li><em>From</em>: &quot;Loren J. Rittle&quot; &lt;<a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a>&gt;</li>
+<li><em>Date</em>: Tue, 25 May 1993 19:19:34 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Tue, 25 May 93 06:58:02 EDT.&quot;             &lt;<a href="msg00496.html">9305250958.AA08408@nutrimat.gnu.ai.mit.edu</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>In message &lt;<a href="msg00496.html">9305250958.AA08408@nutrimat.gnu.ai.mit.edu</a>&gt; , 
+&gt; 1) Anything related to &quot;cdpath&quot; searching.  I can't believe there aren't
+&gt;    more people who agree with me on this even if they think the rest of my
+&gt;    suggestions are out in left field.
+
+I can agree with this.
+
+&gt; 2) true and false.  Really.  {result 0} and {result 1} are short enough to
+&gt;    use explicitly.  How often do people actually need to refer to `true'
+&gt;    and `false' values explicitly anyway?  Out of a couple thousand lines of
+&gt;    es script so far I've only used `result 0' a total of five times, and
+&gt;    didn't use `true' or `false' even once.
+
+I can agree with this.
+
+&gt; 3) The `apids', `var', `vars', and `whatis' commands.
+&gt; 
+&gt;    Paul said:
+&gt;    &gt;vars: it's more than the others.  it actually does something useful.
+&gt; 
+&gt;    How often do people really use it?  I have never used it even once.  I
+&gt;    also find it hard to imagine anyone's scripts depending on it, so if
+&gt;    it's primarily an interactive feature it ought to be sufficient just to
+&gt;    drop it in your .esrc.
+
+vars is far from an interactive feature!
+
+remove vars (functionality) and I quit upgrading my copies of es. :-)
+
+Noah, vars exports the environment is an es friendly manner (i.e. nothing need be
+done to the output to read it back into another es).
+
+I use vars to export my environment from an es shell running on one machine to
+a subshell running on another machine (via rsh).  Just like Plan 9's 'cpu' command,
+I have an 'res' command that exports the complete working state of a shell to another
+machine.  Without vars, I don't know how I would do this.
+
+&gt; 3) `eval'. 
+&gt; 
+&gt;    As has been pointed out, you really almost never need eval in rc and es
+&gt;    (by contrast, in the bourne shell you need it a lot).
+&gt; 
+&gt;    At least one reason why `eval' isn't in R4RS is because R4RS doesn't
+&gt;    require first-class environments, without which you can't specify in
+&gt;    which environment the &quot;second&quot; evaluation should occur.  Perhaps, for
+&gt;    the same reasons, `eval' should be removed from es.  On the other hand,
+&gt;    most actual implementations of Scheme have eval (even those without 1st
+&gt;    class environments), so some people must think it's useful even with the
+&gt;    ambiguity about the environment in which the second evaluation occurs.
+
+eval is used by 'res'.  I would hate to lose the ability to export an es' state
+to a remote machine's es.
+
+&gt; Features I think should at least be moved into initial.es:
+&gt; 
+&gt; 1) $&amp;flatten and $&amp;split.  They are easy to implement in es script.
+&gt; 
+&gt;    Someone raised a performance issue with regards to doing them in es
+&gt;    script.  It's true that they run substantially slower (particularly for
+&gt;    large arrays), but this is an indication that es ought to be made faster
+&gt;    somehow, not that you should bloat it with more primitives just in the
+&gt;    name of &quot;efficiency&quot;.  That way lies GNU Emacs.
+
+No comment. :-)
+
+&gt; 1) `\n' and related syntax for special characters.  I guess I am not as
+&gt;    adverse to this as I once was.  There is already enough of a quoting
+&gt;    nightmare when you use eval that things like `\n' do not make it
+&gt;    substantially worse.
+
+I really like \n, etc.  Please keep them in es.
+
+--
+Loren J. Rittle (rittle@comm.mot.com)
+Systems Technology Research (IL02/2240)
+Motorola, Inc.
+(708)576-7794
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00496" href="msg00496.html">creature = `feep</a></strong>
+<ul><li><em>From:</em> friedman@gnu.ai.mit.edu (Noah Friedman)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00519.html">Re: heirarchical lists, one more time.</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00521.html">Re: &quot;cdpath&quot; searching, and pushd/popd too</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00507.html">creature = `feep</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00493.html">Re: feeping creatures, again</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00520"><strong>Date</strong></a></li>
+<li><a href="threads.html#00520"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

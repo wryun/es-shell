@@ -1,0 +1,144 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: compiling es -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Fri, 2 Oct 1992 19:38:49 &#45;0400 -->
+<!--X-Message-Id: 9210022340.AA26840@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: compiling es</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00008.html">Date Prev</a>][<a href="msg00010.html">Date Next</a>][<a href="msg00008.html">Thread Prev</a>][<a href="msg00011.html">Thread Next</a>][<a href="maillist.html#00009">Date Index</a>][<a href="threads.html#00009">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: compiling es</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:schwartz%40groucho.cs.psu.edu">schwartz@groucho.cs.psu.edu</a></li>
+<li><em>Subject</em>: Re: compiling es</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 2 Oct 1992 19:40:28 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; First impressions:  ``let'' and ``local'' are backwards!
+
+hmm, what do people think about this?  we picked let first, with its
+current semantics, before we'd even decided that es would have closures.
+when we added closures, we knew we'd need a different binding keyword,
+and local seemed reasonable.  hadn't realized that perl used it for
+what we're calling let.  (the one case of prior art for a language with
+both keywords that we knew of was ken brooks' two-view document editor,
+and he picked the same usage we did.)
+
+&gt; Surprisingly, es binary is quite a bit bigger than that of rc, even
+&gt; though the source isn't much bigger.   Maybe gcc just generated really
+&gt; bad code, or something?
+
+it's all the Ref() things for the garbage collector, methinks.  they
+push a lot of stuff that should be in registers onto the stack, with
+a lot of extra code to manipulate the root list.  perhaps we should
+have used a different form of garbage collector.
+
+&gt; Echo is a primative, but not read isn't.  That's rather asymmetrical.
+
+to support a user-written read-eval-print loop, there will be some input
+mechanism in the next version, due out in a couple of weeks.  it won't
+be read w/sh semantics, though.  what's general opinion on adding a read
+primitive?  (i don't want to start a flamefest here, and i know that we
+flushed some of that out on the rc list many moons ago, so i ask the
+question somewhat gingerly.)
+
+&gt; As in rc, null terminated strings are used.
+
+the main reason is that only null terminated strings can be passed in
+the environment or argv vectors.  we had debated this extensively, and
+decided strings with nul characters in them weren't important.  were
+we wrong?  (the garbage collector uses the fact that strings don't
+have nuls in them, but that's minor.)
+
+&gt; Whatis is only for functions, not variables?
+
+for now, yes.  path searching &amp; whatis are changing soon, and before
+we start arguing about whatis &amp; variables, whatis &amp; signals, etc.,
+wait for that part of the language to settle down.
+
+&gt; Guaranteeing that functions will be properly tail recursive would be
+&gt; great.
+
+we know, we know!  that meant throwing away more code &amp; organization from
+rc than we were prepared to do for our first version, but we do intend to
+do that.
+
+&gt; if someone were interested
+&gt; in doing an independent implementation of es,
+
+that deserves a :-).  wait to see if this thing is actually useful before
+considering independent implementations.  remember, for now this is just
+a collection of unproven ideas.
+
+&gt; start with a small scheme interpreter and give it a new repl loop.
+
+might be reasonable.  we started from rc for the obvious historical reasons.
+pending a good model for macros/syntax extension that would support shell
+syntax, i'd expect to stay with something based around a c+yacc implementation.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00016" href="msg00016.html">Paul's questions</a></strong>
+<ul><li><em>From:</em> John (_You_ hide, they seek.) Mackin &lt;john@civil.su.oz.au&gt;</li></ul></li>
+<li><strong><a name="00011" href="msg00011.html">Re: compiling es</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00008.html">compiling es</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00010.html">Re: compiling es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00008.html">compiling es</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00011.html">Re: compiling es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00009"><strong>Date</strong></a></li>
+<li><a href="threads.html#00009"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

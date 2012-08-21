@@ -1,0 +1,165 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Pattern extraction and Wildcard expansion -->
+<!--X-From-R13: ebt -->
+<!--X-Date: Thu, 14 Dec 2000 18:20:30 &#45;0500 -->
+<!--X-Message-Id: 00Dec14.182030edt.45352@hawkwind.utcs.utoronto.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Pattern extraction and Wildcard expansion</title>
+<link rev="made" href="mailto:rog">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01045.html">Date Prev</a>][<a href="msg01047.html">Date Next</a>][<a href="msg01055.html">Thread Prev</a>][<a href="msg01068.html">Thread Next</a>][<a href="maillist.html#01046">Date Index</a>][<a href="threads.html#01046">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Pattern extraction and Wildcard expansion</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: hawkwind.utcs.toronto.edu</li>
+<li><em>Subject</em>: Re: Pattern extraction and Wildcard expansion</li>
+<li><em>From</em>: rog</li>
+<li><em>Date</em>: Thu, 14 Dec 2000 19:03:03 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; and try to execute:
+&gt;
+&gt;  	; s l*
+&gt;
+&gt;  Mi intention is to get a list of commands that begin with &quot;l&quot;, but there is
+&gt;  no output.
+&gt;
+&gt;  Where is my error?
+
+you've run into a fundamental design issue with es.
+
+in common with rc, es is very careful not to reparse its input.  in
+particular, wildcards are expanded once only.  it's perfectly
+permissable to have a filename containing a '*' character for example.
+a variable containing such a filename as a value will, unlike in the
+bourne or korn shells, never be unintentionally expanded when used
+later in the script.
+
+what this means is that if you type:
+
+	s x*
+
+the x* gets expanded (or not) there and then.  the function that is
+called gets the resulting argument list as a simple list of string.
+
+this makes for a much simpler and more predictable interface.  it
+means that, for instance, the s function can count the number of items
+in its list reliably.  lazy evaluation of wildcards would mean that a
+function:
+
+	fn s pat {
+		echo $#pat
+		cd /
+		echo $#pat
+	}
+
+could print two different numbers!  this does happen in bourne shell
+derivatives.  for instance, the bourne shell script:
+
+	s() {
+		x=$*
+		echo $x
+		cd /
+		echo $x
+	}
+	s '*'
+
+is likely to print two entirely different things.  this is a huge
+source of errors (and security holes) in shell scripts.
+
+i'm actually a little surprised.  i thought that es, of all shells,
+might have a globbing (pattern matching) primitive available for user
+consumption.  but it appears not.
+
+as far as i'm aware, the best you can do is:
+
+	fn s pat {
+		lis = `{for (dir = $path) ls $dir}
+		a = &lt;={eval 'result &lt;={~~ $lis ' ^ $pat ^ '}'}
+		echo $a^$nl
+	}
+
+
+but that leads you into all sorts of potential trouble if there are
+files around containing es metacharacters (e.g.  a file names ';rm -rf
+*'...).  not to mention files containing spaces.
+
+if you *really* want to do something like this, you could use a sed
+script to mutate the shell wild-card style pattern into a sed-style
+pattern, which you could then run over the files.  but even this,
+although safer, won't always give correct results.
+
+basically you'd be better off writing a function that took grep-style
+patterns than shell-style patterns.  so you might do something like:
+
+	fn s pat {
+		{for (dir = $path) ls $dir} |
+			grep -e '^' ^ $pat ^ '$'
+	}
+
+so you could do:
+
+	s 'l.*'
+
+to get what you wanted.  it's still not perfect, as it won't work with
+filenames containing newlines...  but you can't have everything :-)
+
+hope this helps,
+
+  rog.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01045.html">Re: Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01047.html">Re: Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01055.html">Re: Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01068.html">job control for the es shell</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01046"><strong>Date</strong></a></li>
+<li><a href="threads.html#01046"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  should es have a recursion depth limit? -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 15 Jun 1993 21:32:24 &#45;0400 -->
+<!--X-Message-Id: 9306160132.AA16552@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  should es have a recursion depth limit?</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00646.html">Date Prev</a>][<a href="msg00648.html">Date Next</a>][<a href="msg00645.html">Thread Prev</a>][<a href="msg00648.html">Thread Next</a>][<a href="maillist.html#00647">Date Index</a>][<a href="threads.html#00647">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  should es have a recursion depth limit?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re:  should es have a recursion depth limit?</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 15 Jun 1993 21:32:15 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Bill Trost wrote
+&gt; The thing that most drives me up the wall about emacs lisp is the fact
+&gt; that it's completely impossible to write any serious recursive
+&gt; functions because of the stupid max-lisp-eval-depth.  I have the
+&gt; feeling I would very quickly bump into this &quot;feature&quot; [bah!] if you
+&gt; added it to es.
+
+&gt; As an option for debugging scripts, it might be reasonable, but the
+&gt; default very much needs to be infinite, but don't cripple the language
+&gt; to &quot;protect&quot; the programmer from their mistakes.
+
+based on an off-line suggestion from Noah, the proposal now includes
+the ability to turn the feature off (by setting the variable to 0).
+
+i actually doubt very seriously whether you'll bump into the limit
+very soon.  run this test, and see how high the numbers go:
+
+	fn x { echo $#*; x 1 $* }
+	x
+
+i got to 71 on one machine and 244 on another.  (that 71 may be a
+garbage collector bug, but the other was defintely a stack overflow.)
+
+the lack of proper tail calling is what gets in the way of me writing
+serious recursive functions.  such a limit is just meant to allow es
+to fail properly.
+
+i hope that this addresses your concerns.  if not, please let me know
+how to make it better while still allowing es to run without crashing
+when the user does something stupid (which many of us have done) like
+
+	fn ls { ls -F $* }
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00646.html">Re: Features to remove: return and noreturn</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00648.html">Re: should es have a recursion depth limit?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00645.html">should es have a recursion depth limit?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00648.html">Re: should es have a recursion depth limit?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00647"><strong>Date</strong></a></li>
+<li><a href="threads.html#00647"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Flaw in %readfrom and %writeto -->
+<!--X-From-R13: Ebera Rnlgba <pfqnlgbaNpf.hpuvpntb.rqh> -->
+<!--X-Date: Sat, 13 Sep 1997 23:06:22 &#45;0400 -->
+<!--X-Message-Id: xcd202tgjof.fsf@ra.cs.uchicago.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199709130052.UAA49594@dingler.dev.infomkt.ibm.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Flaw in %readfrom and %writeto</title>
+<link rev="made" href="mailto:csdayton@cs.uchicago.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00975.html">Date Prev</a>][<a href="msg00978.html">Date Next</a>][<a href="msg00975.html">Thread Prev</a>][<a href="msg00977.html">Thread Next</a>][<a href="maillist.html#00976">Date Index</a>][<a href="threads.html#00976">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Flaw in %readfrom and %writeto</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: Flaw in %readfrom and %writeto</li>
+<li><em>From</em>: Soren Dayton &lt;<a href="mailto:csdayton%40cs.uchicago.edu">csdayton@cs.uchicago.edu</a>&gt;</li>
+<li><em>Date</em>: Sat, 13 Sep 1997 14:20:16 -0400</li>
+<li><em>In-reply-to</em>: erik quanstrom's message of Fri, 12 Sep 1997 20:52:45 -0400</li>
+<li><em>Mail-copies-to</em>: never</li>
+<li><em>References</em>: &lt;<a href="msg00975.html">199709130052.UAA49594@dingler.dev.infomkt.ibm.com</a>&gt;</li>
+<li><em>Reply-to</em>: <a href="mailto:csdayton%2Bes%40cs.uchicago.edu">csdayton+es@cs.uchicago.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:csdayton%40cs.uchicago.edu">csdayton@cs.uchicago.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>erik quanstrom &lt;quanstro@infomkt.ibm.com&gt; writes:
+
+&gt; &gt;Yep, that's right.  Don't most systems support /dev/fd these days,
+&gt; &gt;making the temp file kludge less necessary?
+&gt; 
+&gt; no. aix, for example. 
+&gt; 
+&gt; &gt;&gt; I actually never understood why $pid does not change in a forked subshell,
+&gt; &gt;&gt; but that's a different matter.
+&gt; 
+&gt; &gt;So you can do things like
+&gt; &gt;
+&gt; &gt;  { mumble &gt; /tmp/poot.$pid } &amp;
+&gt; &gt;  rm /tmp/poot.$pid
+&gt; &gt;
+&gt; &gt;and have them work on the same file.  Behavior inherited from /bin/sh.
+&gt; 
+&gt; why would you want that? if you really want that behavior,
+&gt; then you can implement it by doing the floowing if subshells
+&gt; change $pid
+&gt; 
+&gt;         parentPid = $pid
+&gt; 
+&gt;         { mumble &gt; /tmp/poot.$parentPid } &amp;
+&gt;         rm /tmp/poot/$parentPid
+
+note the `behaviour inherited from /bin/sh'.  This would be unfortunate
+to break.  Perhaps another way to do this would be to provide a $&amp;getpid
+primitive?  While this is not ideal, it would work.
+
+What do people think?
+
+Soren
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00977" href="msg00977.html">Re: Flaw in %readfrom and %writeto</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@netcom.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00975" href="msg00975.html">re: Flaw in %readfrom and %writeto</a></strong>
+<ul><li><em>From:</em> erik quanstrom &lt;quanstro@Infomkt.ibm.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00975.html">re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00978.html">re $pid</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00975.html">re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00977.html">Re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00976"><strong>Date</strong></a></li>
+<li><a href="threads.html#00976"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

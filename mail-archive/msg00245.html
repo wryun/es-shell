@@ -1,0 +1,148 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: a note on notations -->
+<!--X-From-R13: Xbua ([bfg zbqrea pbzchgref jbhyq oernx vs lbh fgbbq ba gurz) [npxva <wbuaN	pvivy.fh.bm.nh> -->
+<!--X-Date: Wed, 31 Mar 1993 20:19:09 &#45;0500 -->
+<!--X-Message-Id: 199304011048.3610.es.bageg@civil.su.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9303312041.AA14066@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: a note on notations</title>
+<link rev="made" href="mailto:john@civil.su.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00244.html">Date Prev</a>][<a href="msg00246.html">Date Next</a>][<a href="msg00233.html">Thread Prev</a>][<a href="msg00234.html">Thread Next</a>][<a href="maillist.html#00245">Date Index</a>][<a href="threads.html#00245">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: a note on notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: The es Mailing List &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: a note on notations</li>
+<li><em>From</em>: John (Most modern computers would break if you stood on them) Mackin &lt;john@	civil.su.oz.au&gt;</li>
+<li><em>Date</em>: Wed, 31 Mar 1993 19:48:42 -0500</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00233.html">9303312041.AA14066@astro.mv.us.adobe.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Here are my first-cut comments on the issues raised in this thread.
+I'm writing to the list about this at once since Paul asked for
+quick reactions; I don't normally like to fire from the hip, so
+I'd ask your indulgence if I haven't quite thought it all
+through.  On the other hand, I do have VERY strong feelings about
+all this, otherwise I'd keep silence.
+
+I will try to progress from the general to the specific.
+
+I believe that a redirection operator that opens for read and
+write is an excellent idea and definitely belongs in the shell.
+I once had to code a C program merely because the shell I was
+using lacked that very ability.  I agree, it is not used all
+that often -- I have only needed it that once, I think, in fourteen
+years of working with UNIX.  On the other hand, I really felt
+put out when I had to write that program.  This is the sort of
+thing the shell should do for us when we need it.
+
+Regardless of former art, I think that any such operator should
+certainly NOT truncate the file.  If you want truncation, it's
+as easy as writing &quot;&gt;file; command &lt;&gt;file&quot;.  Open for read and
+write means just that, open for read and write.  It does NOT
+mean &quot;with truncate&quot;.  Three-argument open() sucks.  The
+redirection should give us access to open(..., 2).
+
+I have always agreed, and have said publically before, that the
+&lt;&gt;{ ... } syntax bites the big one.  On the other hand, I haven't
+been able to come up with a better suggestion before now.  I would
+be very pleased to see &lt;&gt; become a redirection operator and the
+return-value syntax become something else.
+
+I will spit flaming blue comets if &quot;:&quot; as a word becomes special.
+es has already departed from the path of righteousness in making
+backslash special again (all in favour of rc's backslashes, shout AYE!);
+making colon special would be totally intolerable for me.  The reason
+is that I use the Pike prompt style, where : as a word introduces a
+functional comment terminated by semicolon.  So I can have
+
+: some-stuff; 
+
+as my prompt and mouse up the whole line and send it.  Pike came
+up with this idea under sh where : was built in; rc, and now es,
+don't need a : builtin to support this since you simply define :
+as a null function.  I will be MOST unhappy if this is broken
+by changes to es.  I admit that the stench of xterm is somewhat
+implicated here, but even with the best-designed terminal program
+in the universe it is always going to be easier to mouse up a whole
+line than a partial line.
+
+I'm not very keen on ${foo} either.  My reasons for disliking that
+are more inchoate; basically (1) it looks too much like foul mechanisms
+from other bad shells; (2) $ is for variables and I wouldn't like to
+see it overloaded this way.
+
+The syntax %{foo} was indirectly suggested.  This gets my vote.  I
+don't know why I didn't think of this myself; well, I do, but I'm
+not going to admit to it in public.  Someone said that this was
+a new and distinctive mechanism and should have a new and distinctive
+syntax.  %{foo} fits the bill.  Easy to type, looks nice (as definitely
+opposed to &lt;&gt;{foo}, and definitely new and distinctive.  Use the
+Percent, Luke :).
+
+I can't comment on the names of the hooks now; no more time.
+
+OK,
+John.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00233" href="msg00233.html">Re:  a note on notations</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00244.html">Re: a note on notations (I'm going to be sorry I sent this to the list)</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00246.html">Re: a note on notations (I'm going to be sorry I sent this to the list)</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00233.html">Re:  a note on notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00234.html">Re: a note on notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00245"><strong>Date</strong></a></li>
+<li><a href="threads.html#00245"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

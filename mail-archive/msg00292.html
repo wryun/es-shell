@@ -1,0 +1,130 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: multiple servers (was: Speed of rc) -->
+<!--X-From-R13: Rnir [nfba <qznfbaNcyt.hjngreybb.pn> -->
+<!--X-Date: Fri, 9 Apr 1993 16:26:56 &#45;0400 -->
+<!--X-Message-Id: 93Apr9.162622edt.28706@plg.uwaterloo.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 93Apr8.203942edt.2538@groucho.cs.psu.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>multiple servers (was: Speed of rc)</title>
+<link rev="made" href="mailto:dmason@plg.uwaterloo.ca">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00291.html">Date Prev</a>][<a href="msg00293.html">Date Next</a>][<a href="msg00291.html">Thread Prev</a>][<a href="msg00293.html">Thread Next</a>][<a href="maillist.html#00292">Date Index</a>][<a href="threads.html#00292">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>multiple servers (was: Speed of rc)</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: multiple servers (was: Speed of rc)</li>
+<li><em>From</em>: Dave Mason &lt;<a href="mailto:dmason%40plg.uwaterloo.ca">dmason@plg.uwaterloo.ca</a>&gt;</li>
+<li><em>Date</em>: Fri, 9 Apr 1993 16:26:14 -0400</li>
+<li><em>In-reply-to</em>: &lt;93Apr8.203942edt.2538@groucho.cs.psu.edu&gt; (message from Scott Schwartz on Thu, 8 Apr 1993 20:38:11 -0400)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Date: Thu, 8 Apr 1993 20:38:11 -0400
+&gt; From: Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;
+&gt; 
+&gt; Just some random thoughts...
+&gt; 
+&gt; Tom &lt;culliton@srg.af.mil&gt; writes:
+&gt; | I actually spent a fair amount of time once trying to figure out a
+&gt; | stunt to run co-processes under rc so I can fire up sh (for test), and
+&gt; | something else to do math, exactly once and then have functions that
+&gt; | talk to them.  In the end I decided it either couldn't be done or
+&gt; | wasn't worth the effort.
+&gt; 
+&gt; Yet another defect in Unix, where IPC is so limited that even simple
+&gt; and obvious things are so painful that no one does them.  Similarly, if
+&gt; dynamic loading were fundamental and pervasive one could envision
+&gt; taking any a.out file, mapping it once, and then calling its entry
+&gt; points.  For example, make the system (OS, language runtime, etc)
+&gt; understand /bin/sh/glob.  Then the normal execve means calling
+&gt; /bin/sh/main.
+&gt; 
+&gt; The problem with being spartan is that you end up being stoic.
+
+On a simpler level, it appears to me that there is no way to create a
+circular pipe in es, but if you could, you could make a server
+function fairly easily (excuse the mangled syntax, I'm just
+now planning to switch from rc to es):
+
+fn server cmd reader writer {
+	%pipe {$cmd} (1 0) (&gt;10 &lt;11) {
+		$reader={line &gt;[0=11]}
+		$writer=@ args {
+			for (i=$args) {
+				echo $i &gt;[1=10]}}}}
+
+Then you could say, e.g.:
+	server bc bc-answer ask-bc
+then:
+	ask-bc 3 4 + 2 '*'
+	echo `bc-answer
+and get:
+	14
+
+(In my hacked extension to the %pipe syntax:
+	%pipe cmd [list-of-left-side-descriptors
+		   list-of-right-side-descriptors-and-directions
+		    cmd] ...
+lets you connect any number of pipes.  There's got to be a better way.)
+
+You could also write a server for test that ran /bin/sh (you'd have to
+send it cd commands as well as test commands so that paths would be
+consistent) (although I personally think this would be a horrible hack).
+
+../Dave
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00291.html">${} or &lt;- or &lt;=</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00293.html">announcing release 0.82 of es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00291.html">${} or &lt;- or &lt;=</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00293.html">announcing release 0.82 of es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00292"><strong>Date</strong></a></li>
+<li><a href="threads.html#00292"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

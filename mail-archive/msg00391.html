@@ -1,0 +1,106 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Catching both the exit status and the output -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Fri, 14 May 1993 18:35:24 &#45;0400 -->
+<!--X-Message-Id: 9305142235.AA29384@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Catching both the exit status and the output</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00390.html">Date Prev</a>][<a href="msg00392.html">Date Next</a>][<a href="msg00386.html">Thread Prev</a>][<a href="msg00392.html">Thread Next</a>][<a href="maillist.html#00391">Date Index</a>][<a href="threads.html#00391">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Catching both the exit status and the output</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Catching both the exit status and the output</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Fri, 14 May 1993 18:35:22 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I realized that using line to implement read was not altogether
+trivial, as I need to check the exit status of line to distinguish
+between an empty input line and end-of-file, and %backquote throws
+away the exit status!  So I wrote
+
+fn %Backquote sep cmd {
+  let (tmp = /tmp/es.Bq.$pid) {
+    let (status = &lt;={$cmd &gt;$tmp}) {
+      result ($status ``$sep{cat $tmp; /bin/rm -f $tmp})}}}
+
+which acts like %backquote except it prepends the exit status to the
+front of the return value.  Maybe this functionality should be in the
+primitive, and then the common ` and `` forms could chop the first
+element off the list?  My solution certainly forks and execs a lot...
+
+As an example, I now have a read function as follows:
+
+fn read {
+  let (ans = &lt;={%Backquote \n {line}}) {
+    if {result $ans(1)} {
+       if {~ $#ans 1} {result ''} {result $ans(2 ...)}} {result ()}}}
+
+It returns () on eof and '' on an empty line.  I will be happy to
+receive comments on the programming style!  I am used to programming
+in Scheme (and hopefully it shows), but es is new to me, and maybe I
+am being needlessly circumspect.
+
+Now, ls | while {x=&lt;=read;!result $x} {echo ... $x} does work, but it
+is slow as molasses.  We really need that read builtin, methinks.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00390.html">Re: Read?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00392.html">Re: Catching both the exit status and the output</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00386.html">&quot;es&quot; Mailing List</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00392.html">Re: Catching both the exit status and the output</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00391"><strong>Date</strong></a></li>
+<li><a href="threads.html#00391"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

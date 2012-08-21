@@ -1,0 +1,438 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: patches to es&#45;0.8 -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Mon, 22 Mar 1993 21:00:17 &#45;0500 -->
+<!--X-Message-Id: 9303230158.AA05999@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>patches to es-0.8</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00217.html">Date Prev</a>][<a href="msg00219.html">Date Next</a>][<a href="msg00232.html">Thread Prev</a>][<a href="msg00221.html">Thread Next</a>][<a href="maillist.html#00218">Date Index</a>][<a href="threads.html#00218">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>patches to es-0.8</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: patches to es-0.8</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 22 Mar 1993 20:58:32 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>please install these patches to es-0.8 before installing.  it should
+fix the three bugs i know about (two reported and one discovered along
+the way to fixing the others) in 0.8.  there'll be a new release in
+a few days which i hope to release to the world after i get some feedback
+on 0.8, but i don't plan on making any changes other than bug fixes
+between now and then.
+
+paul
+
+*** CHANGES	Sat Mar 20 18:24:52 1993
+--- ../es/CHANGES	Mon Mar 22 17:46:28 1993
+***************
+*** 1,8 ****
+  CHANGES
+  =======
+  
+! since 0.79
+! ----------
+  
+  there's now a man page.  i believe that it's up to date.
+  
+--- 1,21 ----
+  CHANGES
+  =======
+  
+! since 0.8
+! ---------
+! 
+! access -l will now report true for symbolic links;  it used to always
+! report false.  oops.
+! 
+! whatis was broken and accepted any executable filename as a valid without
+! checking the executable bit.  fixed.
+! 
+! when the wait builtin was made interruptible, it broke the handling
+! of control-c.  that's fixed now.
+! 
+! 
+! 0.79 to 0.8
+! -----------
+  
+  there's now a man page.  i believe that it's up to date.
+  
+*** access.c	Sat Mar 20 18:24:54 1993
+--- ../es/access.c	Mon Mar 22 17:45:49 1993
+***************
+*** 1,4 ****
+! /* access.c -- access testing and path searching ($Revision: 1.7 $) */
+  
+  #define	REQUIRE_STAT	1
+  #define	REQUIRE_PARAM	1
+--- 1,4 ----
+! /* access.c -- access testing and path searching ($Revision: 1.8 $) */
+  
+  #define	REQUIRE_STAT	1
+  #define	REQUIRE_PARAM	1
+***************
+*** 55,62 ****
+  
+  static int testfile(char *path, int perm, int type) {
+  	struct stat st;
+! 	if (stat(path, &amp;st) == -1)
+! 		return errno;
+  	if (type != 0 &amp;&amp; (st.st_mode &amp; S_IFMT) != type)
+  		return EACCES;		/* what is an appropriate return value? */
+  	return testperm(&amp;st, perm);
+--- 55,68 ----
+  
+  static int testfile(char *path, int perm, int type) {
+  	struct stat st;
+! #ifdef S_IFLNK
+! 	if (type == S_IFLNK) {
+! 		if (lstat(path, &amp;st) == -1)
+! 			return errno;
+! 	} else
+! #endif
+! 		if (stat(path, &amp;st) == -1)
+! 			return errno;
+  	if (type != 0 &amp;&amp; (st.st_mode &amp; S_IFMT) != type)
+  		return EACCES;		/* what is an appropriate return value? */
+  	return testperm(&amp;st, perm);
+***************
+*** 167,170 ****
+--- 173,181 ----
+  extern Dict *initprims_access(Dict *primdict) {
+  	X(access);
+  	return primdict;
++ }
++ 
++ extern char *checkexecutable(char *file) {
++ 	int err = testfile(file, EXEC, S_IFREG);
++ 	return err == 0 ? NULL : strerror(err);
+  }
+*** es.h	Sat Mar 20 18:25:00 1993
+--- ../es/es.h	Mon Mar 22 17:45:54 1993
+***************
+*** 1,4 ****
+! /* es.h -- definitions for higher order shell ($Revision: 1.11 $) */
+  
+  #include &quot;config.h&quot;
+  #include &quot;stdenv.h&quot;
+--- 1,4 ----
+! /* es.h -- definitions for higher order shell ($Revision: 1.13 $) */
+  
+  #include &quot;config.h&quot;
+  #include &quot;stdenv.h&quot;
+***************
+*** 198,209 ****
+  extern void printstatus(int pid, int status);
+  
+  
+  /* proc.c */
+  
+  extern Boolean hasforked;
+  extern int efork(Boolean parent, Boolean background);
+! extern int ewaitfor2(int pid, void *rusage);
+! #define	ewaitfor(pid)	ewaitfor2(pid, NULL)
+  
+  
+  /* dict.c */
+--- 198,214 ----
+  extern void printstatus(int pid, int status);
+  
+  
++ /* access.c */
++ 
++ extern char *checkexecutable(char *file);
++ 
++ 
+  /* proc.c */
+  
+  extern Boolean hasforked;
+  extern int efork(Boolean parent, Boolean background);
+! extern int ewait(int pid, Boolean interruptible, void *rusage);
+! #define	ewaitfor(pid)	ewait(pid, FALSE, NULL)
+  
+  
+  /* dict.c */
+*** eval.c	Sat Mar 20 18:24:54 1993
+--- ../es/eval.c	Mon Mar 22 17:45:56 1993
+***************
+*** 1,4 ****
+! /* eval.c -- evaluation of lists and trees ($Revision: 1.11 $) */
+  
+  #include &quot;es.h&quot;
+  
+--- 1,4 ----
+! /* eval.c -- evaluation of lists and trees ($Revision: 1.12 $) */
+  
+  #include &quot;es.h&quot;
+  
+***************
+*** 146,151 ****
+--- 146,154 ----
+  	/* the logic here is duplicated in $&amp;whatis */
+  
+  	if (isabsolute(lp-&gt;term-&gt;str)) {
++ 		char *error = checkexecutable(lp-&gt;term-&gt;str);
++ 		if (error != NULL)
++ 			fail(&quot;$&amp;whatis&quot;, &quot;%s: %s&quot;, lp-&gt;term-&gt;str, error);
+  		lp = forkexec(lp-&gt;term-&gt;str, lp, flags &amp; eval_inchild);
+  		goto done;
+  	}
+*** prim-etc.c	Sat Mar 20 18:24:57 1993
+--- ../es/prim-etc.c	Mon Mar 22 17:45:58 1993
+***************
+*** 1,4 ****
+! /* prim-etc.c -- miscellaneous primitives ($Revision: 1.11 $) */
+  
+  #define	REQUIRE_PWD	1
+  
+--- 1,4 ----
+! /* prim-etc.c -- miscellaneous primitives ($Revision: 1.12 $) */
+  
+  #define	REQUIRE_PWD	1
+  
+***************
+*** 119,126 ****
+  	if (term-&gt;closure == NULL) {
+  		Ref(char *, prog, term-&gt;str);
+  		assert(prog != NULL);
+! 		if (!isabsolute(prog) &amp;&amp; (list = varlookup2(&quot;fn-&quot;, prog)) == NULL)
+! 			list = pathsearch(term);
+  		RefEnd(prog);
+  	}
+  	RefEnd(term);
+--- 119,133 ----
+  	if (term-&gt;closure == NULL) {
+  		Ref(char *, prog, term-&gt;str);
+  		assert(prog != NULL);
+! 		if (isabsolute(prog)) {
+! 			char *error = checkexecutable(prog);
+! 			if (error != NULL)
+! 				fail(&quot;$&amp;whatis&quot;, &quot;%s: %s&quot;, prog, error);
+! 		} else {
+! 			list = varlookup2(&quot;fn-&quot;, prog);
+! 			if (list == NULL)
+! 				list = pathsearch(term);
+! 		}
+  		RefEnd(prog);
+  	}
+  	RefEnd(term);
+*** prim-sys.c	Sat Mar 20 18:24:57 1993
+--- ../es/prim-sys.c	Mon Mar 22 17:04:03 1993
+***************
+*** 1,4 ****
+! /* prim-sys.c -- system call primitives ($Revision: 1.10 $) */
+  
+  #define	REQUIRE_IOCTL	1
+  
+--- 1,4 ----
+! /* prim-sys.c -- system call primitives ($Revision: 1.11 $) */
+  
+  #define	REQUIRE_IOCTL	1
+  
+***************
+*** 273,279 ****
+  	pid = efork(TRUE, FALSE);
+  	if (pid == 0)
+  		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+! 	status = ewaitfor2(pid, &amp;r);
+  	t1 = time(NULL);
+  	SIGCHK();
+  	printstatus(0, status);
+--- 273,279 ----
+  	pid = efork(TRUE, FALSE);
+  	if (pid == 0)
+  		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+! 	status = ewait(pid, FALSE, &amp;r);
+  	t1 = time(NULL);
+  	SIGCHK();
+  	printstatus(0, status);
+*** proc.c	Sat Mar 20 18:24:58 1993
+--- ../es/proc.c	Mon Mar 22 17:04:26 1993
+***************
+*** 1,4 ****
+! /* proc.c -- process control system calls ($Revision: 1.5 $) */
+  
+  #include &quot;es.h&quot;
+  
+--- 1,4 ----
+! /* proc.c -- process control system calls ($Revision: 1.6 $) */
+  
+  #include &quot;es.h&quot;
+  
+***************
+*** 74,81 ****
+  static struct rusage wait_rusage;
+  #endif
+  
+! /* ewait -- a wait wrapper that interfaces with signals */
+! static int ewait(int *statusp) {
+  	int n;
+  	interrupted = FALSE;
+  	if (!setjmp(slowlabel)) {
+--- 74,81 ----
+  static struct rusage wait_rusage;
+  #endif
+  
+! /* dowait -- a wait wrapper that interfaces with signals */
+! static int dowait(int *statusp) {
+  	int n;
+  	interrupted = FALSE;
+  	if (!setjmp(slowlabel)) {
+***************
+*** 111,118 ****
+  		}
+  }
+  
+! /* ewaitfor2 -- wait for a specific process to die, or any process if pid == 0 */
+! extern int ewaitfor2(int pid, void *rusage) {
+  	Proc *proc;
+  top:
+  	for (proc = proclist; proc != NULL; proc = proc-&gt;next)
+--- 111,118 ----
+  		}
+  }
+  
+! /* ewait -- wait for a specific process to die, or any process if pid == 0 */
+! extern int ewait(int pid, Boolean interruptible, void *rusage) {
+  	Proc *proc;
+  top:
+  	for (proc = proclist; proc != NULL; proc = proc-&gt;next)
+***************
+*** 120,132 ****
+  			int status;
+  			if (proc-&gt;alive) {
+  				int deadpid;
+! 				while ((deadpid = ewait(&amp;proc-&gt;status)) != pid)
+  					if (deadpid != -1)
+  						reap(deadpid, proc-&gt;status);
+! 					else if (errno == EINTR)
+  						SIGCHK();
+- 					else
+- 						fail(&quot;es:ewaitfor2&quot;, &quot;wait: %s&quot;, strerror(errno));
+  				proc-&gt;alive = FALSE;
+  #if BSD_LIMITS
+  				proc-&gt;rusage = wait_rusage;
+--- 120,132 ----
+  			int status;
+  			if (proc-&gt;alive) {
+  				int deadpid;
+! 				while ((deadpid = dowait(&amp;proc-&gt;status)) != pid)
+  					if (deadpid != -1)
+  						reap(deadpid, proc-&gt;status);
+! 					else if (errno != EINTR)
+! 						fail(&quot;es:ewait&quot;, &quot;wait: %s&quot;, strerror(errno));
+! 					else if (interruptible)
+  						SIGCHK();
+  				proc-&gt;alive = FALSE;
+  #if BSD_LIMITS
+  				proc-&gt;rusage = wait_rusage;
+***************
+*** 152,166 ****
+  		}
+  	if (pid == 0) {
+  		int status;
+! 		while ((pid = ewait(&amp;status)) == -1)
+! 			if (errno == EINTR)
+  				SIGCHK();
+! 			else
+! 				fail(&quot;es:ewaitfor2&quot;, &quot;wait: %s&quot;, strerror(errno));
+  		reap(pid, status);
+  		goto top;
+  	}
+! 	fail(&quot;es:ewaitfor2&quot;, &quot;wait: %d is not a child of this shell&quot;, pid);
+  	NOTREACHED;
+  }
+  
+--- 152,167 ----
+  		}
+  	if (pid == 0) {
+  		int status;
+! 		while ((pid = dowait(&amp;status)) == -1) {
+! 			if (errno != EINTR)
+! 				fail(&quot;es:ewait&quot;, &quot;wait: %s&quot;, strerror(errno));
+! 			if (interruptible)
+  				SIGCHK();
+! 		}
+  		reap(pid, status);
+  		goto top;
+  	}
+! 	fail(&quot;es:ewait&quot;, &quot;wait: %d is not a child of this shell&quot;, pid);
+  	NOTREACHED;
+  }
+  
+***************
+*** 192,198 ****
+  		fail(&quot;$&amp;wait&quot;, &quot;usage: wait [pid]&quot;);
+  		NOTREACHED;
+  	}
+! 	return mklist(mkterm(mkstatus(ewaitfor(pid)), NULL), NULL);
+  }
+  
+  extern Dict *initprims_proc(Dict *primdict) {
+--- 193,199 ----
+  		fail(&quot;$&amp;wait&quot;, &quot;usage: wait [pid]&quot;);
+  		NOTREACHED;
+  	}
+! 	return mklist(mkterm(mkstatus(ewait(pid, TRUE, NULL)), NULL), NULL);
+  }
+  
+  extern Dict *initprims_proc(Dict *primdict) {
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00217.html">es decompression hack</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00219.html">Re: es decompression hack</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00232.html">Re: es decompression hack</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00221.html">%assign</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00218"><strong>Date</strong></a></li>
+<li><a href="threads.html#00218"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

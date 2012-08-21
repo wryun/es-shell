@@ -1,0 +1,115 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Incorrect signal handling under SYSV machines -->
+<!--X-From-R13: "Vnenyq Vnapur&#45;Ayfra" <unapurNvzs.havg.ab> -->
+<!--X-Date: Thu, 3 Apr 1997 17:40:19 &#45;0500 -->
+<!--X-Message-Id: 970403140846.ZM8575@imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9703270106.AA27404@supra.rsch.comm.mot.com -->
+<!--X-Reference: 9703270315.AA29301@supra.rsch.comm.mot.com -->
+<!--X-Reference: 199704030409.WAA00249@pobox.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Incorrect signal handling under SYSV machines</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00950.html">Date Prev</a>][<a href="msg00952.html">Date Next</a>][<a href="msg00949.html">Thread Prev</a>][<a href="msg00952.html">Thread Next</a>][<a href="maillist.html#00951">Date Index</a>][<a href="threads.html#00951">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Incorrect signal handling under SYSV machines</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:alk%40pobox.com">alk@pobox.com</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: Incorrect signal handling under SYSV machines</li>
+<li><em>From</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Thu, 3 Apr 1997 07:08:46 -0500</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00949.html">199704030409.WAA00249@pobox.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00940.html">9703270106.AA27404@supra.rsch.comm.mot.com</a>&gt; 	&lt;<a href="msg00942.html">9703270315.AA29301@supra.rsch.comm.mot.com</a>&gt; 	&lt;<a href="msg00949.html">199704030409.WAA00249@pobox.com</a>&gt;</li>
+<li><em>Sender</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[ Tony Kimball &lt;alk@pobox.com&gt; 1997-4 -2 23:09 -0500 ]
+|---
+| Very strange indeed:
+|
+| ; l='@(#)RELEASE VERSION HPC 2.0 TMrts 10.1-integration.2-FreeBSD/x86'
+| ; echo $l
+| @(#)RELEASE VERSION HPC 2.0 TMrts 10.1-integration.2-FreeBSD/x86
+| ; k=`{strings lib/libtmrts_g.a | grep RELEASE\ VERSION | head -1| sed
+s,'&quot;',,g}
+| ; echo $k &gt; k.out
+| ; echo $l &gt; l.out
+| ; diff *.out
+| ; expr $l : $e
+| expr $l : $e
+| HPC 2.0 TMrts 10.1-integration.2-FreeBSD/x86
+| ; expr $k : $e
+| expr $k : $e
+| expr: syntax error
+|
+| Go figure.
+
+$l is one word.  $k is 5 words.  Try expr $^k : $e
+Or -- better -- do k=``\n{strings ...}
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00940" href="msg00940.html">Incorrect signal handling under SYSV machines</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="00942" href="msg00942.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="00949" href="msg00949.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+<ul><li><em>From:</em> Tony Kimball &lt;alk@pobox.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00950.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00952.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00949.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00952.html">Re: Incorrect signal handling under SYSV machines</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00951"><strong>Date</strong></a></li>
+<li><a href="threads.html#00951"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: SIGINT handling -->
+<!--X-From-R13: "Vnenyq Vnapur&#45;Ayfra" <unapurNvzs.havg.ab> -->
+<!--X-Date: Wed, 19 Apr 1995 14:30:26 &#45;0400 -->
+<!--X-Message-Id: 9504192028.ZM1941@chanur.imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199504191812.LAA18096@hp08.nas.nasa.gov -->
+<!--X-Reference: gray@nas.nasa.gov -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: SIGINT handling</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00818.html">Date Prev</a>][<a href="msg00820.html">Date Next</a>][<a href="msg00818.html">Thread Prev</a>][<a href="msg00820.html">Thread Next</a>][<a href="maillist.html#00819">Date Index</a>][<a href="threads.html#00819">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: SIGINT handling</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:gray%40nas.nasa.gov">gray@nas.nasa.gov</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: SIGINT handling</li>
+<li><em>From</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Wed, 19 Apr 1995 14:28:20 -0400</li>
+<li><em>In-reply-to</em>: &quot;Scott C. Gray&quot; &lt;gray@nas.nasa.gov&gt;        &quot;SIGINT handling&quot; (Apr 19, 14:12)</li>
+<li><em>References</em>: &lt;<a href="msg00818.html">199504191812.LAA18096@hp08.nas.nasa.gov</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>On Apr 19, 14:12, Scott C. Gray wrote:
+&gt; Subject: SIGINT handling
+| 
+| Is it normal behaviour for an interactive es shell to exit after receiving two 
+| interrupt signals?  They don't even have to be consecutive, I can do the 
+| following:
+| 
+|      ; ^C
+|      ; ls
+|      ...
+|      ; ^C
+|      (shell exits)
+| 
+| I am using es-0.84, on HP-UX 9.0.5, compiled with '-Ae +ESlit +O3 -DHPUX'.
+
+In signal.c we find the lines
+
+/* catcher -- catch (and defer) a signal from the kernel */
+static void catcher(int sig) {
+#if SYSV_SIGNALS /* only do this for unreliable signals */
+	signal(sig, catcher);
+#endif
+
+maybe SYSV_SIGNALS ought to be true for HPUX systems?  Try adding the lines
+
+#ifndef	SYSV_SIGNALS
+#define	SYSV_SIGNALS		1
+#endif
+
+after the line saying
+
+#if HPUX
+
+and tell ut how it worked out.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00822" href="msg00822.html">Re: SIGINT handling</a></strong>
+<ul><li><em>From:</em> matthew green &lt;mrg@mame.mu.OZ.AU&gt;</li></ul></li>
+<li><strong><a name="00821" href="msg00821.html">Re: SIGINT handling</a></strong>
+<ul><li><em>From:</em> &quot;Scott C. Gray&quot; &lt;gray@nas.nasa.gov&gt;</li></ul></li>
+<li><strong><a name="00820" href="msg00820.html">Re: SIGINT handling</a></strong>
+<ul><li><em>From:</em> &quot;Scott C. Gray&quot; &lt;gray@nas.nasa.gov&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00818" href="msg00818.html">SIGINT handling</a></strong>
+<ul><li><em>From:</em> &quot;Scott C. Gray&quot; &lt;gray@nas.nasa.gov&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00818.html">SIGINT handling</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00820.html">Re: SIGINT handling</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00818.html">SIGINT handling</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00820.html">Re: SIGINT handling</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00819"><strong>Date</strong></a></li>
+<li><a href="threads.html#00819"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

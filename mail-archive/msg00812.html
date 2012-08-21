@@ -1,0 +1,120 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Cray C&#45;90 (UNICOS 8.0.3) support? -->
+<!--X-From-R13: neabyqNfxrrir.ngy.tn.hf -->
+<!--X-Date: Tue, 4 Apr 1995 07:12:18 &#45;0400 -->
+<!--X-Message-Id: m0rw671&#45;000143C@skeeve.atl.ga.us -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Cray C-90 (UNICOS 8.0.3) support?</title>
+<link rev="made" href="mailto:arnold@skeeve.atl.ga.us">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00811.html">Date Prev</a>][<a href="msg00813.html">Date Next</a>][<a href="msg00811.html">Thread Prev</a>][<a href="msg00813.html">Thread Next</a>][<a href="maillist.html#00812">Date Index</a>][<a href="threads.html#00812">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Cray C-90 (UNICOS 8.0.3) support?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Paul Haahr &lt;<a href="mailto:haahr%40netcom.com">haahr@netcom.com</a>&gt;, <a href="mailto:gray%40nas.nasa.gov">gray@nas.nasa.gov</a></li>
+<li><em>Subject</em>: Re: Cray C-90 (UNICOS 8.0.3) support?</li>
+<li><em>From</em>: <a href="mailto:arnold%40skeeve.atl.ga.us">arnold@skeeve.atl.ga.us</a></li>
+<li><em>Date</em>: Tue, 4 Apr 1995 06:45:30 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Paul Haahr's 128-line message on Apr  4,  5:41am</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; I believe that there's no simple workaround.  I got this note from the
+&gt; last person who I knew of who tried to bring es up on a Cray.  (I don't
+&gt; see how Cray can say they ship ANSI C while imposing these restrictions,
+&gt; but I'm not in the supercomputer business.)
+&gt; 
+&gt; | From: djc@niwot.scd.ucar.EDU (Dennis Colarelli)
+&gt; | To: haahr (Paul Haahr)
+&gt; | Subject: Re: for better or for worse,
+&gt; | Date: Fri, 30 Apr 93 15:36:26 MDT
+&gt; | 
+&gt; | &gt; can you tell me what the restrictions on setjmp are?  i'll try to make
+&gt; | &gt; pushhandler() more portable if you can tell me what has to be done.
+&gt; | 
+&gt; | Attached are the restrictions from the UNICOS setjmp man page.  Note
+&gt; | that if you want to run es on the Cray 3, CSOS has, I believe, even further 
+&gt; | restrictions.  I'll know more when it gets here.
+&gt; | 
+&gt; |    An invocation of the setjmp macro can appear only in one of the following
+&gt; |    contexts:
+&gt; | 
+&gt; |      o  The entire controlling expression of a selection or iteration
+&gt; |         statement (if, for, while, do, switch)
+&gt; | 
+&gt; |      o  One operand of a relational or equality operator with the other
+&gt; |         operand an integral constant expression, and with the resulting
+&gt; |         expression being the entire controlling expression of a selection
+&gt; |         or iteration statement
+&gt; | 
+&gt; |      o  The operand of a unary ! operator with the resulting expression
+&gt; |         being the entire controlling expression of a selection or
+&gt; | 
+&gt; |      o  The entire expression of an expression statement (possibly cast
+&gt; |         to void)
+
+These restrictions are straight out of the ANSI C standard. I'd have to check
+the rationale for why they were put in. It made sense at the time though.
+
+Arnold
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00813" href="msg00813.html">Re: Cray C-90 (UNICOS 8.0.3) support?</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00811.html">Re: Cray C-90 (UNICOS 8.0.3) support?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00813.html">Re: Cray C-90 (UNICOS 8.0.3) support?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00811.html">Re: Cray C-90 (UNICOS 8.0.3) support?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00813.html">Re: Cray C-90 (UNICOS 8.0.3) support?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00812"><strong>Date</strong></a></li>
+<li><a href="threads.html#00812"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

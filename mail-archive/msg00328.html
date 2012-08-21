@@ -1,0 +1,163 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: pushd/popd/dirs for es -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Thu, 29 Apr 1993 13:27:07 &#45;0400 -->
+<!--X-Message-Id: 9304291727.AA20131@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>pushd/popd/dirs for es</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00327.html">Date Prev</a>][<a href="msg00329.html">Date Next</a>][<a href="msg00327.html">Thread Prev</a>][<a href="msg00332.html">Thread Next</a>][<a href="maillist.html#00328">Date Index</a>][<a href="threads.html#00328">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>pushd/popd/dirs for es</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: pushd/popd/dirs for es</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Thu, 29 Apr 1993 13:27:40 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>i haven't used a shell with these operations in it for nearly a decade,
+but i know many csh users swear by them, so i consed up es versions.
+i think they act identically to those in csh, but i'm not sure, since
+i only tried a few commands.
+
+the dirs command (which is also invoked by pushd and popd) is too slow
+in my opinion because it substituted ~ in the directories it prints, ala
+csh.  to do that, it uses sed.  other than that, these things should
+run nice and fast.  (i really don't think pattern matching and
+substitution belongs in native es, so forking something is just about
+required.)
+
+anyway, i now have these in my $autoload directory under the name pushd.
+(that is, until a pushd command is given, popd and dirs are not defined;
+i wanted it that way, but it might be more consistent to use symbolic
+links and load them when any of the three commands is given.)
+
+paul
+
+fn %pwd {
+	result `` \n pwd
+}
+
+fn dirs {
+	echo `` \n {
+		{ for (i = &lt;=%pwd $dirstack) echo $i } |
+			sed 's,^'^$realhome^'$,~,
+			     s,^'^$realhome^'/,~/,'
+	}
+}
+
+fn pushd dir {
+	if {~ $#dir 0} {
+		if {~ $#dirstack 0} {
+			throw error pushd 'pushd: no other directory'
+		}
+		let (cwd = &lt;=%pwd) {
+			cd $dirstack(1)
+			dirstack = $cwd $dirstack(2 ...)
+		}
+	} {~ $#dir 1} {
+		if {~ $dir +[0-9]*} {
+			if {~ $dir +0} {
+				return &lt;=pushd
+			}
+			let (h = $dirstack($dir ...); t = &lt;=%pwd $dirstack) {
+				cd $h(1)
+				dirstack = $h(2 ...) $t(... $dir)
+			}
+		} {
+			let (cwd = &lt;=%pwd) {
+				cd $dir
+				dirstack = $cwd $dirstack
+			}
+		}
+	} {
+		throw error pushd 'usage: pushd [directory | +n]'
+	}
+	dirs
+}
+
+fn popd n {
+	if {~ $#n 0} {
+		n = +0
+	}
+	if {!~ $#n 1} {
+		throw error popd 'usage: popd [+n]'
+	}
+	if {~ $n 0 +0} {
+		cd $dirstack(1)
+		dirstack = $dirstack(2 ...)
+	} {
+		let (h = - $dirstack; t = $dirstack(2 ...)) {
+			dirstack = $h(2 ... $n) $t($n ...)
+		}
+	}
+	dirs
+}
+
+dirstack =
+realhome = `` \n { $&amp;cd $home; pwd }
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00333" href="msg00333.html">pushd/popd/dirs for es</a></strong>
+<ul><li><em>From:</em> Noah Friedman &lt;friedman@gnu.ai.mit.edu&gt;</li></ul></li>
+<li><strong><a name="00332" href="msg00332.html">pushd/popd/dirs for es</a></strong>
+<ul><li><em>From:</em> Noah Friedman &lt;friedman@gnu.ai.mit.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00327.html">Re:  Should es do this?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00329.html">proposed minor change to var and whatis semantics</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00327.html">Re:  Should es do this?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00332.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00328"><strong>Date</strong></a></li>
+<li><a href="threads.html#00328"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

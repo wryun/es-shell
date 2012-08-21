@@ -1,0 +1,112 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  Read? -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Fri, 14 May 1993 14:55:52 &#45;0400 -->
+<!--X-Message-Id: 9305141856.AA07232@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  Read?</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00386.html">Date Prev</a>][<a href="msg00388.html">Date Next</a>][<a href="msg00382.html">Thread Prev</a>][<a href="msg00389.html">Thread Next</a>][<a href="maillist.html#00387">Date Index</a>][<a href="threads.html#00387">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  Read?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a></li>
+<li><em>Subject</em>: Re:  Read?</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Fri, 14 May 1993 14:56:23 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>for now, there is no read-like builtin in es.  people have proposed
+adding it or line, which seems perfectly reasonable.  whenever this
+discussion starts, it seems to get bogged down in ``system x does it
+this way'' but ``system y does it this way'' and ``in an ideal world
+it would be done this way'' sorts of messages.
+
+so, i'm going to proposed something that is not the same as other
+systems, but should work.  please complain about things that can't
+be done with this functionality, not that it's not like other systems.
+
+the %read builtin returns either the empty list (in the case of end-of-file)
+or a single element string with up to one line of data read from standard
+input (including possible redirections).  %read will read one character
+at a time in order to not read more data out of a pipe than it should.
+the terminating newline (if present) is not included in the returned
+string.
+
+i believe that /bin/sh-style read and the well-known line function can
+be implemented based on this builtin.
+
+please comment on the proposed semantics.  possible variations:
+
+	+ don't strip the trailing newline
+	+ let %read take a prompt argument, ala %parse
+	+ use readline/editline if appropriate
+	+ don't hardcode the line delimiter as \n
+	+ not including any such builtin and dropping the idea entirely
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00417" href="msg00417.html">Read?</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+<li><strong><a name="00389" href="msg00389.html">Read?</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00386.html">&quot;es&quot; Mailing List</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00388.html">Re: X-Windows Trouble</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00382.html">Read?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00389.html">Read?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00387"><strong>Date</strong></a></li>
+<li><a href="threads.html#00387"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

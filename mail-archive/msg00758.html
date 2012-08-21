@@ -1,0 +1,100 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es bug -->
+<!--X-From-R13: Qurg Dnzrl <purgNbqva.W@E.QIDG.Sqh> -->
+<!--X-Date: Thu, 22 Sep 1994 16:01:02 &#45;0400 -->
+<!--X-Message-Id: 9409221947.AA28756.SM@odin.INS.CWRU.Edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9409221756.AA07167@busco.lanl.gov -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es bug</title>
+<link rev="made" href="mailto:chet@odin.INS.CWRU.Edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00757.html">Date Prev</a>][<a href="msg00759.html">Date Next</a>][<a href="msg00755.html">Thread Prev</a>][<a href="msg00756.html">Thread Next</a>][<a href="maillist.html#00758">Date Index</a>][<a href="threads.html#00758">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es bug</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:tromey%40busco.lanl.gov">tromey@busco.lanl.gov</a></li>
+<li><em>Subject</em>: Re: es bug</li>
+<li><em>From</em>: Chet Ramey &lt;<a href="mailto:chet%40odin.INS.CWRU.Edu">chet@odin.INS.CWRU.Edu</a>&gt;</li>
+<li><em>Date</em>: Thu, 22 Sep 1994 15:47:35 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Message from tromey@busco.lanl.gov of Thu, 22 Sep 1994 13:56:43 -0400 (id &lt;<a href="msg00754.html">9409221756.AA07167@busco.lanl.gov</a>&gt;)</li>
+<li><em>Read-receipt-to</em>: <a href="mailto:chet%40po.CWRU.Edu">chet@po.CWRU.Edu</a></li>
+<li><em>Reply-to</em>: <a href="mailto:chet%40po.CWRU.Edu">chet@po.CWRU.Edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; |I've noticed that &quot;*/&quot; expands to all file names with &quot;/&quot; appended,
+&gt; |instead of just the names of directories.  I think this is a bug --
+&gt; |all the other glob code I've used does the right thing (expands to
+&gt; |just directories).
+
+It's not necessarily a bug, because it does not follow from the simple
+definition of globbing.  You have to handle the case of a null
+pathname specially with an extra check; es does not.
+
+Chet
+
+-- 
+``The lyf so short, the craft so long to lerne.'' - Chaucer
+
+Chet Ramey, Case Western Reserve University	Internet: chet@po.CWRU.Edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00754" href="msg00754.html">Re: es bug</a></strong>
+<ul><li><em>From:</em> tromey@busco.lanl.gov (Tom Tromey)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00757.html">Re: es bug</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00759.html">Re: es bug</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00755.html">Re: es bug</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00756.html">Re: es bug</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00758"><strong>Date</strong></a></li>
+<li><a href="threads.html#00758"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

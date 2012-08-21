@@ -1,0 +1,242 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: for better or for worse, -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Thu, 29 Apr 1993 23:32:22 &#45;0400 -->
+<!--X-Message-Id: 9304300333.AA02753@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>for better or for worse,</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00329.html">Date Prev</a>][<a href="msg00331.html">Date Next</a>][<a href="msg00341.html">Thread Prev</a>][<a href="msg00331.html">Thread Next</a>][<a href="maillist.html#00330">Date Index</a>][<a href="threads.html#00330">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>for better or for worse,</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:rc%40hawkwind.utcs.toronto.edu">rc@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: for better or for worse,</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Thu, 29 Apr 1993 23:33:01 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>es has been announced to the rest of the world.  version 0.84 is now
+available for ftp from the usual place.  (thanks Chris!)  i think this
+release should work straight out of the box on most machines.
+
+very little has changed since 0.83; see the CHANGES file for details.
+the usenet posting follows.
+
+paul
+
+Article 9818 of comp.unix.shell:
+Xref: adobe comp.unix.shell:9818 comp.unix.wizards:21071 comp.lang.misc:10810 comp.lang.tcl:4036 comp.lang.scheme:6086
+Newsgroups: comp.unix.shell,comp.unix.wizards,comp.lang.misc,comp.lang.tcl,comp.lang.scheme
+Path: adobe!haahr
+From: haahr@adobe.com (Paul Haahr)
+Subject: es, a new shell
+Message-ID: &lt;1993Apr30.032118.27003@adobe.com&gt;
+Followup-To: comp.unix.shell
+Keywords: es rc shell
+Sender: usenet@adobe.com (USENET NEWS)
+Organization: Adobe Systems Incorporated
+Date: Fri, 30 Apr 1993 03:21:18 GMT
+
+We'd like to announce the availability of es, a new Unix shell.
+
+Es evolved out of Byron's public reimplementation of rc, the Plan 9
+shell.  When he was writing rc, the two of us started speculating
+what a shell would be like if it were designed as a programming
+language rather than as an ad hoc collection of syntax and builtins
+that happen to trigger certain system calls.  We stole a lot from
+other programming languages---notably rc, Scheme, and Tcl---and
+ended up with a system that is very extensible and programmable.
+
+The version we are releasing is 0.84; that is, a little more than
+four-fifths of a product.  It's been used by a few dozen people
+while the big design issues were worked out, but we're freezing
+development of major new features until we've got a stable 1.0
+version.  We don't think there are very many serious bugs, but we
+can't claim that it's been extensively tested.  (At least one of
+us has been using it as a login shell for over six months.)
+
+Es is availble by anonymous ftp from
+
+	ftp.sys.utoronto.ca:/pub/es/es-0.84.tar.Z
+
+It is written in ANSI C, and effectively requires a compiler that
+knows about prototypes, &lt;stdarg.h&gt; and the like.  You may need to
+add a few compile-time options to the CFLAGS line in the Makefile,
+and, of course, header files always move around, but other than
+that it should just compile and run.
+
+For details on es, please see the man page in the distribution.  For
+some background on the design of es, see our Winter 1993 Usenix paper,
+``Es: a shell with higher-order functions,'' available by ftp as
+
+	ftp.sys.utoronto.ca:/pub/es/usenix-w93.ps.Z
+
+Please report any bugs in es (or other problems with it) to us at
+
+	haahr@adobe.com
+	byron@netapp.com
+
+There is a mailing list for discussing es.  Send mail to
+
+	es-request@hawkwind.utcs.toronto.edu
+
+to join the list.  The list itself is
+
+	es@hawkwind.utcs.toronto.edu
+
+Es is in the public domain.  We hold no copyrights or patents on
+the source code, and do not place any restrictions on its distribution.
+We would appreciate it if any distributions credit the authors.
+
+The following are answers to a few questions people might have about es.
+
+Q: What machines does it run on?
+
+A: So far, we've run it successfully on Sparc machines under
+   SunOS 4.x and Solaris 2, Sun3s, Silicon Graphics and MIPS
+   machines, DEC Alpha OSF/1 and MIPS Ultrix machines, NeXTs,
+   and IBM RS6000s.  Others have run it under SCO Open Desktop,
+   Interactive's Unix for Intel processors, and HP/UX 9.0.1.
+   Somebody sent us a note about getting it running on a Cray.
+   Where the native compilers support ANSI C we've used them,
+   otherwise we've used gcc.
+
+Q: What's performance like?
+
+A: Pretty good, not that it matters much, since most shells spend
+   very little time doing anything interesting other than making
+   system calls.  Roughly, performance is slightly worse than that
+   of rc.  Interactive performance is pretty good, and startup time
+   is pretty small.
+
+Q: What's going to change between now and the 1.0 release?
+
+A: As little as possible.  We want to get the remaining bugs out
+   and address portability issues.  We'd also like to document the
+   internals better.
+
+Q: Does es support history?
+
+A: Yes, in two forms.  First, es can be used with GNU readline or
+   a compatible library, such as editline.  Second, es will optionally
+   write all interactive input to a file, which an auxiliary program
+   can manipulate.  It does not have csh-style ! history.
+
+Q: You say es is extensible.  Can I add csh-style history?
+
+A: No, or, at least, not yet.  We'd like to come up with a way for
+   an es user to extend the syntax.  Right now extensibility in es
+   is similar to C++ operators:  you can give new semantics to
+   existing syntax, but you can't invent wholly new syntax.
+
+   Future versions of es probably will support user-defined syntax.
+   We think definition-by-example systems such as extend-syntax in
+   Scheme are a good model, but we don't know how to apply that
+   approach to a language that doesn't have lispish syntax.
+
+Q: Does es have job control?
+
+A: No.  While neither of us likes job control, we did not leave it
+   out for ideological reasons.  Rather, we wanted to avoid the
+   complexity it would add to the shell.  If someone can tell us
+   how to add job control portably without requiring pervasive
+   changes to the shell's semantics or implementation, we would
+   probably do it.
+
+Q: Isn't es just another of those minimalist, spartan shells that
+   people like to read about but not use?
+
+A: As two of rc's earliest adopters outside of Bell Labs, we'd
+   disagree with the premise that a small shell is worse to use
+   than a big one.  Nonetheless, we're ashamed to admit that es is
+   not as minimalist as it could be.  In fact, compiled with
+   assertion checking on (the default), es is larger than csh on
+   most systems.
+
+   Rc is in many ways the perfect shell.  It's small, fast, and
+   predictable.  There's not much to confuse a user in it.  Es is
+   different; it's larger, slower, and has many nooks and crannies.
+   The central difference between the two shells is that rc is
+   hard-coded to the right thing, where you can customize es to do
+   what you want it to do.  That ability to extend es required a
+   more sophisticated language and more builtin operations than
+   are found in rc.
+
+Q: What does es mean for Byron's rc implementation?
+
+A: Rc is a mature, stable piece of code.  New development on
+   rc has mostly stopped, reflecting the maturity of the code.
+   The last release of Byron's rc was last May, although another
+   one is coming soon.  Es, on the other hand, is still rather
+   immature, and makes a wonderful testbed for new ideas on how to
+   construct shells.
+
+   We expect that some rc users will switch to es and some will
+   not.
+
+Enjoy!
+
+-- Paul Haahr &amp; Byron Rakitzis
+-- 
+paul haahr		adobe systems incorporated
+haahr@adobe.com		...!decwrl!adobe!haahr		+1 415 962 6056
+
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00329.html">proposed minor change to var and whatis semantics</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00331.html">%read and %write</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00341.html">Re:  proposed minor change to var and whatis semantics</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00331.html">%read and %write</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00330"><strong>Date</strong></a></li>
+<li><a href="threads.html#00330"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

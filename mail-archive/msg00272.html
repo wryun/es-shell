@@ -1,0 +1,121 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: <> redirection and notations -->
+<!--X-From-R13: Egrira [ Drmfhgrx <fgrirNonybb.tfsp.anfn.tbi> -->
+<!--X-Date: Thu, 1 Apr 1993 18:31:00 &#45;0500 -->
+<!--X-Message-Id: 9304012330.AA07956@baloo.gsfc.nasa.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9304011607.AA14673@quickly.robots.ox.ac.uk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: &lt;&gt; redirection and notations</title>
+<link rev="made" href="mailto:steve@baloo.gsfc.nasa.gov">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00271.html">Date Prev</a>][<a href="msg00273.html">Date Next</a>][<a href="msg00263.html">Thread Prev</a>][<a href="msg00264.html">Thread Next</a>][<a href="maillist.html#00272">Date Index</a>][<a href="threads.html#00272">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: &lt;&gt; redirection and notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: &lt;&gt; redirection and notations</li>
+<li><em>From</em>: Steven M Rezsutek &lt;<a href="mailto:steve%40baloo.gsfc.nasa.gov">steve@baloo.gsfc.nasa.gov</a>&gt;</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 18:30:03 -0500</li>
+<li><em>In-reply-to</em>: Your message of &quot;Thu, 01 Apr 1993 11:07:13 EST.&quot;             &lt;<a href="msg00263.html">9304011607.AA14673@quickly.robots.ox.ac.uk</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Gentlebeings,
+
+The discussion on this subject has been quite overwhelming [at least
+to me], but I'd like to put my 0.02 non-denominationa-monetary-units
+in nonetheless...  
+
+[Don't worry, I'm prepared for the ensuing &quot;beating down&quot; :-)]
+
+On the subject of &lt;&gt; for read-write, I have to remain silent.  I my
+self have yet to run into this need.  However it does have a &quot;logic&quot;
+to it that I like.  The logic of the sugar-table that Alan(?) proposed
+seems good to me.  (This amounts to nothing more than a word of support,
+I suppose).
+
+- Sugar	Meaning		Function	Implementation
+- -----	-------		--------	--------------
+- &lt;	open ro		%open-ro	@{ %open r $* }
+- &gt;	open wo		%open-wo	@{ %open w $* }
+- &gt;&gt;	open append	%open-app	@{ %open a $* }
+- &lt;&gt;	open rw		%open-rw	@{ %open r+ $* }
+- &lt;&gt;!	open rw+trun	%open-rw-trunc	@{ %open w+ $* }
+- &lt;&gt;&gt;	open rw+app	%open-rw-app	@{ %open a+ $* }
+
+At to the replacement for &lt;&gt;{},  I also liked the suggstion of ::.
+Why?  Well, I've just started to learn ML, and :: is the list &quot;cons&quot;
+operator in that language... so, it's easy enough to think of this 
+&quot;operator&quot; consing the result of evaluating {...} into a &quot;hidden&quot;
+list of values.
+
+[BTW, ML uses ^ as it's string &quot;cons&quot;... deja-vu? ]
+
+Perhaps it's just me, but I've already trained myself to think of
+anything with a % as someting I normally wouldn't fool with without
+a lot of forethought (i.e. it represents something &quot;system-oid&quot;).
+
+Ok, I've said too much already.  Tear me up...
+
+
+Steve
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00263" href="msg00263.html">Re: &lt;&gt; redirection and notations</a></strong>
+<ul><li><em>From:</em> peter@robots.oxford.ac.uk</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00271.html">es-remote problem; how to fix?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00273.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00263.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00264.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00272"><strong>Date</strong></a></li>
+<li><a href="threads.html#00272"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es 0.7: ^C at prompt -->
+<!--X-From-R13: Fbal Eybnar <gbalNevxre.pf.pbybenqb.rqh> -->
+<!--X-Date: Wed, 21 Oct 1992 13:24:29 &#45;0400 -->
+<!--X-Message-Id: 199210211724.AA25544@riker.cs.colorado.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9210211703.AA07962@carson.u.washington.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es 0.7: ^C at prompt</title>
+<link rev="made" href="mailto:tony@riker.cs.colorado.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00115.html">Date Prev</a>][<a href="msg00117.html">Date Next</a>][<a href="msg00115.html">Thread Prev</a>][<a href="msg00125.html">Thread Next</a>][<a href="maillist.html#00116">Date Index</a>][<a href="threads.html#00116">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es 0.7: ^C at prompt</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: es 0.7: ^C at prompt</li>
+<li><em>From</em>: Tony Sloane &lt;<a href="mailto:tony%40riker.cs.colorado.edu">tony@riker.cs.colorado.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 21 Oct 1992 13:24:16 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>References</em>: &lt;<a href="msg00115.html">9210211703.AA07962@carson.u.washington.edu</a>&gt;</li>
+<li><em>Reply-to</em>: <a href="mailto:tony%40cs.colorado.edu">tony@cs.colorado.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre> &gt; &gt;|PS.  Are there any plans to make it possible to get at the ~user mechanism in
+ &gt; &gt;|some way?  I have a machine that many people don't have logins on but that has
+ &gt; &gt;|access to their home directories via amd/NFS.  Thus a passwd file mechanism
+ &gt; &gt;|doesn't work for most people in the dept.  I'd like to (say) be able to define
+ &gt; &gt;|a function that gets called when doing ~ expansion.
+ &gt; 
+ &gt; &gt; Amd supports a home directory map, independent of the passwd file.
+ &gt; &gt; /u/schwartz then points to /home/groucho/schwartz, or whatever.  This
+ &gt; &gt; is a thing that goes so nicely in the OS, it's a shame to force it on
+ &gt; &gt; the shell, especially since other programs often want the short name
+ &gt; &gt; for users' homes.
+ &gt; 
+ &gt; I wonder how it manages to be independent of the passwd file?  It sounds
+ &gt; like a great idea, if that's true.  Unfortunately, I don't know what Amd
+ &gt; is, but on one of our systems, the one where I want to use es in a big
+ &gt; way, we expect to have around 10K users in the very near future, and a
+ &gt; lot more possibly later.  A 10K file directory is going to be a darn slow
+ &gt; way to look things up.
+ &gt;
+ &gt; 	Donn Cave, University Computing Services, University of Washington
+ &gt; 	donn@cac.washington.edu
+
+Size is not usually a problem because amd will only create links (from say
+/homes/fred to /home/fredsmachine/fred) when they are needed (ie. referenced).
+There's a timeout value that allows them to be automatically removed if
+they're not referenced.  Thus the /homes directory doesn't usually get too
+big.
+
+I guess the real issue is that amd is general enough that your homes map can
+be generated any way you like (ie. not just from the passwd file on a local
+machine).  If we use &quot;user&quot; to mean &quot;a user on the local network&quot; (eg. within
+a dept.) then it is straightforward (say using a merged passwd file) to make
+amd set up /homes/user for all these people on all machines regardless of
+whether they have a login or not.  Then we want ~user to map to /homes/user as
+I suggested in a previous message.  (Clearly not everyone runs amd, hence the
+%home mechanism that Paul mentioned to allow people like me to customize it.
+There are also amd management issues to do with making sure each user has a
+unique or prime home directory on the machines in question.)
+
+Some other posters have raised the issue whether this kind of thing should be
+in a shell or not.  I would argue that ~user is a useful enough notation that
+it should be there, but others can (and do) disagree.  The main point is that
+given that es has it, it should be customizable because the passwd file based
+implementation is not flexible enough to cope with situations like those
+described in the previous paragraph.
+
+Tony
+
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00115" href="msg00115.html">Re: es 0.7: ^C at prompt</a></strong>
+<ul><li><em>From:</em> Donn Cave &lt;donn@u.washington.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00115.html">Re: es 0.7: ^C at prompt</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00117.html">~ and a plea for peace</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00115.html">Re: es 0.7: ^C at prompt</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00125.html">Re: es 0.7: ^C at prompt</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00116"><strong>Date</strong></a></li>
+<li><a href="threads.html#00116"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

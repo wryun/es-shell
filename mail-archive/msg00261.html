@@ -1,0 +1,117 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: <> redirection and notations -->
+<!--X-From-R13: neabyqNpp.tngrpu.rqh (Oeabyq Dboovaf) -->
+<!--X-Date: Thu, 1 Apr 1993 09:36:37 &#45;0500 -->
+<!--X-Message-Id: 9304011436.AA01784@penfold.cc.gatech.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>&lt;&gt; redirection and notations</title>
+<link rev="made" href="mailto:arnold@cc.gatech.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00260.html">Date Prev</a>][<a href="msg00262.html">Date Next</a>][<a href="msg00258.html">Thread Prev</a>][<a href="msg00267.html">Thread Next</a>][<a href="maillist.html#00261">Date Index</a>][<a href="threads.html#00261">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>&lt;&gt; redirection and notations</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: &lt;&gt; redirection and notations</li>
+<li><em>From</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a> (Arnold Robbins)</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 09:36:25 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Folks,
+
+I was mistaken when I said that &lt;&gt; truncated files in ksh. (Maybe it does
+in bash? I just got through going through the bash doc.  If so, bash is
+wrong... Sigh.)  The ksh book doesn't say it truncates, and experimentation
+with ksh shows that indeed it just opens it read/write but does NOT truncate.
+
+I had suggested multiple functions, Alan (I think) said why not just pass
+a mode to %open, and then Paul said sometimes one only wants to spoof one
+and not the other.  The way to go is to have our cake and eat it too:
+
+Sugar	Meaning		Function	Implementation
+-----	-------		--------	--------------
+&lt;	open ro		%open-ro	@{ %open r $* }
+&gt;	open wo		%open-wo	@{ %open w $* }
+&gt;&gt;	open append	%open-app	@{ %open a $* }
+&lt;&gt;	open rw		%open-rw	@{ %open r+ $* }
+&lt;&gt;!	open rw+trun	%open-rw-trunc	@{ %open w+ $* }
+&lt;&gt;&gt;	open rw+app	%open-rw-app	@{ %open a+ $* }
+
+Thus we can either spoof one thing or the whole mess, and we have
+access to every way we'd like to open files. (What do folks think of &lt;&gt;! ?
+I had first thought about &lt;&lt;&gt; , and then &lt;&gt;&lt; but didn't really like either
+of those...)
+
+I admit &lt;&gt; is a little used construct - maybe it's little used because
+it was never there? (Which came first ... :-)
+
+Now, as to how to replace &lt;&gt;{...}.  From the discussion, it sounds like we're
+going to need a two character glyph or else just %.  I'd rather see a
+two character glyph like :: but % will do the trick for me ok too.
+
+Again, I apologize for saying &lt;&gt; truncated in ksh. It does in bash, and I
+think bash is broken for doing it that way.  That mistake unfortunately added
+unnecessary fuel to the fire.
+
+Arnold
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00267" href="msg00267.html">Re: &lt;&gt; redirection and notations</a></strong>
+<ul><li><em>From:</em> Chet Ramey &lt;chet@odin.INS.CWRU.Edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00260.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00262.html">Re: a note on notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00258.html">Re: an even newer shell</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00267.html">Re: &lt;&gt; redirection and notations</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00261"><strong>Date</strong></a></li>
+<li><a href="threads.html#00261"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

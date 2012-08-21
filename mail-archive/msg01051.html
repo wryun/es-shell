@@ -1,0 +1,154 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Problems with ~ and ~~ -->
+<!--X-From-R13: ebtNivgnahbin.pbz -->
+<!--X-Date: Fri, 15 Dec 2000 00:51:17 &#45;0500 -->
+<!--X-Message-Id: 00Dec15.005117edt.45362@hawkwind.utcs.utoronto.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Problems with ~ and ~~</title>
+<link rev="made" href="mailto:rog@vitanuova.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01049.html">Date Prev</a>][<a href="msg01050.html">Date Next</a>][<a href="msg01050.html">Thread Prev</a>][<a href="msg01042.html">Thread Next</a>][<a href="maillist.html#01051">Date Index</a>][<a href="threads.html#01051">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Problems with ~ and ~~</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: Problems with ~ and ~~</li>
+<li><em>From</em>: <a href="mailto:rog%40vitanuova.com">rog@vitanuova.com</a></li>
+<li><em>Date</em>: Thu, 14 Dec 2000 20:12:18 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; It's a fairly messy distinction.  I'm very unhappy with it.  If Unix
+&gt; didn't have exit statuses, it would probably never have happened.
+&gt; Instead, I generalized exit statuses in a way they shouldn't have been.
+
+i thought about this quite hard when deciding what to do about this
+issue in my es-reminiscent shell for inferno (named, unimaginatively
+&quot;sh&quot;).
+
+eventually i decided that exit status and return value are two quite
+different things, one being essentially true/false, and the other
+multi-valued.
+
+unlike es, i wasn't limited by the strict exec/wait boundary, so i
+implemented two classes of runnable shell objects, commands, and
+&quot;substitution operators&quot; (a terrible name).  commands are run as
+usual; substitution operators look like braced commands run with the $
+operator.
+
+e.g.
+	x = ${split e 'hello there'}
+
+there is no &quot;split&quot; command - names invoked by the ${} operator are
+taken from a different namespace.
+
+this means that normal commands retain their true/false nature, while
+substitution operators (which are dynamically definable) don't try to
+stretch the definition of &quot;true&quot; and &quot;false&quot;.
+
+does
+	if {%split x 'hello there'} {
+		...
+	}
+really have any useful meaning?
+
+it's quite nice being able to use the &quot;split&quot; unambiguously for both
+the above:
+
+	x = ${split e 'hello there'}
+
+and also:
+
+	split -1000 somefile
+
+(the unix-style command).
+
+if anyone's interested, this shell takes the one core es concept
+(braced blocks as values) and tries to push it as far as it'll go,
+while keeping the core syntax to a bare minimum.  it manages to be an
+extensible shell, not because you can override stuff underneath the
+syntactic sugar, as with es, but because almost all of what would be
+considered &quot;code syntax&quot; in most shells is implemented externally
+(e.g.  if, while, fn, etc, etc) and hence can be redefined or
+reinvented.
+
+it allows the core shell to be fairly small (2480 lines total, a 40K
+binary) but more powerful than most.
+
+if you are interested, there's a wee paper on it at:
+
+	<a  rel="nofollow" href="http://www.vitanuova.com/inferno/papers/sh.html">http://www.vitanuova.com/inferno/papers/sh.html</a>
+
+and the documentation at:
+
+	<a  rel="nofollow" href="http://www.vitanuova.com/inferno/man/1/sh.html">http://www.vitanuova.com/inferno/man/1/sh.html</a>
+
+and if you're using Internet Explorer under Windows
+and can't be bothered with the 14MB free download,
+you can even have a play with it in your web browser!
+
+	<a  rel="nofollow" href="http://www.vitanuova.com/inferno/pi/shell/index.html">http://www.vitanuova.com/inferno/pi/shell/index.html</a>
+
+now i'll see whether i can get my conversation with the SMTP
+server correct this time (the local SMTP client got a bounce
+saying &quot;please use your fully qualified real domain name&quot;,
+and since i don't control it, i guess manual telnet is the only way!)
+
+  cheers,
+    rog. (rog@vitanuova.com a.k.a. rog@ohm.york.ac.uk, in case
+	this post also comes through with an odd address!)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01049.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01050.html">Re: Problems with ~ and ~~</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01050.html">Re: Problems with ~ and ~~</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01042.html">Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01051"><strong>Date</strong></a></li>
+<li><a href="threads.html#01051"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

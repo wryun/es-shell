@@ -1,0 +1,110 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  Full duplex connections (pipes) -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Fri, 28 May 1993 11:27:24 &#45;0400 -->
+<!--X-Message-Id: 9305281528.AA01404@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  Full duplex connections (pipes)</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00574.html">Date Prev</a>][<a href="msg00576.html">Date Next</a>][<a href="msg00573.html">Thread Prev</a>][<a href="msg00577.html">Thread Next</a>][<a href="maillist.html#00575">Date Index</a>][<a href="threads.html#00575">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  Full duplex connections (pipes)</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re:  Full duplex connections (pipes)</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Fri, 28 May 1993 11:28:13 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Many moons ago I suggested that it would be nice if you could background
+&gt; a process and communicate with it from your command line, thus allowing
+&gt; an MH-like interface to be plugged into any process you wanted
+
+doing an mh-style (``the shell is my only command interpreter'') interface
+to things is great; if you want to build it on top of other tools, those
+tools probably need to be structured very intelligently and flexibly.
+you probably want your programs pre-structured as ``server'' processes.
+
+the idea of being able to put new interfaces on old programs is great.
+but, you've got to deal with complex output:  for bc this isn't much
+of an issue, and i've never used gnuplot, but dbx has nightmare output,
+enough so that sun had to add a new output format and command line
+option (-P? -R?) when they did their mouse-based interface to it.
+
+a shell is probably not the appropriate place to do the filtering
+that goes on inside the tools.
+
+on the other hand, Don Libes' expect program is a real win, i think.
+it's set up to control other programs, and, with sufficient cleverness,
+allows you to handle the input/output of any child process, from dbx
+to a rogue game.  the reason it works is you write programs in a real
+language (tcl) to parse the output and make decisions.  you could probably
+set up expect to act as a background (server) process and just have
+a simple (c or perl or hacked-es) program which writes a message to
+the expect process and gets one back for printing to the user.
+
+one other difficulty doing this is buffering on pipes.  socket-based
+pipes are much better in this regard, i think, but traditional unix
+pipes would cause things to lock up.  i'm pretty sure that expect
+uses pseudo-ttys, which lack this problem.
+
+paul
+
+ps:  sorry if this note rambles.  i'm not awake yet.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00574.html">Re: The primitiveness of pipe</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00576.html">Confession</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00573.html">Full duplex connections (pipes)</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00577.html">Re: Confession</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00575"><strong>Date</strong></a></li>
+<li><a href="threads.html#00575"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

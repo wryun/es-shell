@@ -1,0 +1,157 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es dumping core on me -->
+<!--X-From-R13: Egrira Drmfhgrx <E.DrmfhgrxNonybb.tfsp.anfn.tbi> -->
+<!--X-Date: Wed, 15 Jun 1994 10:15:37 &#45;0400 -->
+<!--X-Message-Id: 94Jun15.101537edt.24025@hawkwind.utcs.utoronto.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es dumping core on me</title>
+<link rev="made" href="mailto:S.Rezsutek@baloo.gsfc.nasa.gov">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00739.html">Date Prev</a>][<a href="msg00741.html">Date Next</a>][<a href="msg00726.html">Thread Prev</a>][<a href="msg00727.html">Thread Next</a>][<a href="maillist.html#00740">Date Index</a>][<a href="threads.html#00740">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es dumping core on me</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: es dumping core on me</li>
+<li><em>From</em>: Steven Rezsutek &lt;<a href="mailto:S.Rezsutek%40baloo.gsfc.nasa.gov">S.Rezsutek@baloo.gsfc.nasa.gov</a>&gt;</li>
+<li><em>Date</em>: Wed, 15 Jun 1994 10:15:20 -0400</li>
+<li><em>Sender</em>: <a href="mailto:S.Rezsutek%40baloo.gsfc.nasa.gov">S.Rezsutek@baloo.gsfc.nasa.gov</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Greetings all,
+
+A few months back, Bennett Todd sent a message to the list concerning
+es dumping core and/or violating some assertions in forward() [part
+of the garbage collector.  Well, I've been tickling this bug alot,
+and rather than rewrite the script in something else, I decided 
+I should spend some time and try to fix things. 
+
+So far, I have been able to draw the conclusion that it is not
+a Tag structure being changed. [I went through the quick, though probably
+pointless, process of making all FooTag structs const and read only.]
+Compiling with GCPROTECT delayed, but did not prevent the occurance
+of whatever it is.
+
+My proddings with dbx last night left me with the feeling that the
+memory where rootlist is stored is being stomped on, but I've yet to
+determine where.  
+
+If anyone else has been working on this, or can provide pointers/hints
+on narrowing the search a bit, I would greatly appreciate it.  I can
+send you a copy of the &quot;es killer&quot; script as well, if you want to 
+poke at it.
+
+I've appended some GC output and stack trace info below.
+
+Thanks,
+
+
+Steve
+
+...................................................................
+Steven Rezsutek			      Steven.Rezsutek@gsfc.nasa.gov
+Nyma / NASA GSFC Code 735.2	      Vox: +1 301 286 0897
+
+
+------------------- cut here -----------------------------------
+
+GC 1001a360 : Binding   -&gt; 1003d3f4 (followed)
+GC 10016948 : Tree2     -&gt; 100387b4 (followed)
+GC 1001a388 : StrList   -&gt; 1003d41c (forwarded)
+GC 1001a394 : List      -&gt; 1003d428 (forwarded)
+GC 1001a394 : List      -&gt; 1003d428 (followed)
+GC 1001a388 : StrList   -&gt; 1003d41c (followed)
+GC        0 : &lt;&lt;not in old space&gt;&gt;
+GC 1001a360 : Binding   -&gt; 1003d3f4 (followed)
+GC 10016970 : Tree2     -&gt; 100387dc (followed)
+GC 1001a3a0 : StrList   -&gt; 1003d434 (forwarded)
+GC 1001a3ac : List      -&gt; 1003d440 (forwarded)
+C 1001a3ac : List      -&gt; 1003d440 (followed)
+GC 1001a3a0 : StrList   -&gt; 1003d434 (followed)
+GC        0 : &lt;&lt;not in old space&gt;&gt;
+GC 1001a360 : Binding   -&gt; 1003d3f4 (followed)
+GC        0 : &lt;&lt;not in old space&gt;&gt;
+GC 1001a3b8 : List      -&gt; 1003d44c (forwarded)
+GC        0 : &lt;&lt;not in old space&gt;&gt;
+GC 1001a3c4 : List      -&gt; 1003d458 (forwarded)
+GC 10023cd8 : gc.c:320: assertion failed (tag-&gt;magic == TAGMAGIC)
+[4] Process  1129 (es) stopped at [abort:30 ,0xfb1b454]
+         Source (of abort.c) not available for Process  1129
+(dbx) where
+&gt;  0 abort(0x2, 0x7fefb9b8, 0x34, 0x0, 0x0) [0xfb1b450]
+   1 forward(p = 0x10023cd8) [&quot;/a/apollo/u2/steve/src/es-0.84/gc.c&quot;:320, 0x40f150]
+   2 scanroots(rootlist = 0x7fefbed0) [&quot;/a/apollo/u2/steve/src/es-0.84/gc.c&quot;:332, 0x40f22c]
+   3 gc() [&quot;/a/apollo/u2/steve/src/es-0.84/gc.c&quot;:425, 0x40fa4c]
+   4 gcdisable(minfree = 320) [&quot;/a/apollo/u2/steve/src/es-0.84/gc.c&quot;:377, 0x40f6a0]
+   5 append(head = 0x1002a4b0, tail = (nil)) [&quot;/a/apollo/u2/steve/src/es-0.84/list.c&quot;:84, 0x419798]
+   6 listcopy(list = 0x1002a4b0) [&quot;/a/apollo/u2/steve/src/es-0.84/list.c&quot;:103, 0x419b6c]
+   7 glom1(tree = 0x1002aae8, binding = 0x1002887c) [&quot;/a/apollo/u2/steve/src/es-0.84/glom.c&quot;:185, 0x4145e4]
+   8 glom2(tree = 0x1002aae8, binding = 0x1002887c, quotep = 0x7fefc0fc) [&quot;/a/apollo/u2/steve/src/es-0.84/glom.c&quot;:274, 0x415a34]
+   9 glom2(tree = 0x10027f1c, binding = 0x1002887c, quotep = 0x7fefc170) [&quot;/a/apollo/u2/steve/src/es-0.84/glom.c&quot;:259, 0x41551c]
+  10 glom(tree = 0x10027f1c, binding = 0x1002887c, globit = TRUE) [&quot;/a/apollo/u2/steve/src/es-0.84/glom.c&quot;:309, 0x416468]
+   11 walk(tree0 = 0x10027f1c, binding0 = 0x1002887c, flags = 0) [&quot;/a/apollo/u2/steve/src/es-0.84/eval.c&quot;:238, 0x40ae44]
+  12 eval(list = 0x100384fc, binding0 = 0x100383b4, flags = 0) [&quot;/a/apollo/u2/steve/src/es-0.84/eval.c&quot;:111, 0x409504]
+  13 walk(tree0 = 0x1002a4d8, binding0 = 0x100383b4, flags = 0) [&quot;/a/apollo/u2/steve/src/es-0.84/eval.c&quot;:241, 0x40af4c]
+  14 eval(list = 0x100384cc, binding0 = 0x100383b4, flags = 0) [&quot;/a/apollo/u2/steve/src/es-0.84/eval.c&quot;:111, 0x409504]
+  15 walk(tree0 = 0x100288a8, binding0 = 0x100383b4, flags = 0) [&quot;/a/apollo/u2/steve/src/es-0.84/eval.c&quot;:241, 0x40af4c]
+  16 glom1(tree = 0x10026270, binding = 0x100383b4) [&quot;/a/apollo/u2/steve/src/es-0.84/glom.c&quot;:198, 0x4149b8]
+  17 glom2(tree = 0x10026270, binding = 0x100383b4, quotep = 0x7fefcb94) [&quot;/a/apollo/u2/steve/src/es-0.84/glom.c&quot;:274, 0x415a34]
+  18 glom2(tree = 0x100226fc, binding = 0x100383b4, quotep = 0x7fefcc08) [&quot;/a/apollo/u2/steve/src/es-0.84/glom.c&quot;:259, 0x41551c]
+More (n if no)?n         
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00739.html">Re: es on solaris?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00741.html">command line processing order</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00726.html">es dumping core on me</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00727.html">thought this might amuse some people</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00740"><strong>Date</strong></a></li>
+<li><a href="threads.html#00740"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

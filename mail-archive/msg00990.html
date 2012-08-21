@@ -1,0 +1,105 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: tilde operator -->
+<!--X-From-R13: "Zbera X. Dvggyr" <evggyrNfhcen.efpu.pbzz.zbg.pbz> -->
+<!--X-Date: Sat, 12 Dec 1998 01:40:43 &#45;0500 -->
+<!--X-Message-Id: 199812112230.QAA16086@supra.rsch.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>tilde operator</title>
+<link rev="made" href="mailto:rittle@supra.rsch.comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00989.html">Date Prev</a>][<a href="msg00991.html">Date Next</a>][<a href="msg00989.html">Thread Prev</a>][<a href="msg00991.html">Thread Next</a>][<a href="maillist.html#00990">Date Index</a>][<a href="threads.html#00990">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>tilde operator</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: tilde operator</li>
+<li><em>From</em>: &quot;Loren J. Rittle&quot; &lt;<a href="mailto:rittle%40supra.rsch.comm.mot.com">rittle@supra.rsch.comm.mot.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 11 Dec 1998 17:30:37 -0500</li>
+<li><em>Comments</em>: ( Received on motgate.mot.com from client mothost.mot.com, sender <a href="mailto:rittle%40supra.rsch.comm.mot.com">rittle@supra.rsch.comm.mot.com</a> )</li>
+<li><em>Reply-to</em>: <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I have no idea if any gurus still read this mailing list, but...
+
+Is the following correct behavior under es?
+
+S rittle@supra; echo &lt;={~ x1 x*}
+0
+S rittle@supra; h=x*; echo &lt;={~ x1 $h}
+1
+S rittle@supra; h=x1; echo &lt;={~ x1 $h}
+0
+
+It looks like patterns may be stored in variables, but wildcard
+patterns are not allowed (or working) when stored in variables.
+
+Assuming 0.9-beta1 is still the latest publicly available es, I will
+attempt to provide a patch, once I know the correct behavior.
+
+FYI, I think all three examples should print 0.
+
+Regards,
+Loren
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00992" href="msg00992.html">Re: tilde operator</a></strong>
+<ul><li><em>From:</em> Bill Trost &lt;trost@cloud.rain.com&gt;</li></ul></li>
+<li><strong><a name="00991" href="msg00991.html">Re: tilde operator</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@math.ntnu.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00989.html">Re: es dumps core, aargh...</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00991.html">Re: tilde operator</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00989.html">Re: es dumps core, aargh...</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00991.html">Re: tilde operator</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00990"><strong>Date</strong></a></li>
+<li><a href="threads.html#00990"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

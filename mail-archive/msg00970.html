@@ -1,0 +1,143 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Flaw in %readfrom and %writeto -->
+<!--X-From-R13: "Vnenyq Vnapur&#45;Ayfra" <unapurNzngu.agah.ab> -->
+<!--X-Date: Mon, 1 Sep 1997 17:14:21 &#45;0400 -->
+<!--X-Message-Id: 970901225252.ZM15966@math.ntnu.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Flaw in %readfrom and %writeto</title>
+<link rev="made" href="mailto:hanche@math.ntnu.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00969.html">Date Prev</a>][<a href="msg00971.html">Date Next</a>][<a href="msg00969.html">Thread Prev</a>][<a href="msg00974.html">Thread Next</a>][<a href="maillist.html#00970">Date Index</a>][<a href="threads.html#00970">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Flaw in %readfrom and %writeto</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Flaw in %readfrom and %writeto</li>
+<li><em>From</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Date</em>: Mon, 1 Sep 1997 16:52:51 -0400</li>
+<li><em>Sender</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>In initial.es we find these comments:
+
+#	All that, for example, the /tmp version of %readfrom does is bind
+#	the named variable (which is the first argument, var) to the name
+#	of a (hopefully unique) file in /tmp.
+
+However, the uniqueness fails in some cases, as in the following example.
+
+; for (x=1 2 3) { cat &lt;{echo $x} &amp; }
+15946
+15947
+15948
+; mknod: /tmp/es._devfd0.15685: File exists
+mknod: /tmp/es._devfd0.15685: File exists
+2
+1
+3
+
+;
+
+The crux of the matter is, of course, the fact that we run several
+commands in the background, all of which try to use the same temporary
+file. The relevant code in initial.es looks like this:
+
+fn %readfrom var input cmd {
+	local ($var = /tmp/es.$var.$pid) {
+		unwind-protect {
+			$input &gt; $$var
+			# text of $cmd is   command file
+			$cmd
+		} {
+			rm -f $$var
+		}
+	}
+}
+
+I tried replacing the assignment to $var with
+	local ($var = /tmp/es.^&lt;={%bgcount 0}^.$var.$pid)
+where I also define
+
+let (n=0) fn %bgcount {n=&lt;={$&amp;math $n + $1}; $&amp;result $n}
+
+fn %background {%bgcount 1; $&amp;background $*}
+
+In other words, I count up the background jobs as they are spawned and use
+this to make the value of $var more unique. I have not investigated what
+happens if bacground jobs themselves start background jobs, but I would
+guess my scheme isn't quite robust enough for that case.
+
+Also, this will fail if the user uses $&amp;background directly. I think this
+might be better solved by internals: A forked subshell will have a new pid
+although teh value of $pid is unchanged. Maybe the real pid of the
+subshell could be incorporated into the value of var?
+
+I actually never understood why $pid does not change in a forked subshell,
+but that's a different matter.
+
+Oh, and it should be noted that the above fix will fail for most of you
+because you don't have math built in. Also, of course %writeto needs
+fixing too.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00974" href="msg00974.html">Re: Flaw in %readfrom and %writeto</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@netcom.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00969.html">Re: es 0.9 beta1 available.</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00971.html">99 bottles of beer on the wall in es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00969.html">Re: es 0.9 beta1 available.</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00974.html">Re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00970"><strong>Date</strong></a></li>
+<li><a href="threads.html#00970"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

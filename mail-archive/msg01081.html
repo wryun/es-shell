@@ -1,0 +1,111 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: job control for the es shell -->
+<!--X-From-R13: Bnhy Vnnue <cnhyNcnhyunnue.pbz> -->
+<!--X-Date: Sat, 27 Apr 2002 19:04:22 &#45;0500 -->
+<!--X-Message-Id: cZOtjn75r0@dmul.paulhaahr.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 200204261350.g3QDoOK20479@brother.ludd.luth.se -->
+<!--X-Reference: 3CC96D1D.8EE30D23@physik.uni&#45;erlangen.de -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: job control for the es shell</title>
+<link rev="made" href="mailto:paul@paulhaahr.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01079.html">Date Prev</a>][<a href="msg01082.html">Date Next</a>][<a href="msg01079.html">Thread Prev</a>][<a href="msg01082.html">Thread Next</a>][<a href="maillist.html#01081">Date Index</a>][<a href="threads.html#01081">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: job control for the es shell</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Olaf Rogalsky &lt;<a href="mailto:Olaf.Rogalsky%40physik.uni-erlangen.de">Olaf.Rogalsky@physik.uni-erlangen.de</a>&gt;</li>
+<li><em>Subject</em>: Re: job control for the es shell</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:paul%40paulhaahr.com">paul@paulhaahr.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 26 Apr 2002 18:29:43 -0500</li>
+<li><em>Cc</em>: Mikael Eklund &lt;<a href="mailto:li-fi%40ludd.luth.se">li-fi@ludd.luth.se</a>&gt;,	Steve Kilbane &lt;<a href="mailto:steve%40whitecrow.demon.co.uk">steve@whitecrow.demon.co.uk</a>&gt;,	<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01079.html">3CC96D1D.8EE30D23@physik.uni-erlangen.de</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg01080.html">200204261350.g3QDoOK20479@brother.ludd.luth.se</a>&gt;	&lt;<a href="msg01079.html">3CC96D1D.8EE30D23@physik.uni-erlangen.de</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I can't remember specifically what I said about continuations and job
+control, but my current understanding of that statement would be:
+
+  (1) Correct job control in es requires some notion of (internal-to-es)
+      thread (or process or ...) that can be stopped and started.
+
+  (2) The right way to implement threads in es is using first class
+      continuations (e.g., call/cc).
+
+I still believe (1), but I no longer believe (2).
+
+What do I mean by ``correct''?  Basically, that es commands can be
+seemlessly interrupted and restarted regardless of whether they're
+running within the shell or in forked processes.  I only tried your
+patch very quickly, but it doesn't appear to satisfy that criteria.
+(It's impressive nonetheless.)
+
+For examples, try interrupting (&amp; restarting) things like
+
+  while true { sleep 1 }
+  while true { echo t }
+  x = `{ date; sleep 100; date }
+
+--p
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01080" href="msg01080.html">Re: job control for the es shell</a></strong>
+<ul><li><em>From:</em> Mikael Eklund &lt;li-fi@ludd.luth.se&gt;</li></ul></li>
+<li><strong><a name="01079" href="msg01079.html">Re: job control for the es shell</a></strong>
+<ul><li><em>From:</em> Olaf Rogalsky &lt;Olaf.Rogalsky@physik.uni-erlangen.de&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01079.html">Re: job control for the es shell</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01082.html">[Fwd: Re: job control for the es shell]</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01079.html">Re: job control for the es shell</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01082.html">[Fwd: Re: job control for the es shell]</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01081"><strong>Date</strong></a></li>
+<li><a href="threads.html#01081"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

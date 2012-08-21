@@ -1,0 +1,126 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Es and autocompleting -->
+<!--X-From-R13: rtabeNbso.arg (Rna Stabe) -->
+<!--X-Date: Wed, 27 Dec 2000 19:51:18 &#45;0500 -->
+<!--X-Message-Id: 20001227163206.O986@ofb.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: slrn93t97n.5d4.egnor@ofb.net -->
+<!--X-Reference: 200012190847.IAA29234@whitecrow.demon.co.uk -->
+<!--X-Reference: 20001227160107.762871.FMU6828@piglet.prv.splode.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Es and autocompleting</title>
+<link rev="made" href="mailto:egnor@ofb.net">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01058.html">Date Prev</a>][<a href="msg01060.html">Date Next</a>][<a href="msg01058.html">Thread Prev</a>][<a href="msg01060.html">Thread Next</a>][<a href="maillist.html#01059">Date Index</a>][<a href="threads.html#01059">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Es and autocompleting</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Noah Friedman &lt;<a href="mailto:friedman%40splode.com">friedman@splode.com</a>&gt;</li>
+<li><em>Subject</em>: Re: Es and autocompleting</li>
+<li><em>From</em>: <a href="mailto:egnor%40ofb.net">egnor@ofb.net</a> (Dan Egnor)</li>
+<li><em>Date</em>: Wed, 27 Dec 2000 19:32:06 -0500</li>
+<li><em>Cc</em>: <a href="mailto:steve%40whitecrow.demon.co.uk">steve@whitecrow.demon.co.uk</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01058.html">20001227160107.762871.FMU6828@piglet.prv.splode.com</a>&gt;; from friedman@splode.com on Wed, Dec 27, 2000 at 04:01:07PM -0800</li>
+<li><em>References</em>: &lt;<a href="msg01053.html">slrn93t97n.5d4.egnor@ofb.net</a>&gt; &lt;<a href="msg01056.html">200012190847.IAA29234@whitecrow.demon.co.uk</a>&gt; &lt;<a href="msg01058.html">20001227160107.762871.FMU6828@piglet.prv.splode.com</a>&gt;</li>
+<li><em>User-agent</em>: Mutt/1.2.5i</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>On Wed, Dec 27, 2000 at 04:01:07PM -0800, Noah Friedman wrote:
+&gt; If you have to teach the window system how to do context-sensitive
+&gt; completion and history for csh, sh, rc, scsh, etc. you've now moved a lot
+&gt; of application-specific knowledge into the window system where it will
+&gt; never be kept up to date because a different vendor is responsible for
+&gt; maintaining it.
+
+On the other hand, a good context-sensitive completion system also has to 
+know about the commands you're running.  For example, if you install a recent 
+version of zsh, it comes with completion files for everything from CVS to RPM.
+If you type &quot;cvs remove &lt;Tab&gt;&quot;, it will complete only files which are in the 
+CVS repository for the current directory but are not in the current directory 
+(yes, it knows how to parse CVS/Entries).  If you type &quot;rpm --verify &lt;Tab&gt;&quot;, it
+will complete the names of RPM packages installed on your system (yes, it runs 
+&quot;rpm -qa&quot; to generate the list).  If you type &quot;tar xvfz mytarball.tgz &lt;Tab&gt;&quot;, 
+it will complete the names of files inside the tarball (yes, it runs &quot;tar&quot; 
+behind the scenes to get the list).
+
+Talk about application-specific knowledge!  You're probably recoiling in horror
+(and we all know the zsh developers are insane lunatics), but this sort of 
+thing is amazingly valuable (much more so than something which merely 
+autocompletes strings you happen to have typed in the past).  It's more than a 
+shortcut mechanism, it's actually a fingertip-level exploration tool.  You may 
+pish and tush, but it's still pretty nifty.
+
+I would argue that, if anything, completion logic needs to move &quot;down&quot;, closer 
+to the applications that provide the necessary context, but command line 
+editing and history recall need to move &quot;up&quot;, closer to the terminal's user 
+interface.
+
+I have no idea how to actually accomplish this motion, however.
+
+Ignore me, I'll go back to lurking...
+
+Dan
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01053" href="msg01053.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> egnor@ofb.net (Dan Egnor)</li></ul></li>
+<li><strong><a name="01056" href="msg01056.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> Steve Kilbane &lt;steve@whitecrow.demon.co.uk&gt;</li></ul></li>
+<li><strong><a name="01058" href="msg01058.html">Re: Es and autocompleting</a></strong>
+<ul><li><em>From:</em> Noah Friedman &lt;friedman@splode.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01058.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01060.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01058.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01060.html">Re: Es and autocompleting</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01059"><strong>Date</strong></a></li>
+<li><a href="threads.html#01059"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

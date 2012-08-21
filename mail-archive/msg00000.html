@@ -1,0 +1,174 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: notes on notation -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Fri, 2 Oct 1992 00:46:53 &#45;0400 -->
+<!--X-Message-Id: 9210020448.AA26278@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>notes on notation</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[Date Prev][<a href="msg00001.html">Date Next</a>][Thread Prev][<a href="msg00001.html">Thread Next</a>][<a href="maillist.html#00000">Date Index</a>][<a href="threads.html#00000">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>notes on notation</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: notes on notation</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 2 Oct 1992 00:48:33 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>i realized on my way home from work today that we never bothered to explain
+any of es's funky notations.  in lieu of a manual page or something else
+more formal, i thought i'd send out a brief note explaining the most
+significant of the differences between es and rc. 
+
+``@ args { body }'' is es-speak for lambda.  during the evaluation of body,
+the variable $args is bound to any arguments.  if there are more than one
+parameter variables named in the @ expression, all but the last are bound
+one-to-one to the arguments, with the last named parameter bound to the
+rest.  a lambda may be passed around as a value; if used as the first word
+of an expression it is evaluated.  if no parameters are given, the default
+of * is used, in the name of compatibility. 
+
+	;; echo @ x y z { echo $z $y $x}
+	@ x y z{echo $z $y $x}
+	;; @ x y z { echo $z $y $x} a b c
+	c b a
+	;; @ x y z { echo $z $y $x} a b c d e
+	c d e b a
+	;; @ x y z { echo $z $y $x} a
+	a
+	;; @ { echo $#* $* } foo bar
+	2 foo bar
+	;; @ { echo $#* $* }
+	0
+	;; 
+
+[note that @ is not a special character, so it must be whitespace separated
+from non-separator characters.  this was done so we could continue to write
+mail addresses w/o escape characters.]
+
+code fragments enclosed in {} without @ are a special case of lambda: no
+arguments are bound when a {} group is evaluated.  passing code fragments
+surrounded by braces to functions or shell script is pervasive in es---most
+control flow constructs are implemented as builtins that take brace groups
+as arguments. 
+
+	;; if {cmp -s $i ../old/$i} {rm ../old/$i} {diff -c $i ../old}
+	;; while {test -f lockfile} {sleep 5}
+	;; 
+
+lambdas and brace groups may be passed to programs, assigned to variables,  etc.
+functions are just variables with the prefix ``fn-''.  the parser recognizes the
+syntax ``fn name args { body }'' but converts it to ``fn-name = @ args { body }''.
+
+	;; fn-foo = @ { echo $#* $* }
+	;; foo
+	0
+	;; foo bar bletch
+	2 bar bletch
+	;; fn bar x y { echo $y $x }
+	;; echo $fn-bar
+	@ x y{echo $y $x}
+	;; 
+
+$&amp;foobar refers to a builtin function (a ``primitive'') named foobar.
+only literal strings may be used after $&amp;.
+
+the exit statuses of commands is not reported in the variable $status. 
+instead, one can explicitly get the status of a command using the &lt;&gt;
+notation.  thus
+
+	;; echo &lt;&gt;{cat /etc/termcap | sed 100q | grep -s FooBar}
+	sigpipe 0 1
+	;; 
+
+exit statuses in es are more general than those from other shells: they
+are arbitrary lists, just like variables or arguments passed to commands,
+and, in fact, should be thought of as return values and not just exit
+statuses.  forked programs still return the same values as they did
+before, but shell functions and primitives can return more complex values.
+pipes, for example, return lists of the return values of the pipeline
+components.  (they do this in rc, also, but there is no general mechanism
+for things other than pipes.) one can write an identity function in es as
+
+	;; fn I { return $* }
+	;; echo &lt;&gt;{I foo bar}
+	foo bar
+	;; 
+
+despite richer exit statuses than other shells, the test for truth and
+falseness on exit statuses is unchanged in es; that is, a list containing
+anything but 0 or '' in any of its elements is false, otherwise it's true. 
+
+	;; if {I 0 1 0} {echo true} {echo false}
+	false
+	;; if {I} {echo true} {echo false}
+	true
+	;; 
+
+finally, es uses lexical rather than dynamic scoping for function arguments,
+which can be combined with rich exit statuses to give higher order functions.
+
+	;; fn cons a d { return @ f { $f $a $d } }
+	;; fn car pair { $pair @ a d { return $a } }
+	;; fn cdr pair { $pair @ a d { return $d } }
+	;; echo &lt;&gt;{car &lt;&gt;{cdr &lt;&gt;{cons 1 &lt;&gt;{cons 2 &lt;&gt;{cons 3 NULL}}}}}
+	2
+	;; 
+
+a lot of this syntax is kind of clunky.  please feel free to make suggestions.
+the language hasn't frozen yet by any means, but as more people see it, it's
+beginning to get slushy.
+
+-- paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Next by Date:
+<strong><a href="msg00001.html">Initial reaction</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00001.html">Initial reaction</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00000"><strong>Date</strong></a></li>
+<li><a href="threads.html#00000"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

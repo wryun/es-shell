@@ -1,0 +1,124 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: distinguishing shells -->
+<!--X-From-R13: <qjfNffrp.jvfp.rqh> -->
+<!--X-Date: Thu, 23 Sep 1993 18:28:42 &#45;0400 -->
+<!--X-Message-Id: 9309232223.AA27120@ssec.ssec.wisc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199309232059.AA02687@penfold.cc.gatech.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: distinguishing shells</title>
+<link rev="made" href="mailto:dws@ssec.wisc.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00699.html">Date Prev</a>][<a href="msg00701.html">Date Next</a>][<a href="msg00697.html">Thread Prev</a>][<a href="msg00703.html">Thread Next</a>][<a href="maillist.html#00700">Date Index</a>][<a href="threads.html#00700">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: distinguishing shells</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Arnold Robbins &lt;<a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: distinguishing shells</li>
+<li><em>From</em>: &lt;<a href="mailto:dws%40ssec.wisc.edu">dws@ssec.wisc.edu</a>&gt;</li>
+<li><em>Date</em>: Thu, 23 Sep 1993 19:23:18 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Illegal-object</em>: Syntax error in From: address found on hawkwind.utcs.toronto.edu:	From:	DaviD W.Sanderson &lt;<a href="mailto:dws%40ssec.wisc.edu">dws@ssec.wisc.edu</a>&gt;		^      ^-illegal period in phrase		 \-phrases containing '.' must be quoted</li>
+<li><em>In-reply-to</em>: (Your message of Thu, 23 Sep 93 16:59:17 D.)             &lt;<a href="msg00697.html">199309232059.AA02687@penfold.cc.gatech.edu</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+# How about
+# 	@ {} || echo this is sh
+
+Unfortunately that generates an error message from sh since it cannot
+find a command named '@'.  The only thing I can think of that runs in
+both without syntax errors is something like
+
+	test &quot;&quot; '=' '' &amp;&amp; {
+		echo NOT rc or es
+	} || {
+		echo rc or es
+	}
+
+but that does require using 'test'.
+
+If you've already defined an rc or es function named ':' which returns
+false, then it's easy:
+
+	: &amp;&amp; {
+		echo NOT rc or es
+	} || {
+		echo rc or es
+	}
+
+But I think this is worse than using 'test'.
+
+sh-like syntax and rc-like syntax are so different that I doubt there
+is enough in common to allow distinguising between the two without
+resorting to an external command.  I would love to be proven wrong
+about this.
+
+DaviD W. Sanderson                                    dws@ssec.wisc.edu
+Space Science and Engineering Center    University of Wisconsin-Madison
+&quot;The Noah Webster of smileys&quot;    - The Wall Street Journal, 15 Sep 1992
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00703" href="msg00703.html">distinguishing shells</a></strong>
+<ul><li><em>From:</em> Dave Mason &lt;dmason@plg.uwaterloo.ca&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00697" href="msg00697.html">Re: distinguishing shells</a></strong>
+<ul><li><em>From:</em> Arnold Robbins &lt;arnold@cc.gatech.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00699.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00701.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00697.html">Re: distinguishing shells</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00703.html">distinguishing shells</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00700"><strong>Date</strong></a></li>
+<li><a href="threads.html#00700"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

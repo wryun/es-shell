@@ -1,0 +1,121 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Welcome back -->
+<!--X-From-R13: Rnir [nfba <qznfbaNcyt.hjngreybb.pn> -->
+<!--X-Date: Wed, 30 Nov 1994 11:09:05 &#45;0500 -->
+<!--X-Message-Id: 94Nov30.110837edt.184945@plg.uwaterloo.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199411300118.UAA17077@netcom4.netcom.com -->
+<!--X-Reference: 1994&#45;11&#45;30.163044.hanche@pride -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Welcome back</title>
+<link rev="made" href="mailto:dmason@plg.uwaterloo.ca">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00775.html">Date Prev</a>][<a href="msg00777.html">Date Next</a>][<a href="msg00774.html">Thread Prev</a>][<a href="msg00777.html">Thread Next</a>][<a href="maillist.html#00776">Date Index</a>][<a href="threads.html#00776">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Welcome back</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Welcome back</li>
+<li><em>From</em>: Dave Mason &lt;<a href="mailto:dmason%40plg.uwaterloo.ca">dmason@plg.uwaterloo.ca</a>&gt;</li>
+<li><em>Date</em>: Wed, 30 Nov 1994 11:08:31 -0500</li>
+<li><em>In-reply-to</em>: &lt;1994-11-30.163044.hanche@pride&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00772.html">199411300118.UAA17077@netcom4.netcom.com</a>&gt;	&lt;1994-11-30.163044.hanche@pride&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Harald Hanche-Olsen writes:
+&gt; One of several reasons I am asking is that I would like to restart an
+&gt; old discussion about whether or not a non-login es should read a
+&gt; config file upon startup.  But I would like to take the time to think
+
+I made a minor extension to rc to read .rcrc on -c, providing the
+variable $Command with the argument to -c.  This makes xrsh, etc. work
+just fine.  This is something that itcsh (or some such) had that is
+invaluable in this environment.
+
+I don't run es (though I might someday) so I'm not sure if it has the
+moral equivalent, but it was a very minor addition to rc, and I think
+well worth it in terms of increased functionality.
+
+../Dave
+
+-----
+The following is the first thing in my .rcrc.  If it is a -c call,
+then it (if necessary) it sets up a minimum environment, only going
+whole-hog if it turns out that the user creates an interactive shell
+(i.e. when prompt gets called).  The sed is to turn sh style grouping
+into rc style, and is something that I probably never use now.  I
+should probably also nuke the _C_ function... someday.
+if (! ~ $#Command 0) {
+		~ $#prepath 0 &amp;&amp; {
+		. ./.rc/rcmin
+		fn prompt {
+				reenv;refn
+				fn prompt
+		}}
+		eval `` () {echo 'fn _C_ {'^$Command'}'|sed -e 's/(/{/g' -e 's/)/}/g'}
+		Command= ()
+		_C_
+		exit
+}
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00772" href="msg00772.html">Re: path should be in noexport, and a .esrc tip</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+<li><strong><a name="00774" href="msg00774.html">Welcome back</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@imf.unit.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00775.html">Re: command line processing order</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00777.html">Re: Welcome back</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00774.html">Welcome back</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00777.html">Re: Welcome back</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00776"><strong>Date</strong></a></li>
+<li><a href="threads.html#00776"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

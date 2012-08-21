@@ -1,0 +1,127 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: command line processing order -->
+<!--X-From-R13: unnueNargpbz.pbz (Bnhy Vnnue) -->
+<!--X-Date: Wed, 30 Nov 1994 11:34:00 &#45;0500 -->
+<!--X-Message-Id: 199411301633.LAA09313@netcom7.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199411301548.KAA28288@penfold.cc.gatech.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: command line processing order</title>
+<link rev="made" href="mailto:haahr@netcom.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00777.html">Date Prev</a>][<a href="msg00779.html">Date Next</a>][<a href="msg00775.html">Thread Prev</a>][<a href="msg00747.html">Thread Next</a>][<a href="maillist.html#00778">Date Index</a>][<a href="threads.html#00778">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: command line processing order</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a> (Arnold Robbins)</li>
+<li><em>Subject</em>: Re: command line processing order</li>
+<li><em>From</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Wed, 30 Nov 1994 11:33:06 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00775.html">199411301548.KAA28288@penfold.cc.gatech.edu</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00775.html">199411301548.KAA28288@penfold.cc.gatech.edu</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Arnold Robbins writes:
+&gt; &gt; &gt; ; ls
+&gt; &gt; &gt; a	b	c	d
+&gt; &gt; &gt; ; cat * &gt; foo
+&gt; &gt; &gt; cat: input foo is output
+&gt; &gt; &gt; 
+&gt; &gt; &gt; The wildcard expansion is happening *after* the I/O redirection. The Bourne
+&gt; &gt; &gt; shell and Byron's rc both do the wildcard expansion first, and I think this
+&gt; &gt; &gt; is the right way to go.
+
+&gt; &gt; This would be a hard thing to change.  In raw es (try es -nx) the
+&gt; &gt; command becomes
+&gt; &gt; 	{%create 1 &lt;={%one foo} {cat *}}
+&gt; &gt; which pretty much determines the sequence.  %create doesn't have the
+&gt; &gt; option to glob the command, create the file, and then execute.  (In
+&gt; &gt; fact, it's not even as simple as that description implies.)
+
+&gt; I would argue that this really makes a strong case to bring globbing
+&gt; out to the user level. It should become
+&gt; 	# pardon the pseudo-syntax, I've forgotten a lot of the details
+	# (so have I --Paul)
+&gt; 	local (files = &lt;={%glob *})
+&gt; 		{%create 1 &lt;={%one foo} {cat $files }}
+&gt; This would cause the globbing to happen first.
+
+I knew someone would mention that, which is why I included my ``it's not
+even that simple'' note.
+
+The problem is that if there are multiple commands in a sequence, you
+have to execute the first command before globbing the second.  E.g.,
+
+	{ cat a* &gt; b-files ; cat [ab]* } &gt; foo
+
+would be very hard to translate into something like what you suggest.
+
+&gt; ANYWAY. The point is that I still think globbing should be done first,
+&gt; and it could probably be managed.
+
+I'm not sure I think globbing should be done first, but I don't know how
+to manage it without breaking the es execution model and getting in the
+way of spoofing.
+
+Paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00775" href="msg00775.html">Re: command line processing order</a></strong>
+<ul><li><em>From:</em> arnold@cc.gatech.edu (Arnold Robbins)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00777.html">Re: Welcome back</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00779.html">Non-login config files</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00775.html">Re: command line processing order</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00747.html">'{}' feature or bug?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00778"><strong>Date</strong></a></li>
+<li><a href="threads.html#00778"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

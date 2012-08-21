@@ -1,0 +1,146 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: cd w/o cdpath -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Wed, 14 Oct 1992 17:08:19 &#45;0400 -->
+<!--X-Message-Id: 9210142107.AA27376@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>cd w/o cdpath</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00055.html">Date Prev</a>][<a href="msg00057.html">Date Next</a>][<a href="msg00055.html">Thread Prev</a>][<a href="msg00057.html">Thread Next</a>][<a href="maillist.html#00056">Date Index</a>][<a href="threads.html#00056">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>cd w/o cdpath</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: cd w/o cdpath</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 14 Oct 1992 17:07:59 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I think that prim_cd() doesn't have the ability to cd to a directory within
+the current directory, by default.  Only works if you make a cdpath with &quot;.&quot;
+in it.  My solution was to add &quot;.&quot; as an implicit cdpath member, but perhaps
+there would be better ways to do it.
+
+(Something I found in the source: there are subscript ranges - so I think
+ &quot;shift&quot; is now &quot;* = $*(2 ... $#*)&quot;.  That's nice.  It would also be
+ interesting to be able to assign to a list, so &quot;x = $1; shift&quot; would
+ be &quot;(x *) = $*&quot;, with the usual result of assigning one value to each
+ identifier except the last, which would get all remaining values; any
+ excess identifiers would get nil.)
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+-------------------------------
+--- prim-etc.c	Wed Oct 14 13:10:33 1992
+***************
+*** 200,205 ****
+--- 200,206 ----
+  		return true;
+  	}
+  	if (list-&gt;next == NULL) {
++ 		register int cdpath_has_null = 0;
+  		char *name = getstr(list-&gt;term);
+  		if (isabsolute(name) || streq(name, &quot;.&quot;) || streq(name, &quot;..&quot;))
+  			if (chdir(name) == -1)
+***************
+*** 220,227 ****
+  					testlen = pathlen;
+  					test = erealloc(test, testlen);
+  				}
+! 				if (*dir == '\0')
+  					strcpy(test, name);
+  				else {
+  					strcpy(test, dir);
+  					if (!streq(test, &quot;/&quot;))		/* &quot;//&quot; is special to POSIX */
+--- 221,230 ----
+  					testlen = pathlen;
+  					test = erealloc(test, testlen);
+  				}
+! 				if (*dir == '\0') {
+! 					cdpath_has_null = 1;
+  					strcpy(test, name);
++ 				}
+  				else {
+  					strcpy(test, dir);
+  					if (!streq(test, &quot;/&quot;))		/* &quot;//&quot; is special to POSIX */
+***************
+*** 236,242 ****
+  				}
+  			}
+  			RefEnd(path);
+! 			fail(&quot;cd %s: directory not found&quot;, name);
+  		}
+  	}
+  	fail(&quot;usage: cd [directory]&quot;);
+--- 239,250 ----
+  				}
+  			}
+  			RefEnd(path);
+! 			if (cdpath_has_null || chdir(name) &lt; 0) {
+! 				fail(&quot;cd %s: directory not found&quot;, name);
+! 			}
+! 			else {
+! 				return true;
+! 			}
+  		}
+  	}
+  	fail(&quot;usage: cd [directory]&quot;);
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00055.html">Re: es and environment</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00057.html">Re: cd w/o cdpath</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00055.html">Re: es and environment</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00057.html">Re: cd w/o cdpath</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00056"><strong>Date</strong></a></li>
+<li><a href="threads.html#00056"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

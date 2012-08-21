@@ -1,0 +1,144 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: cd tracking symbolic links -->
+<!--X-From-R13: "Uertbel Z. Earnq" <tfarnqNuneyrdhva.pbz> -->
+<!--X-Date: Mon, 17 Jul 1995 17:23:48 &#45;0400 -->
+<!--X-Message-Id: 29284.199507172123@ensoniq.seattle.harlequin.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 95Jul17.133236edt.12689@galapagos.cse.psu.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: cd tracking symbolic links</title>
+<link rev="made" href="mailto:gsnead@harlequin.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00856.html">Date Prev</a>][<a href="msg00858.html">Date Next</a>][<a href="msg00856.html">Thread Prev</a>][<a href="msg00858.html">Thread Next</a>][<a href="maillist.html#00857">Date Index</a>][<a href="threads.html#00857">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: cd tracking symbolic links</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Scott Schwartz &lt;<a href="mailto:schwartz%40galapagos.cse.psu.edu">schwartz@galapagos.cse.psu.edu</a>&gt;</li>
+<li><em>Subject</em>: Re: cd tracking symbolic links</li>
+<li><em>From</em>: &quot;Gregory L. Snead&quot; &lt;<a href="mailto:gsnead%40harlequin.com">gsnead@harlequin.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 17 Jul 1995 17:23:36 -0400</li>
+<li><em>Cc</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr), <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Mon, 17 Jul 1995 13:32:30 EDT.&quot;             &lt;<a href="msg00856.html">95Jul17.133236edt.12689@galapagos.cse.psu.edu</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+| Gregory L. Snead wrote
+| &gt;   I'm curious of your reasons why this isn't the right thing to do.
+| 
+| Because then ``ls ..'' disagrees with ``cd ..; ls'' and I get confused
+| by that.  Other people don't;  this hack's for them.
+
+ Scott&gt; Paul is right that asymmetry between shell and kernel is
+ Scott&gt; irritating.  I tend to blame &quot;..&quot; itself, which is a
+ Scott&gt; questionable feature when your filesystem isn't really a
+ Scott&gt; tree.  If you have symbolic links (or worse, union mounts
+ Scott&gt; or mounted streams) then &quot;..&quot; yields surprises all too
+ Scott&gt; often.  If chdir's semantics were to set a default prefix
+ Scott&gt; this wouldn't happen.  Enlightened systems like Sprite
+ Scott&gt; and QNX use prefix tables internally instead of mount
+ Scott&gt; points anyway, so there is precident for this, aside from
+ Scott&gt; VMS. :-)
+
+Scott,
+
+  If I understand you correctly, then I tend to use es this way.
+For example, if I'm going to use a couple of directories on a
+regular basis, I will assign them to a variable.  I will prepend
+this variable to file I access.
+
+  A sample session to first define a few things
+
+   ; a=~something/dir1
+   ; b=/disk2/product/sources
+   ; c=/usr/local/lib/lisp
+   ; fn d x y { diff $x $y | more }
+   ; fn m x y { more $x $y }
+
+
+  Then use them
+
+   ; d $a/file1 $b/file2
+
+  Using command line editing to change the &quot;d&quot; to an &quot;m&quot;
+
+   ; ^p^a^dm
+   ; m $a/file1 $b/file2
+
+
+  I only do this when I need to perform the same operation
+repeatedly during the life of a project.
+
+
+
+  In the Unix paradigm, I guess this is what you're talking
+about.  I haven't use VMS in a while (and I'm not familiar with
+QNX or Sprite) would you provide an example of using prefix
+tables?  (I know, this is off the original subject).
+
+
+  -- gregoir
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00858" href="msg00858.html">Re: cd tracking symbolic links</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@galapagos.cse.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00856" href="msg00856.html">Re: cd tracking symbolic links</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@galapagos.cse.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00856.html">Re: cd tracking symbolic links</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00858.html">Re: cd tracking symbolic links</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00856.html">Re: cd tracking symbolic links</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00858.html">Re: cd tracking symbolic links</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00857"><strong>Date</strong></a></li>
+<li><a href="threads.html#00857"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

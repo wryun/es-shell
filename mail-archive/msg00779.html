@@ -1,0 +1,118 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Non&#45;login config files -->
+<!--X-From-R13: Egrira Drmfhgrx <E.DrmfhgrxNonybb.tfsp.anfn.tbi> -->
+<!--X-Date: Wed, 30 Nov 1994 11:37:35 &#45;0500 -->
+<!--X-Message-Id: 94Nov30.113735est.24136@hawkwind.utcs.utoronto.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Non-login config files</title>
+<link rev="made" href="mailto:S.Rezsutek@baloo.gsfc.nasa.gov">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00778.html">Date Prev</a>][<a href="msg00780.html">Date Next</a>][<a href="msg00770.html">Thread Prev</a>][<a href="msg00781.html">Thread Next</a>][<a href="maillist.html#00779">Date Index</a>][<a href="threads.html#00779">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Non-login config files</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Non-login config files</li>
+<li><em>From</em>: Steven Rezsutek &lt;<a href="mailto:S.Rezsutek%40baloo.gsfc.nasa.gov">S.Rezsutek@baloo.gsfc.nasa.gov</a>&gt;</li>
+<li><em>Date</em>: Wed, 30 Nov 1994 11:37:22 -0500</li>
+<li><em>Sender</em>: <a href="mailto:S.Rezsutek%40baloo.gsfc.nasa.gov">S.Rezsutek@baloo.gsfc.nasa.gov</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+In our last episode, Harald said:
+
+&gt; I would like to restart an old discussion about whether or not a 
+&gt; non-login es should read a config file upon startup. 
+
+I've never missed this (non-login configs), and in fact, as a sysadmin
+who sometimes has to help csh users along, it has sometimes shown itself
+to be a pain when people &quot;fix&quot; something in the &quot;wrong&quot; file and then don't
+get consistant behavior in all their shells.
+
+As far as es goes, I've found the current way of doing things, coupled
+with the autoloaded functions to be more than adequate.  Multiple config
+files is just one more thing to bother with, IMHO. To illustrate:
+
+The first line of my .xsession is &quot;#!/bin/es -lop&quot;, so everything is set 
+up in the environment before any apps/shells are started.  &quot;Pure&quot; stuff
+goes in .esrc, and &quot;X-only&quot; stuff, like my rxterm function, go in autoload
+functions.  Things work fine, be it from an Xterminal, an rsh, or a dialup.
+
+If I happen to have created a sub environment by loading in various functions,
+and start off an emacs, it's all right there.  If I have to make adjustments 
+to path, or whatever, I only need change one file.  Of course, the goodies 
+don't go along if I rxterm to another machine, but that's Unix's fault, not
+es's. ;-) 
+
+This being said, I humbly submit my &quot;Nay&quot; vote.
+
+Oh, and welcome back Paul. :-)
+
+
+Steve
+
+...................................................................
+Steven Rezsutek			      Steven.M.Rezsutek.1@gsfc.nasa.gov
+Nyma / NASA GSFC Code 735.2	      Vox: +1 301 286 0897
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00783" href="msg00783.html">Re: Non-login config files</a></strong>
+<ul><li><em>From:</em> Harald Hanche-Olsen &lt;hanche@imf.unit.no&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00778.html">Re: command line processing order</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00780.html">Re: Welcome back</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00770.html">Re: is this my mistake or someone elses?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00781.html">Non-login config files</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00779"><strong>Date</strong></a></li>
+<li><a href="threads.html#00779"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  `*' variable always local to functions -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Mon, 17 May 1993 20:17:47 &#45;0400 -->
+<!--X-Message-Id: 9305180017.AA13003@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305180013.AA25235@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  `*' variable always local to functions</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00422.html">Date Prev</a>][<a href="msg00424.html">Date Next</a>][<a href="msg00422.html">Thread Prev</a>][<a href="msg00424.html">Thread Next</a>][<a href="maillist.html#00423">Date Index</a>][<a href="threads.html#00423">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  `*' variable always local to functions</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: Re:  `*' variable always local to functions</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Mon, 17 May 1993 21:17:20 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00422.html">9305180013.AA25235@astro.mv.us.adobe.com</a>&gt; (haahr@mv.us.adobe.com )</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;uh, i'm not quite sure what you're talking about here.  the only thing about
+&gt;``*'' which is special is that if you have no other arguments to a lambda, it
+&gt;is used by default.  this was done so that
+&gt;	fn g { grep $* }
+&gt;would just work.  (cultural compatibility, rather than real compatibility.)
+
+Yes, that is precisely what I'm talking about.
+
+If I don't specify any arguments local to a function, I don't want any. 
+
+I understand the desire to be culturally compatible with other shells, but
+on the other hand I think that, with respect to es, it makes the shell's
+treatment of variables less consistent. 
+
+It also is a minor annoyance, because you might actually want to frob a
+nonlocal `*' intentionally (it's occured to me once or twice). 
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00422" href="msg00422.html">Re:  `*' variable always local to functions</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00422.html">Re:  `*' variable always local to functions</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00424.html">automatic local variables</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00422.html">Re:  `*' variable always local to functions</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00424.html">automatic local variables</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00423"><strong>Date</strong></a></li>
+<li><a href="threads.html#00423"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

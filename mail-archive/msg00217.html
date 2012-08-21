@@ -1,0 +1,114 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es decompression hack -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Mon, 22 Mar 1993 19:33:51 &#45;0500 -->
+<!--X-Message-Id: 9303230034.AA00834@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es decompression hack</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00216.html">Date Prev</a>][<a href="msg00218.html">Date Next</a>][<a href="msg00216.html">Thread Prev</a>][<a href="msg00219.html">Thread Next</a>][<a href="maillist.html#00217">Date Index</a>][<a href="threads.html#00217">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es decompression hack</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es decompression hack</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Mon, 22 Mar 1993 19:34:17 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>[despite my warning note that immediately preceeded this note,
+i couldn't wait to share this hack which i just coded up with
+the list.]
+
+here's one simple hook function overriding that you might find
+useful.  put this in your .esrc (provided you're using 0.8 or
+later, though one could construct an 0.79 version with test
+instead of access) and you'll be able to use &lt; with files that
+don't exist, provided that a compressed .Z version of the files
+does exist.
+
+let (open = $fn-%open) {
+	fn %open fd file cmd {
+		let (opened-file = $&amp;false) {
+			catch @ e {
+				if {!$opened-file &amp;&amp; !access $file &amp;&amp; access -r $file.Z} {
+					%pipe {zcat $file} 1 $fd $cmd
+				} {
+					throw $e
+				}
+			} {
+				$open $fd $file {
+					opened-file = $&amp;true
+					$cmd
+				}
+			}
+		}
+	}
+}
+
+i haven't tested this extensively, but it handles the obvious
+cases and i like that it's so easy.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00219" href="msg00219.html">Re: es decompression hack</a></strong>
+<ul><li><em>From:</em> John (Most modern computers would break if you stood on them) Mackin &lt;john@	civil.su.oz.au&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00216.html">es-0.8 warning</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00218.html">patches to es-0.8</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00216.html">es-0.8 warning</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00219.html">Re: es decompression hack</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00217"><strong>Date</strong></a></li>
+<li><a href="threads.html#00217"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: re: Flaw in %readfrom and %writeto -->
+<!--X-From-R13: revx dhnafgebz <dhnafgebNWasbzxg.voz.pbz> -->
+<!--X-Date: Sat, 13 Sep 1997 01:11:24 &#45;0400 -->
+<!--X-Message-Id: 199709130052.UAA49594@dingler.dev.infomkt.ibm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>re: Flaw in %readfrom and %writeto</title>
+<link rev="made" href="mailto:quanstro@Infomkt.ibm.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00974.html">Date Prev</a>][<a href="msg00976.html">Date Next</a>][<a href="msg00974.html">Thread Prev</a>][<a href="msg00976.html">Thread Next</a>][<a href="maillist.html#00975">Date Index</a>][<a href="threads.html#00975">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>re: Flaw in %readfrom and %writeto</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a></li>
+<li><em>Subject</em>: re: Flaw in %readfrom and %writeto</li>
+<li><em>From</em>: erik quanstrom &lt;<a href="mailto:quanstro%40Infomkt.ibm.com">quanstro@Infomkt.ibm.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 12 Sep 1997 20:52:45 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;Yep, that's right.  Don't most systems support /dev/fd these days,
+&gt;making the temp file kludge less necessary?
+
+no. aix, for example. 
+
+&gt;&gt; I actually never understood why $pid does not change in a forked subshell,
+&gt;&gt; but that's a different matter.
+
+&gt;So you can do things like
+&gt;
+&gt;  { mumble &gt; /tmp/poot.$pid } &amp;
+&gt;  rm /tmp/poot.$pid
+&gt;
+&gt;and have them work on the same file.  Behavior inherited from /bin/sh.
+
+why would you want that? if you really want that behavior,
+then you can implement it by doing the floowing if subshells
+change $pid
+
+        parentPid = $pid
+
+        { mumble &gt; /tmp/poot.$parentPid } &amp;
+        rm /tmp/poot/$parentPid
+
+i wrote my shell this way.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00976" href="msg00976.html">Re: Flaw in %readfrom and %writeto</a></strong>
+<ul><li><em>From:</em> Soren Dayton &lt;csdayton@cs.uchicago.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00974.html">Re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00976.html">Re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00974.html">Re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00976.html">Re: Flaw in %readfrom and %writeto</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00975"><strong>Date</strong></a></li>
+<li><a href="threads.html#00975"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

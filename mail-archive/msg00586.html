@@ -1,0 +1,279 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: newer -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Fri, 28 May 1993 16:49:49 &#45;0400 -->
+<!--X-Message-Id: 9305282049.AA05340@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305281851.AA08610@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>newer</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00585.html">Date Prev</a>][<a href="msg00587.html">Date Next</a>][<a href="msg00583.html">Thread Prev</a>][<a href="msg00587.html">Thread Next</a>][<a href="maillist.html#00586">Date Index</a>][<a href="threads.html#00586">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>newer</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: newer</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Fri, 28 May 1993 16:49:32 -0400</li>
+<li><em>Cc</em>: <a href="mailto:rsalz%40osf.org">rsalz@osf.org</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00583.html">9305281851.AA08610@astro.mv.us.adobe.com</a>&gt; (haahr@mv.us.adobe.com)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Thanks for your newer program.  I could not resist &quot;improving&quot; on it,
+it seems to be an obsession I have... :-)
+
+I sometimes want to compare a whole buch of files against a single
+file.  For example, I can now write 
+
+  newer -n `{newer -p mark} *.c
+
+to get a list of all files that are newer than mark.  I can also say
+
+  newer -o `{date+ -1 day %Z} *.c
+
+to find out which ones are at least 1 day old, and so forth.  Yes, I
+know I am duplicating some of the functionality of find...
+
+Code appended.  Feel free to stuff it in your personal bit bucket!
+
+- Harald
+
+/* newer.c -- which file is newer? */
+
+/*
+   usage: newer [-s] [-l] [-acm] file1 file2\
+
+   -s	Silent; exit codes only.  If -s is given, an existent file
+	is considered newer than a non-existent one.
+   -l	Use lstat, not stat to check times.  In other words, use this
+	to check times of a symbolic link rather than the file it points to.
+   -acm	Use the access, changed or modified (default) times.
+	(Changed means writing the file or changing inode information).
+
+   Alternative usages and modes:
+   usage: newer [-l] [-acm] -p file ...
+   -p   For each file named, print the corresponding time on stdout.
+	This time is printed &quot;raw&quot; as a long integer.
+   usage: newer [-s] [-l] [-acm] -[on] time file ...
+	Here time is a long integer.
+   -o   For each file, print the file name if it is at least as old as
+	the named time.  If the -s option is used, return success if
+	they are all that old, failure otherwise.
+   -n	For each file, print the file name if it is newer than
+	the named time.  If the -s option is used, return success if
+	they are all newer, failure otherwise.
+
+	Note: &lt;sys/stdtypes&gt; says
+	typedef long time_t;
+	If they had made it unsigned the format would last twice as long :-)
+
+*/
+#ifndef EXTENDED
+#define EXTENDED 1
+#endif
+#if EXTENDED
+# define OPTS &quot;slacmpo:n:?&quot;
+#else
+# define OPTS &quot;slacm?&quot;
+#endif
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+
+#define streq(s, t)	(strcmp((s), (t)) == 0)
+
+enum { ACCESSED, MODIFIED, CHANGED } which = MODIFIED;
+
+#ifndef	TRUE
+#define	TRUE	1
+#endif
+#ifndef	FALSE
+#define	FALSE	0
+#endif
+
+#define	EXIT_TRUE	0
+#define	EXIT_FALSE	1
+
+extern int stat(), lstat();
+int (*statfunc)() = stat;
+
+void usage()
+{
+	fprintf(stderr, &quot;usage: newer [-s] [-l] [-acm] file1 file2\n&quot;);
+#if EXTENDED
+	fprintf(stderr, &quot;       newer      [-l] [-acm] -p file ...\n&quot;);
+	fprintf(stderr, &quot;       newer [-s] [-l] [-acm] -[on] time file ...\n&quot;);
+#endif
+	exit(2);
+}
+
+time_t gettime(s)
+	char *s;
+{
+	struct stat st;
+	if (statfunc(s, &amp;st) == -1)
+		return 0;
+	switch (which) {
+	case ACCESSED:	return st.st_atime;
+	case MODIFIED:	return st.st_mtime;
+	case CHANGED:	return st.st_ctime;
+	}
+}
+
+int main(argc, argv)
+	int argc;
+	char *argv[];
+{
+	int c;
+	time_t t1, t2;
+	int silent = FALSE;
+	extern int optind;
+#if EXTENDED
+	extern char *optarg;
+	int print = FALSE;
+	int newer = FALSE;
+	int older = FALSE;
+	time_t t0;
+#endif
+
+	while ((c = getopt(argc, argv, OPTS)) != EOF)
+		switch (c) {
+		case 's':	silent = TRUE;		break;
+		case 'l':	statfunc = lstat;	break;
+		case 'a':	which = ACCESSED;	break;
+		case 'm':	which = MODIFIED;	break;
+		case 'c':	which = CHANGED;	break;
+#if EXTENDED
+		case 'p':	print = TRUE;		break;
+		case 'n':	newer = TRUE;
+				t0 = atol(optarg);	break;
+		case 'o':	older = TRUE;
+				t0 = atol(optarg);	break;
+#endif
+		case '?':	usage();
+		}
+#if EXTENDED
+      c=0; if (print) c++; if (newer) c++; if (older) c++;
+      if (c&gt;1) usage();
+      if (c==0) {
+#endif
+	if (optind + 2 != argc)
+		usage();
+
+	t1 = gettime(argv[optind]);
+	t2 = gettime(argv[optind + 1]);
+
+	if (silent) {
+		if (t1 != 0 || t2 != 0)
+			exit(t1 &gt;= t2 ? EXIT_TRUE : EXIT_FALSE);
+		fprintf(stderr, &quot;newer: %s and %s don't exist\n&quot;,
+			argv[optind], argv[optind + 1]);
+		exit(2);
+	}
+
+	if (t2 == 0) {
+		perror(argv[optind + 1]);
+		exit(2);
+	}
+	if (t1 == 0) {
+		perror(argv[optind]);
+		exit(2);
+	}
+
+	if (t1 &gt;= t2)
+		printf(&quot;%s\n&quot;, argv[optind]);
+	else
+		printf(&quot;%s\n&quot;, argv[optind + 1]);
+#if EXTENDED
+      } else if (print &amp;&amp; silent) usage();
+	else if (print)
+	  for (c=optind; c&lt;argc; c++)
+	    printf(&quot;%ld\n&quot;, (long) gettime(argv[c]));
+	else {
+	  /* We must have newer or older set */
+	  for (c=optind; c&lt;argc; c++) {
+	    if (gettime(argv[c])&gt;t0) {
+	      /* Is newer */
+	      if (silent) {
+		if (older) exit(1);
+	      } else {
+		if (newer) printf(&quot;%s\n&quot;, argv[c]); }
+	    } else {
+	      /* Is at least as old (or nonexistent) */
+	      if (silent) {
+		if (newer) exit(1);
+	      } else {
+		if (older) printf(&quot;%s\n&quot;, argv[c]); }}}}
+#endif
+	return 0;
+}
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00587" href="msg00587.html">Re: newer</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00583" href="msg00583.html">Re:  Confession</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00585.html">Re: Confession</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00587.html">Re: newer</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00583.html">Re:  Confession</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00587.html">Re: newer</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00586"><strong>Date</strong></a></li>
+<li><a href="threads.html#00586"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

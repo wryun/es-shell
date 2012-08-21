@@ -1,0 +1,135 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es bug -->
+<!--X-From-R13: gebzrlNohfpb.ynay.tbi (Fbz Febzrl) -->
+<!--X-Date: Thu, 22 Sep 1994 15:50:26 &#45;0400 -->
+<!--X-Message-Id: 9409221949.AA07999@busco.lanl.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199409221831.LAA16242@dinsdale.nas.nasa.gov -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es bug</title>
+<link rev="made" href="mailto:tromey@busco.lanl.gov">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00756.html">Date Prev</a>][<a href="msg00758.html">Date Next</a>][<a href="msg00756.html">Thread Prev</a>][<a href="msg00759.html">Thread Next</a>][<a href="maillist.html#00757">Date Index</a>][<a href="threads.html#00757">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es bug</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: David McNab &lt;<a href="mailto:mcnab%40nas.nasa.gov">mcnab@nas.nasa.gov</a>&gt;</li>
+<li><em>Subject</em>: Re: es bug</li>
+<li><em>From</em>: <a href="mailto:tromey%40busco.lanl.gov">tromey@busco.lanl.gov</a> (Tom Tromey)</li>
+<li><em>Date</em>: Thu, 22 Sep 1994 15:49:28 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00756.html">199409221831.LAA16242@dinsdale.nas.nasa.gov</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00756.html">199409221831.LAA16242@dinsdale.nas.nasa.gov</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;&gt;&gt;&gt;&gt; &quot;David&quot; == David McNab &lt;mcnab@nas.nasa.gov&gt; writes:
+
+David&gt; Not on my machine.  Maybe your es(1) is expanding the &quot;*&quot; to
+David&gt; all the file names in the directory, treating the expansion as
+David&gt; a list, and appending the &quot;/&quot;.  If you type echo h* in that
+David&gt; directory do you get &quot;ha hb hx hy&quot; as output?
+
+[ deletia regarding my thoughts on &quot;foo/&quot; ]
+
+David&gt; You can think of it that way, but you are not being precise.
+David&gt; You are confusing a psuedo-convention with &quot;reality&quot;.  If you
+David&gt; opendir() the directory and read it there will be no trailing
+David&gt; &quot;/&quot; characters.  If you type &quot;echo *&quot; or &quot;/bin/ls&quot; there will
+David&gt; be no trailing &quot;/&quot;, or &quot;@&quot; for symbolic links, or &quot;=&quot; for UNIX
+David&gt; domain sockets.
+
+Let's forget all about &quot;ls&quot;.  I don't think it really comes into play
+here in any way.  Let's also forget about rmdir.
+
+There are two things I don't undertsand:
+
+1. Why &quot;foo/&quot; is not the same as &quot;foo/.&quot;.  After all, &quot;&quot; is the same
+   as &quot;.&quot;.  But I don't expect to get any real answer to this, and I
+   don't think it falls into es' domain anyway.
+
+2. Why the expansion of &quot;*/&quot; is not a bug any way you look at it.
+   There are two cases: on my machine, &quot;*/&quot; expands into what is
+   clearly garbage (aside: the example you give does do the right
+   thing -- it expands to &quot;h*&quot;).  Case 2: on your machine, &quot;*/&quot;
+   presumably expands to &quot;*/&quot;.  Isn't this inconsistency bothersome?
+   Doesn't this mean there is a bug in es?  Presumably a goal of es is
+   to provide a portable scripting environments.  Given this
+   difference, script writers have to take into account that strings
+   ending in &quot;/&quot; cannot be globbed.
+
+My vote to get rid of the bug is to make &quot;*/&quot; do what I'm used to.
+Many people, apparently, think this is a bad idea.  I'm not sure
+exactly why -- it seems like if we're defining the behavior, we might
+as well define it to be something useful.
+
+Perhaps this is actually a bug in SunOS, as has been suggested.  I'm
+willing to believe that.  But given that the SunOS bug is not likely
+to go away, I think es should deal with it.  I'm not familiar with the
+es source, but I find it hard to believe that it doesn't already work
+around problems on various architectures.
+
+Tom
+---
+tromey@busco.lanl.gov             Member, League for Programming Freedom
+Sadism and farce are always inexplicably linked.
+	-- Alexander Theroux
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00756" href="msg00756.html">Re: es bug</a></strong>
+<ul><li><em>From:</em> David McNab &lt;mcnab@nas.nasa.gov&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00756.html">Re: es bug</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00758.html">Re: es bug</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00756.html">Re: es bug</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00759.html">Re: es bug</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00757"><strong>Date</strong></a></li>
+<li><a href="threads.html#00757"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

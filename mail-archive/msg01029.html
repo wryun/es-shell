@@ -1,0 +1,107 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es signal handling bug on recent Linuces -->
+<!--X-From-R13: Epbgg Epujnegm <fpujnegmNovb.pfr.cfh.rqh> -->
+<!--X-Date: Thu, 14 Dec 2000 00:36:59 &#45;0500 -->
+<!--X-Message-Id: 20001214010615.10392.qmail@g.bio.cse.psu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: cWe19d5OT0@iadd.jivetech.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es signal handling bug on recent Linuces</title>
+<link rev="made" href="mailto:schwartz@bio.cse.psu.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01026.html">Date Prev</a>][<a href="msg01030.html">Date Next</a>][<a href="msg01026.html">Thread Prev</a>][<a href="msg01025.html">Thread Next</a>][<a href="maillist.html#01029">Date Index</a>][<a href="threads.html#01029">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es signal handling bug on recent Linuces</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Paul Haahr &lt;<a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a>&gt;</li>
+<li><em>Subject</em>: Re: es signal handling bug on recent Linuces</li>
+<li><em>From</em>: Scott Schwartz &lt;<a href="mailto:schwartz%40bio.cse.psu.edu">schwartz@bio.cse.psu.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 13 Dec 2000 20:06:15 -0500</li>
+<li><em>Cc</em>: Loren James Rittle &lt;<a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a>&gt;,	Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Message from Paul Haahr &lt;haahr@jivetech.com&gt;    of &quot;Wed, 13 Dec 2000 16:20:29 PST.&quot; &lt;<a href="msg01027.html">cWe19d5OT0@iadd.jivetech.com</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>The linux manpage says:
+
+NOTES
+       POSIX does not specify whether setjmp will save the signal
+       context. (In SYSV it will not.  In  BSD4.3  it  will,  and
+       there  is  a function _setjmp that will not.)  If you want
+       to save signal masks, use sigsetjmp.
+
+       setjmp() and sigsetjmp make programs  hard  to  understand
+       and  maintain.  If possible an alternative should be used.
+
+
+Perhaps you need to use the sig* versions.  I haven't looked at the es
+code in eons, but I vaguely recall that rc having some sigsetjmp related
+changes proposed at some point.
+
+The linux thing was simply that ctrl-C sometimes doesn't work, but I
+can never reproduce it when I want to.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01025" href="msg01025.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01027" href="msg01027.html">Re: es signal handling bug on recent Linuces</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01026.html">spurious ``wait: No child processes'' messages</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01030.html">Es and autocompleting</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01026.html">spurious ``wait: No child processes'' messages</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01025.html">Re: es signal handling bug on recent Linuces</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01029"><strong>Date</strong></a></li>
+<li><a href="threads.html#01029"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

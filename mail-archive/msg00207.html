@@ -1,0 +1,118 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: syntax -->
+<!--X-From-R13: Xbua ([bfg zbqrea pbzchgref jbhyq oernx vs lbh fgbbq ba gurz) [npxva <wbuaN	pvivy.fh.bm.nh> -->
+<!--X-Date: Wed, 17 Feb 1993 06:12:55 &#45;0500 -->
+<!--X-Message-Id: 199302172156.1266.es.bafiy@civil.su.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>syntax</title>
+<link rev="made" href="mailto:john@civil.su.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00206.html">Date Prev</a>][<a href="msg00208.html">Date Next</a>][<a href="msg00206.html">Thread Prev</a>][<a href="msg00208.html">Thread Next</a>][<a href="maillist.html#00207">Date Index</a>][<a href="threads.html#00207">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>syntax</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: The es Mailing List &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: syntax</li>
+<li><em>From</em>: John (Most modern computers would break if you stood on them) Mackin &lt;john@	civil.su.oz.au&gt;</li>
+<li><em>Date</em>: Wed, 17 Feb 1993 05:56:59 -0500</li>
+<li><em>Cc</em>: Boyd Roberts &lt;<a href="mailto:boyd%40prl.dec.com">boyd@prl.dec.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>There's been minor discussion on this list lately as to whether or
+not some sort of extend-syntax macro business is a Good Thing
+for the shell.  Clearly, as Paul said, we need it to understand infix
+and postfix, not just prefix, and there is little former art in that
+area.  However, I have something to add that I think is worthwhile.
+I'm big on real examples.  You want Feature X?  Well, tell me why
+you want it, give me an example of how it will do you good.
+
+My real example is that extensible syntax will make &quot;programming the
+inputs&quot; all that much easier.  By which I mean, you make your code
+output things that can be moused straight up and sent back into the
+shell.  I first saw this on V8 and it's a great idea.  Plan 9 carries
+the idea much farther: the Plan 9 kill command doesn't do any actual
+killing, it just outputs rc commands that could be used to do such
+killing if you decide to send them.  And so forth.  But you can't
+always guarantee that the output is _all_ going to be _syntactically_
+valid input, without going to trouble or making it ugly.  Example:
+the mail system I use outputs lines like this describing mail items:
+
+- +vwar buzel -   Ed L'Esperance &lt; Wed, 17 Feb 1993 &quot;Tim's Spaghetti&quot;
+
+Now I can mouse up the _initial_ part of that line:
+
+- +vwar buzel
+
+and send it, and have the &quot;-&quot; command display the mail item for me.  Good
+design, thanks Boyd.  But, and although the foul smell of xterm is
+partially responsible for this, even with the best-designed window
+program in the universe it's always going to be easier to mouse up
+a whole line than a partial one.  But the whole line isn't going to
+be syntactically acceptable in most cases.  It'd be nice to be able
+to say, however:
+
+	syntax '-' ::= builtin '-' with: $1, $2, ignore(...)
+
+or something equally hand-wavey.
+
+More comments from Chickenhawk Software, where the main rotor's never
+tied down.
+
+OK,
+John.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00206.html">Re: anonymous lists</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00208.html">Re:  syntax</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00206.html">Re: anonymous lists</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00208.html">Re:  syntax</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00207"><strong>Date</strong></a></li>
+<li><a href="threads.html#00207"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

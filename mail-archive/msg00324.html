@@ -1,0 +1,114 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: lexically scoped functions -->
+<!--X-From-R13: crgreNebobgf.bksbeq.np.hx -->
+<!--X-Date: Mon, 26 Apr 1993 14:19:40 &#45;0400 -->
+<!--X-Message-Id: 9304261653.AA07338@miranda.robots.ox.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: lexically scoped functions</title>
+<link rev="made" href="mailto:peter@robots.oxford.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00323.html">Date Prev</a>][<a href="msg00325.html">Date Next</a>][<a href="msg00321.html">Thread Prev</a>][<a href="msg00325.html">Thread Next</a>][<a href="maillist.html#00324">Date Index</a>][<a href="threads.html#00324">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: lexically scoped functions</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Subject</em>: Re: lexically scoped functions</li>
+<li><em>From</em>: <a href="mailto:peter%40robots.oxford.ac.uk">peter@robots.oxford.ac.uk</a></li>
+<li><em>Date</em>: Mon, 26 Apr 1993 12:53:47 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Currently in es, you can not define a function that has lexical scope.
+&gt; I asked Paul about this, and he says that at one time he had convinced
+&gt; himself that lexical scoping for function names was not desirable, but no
+&gt; longer remembers why now.
+
+	I remember in my first posting way back (I think before es-0.70),
+asking a similar question, which was, why was there an inconsistency in the
+following,
+	let (fn foo {echo $*}) foo bar
+	local (fn foo {echo $*}) foo bar
+Why weren't the results identical?  Well I know better now, but I can see
+it's a shame that es doesn't search for functions in the let-namespace, just
+for the sake of consistency.  
+	However, I can see some logic in terms of efficiency because a let
+function definition can only be used inside the let-body, so why not
+reference directly using $fn-foo because you must have known that you are
+overriding the foo function anyway.
+	This is not the case for local function definitions, because you
+intend this foo to be used in all subsequent calls from your local-body.  Es
+is a shell, so you can't make all function calls by doing $fn-prog because
+prog may be an external program (or may need autoloading :-) ) for
+instance.  Therefore this apparent inconsistency in let() and local() is
+necessary is justifiable ;-).
+
+&gt;       fn frobme  with some args { echo frobme $with $some $args }
+&gt;       fn doit { 
+&gt;          frobme harder $*
+&gt;       }
+&gt;       local (fn frobme { rm $* }) {
+&gt;          frobme /tmp/*~
+&gt;          doit to me baby
+&gt;       }
+
+I never do this kind of thing because as you say, it can be dangerous :-),
+you know it makes sense to use,
+	let (fn frobme {rm $*}) { $fn-frobme ... }
+
+Pete.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00323.html">Re:  Yow!</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00325.html">Re: lexically scoped functions</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00321.html">Re: lexically scoped functions</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00325.html">Re: lexically scoped functions</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00324"><strong>Date</strong></a></li>
+<li><a href="threads.html#00324"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

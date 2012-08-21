@@ -1,0 +1,141 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Ported es to GNU Win32 + HPUX10.01 -->
+<!--X-From-R13: Xbanguna Egberl <wbmNzragbe&#45;flfgrzf.pbz> -->
+<!--X-Date: Sun, 5 Apr 1998 03:31:19 &#45;0400 -->
+<!--X-Message-Id: 001801bd5efc$a57241a0$050120c0@menpc5 -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Ported es to GNU Win32 + HPUX10.01</title>
+<link rev="made" href="mailto:joz@mentor-systems.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00982.html">Date Prev</a>][<a href="msg00984.html">Date Next</a>][<a href="msg00986.html">Thread Prev</a>][<a href="msg00984.html">Thread Next</a>][<a href="maillist.html#00983">Date Index</a>][<a href="threads.html#00983">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Ported es to GNU Win32 + HPUX10.01</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Ported es to GNU Win32 + HPUX10.01</li>
+<li><em>From</em>: Jonathan Storey &lt;<a href="mailto:joz%40mentor-systems.com">joz@mentor-systems.com</a>&gt;</li>
+<li><em>Date</em>: Fri, 3 Apr 1998 07:33:03 -0500</li>
+<li><em>Importance</em>: Normal</li>
+<li><em>Mmdf-warning</em>: Parse error in original version of preceding line at post.mail.demon.net</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+Hello ES people
+
+Just a little note to say HI and to say that I have sucessfully ported es
+0.9 beta1 to the following environments:
+
+HPUX10.01 and GNU Win32 (Beta 19)
+
+The problems I had to resolve were:
+
+Under GNU Win32 Beta19 I had to
+
+1.)
+ #include &quot;time.h&quot; to get CLK_TCK definition required by prim-sys.c
+
+2.)
+ edit the Makefile and give SIGNALS a value of:
+	/H-i386-cygwin32/i386-cygwin32/include/sys/signal.h
+
+3.)
+ bison insisted on looking for 'bison.simple' under /cygnus/b19/share
+ even though I had installed GNUWin32 under /gnuwin32
+ so I created cygnus/b19 under my root of /gnuwin32/b19 and
+ created a symbolic link to 'share' and everything was OK.
+
+
+Under HP-UX 10.01 it was a little trickier: (?!)
+
+I had to #include &quot;resource.h&quot; and define _KERNEL to get the RLIMIT_* values
+required by prim-sys.c
+
+Defining _KERNEL prevented _NSIG being defined by the system headers, so I
+just got it's value (31) and defined _NSIG to be 31 and then we were cookin'
+
+In short I modded the Makefile and added -D_KERNEL -D_NSIG=31 after the
+rest of the CCOPTS.
+
+The path to YACC on this box was /opt/langtools/bin/yacc, which I also added
+to the Makefike under YACC=
+
+I'm sure that there are ``proper'' ways of getting this to compile smoothly
+under
+these environments, but I haven't had time yet to consider how to implement
+the changes required. Hope this info proves useful to somebody.
+
+Regards
+
+JOZ.
+	joz@thinktank.demon.co.uk (Home)
+	joz@mentor-systems.com (Work)
+
+pS.
+ Oh Yeah, I found what I believe to be a bug (although it may just be
+porting issue)
+ try typing $&amp;&lt;any alphanumeric sequence&gt;. (include the full-stop) and see
+what happens!
+ try $&amp;0.
+
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00984" href="msg00984.html">Re: Ported es to GNU Win32 + HPUX10.01</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00982.html">Bug in es %read</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00984.html">Re: Ported es to GNU Win32 + HPUX10.01</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00986.html">Re: Bug in es %read</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00984.html">Re: Ported es to GNU Win32 + HPUX10.01</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00983"><strong>Date</strong></a></li>
+<li><a href="threads.html#00983"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

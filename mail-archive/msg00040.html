@@ -1,0 +1,1062 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es&#45;0.68 -->
+<!--X-From-R13: olebaNargncc.pbz (Pleba Dnxvgmvf) -->
+<!--X-Date: Wed, 7 Oct 1992 13:16:08 &#45;0400 -->
+<!--X-Message-Id: 9210071715.AA19950@netapp.netapp.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es-0.68</title>
+<link rev="made" href="mailto:byron@netapp.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00039.html">Date Prev</a>][<a href="msg00041.html">Date Next</a>][<a href="msg00039.html">Thread Prev</a>][<a href="msg00041.html">Thread Next</a>][<a href="maillist.html#00040">Date Index</a>][<a href="threads.html#00040">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es-0.68</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es-0.68</li>
+<li><em>From</em>: <a href="mailto:byron%40netapp.com">byron@netapp.com</a> (Byron Rakitzis)</li>
+<li><em>Date</em>: Wed, 7 Oct 1992 13:15:39 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Here is a set of patches to bring up es from 0.67 to 0.68.
+
+Changes include:
+
+	verbose gc debugging
+
+	conditional use of &quot;sig_atomic_t&quot;, for non-ANSI environments
+
+	conditional use of Reiser-cpp semantics for token pasting
+		and string-izing
+
+	fix for gc foward() of a vector (this fixes most, if not
+		all, of the crashes that were reported)
+
+	added GCDEBUG support for sun memory protection
+		(via valloc &amp; mprotect)
+
+	fixed a couple of omissions in initial.es
+
+	fix for a word consing bug in the parser
+
+	fix for a redirection node bug in the parser
+
+	initial.es now runs after exception handlers have been
+		enabled
+
+[Editorial note: I don't know if fixes #2 &amp; #3 are enough to make
+es work with unproto; I haven't got the time to waste on games like
+that. My sympathy for people who have hardware that can run an ANSI
+compiler, be it gcc, but who refuse to deal with ANSI code on the basis
+of their religion is absolutely nil. I am not in the religion
+business---i.e., I have no problem helping people get the job done,
+such as compiling on the antiquated OS of an obscure machine (though I
+am not willing to make this a priority effort), but there is no way
+that I am going to make appeasing the religious qualms of the ANSI
+snobs a priority in any way whatsoever. Whew. Enough said.]
+
+Byron.
+
+[Chris: can you put this in the ftp directory as diffs-0.67-0.68,
+please?]
+
+diff -rc ../orig/config.h ./config.h
+*** ../orig/config.h	Thu Oct  1 00:25:39 1992
+--- ./config.h	Wed Oct  7 09:21:59 1992
+***************
+*** 13,18 ****
+--- 13,23 ----
+   *		immediate crash.  requires os/mmu support for enabling and
+   *		disabling access to pages.
+   *
++  *	GCVERBOSE
++  *		if this is on, it is possible to run the garbage collector
++  *		in a mode where it explains what it is doing at all times.
++  *		implied by GCDEBUG.
++  *
+   *	PROTECT_ENV
+   *		if on, makes all variable names in the environment ``safe'':
+   *		that is, makes sure no characters other than c identifier
+***************
+*** 64,70 ****
+  
+  #if NeXT
+  #define	DEFAULT_USE_DIRENT	0
+! #define DEFAULT_USE_SIG_ATOMIC_T 1
+  #endif
+  
+  
+--- 69,75 ----
+  
+  #if NeXT
+  #define	DEFAULT_USE_DIRENT	0
+! #define	DEFAULT_USE_SIG_ATOMIC_T 1
+  #endif
+  
+  
+***************
+*** 124,131 ****
+  #define	DEFAULT_JOB_PROTECT	1
+  #endif
+  
+! #ifndef DEFAULT_USE_SIG_ATOMIC_T
+! #define DEFAULT_USE_SIG_ATOMIC_T 0
+  #endif
+  
+  /*
+--- 129,136 ----
+  #define	DEFAULT_JOB_PROTECT	1
+  #endif
+  
+! #ifndef	DEFAULT_USE_SIG_ATOMIC_T
+! #define	DEFAULT_USE_SIG_ATOMIC_T 0
+  #endif
+  
+  /*
+***************
+*** 140,145 ****
+--- 145,154 ----
+  #define	GCDEBUG		DEFAULT_GCDEBUG
+  #endif
+  
++ #ifndef	GCVERBOSE
++ #define	GCVERBOSE	DEFAULT_GCVERBOSE
++ #endif
++ 
+  #ifndef	PROTECT_ENV
+  #define	PROTECT_ENV	DEFAULT_PROTECT_ENV
+  #endif
+***************
+*** 168,173 ****
+  #define	JOB_PROTECT	DEFAULT_JOB_PROTECT
+  #endif
+  
+! #ifndef USE_SIG_ATOMIC_T
+! #define USE_SIG_ATOMIC_T DEFAULT_USE_SIG_ATOMIC_T
+  #endif
+--- 177,192 ----
+  #define	JOB_PROTECT	DEFAULT_JOB_PROTECT
+  #endif
+  
+! #ifndef	USE_SIG_ATOMIC_T
+! #define	USE_SIG_ATOMIC_T DEFAULT_USE_SIG_ATOMIC_T
+! #endif
+! 
+! 
+! /*
+!  * enforcing choices that must be made
+!  */
+! 
+! #if	GCDEBUG &amp;&amp; !GCVERBOSE
+! #undef	GCVERBOSE
+! #define	GCVERBOSE	1
+  #endif
+diff -rc ../orig/es.h ./es.h
+*** ../orig/es.h	Thu Oct  1 00:25:39 1992
+--- ./es.h	Wed Oct  7 09:21:59 1992
+***************
+*** 26,31 ****
+--- 26,39 ----
+  #define arraysize(a)		((int)(sizeof(a)/sizeof(*a)))
+  #define	memzero(dest, count)	memset(dest, 0, count)
+  
++ #if REISER_CPP
++ #define CONCAT(a,b)	a/**/b
++ #define STRING(s)	&quot;s&quot;
++ #else
++ #define CONCAT(a,b)	a ## b
++ #define STRING(s)	#s
++ #endif
++ 
+  #if __GNUC__
+  typedef volatile void noreturn;
+  #else
+***************
+*** 32,38 ****
+  typedef void noreturn;
+  #endif
+  
+! #if GCDEBUG &amp;&amp; NeXT
+  #define	ABORT()	asm(&quot;trap #15&quot;)	/* (*(char *) 0 = 'c'); */
+  #else
+  #define	ABORT()	abort()
+--- 40,46 ----
+  typedef void noreturn;
+  #endif
+  
+! #if NeXT
+  #define	ABORT()	asm(&quot;trap #15&quot;)	/* (*(char *) 0 = 'c'); */
+  #else
+  #define	ABORT()	abort()
+***************
+*** 43,49 ****
+  	do { \
+  		if (!(expr)) { \
+  			eprint(&quot;%s:%d: assertion failed (%s)\n&quot;, \
+! 					__FILE__, __LINE__, #expr); \
+  			ABORT(); \
+  		} \
+  	} while (0)
+--- 51,57 ----
+  	do { \
+  		if (!(expr)) { \
+  			eprint(&quot;%s:%d: assertion failed (%s)\n&quot;, \
+! 					__FILE__, __LINE__, STRING(expr)); \
+  			ABORT(); \
+  		} \
+  	} while (0)
+***************
+*** 158,164 ****
+  };
+  
+  typedef struct {
+! 	int len;
+  	char *vector[1];
+  } Vector;			/* environment or arguments */
+  
+--- 166,172 ----
+  };
+  
+  typedef struct {
+! 	int alloclen, count;
+  	char *vector[1];
+  } Vector;			/* environment or arguments */
+  
+***************
+*** 175,181 ****
+  extern Boolean verbose;			/* -v */
+  extern Boolean printcmds;		/* -x */
+  
+! extern Boolean gcdebug;			/* -G */
+  extern Boolean bugme;			/* -B */
+  
+  
+--- 183,189 ----
+  extern Boolean verbose;			/* -v */
+  extern Boolean printcmds;		/* -x */
+  
+! extern Boolean gcverbose;		/* -G */
+  extern Boolean bugme;			/* -B */
+  
+  
+***************
+*** 382,388 ****
+  /* gc.c -- see gc.h for more */
+  
+  typedef struct Tag Tag;
+! #define	gcnew(type)	((type *) gcalloc(sizeof (type), &amp;type ## Tag))
+  
+  extern void *gcalloc(size_t n, Tag *t);		/* allocate n with collection tag t */
+  extern char *gcdup(const char *s);		/* copy a 0-terminated string into gc space */
+--- 390,396 ----
+  /* gc.c -- see gc.h for more */
+  
+  typedef struct Tag Tag;
+! #define	gcnew(type)	((type *) gcalloc(sizeof (type), CONCAT(&amp;type, Tag)))
+  
+  extern void *gcalloc(size_t n, Tag *t);		/* allocate n with collection tag t */
+  extern char *gcdup(const char *s);		/* copy a 0-terminated string into gc space */
+***************
+*** 413,433 ****
+  #define	Ref(t, v, init) \
+  	do { \
+  		t v = init; \
+! 		Root (__root__ ## v); \
+! 		(__root__ ## v).p = (void **) &amp;v; \
+! 		(__root__ ## v).next = rootlist; \
+! 		rootlist = &amp;(__root__ ## v)
+  #define	RefPop(v) \
+! 		assert(rootlist == &amp;(__root__ ## v)); \
+  		assert(rootlist-&gt;p == (void **) &amp;v); \
+  		rootlist = rootlist-&gt;next;
+  #define RefEnd(v) \
+! 		assert(rootlist == &amp;(__root__ ## v)); \
+  		assert(rootlist-&gt;p == (void **) &amp;v); \
+  		RefPop(v); \
+  	} while (0)
+  #define RefReturn(v)	/* { */	\
+! 		assert(rootlist == &amp;(__root__ ## v)); \
+  		assert(rootlist-&gt;p == (void **) &amp;v); \
+  		RefPop(v); \
+  		return v; \
+--- 421,441 ----
+  #define	Ref(t, v, init) \
+  	do { \
+  		t v = init; \
+! 		Root (CONCAT(__root__, v)); \
+! 		(CONCAT(__root__, v)).p = (void **) &amp;v; \
+! 		(CONCAT(__root__, v)).next = rootlist; \
+! 		rootlist = &amp;(CONCAT(__root__, v))
+  #define	RefPop(v) \
+! 		assert(rootlist == &amp;(CONCAT(__root__, v))); \
+  		assert(rootlist-&gt;p == (void **) &amp;v); \
+  		rootlist = rootlist-&gt;next;
+  #define RefEnd(v) \
+! 		assert(rootlist == &amp;(CONCAT(__root__, v))); \
+  		assert(rootlist-&gt;p == (void **) &amp;v); \
+  		RefPop(v); \
+  	} while (0)
+  #define RefReturn(v)	/* { */	\
+! 		assert(rootlist == &amp;(CONCAT(__root__, v))); \
+  		assert(rootlist-&gt;p == (void **) &amp;v); \
+  		RefPop(v); \
+  		return v; \
+diff -rc ../orig/gc.c ./gc.c
+*** ../orig/gc.c	Thu Oct  1 00:25:37 1992
+--- ./gc.c	Wed Oct  7 09:22:00 1992
+***************
+*** 41,50 ****
+   * debugging
+   */
+  
+! #if GCDEBUG
+! #define	DEBUG(p)	if (!gcdebug) ; else eprint p ;
+  #else
+! #define	DEBUG(p)	do {} while (0)
+  #endif
+  
+  
+--- 41,50 ----
+   * debugging
+   */
+  
+! #if GCVERBOSE
+! #define	VERBOSE(p)	if (!gcverbose) ; else eprint p ;
+  #else
+! #define	VERBOSE(p)	do {} while (0)
+  #endif
+  
+  
+***************
+*** 125,135 ****
+  
+  /* take -- allocate memory for a space */
+  static void *take(size_t n) {
+  	/* TODO: sun take */
+  }
+  
+! /* revalidate -- enable access to a range of memory */
+  static void release(void *p, size_t n) {
+  	/* TODO: sun release */
+  }
+  
+--- 125,137 ----
+  
+  /* take -- allocate memory for a space */
+  static void *take(size_t n) {
++ 	return valloc(n);
+  	/* TODO: sun take */
+  }
+  
+! /* release -- deallocate a range of memory */
+  static void release(void *p, size_t n) {
++ 	free(n);
+  	/* TODO: sun release */
+  }
+  
+***************
+*** 286,292 ****
+  	if (!isinspace(old, p))
+  		return p;
+  
+! 	DEBUG((&quot;GC %8ux : &quot;, p));
+  
+  	tag = TAG(p);
+  	assert(tag != NULL);
+--- 288,294 ----
+  	if (!isinspace(old, p))
+  		return p;
+  
+! 	VERBOSE((&quot;GC %8ux : &quot;, p));
+  
+  	tag = TAG(p);
+  	assert(tag != NULL);
+***************
+*** 293,303 ****
+  	if (FORWARDED(tag)) {
+  		np = FOLLOW(tag);
+  		assert(TAG(np)-&gt;magic == TAGMAGIC);
+! 		DEBUG((&quot;%s	-&gt; %8ux (followed)\n&quot;, TAG(np)-&gt;typename, np));
+  	} else {
+  		assert(tag-&gt;magic == TAGMAGIC);
+  		np = (*tag-&gt;copy)(p);
+! 		DEBUG((&quot;%s	-&gt; %8ux (forwarded)\n&quot;, tag-&gt;typename, np));
+  		TAG(p) = FOLLOWTO(np);
+  	}
+  	return np;
+--- 295,305 ----
+  	if (FORWARDED(tag)) {
+  		np = FOLLOW(tag);
+  		assert(TAG(np)-&gt;magic == TAGMAGIC);
+! 		VERBOSE((&quot;%s	-&gt; %8ux (followed)\n&quot;, TAG(np)-&gt;typename, np));
+  	} else {
+  		assert(tag-&gt;magic == TAGMAGIC);
+  		np = (*tag-&gt;copy)(p);
+! 		VERBOSE((&quot;%s	-&gt; %8ux (forwarded)\n&quot;, tag-&gt;typename, np));
+  		TAG(p) = FOLLOWTO(np);
+  	}
+  	return np;
+***************
+*** 319,325 ****
+  			Tag *tag = *(Tag **) scan;
+  			assert(tag-&gt;magic == TAGMAGIC);
+  			scan += sizeof (Tag *);
+! 			DEBUG((&quot;GC %8ux : %s	scan\n&quot;, scan, tag-&gt;typename));
+  			scan += ALIGN((*tag-&gt;scan)(scan));
+  		}
+  		if (sp == new)
+--- 321,327 ----
+  			Tag *tag = *(Tag **) scan;
+  			assert(tag-&gt;magic == TAGMAGIC);
+  			scan += sizeof (Tag *);
+! 			VERBOSE((&quot;GC %8ux : %s	scan\n&quot;, scan, tag-&gt;typename));
+  			scan += ALIGN((*tag-&gt;scan)(scan));
+  		}
+  		if (sp == new)
+***************
+*** 376,391 ****
+  #else
+  		new = newspace(NULL);
+  #endif
+! 		DEBUG((&quot;\nGC collection starting\n&quot;));
+! 		DEBUG((&quot;GC old space = %ux ... %ux\n&quot;, old-&gt;bot, old-&gt;current));
+! 		DEBUG((&quot;GC new space = %ux ... %ux\n&quot;, new-&gt;bot, new-&gt;current));
+! 		DEBUG((&quot;GC scanning root list\n&quot;));
+  		scanroots(rootlist);
+! 		DEBUG((&quot;GC scanning global root list\n&quot;));
+  		scanroots(globalrootlist);
+! 		DEBUG((&quot;GC scanning new space\n&quot;));
+  		scanspace();
+! 		DEBUG((&quot;GC collection done\n\n&quot;));
+  
+  		deprecate(old);
+  		old = NULL;
+--- 378,393 ----
+  #else
+  		new = newspace(NULL);
+  #endif
+! 		VERBOSE((&quot;\nGC collection starting\n&quot;));
+! 		VERBOSE((&quot;GC old space = %ux ... %ux\n&quot;, old-&gt;bot, old-&gt;current));
+! 		VERBOSE((&quot;GC new space = %ux ... %ux\n&quot;, new-&gt;bot, new-&gt;current));
+! 		VERBOSE((&quot;GC scanning root list\n&quot;));
+  		scanroots(rootlist);
+! 		VERBOSE((&quot;GC scanning global root list\n&quot;));
+  		scanroots(globalrootlist);
+! 		VERBOSE((&quot;GC scanning new space\n&quot;));
+  		scanspace();
+! 		VERBOSE((&quot;GC collection done\n\n&quot;));
+  
+  		deprecate(old);
+  		old = NULL;
+***************
+*** 422,428 ****
+  /* gcalloc -- allocate an object in new space */
+  extern void *gcalloc(size_t nbytes, Tag *tag) {
+  	size_t n = ALIGN(nbytes + sizeof (Tag *));
+! #if GCDEBUG || GCALWAYS
+  	gc();
+  #endif
+  	assert(tag == NULL || tag-&gt;magic == TAGMAGIC);
+--- 424,430 ----
+  /* gcalloc -- allocate an object in new space */
+  extern void *gcalloc(size_t nbytes, Tag *tag) {
+  	size_t n = ALIGN(nbytes + sizeof (Tag *));
+! #if GCDEBUG
+  	gc();
+  #endif
+  	assert(tag == NULL || tag-&gt;magic == TAGMAGIC);
+***************
+*** 513,519 ****
+  }
+  
+  
+! #if GCDEBUG
+  /*
+   * memdump -- print out all of gc space, as best as possible
+   */
+--- 515,521 ----
+  }
+  
+  
+! #if GCVERBOSE
+  /*
+   * memdump -- print out all of gc space, as best as possible
+   */
+diff -rc ../orig/gc.h ./gc.h
+*** ../orig/gc.h	Thu Oct  1 00:25:39 1992
+--- ./gc.h	Wed Oct  7 09:22:00 1992
+***************
+*** 30,36 ****
+  
+  extern Tag StringTag;
+  
+! #define	DefineTag(t)	Tag t ## Tag = { t ## Copy, t ## Scan, TAGMAGIC, #t }
+  
+  /*
+   * allocation
+--- 30,36 ----
+  
+  extern Tag StringTag;
+  
+! #define	DefineTag(t)	Tag CONCAT(t, Tag) = { CONCAT(t, Copy), CONCAT(t, Scan), TAGMAGIC, STRING(t) }
+  
+  /*
+   * allocation
+diff -rc ../orig/glob.c ./glob.c
+*** ../orig/glob.c	Thu Oct  1 00:25:37 1992
+--- ./glob.c	Wed Oct  7 09:22:00 1992
+***************
+*** 30,38 ****
+  static List *listsort(List *list) {
+  	if (length(list) &gt; 1) {
+  		Vector *v = vectorize(list);
+! 		qsort(v-&gt;vector, v-&gt;len, sizeof (char *), qstrcmp);
+  		gcdisable(0);
+! 		Ref(List *, lp, listify(v-&gt;len, v-&gt;vector));
+  		gcenable();
+  		list = lp;
+  		RefEnd(lp);
+--- 30,38 ----
+  static List *listsort(List *list) {
+  	if (length(list) &gt; 1) {
+  		Vector *v = vectorize(list);
+! 		qsort(v-&gt;vector, v-&gt;count, sizeof (char *), qstrcmp);
+  		gcdisable(0);
+! 		Ref(List *, lp, listify(v-&gt;count, v-&gt;vector));
+  		gcenable();
+  		list = lp;
+  		RefEnd(lp);
+diff -rc ../orig/initial.es ./initial.es
+*** ../orig/initial.es	Thu Oct  1 00:25:37 1992
+--- ./initial.es	Wed Oct  7 09:22:01 1992
+***************
+*** 37,42 ****
+--- 37,43 ----
+  fn-exec		= $&amp;exec
+  fn-exit		= $&amp;exit
+  fn-false	= $&amp;false
++ fn-fork		= $&amp;fork
+  fn-if		= $&amp;if
+  fn-newpgrp	= $&amp;newpgrp
+  fn-noexport	= $&amp;noexport
+***************
+*** 76,78 ****
+--- 77,80 ----
+  ifs = ' ' \t \n
+  prompt = ';; ' ''
+  home = /		# so home definitely exists, even if wrong
++ cdpath = ''
+diff -rc ../orig/main.c ./main.c
+*** ../orig/main.c	Thu Oct  1 00:25:38 1992
+--- ./main.c	Wed Oct  7 09:22:02 1992
+***************
+*** 9,15 ****
+  Boolean printcmds	= FALSE;	/* -x */
+  
+  Boolean bugme		= FALSE;	/* -B */
+! Boolean gcdebug		= FALSE;	/* -G */
+  
+  static const char initial[] =
+  #include &quot;initial.h&quot;
+--- 9,15 ----
+  Boolean printcmds	= FALSE;	/* -x */
+  
+  Boolean bugme		= FALSE;	/* -B */
+! Boolean gcverbose	= FALSE;	/* -G */
+  
+  static const char initial[] =
+  #include &quot;initial.h&quot;
+***************
+*** 58,67 ****
+  	List *e;
+  	int c;
+  
+- 	const char *volatile cmd = NULL;	/* -c */
+- 	Boolean protected = FALSE;		/* -p */
+  	Boolean keepclosed = FALSE;		/* -o */
+! 	Boolean allowquit = FALSE;		/* -d */
+  	volatile Boolean stdin = FALSE;		/* -s */
+  
+  	initgc();
+--- 58,67 ----
+  	List *e;
+  	int c;
+  
+  	Boolean keepclosed = FALSE;		/* -o */
+! 	const char *volatile cmd = NULL;	/* -c */
+! 	volatile Boolean protected = FALSE;	/* -p */
+! 	volatile Boolean allowquit = FALSE;	/* -d */
+  	volatile Boolean stdin = FALSE;		/* -s */
+  
+  	initgc();
+***************
+*** 94,100 ****
+  		default:
+  			usage();
+  		case 'D':	bugme = TRUE;		break;
+! 		case 'G':	gcdebug = TRUE;		break;
+  		}
+  
+  getopt_done:
+--- 94,100 ----
+  		default:
+  			usage();
+  		case 'D':	bugme = TRUE;		break;
+! 		case 'G':	gcverbose = TRUE;	break;
+  		}
+  
+  getopt_done:
+***************
+*** 107,117 ****
+  	if (cmd == NULL &amp;&amp; (optind == argc || stdin) &amp;&amp; !interactive &amp;&amp; isatty(0))
+  		interactive = TRUE;
+  
+- 	initinput();
+- 	initprims();
+- 	initvars(envp, initial, protected);
+- 	initsignals(allowquit);
+- 
+  	if (
+  		(setjmp(childhandler.label) &amp;&amp; (e = exception) != NULL)
+  	     || (e = pushhandler(&amp;h)) != NULL
+--- 107,112 ----
+***************
+*** 122,127 ****
+--- 117,127 ----
+  			eprint(&quot;uncaught exception: %L\n&quot;, e, &quot; &quot;);
+  		return 1;
+  	}
++ 
++ 	initinput();
++ 	initprims();
++ 	initvars(envp, initial, protected);
++ 	initsignals(allowquit);
+  
+  	if (loginshell) {
+  		char *esrc = str(&quot;%L/.esrc&quot;, varlookup(&quot;home&quot;, NULL), &quot;\001&quot;);
+diff -rc ../orig/parse.y ./parse.y
+*** ../orig/parse.y	Thu Oct  1 00:25:37 1992
+--- ./parse.y	Wed Oct  7 09:22:03 1992
+***************
+*** 181,187 ****
+  	| words word	{ $$ = cons($2, $1); }
+  
+  nlwords :		{ $$ = NULL; }
+! 	| nlwords '\n'	{ $$ = cons($1, NULL); }
+  	| nlwords word	{ $$ = cons($2, $1); }
+  
+  nl	:
+--- 181,187 ----
+  	| words word	{ $$ = cons($2, $1); }
+  
+  nlwords :		{ $$ = NULL; }
+! 	| nlwords '\n'	{ $$ = $1; }
+  	| nlwords word	{ $$ = cons($2, $1); }
+  
+  nl	:
+***************
+*** 257,263 ****
+  		default:	panic(&quot;redirect: bad redirection kind %d&quot;, r-&gt;kind);
+  		}
+  		t = cons(thunkify(t), NULL);
+! 		if (r-&gt;kind != rHerestring &amp;&amp; r-&gt;kind != rHeredoc &amp;&amp; r-&gt;kind != rDup) {
+  			Tree *file = r-&gt;tree;
+  			if (file == NULL)
+  				yyerror(&quot;null filename in redirection&quot;);
+--- 257,263 ----
+  		default:	panic(&quot;redirect: bad redirection kind %d&quot;, r-&gt;kind);
+  		}
+  		t = cons(thunkify(t), NULL);
+! 		if (r-&gt;kind != rHerestring &amp;&amp; r-&gt;kind != rHeredoc &amp;&amp; r-&gt;kind != rDup &amp;&amp; r-&gt;kind != rClose) {
+  			Tree *file = r-&gt;tree;
+  			if (file == NULL)
+  				yyerror(&quot;null filename in redirection&quot;);
+diff -rc ../orig/prim-etc.c ./prim-etc.c
+*** ../orig/prim-etc.c	Thu Oct  1 00:25:38 1992
+--- ./prim-etc.c	Wed Oct  7 09:22:04 1992
+***************
+*** 113,118 ****
+--- 113,129 ----
+  	return runstring(str(&quot;%L&quot;, list, &quot; &quot;));
+  }
+  
++ PRIM(fork) {
++ 	int pid, status;
++ 	pid = efork(TRUE, FALSE, FALSE);
++ 	if (pid == 0)
++ 		exit(exitstatus(eval(list, NULL, FALSE)));
++ 	status = ewaitfor(pid);
++ 	SIGCHK();
++ 	printstatus(0, status);
++ 	return mklist(mkterm(mkstatus(status), NULL), NULL);
++ }
++ 
+  PRIM(dot) {
+  	int fd;
+  	List *e;
+***************
+*** 357,361 ****
+--- 368,373 ----
+  	X(sethistory);
+  	X(split);
+  	X(fsplit);
++ 	X(fork);
+  	return primdict;
+  }
+diff -rc ../orig/prim-io.c ./prim-io.c
+*** ../orig/prim-io.c	Thu Oct  1 00:25:38 1992
+--- ./prim-io.c	Wed Oct  7 09:22:04 1992
+***************
+*** 30,35 ****
+--- 30,36 ----
+  		int status;
+  		RefPop2(str, lp);
+  		status = ewaitfor(pid);
++ 		SIGCHK();
+  		printstatus(0, status);
+  		return mklist(mkterm(mkstatus(status), NULL), NULL);
+  	}
+diff -rc ../orig/prim.h ./prim.h
+*** ../orig/prim.h	Thu Oct  1 00:25:39 1992
+--- ./prim.h	Wed Oct  7 09:22:04 1992
+***************
+*** 1,8 ****
+  /* prim.h -- definitions for es primitives */
+  
+  
+! #define	PRIM(name)	static List *prim_##name(List *list, Boolean parent)
+! #define	X(name)		(primdict = dictput(primdict, #name, prim_##name))
+  
+  extern Dict *initprims_controlflow(Dict *primdict);	/* prim-ctl.c */
+  extern Dict *initprims_io(Dict *primdict);		/* prim-io.c */
+--- 1,8 ----
+  /* prim.h -- definitions for es primitives */
+  
+  
+! #define	PRIM(name)	static List *CONCAT(prim_, name)(List *list, Boolean parent)
+! #define	X(name)		(primdict = dictput(primdict, STRING(name), CONCAT(prim_, name)))
+  
+  extern Dict *initprims_controlflow(Dict *primdict);	/* prim-ctl.c */
+  extern Dict *initprims_io(Dict *primdict);		/* prim-io.c */
+diff -rc ../orig/print.c ./print.c
+*** ../orig/print.c	Thu Oct  1 00:25:38 1992
+--- ./print.c	Wed Oct  7 09:22:05 1992
+***************
+*** 283,292 ****
+  	format-&gt;buf = format-&gt;bufbegin;
+  	while (n != 0) {
+  		int written = write(format-&gt;u.n, buf, n);
+! 		if (written &lt; 0) {
+! 			uerror(&quot;write&quot;);
+! 			exit(1);
+! 		}
+  		n -= written;
+  	}
+  }
+--- 283,290 ----
+  	format-&gt;buf = format-&gt;bufbegin;
+  	while (n != 0) {
+  		int written = write(format-&gt;u.n, buf, n);
+! 		if (written &lt; 0)
+! 			return; /* abort silently on write error */
+  		n -= written;
+  	}
+  }
+diff -rc ../orig/signal.c ./signal.c
+*** ../orig/signal.c	Thu Oct  1 00:25:38 1992
+--- ./signal.c	Wed Oct  7 09:22:05 1992
+***************
+*** 111,123 ****
+  extern void setsigdefaults(Boolean background) {
+  
+  #if JOB_PROTECT &amp;&amp; SIGTTOU &amp;&amp; SIGTTIN &amp;&amp; SIGTSTP
+! #define	IGNORE(signal) ((default_ ## signal) = SIG_DFL)
+  #else
+  #define	IGNORE(signal) \
+  	if (!background) \
+! 		(default_ ## signal) = SIG_DFL; \
+  	else { \
+! 		(default_ ## signal) = SIG_IGN; \
+  		esignal(sig, SIG_IGN); \
+  		/* TODO: remove #signal from $signals */ \
+  		break; \
+--- 111,123 ----
+  extern void setsigdefaults(Boolean background) {
+  
+  #if JOB_PROTECT &amp;&amp; SIGTTOU &amp;&amp; SIGTTIN &amp;&amp; SIGTSTP
+! #define	IGNORE(signal) ((CONCAT(default_, signal)) = SIG_DFL)
+  #else
+  #define	IGNORE(signal) \
+  	if (!background) \
+! 		(CONCAT(default_, signal)) = SIG_DFL; \
+  	else { \
+! 		(CONCAT(default_, signal)) = SIG_IGN; \
+  		esignal(sig, SIG_IGN); \
+  		/* TODO: remove #signal from $signals */ \
+  		break; \
+diff -rc ../orig/var.c ./var.c
+*** ../orig/var.c	Thu Oct  1 00:25:38 1992
+--- ./var.c	Wed Oct  7 09:22:07 1992
+***************
+*** 13,19 ****
+  
+  Dict *vars;
+  static Vector *env;
+! static int envcount, envmin;
+  static Tag VarTag;
+  static Boolean isdirty;
+  static char notexported;
+--- 13,19 ----
+  
+  Dict *vars;
+  static Vector *env;
+! static int envmin;
+  static Tag VarTag;
+  static Boolean isdirty;
+  static char notexported;
+***************
+*** 230,256 ****
+  }
+  
+  static void mkenv0(void *dummy, char *key, void *value) {
+! 	if (value == NULL || ((Var *) value)-&gt;env == &amp;notexported)
+  		return;
+- 	Ref(Var *, var, value);
+  	if (var-&gt;env == NULL) {
+  		char *envstr = str(&quot;%F=%L&quot;, key, var-&gt;defn, &quot;\001&quot;);
+  		var-&gt;env = envstr;
+  	}
+! 	assert(envcount &lt; env-&gt;len);
+! 	env-&gt;vector[envcount++] = var-&gt;env;
+! 	RefEnd(var);
+! 	if (envcount == env-&gt;len) {
+! 		Vector *newenv = mkvector(env-&gt;len * 2);
+! 		memcpy(&amp;newenv-&gt;vector[0], &amp;env-&gt;vector[0], envcount * sizeof *env-&gt;vector);
+  		env = newenv;
+  	}
+  }
+  	
+  extern Vector *mkenv(void) {
+! 	envcount = envmin;
+  	dictforall(vars, mkenv0, NULL);
+! 	env-&gt;vector[envcount] = NULL;
+  	return env;
+  }
+  
+--- 230,259 ----
+  }
+  
+  static void mkenv0(void *dummy, char *key, void *value) {
+! 	Var *var = value;
+! 	assert(gcblocked &gt; 0);
+! 	if (var == NULL || var-&gt;env == &amp;notexported)
+  		return;
+  	if (var-&gt;env == NULL) {
+  		char *envstr = str(&quot;%F=%L&quot;, key, var-&gt;defn, &quot;\001&quot;);
+  		var-&gt;env = envstr;
+  	}
+! 	assert(env-&gt;count &lt; env-&gt;alloclen);
+! 	env-&gt;vector[env-&gt;count++] = var-&gt;env;
+! 	if (env-&gt;count == env-&gt;alloclen) {
+! 		Vector *newenv = mkvector(env-&gt;alloclen * 2);
+! 		newenv-&gt;count = env-&gt;count;
+! 		memcpy(newenv-&gt;vector, env-&gt;vector, env-&gt;count * sizeof *env-&gt;vector);
+  		env = newenv;
+  	}
+  }
+  	
+  extern Vector *mkenv(void) {
+! 	env-&gt;count = envmin;
+! 	gcdisable(0);		/* TODO: make this a good guess */
+  	dictforall(vars, mkenv0, NULL);
+! 	gcenable();
+! 	env-&gt;vector[env-&gt;count] = NULL;
+  	return env;
+  }
+  
+***************
+*** 328,334 ****
+  	globalroot(&amp;env);
+  	vars = mkdict();
+  	env = mkvector(10);
+- 	envcount = 0;
+  
+  	runstring(initial);
+  	initpath();
+--- 331,336 ----
+***************
+*** 338,347 ****
+  	for (; (envstr = *envp) != NULL; envp++) {
+  		char *eq = strchr(envstr, '=');
+  		if (eq == NULL) {
+! 			env-&gt;vector[envcount++] = envstr;
+! 			if (envcount == env-&gt;len) {
+! 				Vector *newenv = mkvector(env-&gt;len * 2);
+! 				memcpy(&amp;newenv-&gt;vector[0], &amp;env-&gt;vector[0], envcount * sizeof (char *));
+  				env = newenv;
+  			}
+  			continue;
+--- 340,350 ----
+  	for (; (envstr = *envp) != NULL; envp++) {
+  		char *eq = strchr(envstr, '=');
+  		if (eq == NULL) {
+! 			env-&gt;vector[env-&gt;count++] = envstr;
+! 			if (env-&gt;count == env-&gt;alloclen) {
+! 				Vector *newenv = mkvector(env-&gt;alloclen * 2);
+! 				newenv-&gt;count = env-&gt;count;
+! 				memcpy(newenv-&gt;vector, env-&gt;vector, env-&gt;count * sizeof *env-&gt;vector);
+  				env = newenv;
+  			}
+  			continue;
+***************
+*** 357,363 ****
+  		RefEnd(name);
+  	}
+  
+! 	envmin = envcount;
+  	printcmds = save_printcmds;
+  	noexecute = save_noexecute;
+  }
+--- 360,366 ----
+  		RefEnd(name);
+  	}
+  
+! 	envmin = env-&gt;count;
+  	printcmds = save_printcmds;
+  	noexecute = save_noexecute;
+  }
+diff -rc ../orig/vec.c ./vec.c
+*** ../orig/vec.c	Thu Oct  1 00:25:38 1992
+--- ./vec.c	Wed Oct  7 09:22:08 1992
+***************
+*** 6,32 ****
+  static Tag VectorTag;
+  
+  extern Vector *mkvector(int n) {
+- 	int i;
+  	Vector *v = gcalloc(offsetof(Vector, vector[n + 1]), &amp;VectorTag);
+! 	v-&gt;len = n;
+! 	for (i = 0; i &lt;= n; i++)
+! 		v-&gt;vector[i] = NULL;
+  	return v;
+  }
+  
+  static void *VectorCopy(void *ov) {
+! 	size_t n = offsetof(Vector, vector[((Vector *) ov)-&gt;len + 1]);
+  	void *nv = gcalloc(n, &amp;VectorTag);
+! 	memcpy(nv, ov, sizeof (Vector));
+  	return nv;
+  }
+  
+  static size_t VectorScan(void *p) {
+  	Vector *v = p;
+! 	int i, n = v-&gt;len;
+  	for (i = 0; i &lt;= n; i++)
+  		v-&gt;vector[i] = forward(v-&gt;vector[i]);
+! 	return offsetof(Vector, vector[n + 1]);
+  }
+  
+  static DefineTag(Vector);
+--- 6,32 ----
+  static Tag VectorTag;
+  
+  extern Vector *mkvector(int n) {
+  	Vector *v = gcalloc(offsetof(Vector, vector[n + 1]), &amp;VectorTag);
+! 	v-&gt;alloclen = n;
+! 	v-&gt;count = 0;
+! 	/* int i; for (i = 0; i &lt;= n; i++)
+! 		v-&gt;vector[i] = NULL; */
+  	return v;
+  }
+  
+  static void *VectorCopy(void *ov) {
+! 	size_t n = offsetof(Vector, vector[((Vector *) ov)-&gt;alloclen + 1]);
+  	void *nv = gcalloc(n, &amp;VectorTag);
+! 	memcpy(nv, ov, n);
+  	return nv;
+  }
+  
+  static size_t VectorScan(void *p) {
+  	Vector *v = p;
+! 	int i, n = v-&gt;count;
+  	for (i = 0; i &lt;= n; i++)
+  		v-&gt;vector[i] = forward(v-&gt;vector[i]);
+! 	return offsetof(Vector, vector[v-&gt;alloclen + 1]);
+  }
+  
+  static DefineTag(Vector);
+***************
+*** 38,43 ****
+--- 38,44 ----
+  	Ref(Vector *, v, NULL);
+  	Ref(List *, lp, list);
+  	v = mkvector(n);
++ 	v-&gt;count = n;
+  
+  	for (i = 0; lp != NULL; lp = lp-&gt;next, i++) {
+  		char *s = getstr(lp-&gt;term); /* must evaluate before v-&gt;vector[i] */
+diff -rc ../orig/version.c ./version.c
+*** ../orig/version.c	Thu Oct  1 00:25:38 1992
+--- ./version.c	Wed Oct  7 09:22:08 1992
+***************
+*** 1,2 ****
+! static const char id[] = &quot;@(#)es version 0.67: 30 Sep 1992&quot;;
+  const char * const version = &amp;id[sizeof &quot;@(#)&quot; - 1];
+--- 1,2 ----
+! static const char id[] = &quot;@(#)es version 0.68: 1 Oct 1992&quot;;
+  const char * const version = &amp;id[sizeof &quot;@(#)&quot; - 1];
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00039.html">Re: es v*1* features</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00041.html">exec &gt;[2] err.out</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00039.html">Re: es v*1* features</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00041.html">exec &gt;[2] err.out</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00040"><strong>Date</strong></a></li>
+<li><a href="threads.html#00040"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

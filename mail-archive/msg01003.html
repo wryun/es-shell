@@ -1,0 +1,108 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: my recent request for help -->
+<!--X-From-R13: svfpure <vabqrNserrarg.qr> -->
+<!--X-Date: Wed, 12 Apr 2000 00:53:25 &#45;0400 -->
+<!--X-Message-Id: Pine.BSF.4.05.10004092026250.280&#45;100000@spotteswoode.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>my recent request for help</title>
+<link rev="made" href="mailto:inode@freenet.de">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01001.html">Date Prev</a>][<a href="msg01002.html">Date Next</a>][<a href="msg01001.html">Thread Prev</a>][<a href="msg01004.html">Thread Next</a>][<a href="maillist.html#01003">Date Index</a>][<a href="threads.html#01003">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>my recent request for help</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es-list%40hawkwind.utcs.toronto.edu">es-list@hawkwind.utcs.toronto.edu</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: my recent request for help</li>
+<li><em>From</em>: fischer &lt;<a href="mailto:inode%40freenet.de">inode@freenet.de</a>&gt;</li>
+<li><em>Date</em>: Sun, 9 Apr 2000 14:34:54 -0400</li>
+<li><em>Organization</em>: private</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>thanx guys, for all the help.
+
+i got exactly zero messages on a fairly simple problem 7^/
+
+now for the good part:  it may happen to you as well, that you input a list
+of integers like this:
+
+i = &lt;=%read
+
+...and want to use it like this:
+
+echo $list($i)
+
+...just to see that only one single little value will be returned, the
+first one called for in the indice-list.  have no fear, because i got the
+solution.  when reading several values using %read, they will be returned in
+one simple flat value.  to index a list you would rather want several
+distinguishable values, and it happens like this:
+
+i = &lt;=%read; i = `{echo $i}
+echo $list($i)
+
+...then will work as expected.
+
+-- 
+inode@freenet.de
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01004" href="msg01004.html">Re: my recent request for help</a></strong>
+<ul><li><em>From:</em> Bill Trost &lt;trost@cloud.rain.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01001.html">why?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01002.html">hello, world!\n</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01001.html">why?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01004.html">Re: my recent request for help</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01003"><strong>Date</strong></a></li>
+<li><a href="threads.html#01003"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

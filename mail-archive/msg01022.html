@@ -1,0 +1,145 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Possible fix for the signal&#45;handling problem in es&#45;0.9&#45;beta1.tar.gz -->
+<!--X-From-R13: Vnenyq Vnapur&#45;Ayfra <unapurNzngu.agah.ab> -->
+<!--X-Date: Wed, 13 Dec 2000 14:19:01 &#45;0500 -->
+<!--X-Message-Id: 20001213200216D.hanche@math.ntnu.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 200012080119.eB81JDe98193@latour.rsch.comm.mot.com -->
+<!--X-Reference: cWdHfF5Et0@iadd.jivetech.com -->
+<!--X-Reference: 200012130910.eBD9ApC75012@latour.rsch.comm.mot.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</title>
+<link rev="made" href="mailto:hanche@math.ntnu.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01021.html">Date Prev</a>][<a href="msg01023.html">Date Next</a>][<a href="msg01020.html">Thread Prev</a>][<a href="msg01023.html">Thread Next</a>][<a href="maillist.html#01022">Date Index</a>][<a href="threads.html#01022">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:rittle%40rsch.comm.mot.com">rittle@rsch.comm.mot.com</a></li>
+<li><em>Subject</em>: Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</li>
+<li><em>From</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+<li><em>Date</em>: Wed, 13 Dec 2000 14:02:16 -0500</li>
+<li><em>Cc</em>: <a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:friedman%40splode.com">friedman@splode.com</a>,	<a href="mailto:csdayton%40cs.uchicago.edu">csdayton@cs.uchicago.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01020.html">200012130910.eBD9ApC75012@latour.rsch.comm.mot.com</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg01018.html">200012080119.eB81JDe98193@latour.rsch.comm.mot.com</a>&gt;	&lt;<a href="msg01021.html">cWdHfF5Et0@iadd.jivetech.com</a>&gt;	&lt;<a href="msg01020.html">200012130910.eBD9ApC75012@latour.rsch.comm.mot.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>+ Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;:
+
+| In article &lt;<a href="msg01021.html">cWdHfF5Et0@iadd.jivetech.com</a>&gt;,
+| Paul Haahr &lt;haahr@jivetech.com&gt; writes:
+| 
+| &gt;&gt; I have no idea if anyone besides me still runs es (or anyone cares to
+| &gt;&gt; maintain their copies),
+| 
+| &gt; Well, I still run it.
+
+Me too.  Es has been my login shell since 1993, and I have no plans of
+changing this happe state of affairs.  (Actually, I recruited yet
+another es user recently, perhaps in the process doubling the number
+of es users in Norway.)
+
+But I am not writing to tell you this.
+
+| [Since the es list appears to insert a rather large time delay, I have
+|  explicitly CC'd parties that were known to be interested in this
+|  problem back in January 2000.]
+
+So did I, and I added Soren Dayton as well.  Too bad the list is so
+sluggish it makes us do these things.
+
+| OK, the signal-handling code for interactive use could still use some
+| minor tuning. ;-)
+| 
+| Of course, I could never do the amount of work on es that you did, but
+| as a small token of my gratitude, I have finally attempted to debug
+| this problem in earnest and produce a patch for it.
+
+Great!  This and your other recent patch ought to clear up my one
+remaining quarrel with es.
+
+I wonder which 0.9-beta1 version you have patched, though:  I think
+there are two of them out there.  Back in September of 1997, Soren
+Dayton introduced the new primitive $&amp;getpid and used it to fix a
+problem with %readfrom and %writeto.  (The problem only bites on
+machines that do not have /dev/fd/, and on which es does not have the
+$&amp;readfrom and $&amp;writeto primitives.)
+
+But I don't know if his patch ever made it into the world at large.
+If Soren is still out there, maybe he can apply your patches to the
+source, including the getpid primitive, and release it as 0.9-beta2?
+
+(I'll forward the patches to him, as he probably hasn't gotten them.)
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01048" href="msg01048.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="01023" href="msg01023.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01018" href="msg01018.html">Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;</li></ul></li>
+<li><strong><a name="01021" href="msg01021.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+<li><strong><a name="01020" href="msg01020.html">Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01021.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01023.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01020.html">Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01023.html">Re: Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01022"><strong>Date</strong></a></li>
+<li><a href="threads.html#01022"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

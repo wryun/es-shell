@@ -1,0 +1,227 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: an even newer shell -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Thu, 1 Apr 1993 03:41:39 &#45;0500 -->
+<!--X-Message-Id: 9304010842.AA06451@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>an even newer shell</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00253.html">Date Prev</a>][<a href="msg00255.html">Date Next</a>][<a href="msg00246.html">Thread Prev</a>][<a href="msg00258.html">Thread Next</a>][<a href="maillist.html#00254">Date Index</a>][<a href="threads.html#00254">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>an even newer shell</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:rc%40hawkwind.utcs.toronto.edu">rc@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: an even newer shell</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Thu, 1 Apr 1993 03:42:06 -0500</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>we'd like to bring y'all up to some work we've been doing on the successor
+shell to es.
+
+Article 9438 of comp.unix.shell:
+Xref: adobe comp.unix.shell:9438 comp.unix.wizards:20772
+Newsgroups: comp.unix.shell,comp.unix.wizards
+Path: adobe!haahr
+From: haahr@adobe.com (Paul Haahr)
+Subject: tzsh, a new shell
+Message-ID: &lt;1993Apr1.083812.18334@adobe.com&gt;
+Summary: several kitchen sinks
+Sender: usenet@adobe.com (USENET NEWS)
+Reply-To: haahr@adobe.com (Paul Haahr)
+Organization: Adobe Systems Incorporated
+Date: Thu, 1 Apr 1993 08:38:12 GMT
+
+We'd like to announce the availability of a beta version of tzsh,
+a new shell for Unix, Plan 9, MS-DOS, and OS/360.
+
+For the past several months, since the time we presented a Usenix
+paper on our previous shell, es, we've been wondering how we could
+build a shell that people would actually use.  We decided that a
+few simple, clean concepts, borrowed from the most popular shells
+as well as traditional programming languages would provide a solid
+basis for a shell that would meet the requirements of most USENET
+readers.
+
+A while ago, we realized that Scheme and functional languages made
+little sense as the basis for shells, because hierarchical lists
+did not match well the semantics of the Unix(TM) execve(2) argv
+vector.  We found, however, the semantics very well matched the
+concept of the ``array'' from the FORTRAN family of languages.
+(For those unfamiliar with the array concept, there are probably
+some books that still teach FORTRAN.)
+
+When we started looking further at what we could steal from FORTRAN,
+we realized that one of the ideas which had lead us astray in rc
+and es was the use of whitespace as a separator.  In tzsh (when
+using tzsh syntax, see below) the comma is used to separate words.
+By using comma as the separator, whitespace characters do not have
+to be quoted.  Further, the use of a continuation character in
+column 6 of input can continue lines, so backslashes do not have
+to be quoted.
+
+Quoting rules in tzsh are rather simple.  By preceding a string
+with a number (n) and the letter H, all the following n characters
+are quoted, except if they are one of
+
+	$ ` !
+
+which must be quoted by doubling them inside the quoted string.
+
+To get around the infamous quoted backquotes inside backquotes
+problem from /bin/sh, without using the confusing rc or es syntax,
+all backquote substitutions start from the ` character and go up
+to the end of the line (or column 72, which ever comes first).
+
+Tzsh also borrows implicit typing of variables from FORTRAN.  Any
+shell variable whose name begins with a P or Q is taken to be a
+colon-separated path.  Variables that start with I-N are integers.
+Variables that start with the letters A-E and L-N are not exported
+into the environment, by default, though the ``export'' and
+`dontexport'' commands can override the defaults.  For convenience,
+all shell variables must be all-uppercase, with up to six significant
+characters.
+
+And, another feature borrowed from FORTRAN that will certainly
+please novice shell users:  All shell variables are global.  Changes
+to a shell variable performed in a subshell automatically change
+the value in the parent shell.  This feature alone should reduce
+volume in comp.unix.questions by 50%.
+
+Tzsh borrows many interactive features from bash, zsh, and tcsh.
+We think, in fact, that tzsh offers the most comprehensive set of
+command editing and completion features.  Based on the user settable
+variable,
+
+	COMMAND_LINE_EDITOR_EMULATION
+
+you can control what editor the command line editor emulates.  The
+default is TECO, but tzsh also supports emacs, vi, sam -d, ed, and
+WYLBUR modes.  We hope to support sam (not -d), sun textedit and
+MS-DOS EDLIN style editing in the final release.  (In addition,
+tzsh accepts !-style history, but the colon suffixes are perl
+programs rather than sed-style expressions.)
+
+Tzsh will complete commands, file names, directory names, sentences,
+user names, host names, phone numbers, mail aliases, variable names
+from C and FORTRAN programs, shell variables, dates, and inode
+numbers.  By redefining the
+
+	COMPLETION_METHOD
+
+variable, the programmer can add specific types of completion and
+the programs which use them.
+
+Of course, tzsh has job control.
+
+On initialization, tzsh runs all of the .-named files in your home
+directory, except that it doesn't run .profile, .rcrc, and .esrc
+unless it was invoked as a login shell or it thinks you haven't
+logged in yet.  If given the -N flag, tzsh also doesn't run .newsrc
+and .Xdefaults; the authors swear by this option.
+
+Tzsh optionally accepts all valid sh, ksh, bash, csh, tcsh, zsh,
+rc, and es commands.  If a command would be interpreted differently
+by some of the shells, the user can set the environment variable
+PSHELL_EMULATION_PATH to a list of colon-separated shell names
+giving the order in which to resolve conflicts between different
+possible interpretations.  For example,
+
+	PSHELL_EMULATION_PATH=tzsh:zsh:rc:sh:es
+
+says that tzsh should first try to interpret commands with tzsh
+syntax, and if they are illegal that way, then try zsh syntax, etc.
+
+As a special case, a component of PSHELL_EMULATION_PATH may be two
+(or more) shell names separated by ampersands.  If the interpretation
+of the command differs between the shells, both versions are run.
+For example
+
+	PSHELL_EMULATION_PATH=rc&amp;csh:es:zsh:bash
+	date | mail research!rob
+
+both mails the date to Rob Pike and prints ``rob: Event not found.''
+Note that using 'rc&amp;rc' as a component is a convenient way to
+guarantee that all commands are executed twice.  When using tzsh
+over a noisy phone line, the form ``rc&amp;rc&amp;rc'' is very useful; a
+majority vote of the interpretations of the commands is used.
+
+A beta copy of the shell may be obtained from
+
+	ftp.kremvax.su:/pub/tzsh/tzsh-0.999.tar.Z
+
+There is no man page yet, but reading the source along with every
+other line from the zsh, tcsh, and perl man pages should be a good
+enough guide to the shell for most FORTRAN 8x programmers.
+
+We would like to thank Raymond Chen and Dave Hitz for their help
+in the design and implementation of tzsh.
+
+				-- Paul Haahr &amp; Byron Rakitzis
+-- 
+paul haahr		adobe systems incorporated
+haahr@adobe.com		...!decwrl!adobe!haahr		+1 415 962 6056
+
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00258" href="msg00258.html">Re: an even newer shell</a></strong>
+<ul><li><em>From:</em> Steven M Rezsutek &lt;steve@baloo.gsfc.nasa.gov&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00253.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00255.html">Re: a note on notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00246.html">Re: a note on notations (I'm going to be sorry I sent this to the list)</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00258.html">Re: an even newer shell</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00254"><strong>Date</strong></a></li>
+<li><a href="threads.html#00254"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

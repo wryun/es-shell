@@ -1,0 +1,107 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: You said the J word -->
+<!--X-From-R13: Pehpr Breraf <oehprNcvkne.pbz> -->
+<!--X-Date: Wed, 21 Oct 1992 17:44:23 &#45;0400 -->
+<!--X-Message-Id: m0mhnqc&#45;0000rEC@copland.pixar.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9210212112.AA10597@utopia.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: You said the J word</title>
+<link rev="made" href="mailto:bruce@pixar.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00125.html">Date Prev</a>][<a href="msg00127.html">Date Next</a>][<a href="msg00122.html">Thread Prev</a>][<a href="msg00128.html">Thread Next</a>][<a href="maillist.html#00126">Date Index</a>][<a href="threads.html#00126">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: You said the J word</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Subject</em>: Re: You said the J word</li>
+<li><em>From</em>: Bruce Perens &lt;<a href="mailto:bruce%40pixar.com">bruce@pixar.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 21 Oct 1992 17:44:09 -0400</li>
+<li><em>Cc</em>: Bruce Perens &lt;<a href="mailto:bruce%40pixar.pixar.com">bruce@pixar.pixar.com</a>&gt;,	es mailing list &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;, bruce</li>
+<li><em>In-reply-to</em>: Your message of &quot;Wed, 21 Oct 92 14:12:09 PDT.&quot;             &lt;<a href="msg00122.html">9210212112.AA10597@utopia.mv.us.adobe.com</a>&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I can see you've thought this through very well.
+
+I would prefer to have some more control over wait(). Where
+$cmd is invoked, its pid should be recorded and passed to an operator
+that would do an explicit wait on a list of process-ids. In this manner,
+the difference between foreground and background processes could be
+reduced to signal handling and wait processing that would be
+user-modifyable.
+
+Yes, history should be handled in that loop.
+When the user just hits return, the user-written read-eval loop should 
+have a chance to regain control and decide what to do rather than simply
+having %parse re-prompt. I don't know what anyone would do with this, I
+just think it might be useful.
+
+Regarding the posibility of job control - I wouldn't try to implement it
+the way it is in BSD. Something using PTYs would be easier, and could
+be made to work close to the BSD semantics. The result would be sort of
+a cross between the ATT shell-levels and CSH job control.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00128" href="msg00128.html">Re: You said the J word</a></strong>
+<ul><li><em>From:</em> noel@es.su.oz.au</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00122" href="msg00122.html">Re: You said the J word</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@mv.us.adobe.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00125.html">Re: es 0.7: ^C at prompt</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00127.html">Re: You said the J word</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00122.html">Re: You said the J word</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00128.html">Re: You said the J word</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00126"><strong>Date</strong></a></li>
+<li><a href="threads.html#00126"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

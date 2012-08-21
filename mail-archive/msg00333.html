@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: pushd/popd/dirs for es -->
+<!--X-From-R13: @bnu Tevrqzna <sevrqznaNtah.nv.zvg.rqh> -->
+<!--X-Date: Sat, 1 May 1993 00:07:44 &#45;0400 -->
+<!--X-Message-Id: 9305010055.AA02836@nutrimat.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9304291727.AA20131@astro.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>pushd/popd/dirs for es</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00332.html">Date Prev</a>][<a href="msg00334.html">Date Next</a>][<a href="msg00332.html">Thread Prev</a>][<a href="msg00335.html">Thread Next</a>][<a href="maillist.html#00333">Date Index</a>][<a href="threads.html#00333">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>pushd/popd/dirs for es</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: pushd/popd/dirs for es</li>
+<li><em>From</em>: Noah Friedman &lt;<a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a>&gt;</li>
+<li><em>Date</em>: Fri, 30 Apr 1993 21:55:34 -0400</li>
+<li><em>Cc</em>: es</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00328.html">9304291727.AA20131@astro.mv.us.adobe.com</a>&gt; (haahr@mv.us.adobe.com )</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Resent-date</em>: Sat, 1 May 1993 00:07:36 -0400</li>
+<li><em>Resent-from</em>: Chris Siebenmann &lt;cks&gt;</li>
+<li><em>Resent-message-id</em>: &lt;<a href="mailto:93May1.000744edt.2785%40hawkwind.utcs.toronto.edu">93May1.000744edt.2785@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Resent-to</em>: es</li>
+<li><em>Sender</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Here is a pwd prettifier (that substitutes ~ for $home in the pathname)
+that could conceivably call no external programs.  It could be generalized
+to take a list of arguments or at least one abitrary argument.  For now it
+just uses `pwd (which, if you use my pushd/popd frobs, is not an external
+program). 
+
+
+fn pwd-pretty \
+{
+   let (pwd = `pwd; pwdl = ; homel =)
+     {
+       ~ $pwd $home &amp;&amp; { echo '~'; return 0 }
+       ~ $pwd $home^* || { echo $pwd; return 0 }
+
+       pwdl = &lt;={ %split '/' $pwd }
+       homel = &lt;={ %split '/' '.' $home }
+       pwdl = $pwdl($#homel ...)
+       echo &lt;={ %flatten '/' '~' $pwdl }
+     }
+}
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00328" href="msg00328.html">pushd/popd/dirs for es</a></strong>
+<ul><li><em>From:</em> haahr@mv.us.adobe.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00332.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00334.html">proposed minor change to var and whatis semantics</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00332.html">pushd/popd/dirs for es</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00335.html">Re: pushd/popd/dirs for es</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00333"><strong>Date</strong></a></li>
+<li><a href="threads.html#00333"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

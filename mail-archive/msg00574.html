@@ -1,0 +1,103 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: The primitiveness of pipe -->
+<!--X-From-R13: crgrNzvafgre.lbex.np.hx -->
+<!--X-Date: Fri, 28 May 1993 07:41:51 &#45;0400 -->
+<!--X-Message-Id: swordfish.738589301@minster.york.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: The primitiveness of pipe</title>
+<link rev="made" href="mailto:pete@minster.york.ac.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00573.html">Date Prev</a>][<a href="msg00575.html">Date Next</a>][<a href="msg00571.html">Thread Prev</a>][<a href="msg00573.html">Thread Next</a>][<a href="maillist.html#00574">Date Index</a>][<a href="threads.html#00574">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: The primitiveness of pipe</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a>, <a href="mailto:steve%40baloo.gsfc.nasa.gov">steve@baloo.gsfc.nasa.gov</a></li>
+<li><em>Subject</em>: Re: The primitiveness of pipe</li>
+<li><em>From</em>: <a href="mailto:pete%40minster.york.ac.uk">pete@minster.york.ac.uk</a></li>
+<li><em>Date</em>: Fri, 28 May 1993 08:40:42 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Steven M Rezsutek says:
+
+&gt;Why stop there?  If es had $&amp;socket, I could purge perl from the disk.
+&gt;One small feature for es, one giant bloat-purge for the system as a 
+&gt;whole.  After all, the network is the computer. ;-) Es could be the 
+&gt;first network shell...
+
+$&amp;socket is unnecessary. Get hold of Dan Bernstein's excellent client-server
+code which implements his UCSPI (Unix Client Server Program Interface)
+which will give you very nice shell-level access to internet and unix-domain
+sockets, and named pipes. It takes a bit of plumbing to get things working, but
+most of the lurking horrors could be taken care of by careful use of es
+syntax.
+
+You can ftp it from a number of sites. The most up to date seems to be
+lysator.liu.se:/pub/daemons/clientserver-0.80-p1.tar.z (gzipped)
+
+To date I've only used it with sh and rc, but I plan to migrate some of my
+old code to es in the near future. I find Dan's system the easiest way of
+presenting network services to shell scripts.
+
+Pete
+--
+ *Peter Fenelon -- Research Associate -- Software Safety Assessment Procedures*
+ Dept. of Computer Science, University of York, York, Y01 5DD (+44 0904 433388)
+ EMAIL: pete@minster.york.ac.uk `There's no room for enigmas in built-up areas'
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00573.html">Full duplex connections (pipes)</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00575.html">Re:  Full duplex connections (pipes)</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00571.html">Re: The primitiveness of pipe</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00573.html">Full duplex connections (pipes)</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00574"><strong>Date</strong></a></li>
+<li><a href="threads.html#00574"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

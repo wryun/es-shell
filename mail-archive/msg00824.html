@@ -1,0 +1,177 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: SIGINT handling -->
+<!--X-From-R13: znggurj terra <zetNznzr.zh.AL.OG> -->
+<!--X-Date: Thu, 20 Apr 1995 07:21:49 &#45;0400 -->
+<!--X-Message-Id: 199504201120.VAA06617@splode.mame.mu.OZ.AU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9504200450.AA12443@sulphur.osf.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: SIGINT handling</title>
+<link rev="made" href="mailto:mrg@mame.mu.OZ.AU">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00823.html">Date Prev</a>][<a href="msg00825.html">Date Next</a>][<a href="msg00823.html">Thread Prev</a>][<a href="msg00825.html">Thread Next</a>][<a href="maillist.html#00824">Date Index</a>][<a href="threads.html#00824">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: SIGINT handling</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: Rich Salz &lt;<a href="mailto:rsalz%40osf.org">rsalz@osf.org</a>&gt;</li>
+<li><em>Subject</em>: Re: SIGINT handling</li>
+<li><em>From</em>: matthew green &lt;<a href="mailto:mrg%40mame.mu.OZ.AU">mrg@mame.mu.OZ.AU</a>&gt;</li>
+<li><em>Date</em>: Thu, 20 Apr 1995 07:20:46 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:es-owner%40hawkwind.utcs.toronto.edu">es-owner@hawkwind.utcs.toronto.edu</a>,	<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Thu, 20 Apr 1995 00:50:42 -0400.&quot;             &lt;<a href="msg00823.html">9504200450.AA12443@sulphur.osf.org</a>&gt; </li>
+<li><em>Sender</em>: <a href="mailto:mrg%40splode.mame.mu.OZ.AU">mrg@splode.mame.mu.OZ.AU</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+   I'm sort-of confused that es doesn't do this, but isn't it always
+   safe to re-arm the signal handler?  That's what I do in my code...
+
+no.  if you get two signals before you get a chance to reinstate
+the handler, you're stuffed.  here's some things i use:
+
+#ifdef USE_SIGACTION
+typedef RETSIGTYPE sigfunc _((int));
+sigfunc *my_signal _((int, sigfunc *, int));
+# define MY_SIGNAL(s_n, s_h, m_f) my_signal(s_n, s_h, m_f)
+#else
+# if USE_SIGSET
+#  define MY_SIGNAL(s_n, s_h, m_f) sigset(s_n, s_h)
+# else
+#  define MY_SIGNAL(s_n, s_h, m_f) signal(s_n, s_h)
+# endif /* USE_SIGSET */
+#endif /* USE_SIGACTION */
+
+where you've previously defined the USE_* and RETSIGTYPE's.
+and the my_signal() looks like this:
+
+/*
+ * ircsig.c: has a `my_signal()' that uses sigaction().
+ *
+ * written by matthew green, 1993.
+ *
+ * i stole bits of this from w. richard stevens' `advanced programming
+ * in the unix environment' -mrg
+ */
+
+#ifndef lint
+static	char	rcsid[] = &quot;@(#)$Id: ircsig.c,v 1.3 1994/07/02 02:32:13 mrg Stab $&quot;;
+#endif
+
+#include &quot;irc.h&quot;
+#include &quot;irc_std.h&quot;
+
+#ifdef USE_SIGACTION
+sigfunc *
+my_signal(sig_no, sig_handler, misc_flags)
+	int sig_no;
+	sigfunc *sig_handler;
+	int misc_flags;
+{
+        /*
+         * misc_flags is unused currently.  it's planned to be used
+         * to use some of the doovier bits of sigaction(), if at
+         * some point we need them, -mrg
+         */
+
+        struct sigaction sa, osa;
+
+        sa.sa_handler = sig_handler;
+
+        sigemptyset(&amp;sa.sa_mask);
+        sigaddset(&amp;sa.sa_mask, sig_no);
+
+        /* this is ugly, but the `correct' way.  i hate c. -mrg */
+        sa.sa_flags = 0;
+#if defined(SA_RESTART) || defined(SA_INTERRUPT)
+        if (SIGALRM == sig_no)
+        {
+# if defined(SA_INTERRUPT)
+                sa.sa_flags |= SA_INTERRUPT;
+# endif /* SA_INTERRUPT */
+        }
+        else
+        {
+# if defined(SA_RESTART)
+                sa.sa_flags |= SA_RESTART;
+# endif /* SA_RESTART */
+        }
+#endif /* SA_RESTART || SA_INTERRUPT */
+
+        if (0 &gt; sigaction(sig_no, &amp;sa, &amp;osa))
+                return (SIG_ERR);
+
+        return (osa.sa_handler);
+}
+#endif /* USE_SIGACTION */
+
+
+---
+
+and then you use it like this:
+
+(void) MY_SIGNAL(SIGINT, cntl_c, 0);
+
+i've also got the SYSVSIGNALS stuff in the signal handlers
+themselves -if- we don't have any real signals.
+
+.mrg.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00823" href="msg00823.html">Re: SIGINT handling</a></strong>
+<ul><li><em>From:</em> Rich Salz &lt;rsalz@osf.org&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00823.html">Re: SIGINT handling</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00825.html">Re: SIGINT handling</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00823.html">Re: SIGINT handling</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00825.html">Re: SIGINT handling</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00824"><strong>Date</strong></a></li>
+<li><a href="threads.html#00824"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

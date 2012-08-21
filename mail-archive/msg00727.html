@@ -1,0 +1,164 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: thought this might amuse some people -->
+<!--X-From-R13: sevrqznaNtah.nv.zvg.rqh (@bnu Tevrqzna) -->
+<!--X-Date: Fri, 18 Feb 1994 03:06:02 &#45;0500 -->
+<!--X-Message-Id: m0pXQE5&#45;0000qaC@baalperazim.frob.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>thought this might amuse some people</title>
+<link rev="made" href="mailto:friedman@gnu.ai.mit.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00726.html">Date Prev</a>][<a href="msg00728.html">Date Next</a>][<a href="msg00740.html">Thread Prev</a>][<a href="msg00728.html">Thread Next</a>][<a href="maillist.html#00727">Date Index</a>][<a href="threads.html#00727">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>thought this might amuse some people</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: thought this might amuse some people</li>
+<li><em>From</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a> (Noah Friedman)</li>
+<li><em>Date</em>: Fri, 18 Feb 1994 03:06:00 -0500</li>
+<li><em>Reply-to</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Sender</em>: Noah Friedman &lt;<a href="mailto:friedman%40frob.com">friedman@frob.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>#
+# number.es, 26-May-93 Noah Friedman &lt;friedman@prep.ai.mit.edu&gt;
+# Last modified 18-Feb-94
+#
+# Public domain.
+#
+
+#:docstring number:
+# Usage: number [number]
+#
+# Converts decimal integers to english notation.  Spaces and commas are
+# optional.  Numbers 67 digits and larger will overflow this script.
+#
+# E.g: number 99,000,000,000,000,454
+#      =&gt; ninety-nine quadrillion four hundred fifty-four
+#
+#:end docstring:
+
+fn number \
+{
+  if { ~ $* *[~0-9,.]* } \
+       { throw error $0 $0: invalid character in argument. }
+     { ~ $* *.* } \
+       { throw error $0 $0: fractions not supported '(yet).' }
+
+  # Strips excess spaces and commas, and puts each digit into a separate
+  # slot in the array.
+  * = &lt;={ %fsplit '' &lt;={%flatten '' &lt;={%fsplit ', ' $^* } } }
+
+  let (ones = one two three four five six seven eight nine;
+       tens = ten twenty thirty forty fifty sixty seventy eighty ninety;
+       teens = eleven twelve (thir four fif six seven eigh nine)^teen;
+       bignum = (thousand 
+                 (m b tr quadr quint sext sept oct non 
+                  ('' un duo tre quattuoro quin sex septen octo novem)^dec
+                  vigint)^illion );
+       a = $*
+       bignum-ref = ;
+       val100 =; val10 =; val1 =;
+       result =)
+    {
+      while { ! ~ $#a 0 1 2 3 } \
+        { 
+          a = $a(4 ...) 
+          bignum-ref = $bignum-ref ''
+        }
+
+      if { ~ $#a 1 } \
+           { * = 0 0 $* } \
+         { ~ $#a 2 } \
+           { * = 0 $* }
+
+      while { ! ~ $* () } \
+        {
+          val100 =; val10 =; val1 =;
+          if { ! ~ $1 0 } { val100 = $ones($1) hundred }
+          if { ! ~ $2 0 } { val10 = $tens($2) }
+          if { ! ~ $3 0 } \
+               { 
+                 if { ~ $val10 ten } \
+                      { val10 = ; val1 = $teens($3) } \
+                    { val1 = $ones($3) } 
+               }
+
+          result = $result $val100 
+          if { ~ $val10 *ty &amp;&amp; ! ~ $val1 () } \
+               { result = $result $^val10^-^$val1 } \
+             { result = $result $val10 $val1 }
+          if { ! { ~ $bignum-ref () || ~ $1$2$3 000 } } \
+               { 
+                 result = $result $bignum($#bignum-ref) 
+               }
+          bignum-ref = $bignum-ref(2 ...)
+          * = $*(4 ...)
+        }
+      result $result
+    }
+}
+
+# eof
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00731" href="msg00731.html">ftp es?</a></strong>
+<ul><li><em>From:</em> alk@et.msc.edu (Anthony L. Kimball)</li></ul></li>
+<li><strong><a name="00728" href="msg00728.html">Re: thought this might amuse some people</a></strong>
+<ul><li><em>From:</em> ken@netstor.com (Ken Olstad)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00726.html">es dumping core on me</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00728.html">Re: thought this might amuse some people</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00740.html">Re: es dumping core on me</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00728.html">Re: thought this might amuse some people</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00727"><strong>Date</strong></a></li>
+<li><a href="threads.html#00727"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

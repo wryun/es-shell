@@ -1,0 +1,154 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Pattern extraction and Wildcard expansion -->
+<!--X-From-R13: Bnhy Vnnue <unnueNwvirgrpu.pbz> -->
+<!--X-Date: Thu, 14 Dec 2000 18:20:25 &#45;0500 -->
+<!--X-Message-Id: cWek1s5YR7@iadd.jivetech.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 20001214215816.A1256@bree.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Pattern extraction and Wildcard expansion</title>
+<link rev="made" href="mailto:haahr@jivetech.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01044.html">Date Prev</a>][<a href="msg01046.html">Date Next</a>][<a href="msg01042.html">Thread Prev</a>][<a href="msg01047.html">Thread Next</a>][<a href="maillist.html#01045">Date Index</a>][<a href="threads.html#01045">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Pattern extraction and Wildcard expansion</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: DaVinci &lt;<a href="mailto:bombadil%40wanadoo.es">bombadil@wanadoo.es</a>&gt;</li>
+<li><em>Subject</em>: Re: Pattern extraction and Wildcard expansion</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a>&gt;</li>
+<li><em>Date</em>: Thu, 14 Dec 2000 16:49:16 -0500</li>
+<li><em>Cc</em>: Lista Es &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01042.html">20001214215816.A1256@bree.net</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg01042.html">20001214215816.A1256@bree.net</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt;  I have the function:
+&gt; 
+&gt;  nl = {
+&gt;  }
+&gt;  fn s pat {
+&gt;          lis = `{for (dir = $path) ls $dir}
+&gt; 	 a = &lt;={~~ $lis $pat}
+&gt; 	 echo $a^$nl
+&gt;  }
+&gt; 
+&gt;  and try to execute:
+&gt; 
+&gt;  	; s l*
+&gt; 
+&gt;  Mi intention is to get a list of commands that begin with &quot;l&quot;, but
+&gt;  there is no output.
+&gt; 
+&gt;  Where is my error?
+
+Quoting.  ~ and ~~ are special with regard to quoting.  The pattern
+argument to ~ and ~~, if it includes wildcards, must be an unquoted
+literal.  Eval might be helpful here, but introduces at least as many
+problems as it solves.
+
+I tend to do that sort of thing with ``here's the prefix I'm interested
+in'' explicitly, though you can make eval work properly, with care.
+
+There are a couple of other problems.  The l* argument to s will be
+expanded against the list of files in the current directory before s is
+called, so you're matching againt the wrong thing;  if l* doesn't match
+anything in the current directory, you'll get the equivalent of 'l*'.
+
+--p
+
+Here's a crude toy, based on the thing you were writing:
+
+    fn commands-starting-with prefixes {
+	for (dir = $path) {
+	    for (file = $dir/$prefixes^*) {
+		if { access -x $file } {
+		    echo $file
+		}
+	    }
+	}
+    }
+
+    ; commands-starting-with ghost java
+    /home/jdk/bin/java
+    /home/jdk/bin/java-rmi.cgi
+    /home/jdk/bin/javac
+    /home/jdk/bin/javadoc
+    /home/jdk/bin/javah
+    /home/jdk/bin/javap
+    /usr/bin/ghostscript
+    /usr/bin/X11/ghostview
+    /usr/X11R6/bin/ghostview
+    ;
+
+I think it should be reasonable to do something like:
+
+    commands-matching '*view'
+
+by using eval, but that's left as an exercise for the reader.
+
+--p
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01047" href="msg01047.html">Re: Pattern extraction and Wildcard expansion</a></strong>
+<ul><li><em>From:</em> DaVinci &lt;bombadil@wanadoo.es&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01042" href="msg01042.html">Pattern extraction and Wildcard expansion</a></strong>
+<ul><li><em>From:</em> DaVinci &lt;bombadil@wanadoo.es&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01044.html">Re: Problems with ~ and ~~</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01046.html">Re: Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01042.html">Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01047.html">Re: Pattern extraction and Wildcard expansion</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01045"><strong>Date</strong></a></li>
+<li><a href="threads.html#01045"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

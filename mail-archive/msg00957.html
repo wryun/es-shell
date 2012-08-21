@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: A `new' es available -->
+<!--X-From-R13: "Vnenyq Vnapur&#45;Ayfra" <unapurNvzs.havg.ab> -->
+<!--X-Date: Thu, 10 Apr 1997 21:21:39 &#45;0400 -->
+<!--X-Message-Id: 970410213938.ZM8991@imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: xcd3eszmtnq.fsf@ra.cs.uchicago.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: A `new' es available</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00956.html">Date Prev</a>][<a href="msg00958.html">Date Next</a>][<a href="msg00955.html">Thread Prev</a>][<a href="msg00958.html">Thread Next</a>][<a href="maillist.html#00957">Date Index</a>][<a href="threads.html#00957">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: A `new' es available</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: A `new' es available</li>
+<li><em>From</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Thu, 10 Apr 1997 15:39:38 -0400</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00953.html">xcd3eszmtnq.fsf@ra.cs.uchicago.edu</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg00953.html">xcd3eszmtnq.fsf@ra.cs.uchicago.edu</a>&gt;</li>
+<li><em>Sender</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40math.ntnu.no">hanche@math.ntnu.no</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Bravo!  (Sounds of champagne corks popping in the background).
+
+A DEC alpha running OSF1 didn't like some protoypes.  I ended up
+changing the source a bit.  Find the patch below (the alpha wanted
+the second argument to getopt to be char *argv[], and getting const
+declarations to match seems to be a lost battle.  Maybe -Dconst= would
+be appropriate?)
+
+- Harald
+
+diff -ru /stores/ernie/es/src-0.9alpha2-local/main.c src-0.9alpha2-alpha/main.c
+--- /stores/ernie/es/src-0.9alpha2-local/main.c	Fri Mar 21 18:34:09 1997
++++ src-0.9alpha2-alpha/main.c	Thu Apr 10 18:16:06 1997
+@@ -9,7 +9,7 @@
+ Boolean gcinfo		= FALSE;	/* -I */
+ #endif
+ 
+-#if !HPUX &amp;&amp; !defined(linux) &amp;&amp; !defined(sgi)
++#if !HPUX &amp;&amp; !defined(linux) &amp;&amp; !defined(sgi) &amp;&amp; !defined(__osf__)
+ extern int getopt (int argc, char **argv, const char *optstring);
+ #endif
+ extern int optind;
+diff -ru /stores/ernie/es/src-0.9alpha2-local/prim-sys.c src-0.9alpha2-alpha/prim-sys.c
+--- /stores/ernie/es/src-0.9alpha2-local/prim-sys.c	Tue Oct 22 18:58:13 1996
++++ src-0.9alpha2-alpha/prim-sys.c	Thu Apr 10 18:15:07 1997
+@@ -139,7 +139,11 @@
+ 
+ #if BSD_LIMITS
+ extern int getrlimit(int, struct rlimit *);
++#if defined(__osf__)
++extern int setrlimit(int,struct rlimit *);
++#else
+ extern int setrlimit(int, const struct rlimit *);
++#endif
+ 
+ typedef struct Suffix Suffix;
+ struct Suffix {
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00953" href="msg00953.html">A `new' es available</a></strong>
+<ul><li><em>From:</em> Soren Dayton &lt;csdayton@cs.uchicago.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00956.html">Re: A `new' es available</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00958.html">signal handling, killing background processes started under sub-shells</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00955.html">Re: A `new' es available</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00958.html">signal handling, killing background processes started under sub-shells</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00957"><strong>Date</strong></a></li>
+<li><a href="threads.html#00957"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

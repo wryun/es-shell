@@ -1,0 +1,172 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: is this my mistake or someone elses? -->
+<!--X-From-R13: "Xrsserl Q. Dbtref" <ebtrewNznvyubfg.pgeba.pbz> -->
+<!--X-Date: Tue, 29 Nov 1994 18:20:25 &#45;0500 -->
+<!--X-Message-Id: 9411292319.AA27916@stealth.ctron.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199411291449.JAA05458@netcom4.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: is this my mistake or someone elses?</title>
+<link rev="made" href="mailto:rogerj@mailhost.ctron.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00768.html">Date Prev</a>][<a href="msg00770.html">Date Next</a>][<a href="msg00764.html">Thread Prev</a>][<a href="msg00770.html">Thread Next</a>][<a href="maillist.html#00769">Date Index</a>][<a href="threads.html#00769">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: is this my mistake or someone elses?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40netcom.com">haahr@netcom.com</a> (Paul Haahr)</li>
+<li><em>Subject</em>: Re: is this my mistake or someone elses?</li>
+<li><em>From</em>: &quot;Jeffrey C. Rogers&quot; &lt;<a href="mailto:rogerj%40mailhost.ctron.com">rogerj@mailhost.ctron.com</a>&gt;</li>
+<li><em>Date</em>: Tue, 29 Nov 1994 18:19:33 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: Your message of &quot;Tue, 29 Nov 1994 09:49:25 EST.&quot;             &lt;199411291449.JAA05458@netcom4.netcom.com&gt; </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; I think the problem is that you should need to do a
+&gt; 	fd = fdmap(fd);
+&gt; after you've got the fd you want and before you actually use it for any
+&gt; I/O operations.  This is part of the deferred fd mapping system which is
+&gt; used to allow redirections, etc, to run in the context of a parent shell
+&gt; and not require forking for builtins with redirections.
+
+Ok, that gets my read to work with arbitrary descriptors properly.  Now more 
+questions about file descriptors:
+
+ - Is there any way to make open descriptors hang around and remain open 
+between commands, or permanently (until otherwise affected) with exec?
+For example, this is in rc:
+; touch food
+; cat food
+; exec &lt;[4] food
+; cat &lt;[0=4]
+; cat &gt;&gt; food
+pizza 
+taco
+; cat &lt;[0=4]
+pizza
+taco
+; cat &lt;[0=4]
+; cat &gt;&gt; food
+burger king
+mcdonalds
+; cat &lt;[0=4]
+burger king
+mcdonalds
+; cat &lt;[0=4]
+; exec &lt;[4=]
+; cat &lt;[0=4]
+dup2: Bad file number
+; 
+
+fd 4 remains open (and with the same file pointer, as you would expect - that 
+could be a neat way to check your mail) in between commands, and only gets the 
+dup error after fd4 is explicitly closed. But in es:
+
+; exec &lt;[4] food
+; cat &lt;[0=4]
+dup: Bad file number
+; 
+
+It would seem that the fds get closed in between commands. For a much more 
+common/useful example, in a shell script:
+exec &gt;[1] /dev/null &gt;[2] /dev/null
+.
+.
+exec &gt;[1=0] &gt;[2=0]
+
+to temporarily disable all output. But it doesn't work.
+
+ - should writing to a closed file descriptor really be a fatal error?
+
+; echo &gt;[1=]
+write: Bad file number
+&lt;shell exits&gt;
+
+And you can't even unwind-protect it, because it just exits (line 288, print.c)
+
+ - why can't %parse read from somewhere other than the terminal? 
+
+; fork {echo &lt;={%parse &lt;etest}}
+input.c:210: assertion failed (in-&gt;fd &gt;= 0)
+abort--core dumped
+; 
+
+Without the fork it just reads from the terminal (I assume because of the 
+deferred fd system).  This probably isn't much of an issue, as there's not too 
+many places where it would be used (implementing . in the shell comes to 
+mind), but when it's supposed to be extensible, why a restriction like this? 
+
+Are the assertions over-protective (some seem to be - in gcndup, for example), 
+or are they generally just killing you before you would be otherwise?
+
+&gt; Nice hack.  Tell me how you like working with your read primitive, once
+&gt; you get past this bug I threw in your way.
+
+Thanx.  I'll post my es version of ash (adventure shell) once I finish it ;-)
+
+One note about my read prim - the buffered reading (using the readctl prim) 
+doesn't work _quite_ right. (correct behavior can be reverted to by setting 
+the bufsiz to 0, which doesn't use any nested pointers or anything).  Anyone 
+care to debug it?
+
+Diversion
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00770" href="msg00770.html">Re: is this my mistake or someone elses?</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00768.html">Re: es bug</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00770.html">Re: is this my mistake or someone elses?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00764.html">is this my mistake or someone elses?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00770.html">Re: is this my mistake or someone elses?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00769"><strong>Date</strong></a></li>
+<li><a href="threads.html#00769"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

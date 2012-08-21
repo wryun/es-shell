@@ -1,0 +1,152 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: "cdpath" searching, and pushd/popd too -->
+<!--X-From-R13: Rbht.ZnaqnhreNSat.Eha.QA[ (Rbht Znaqnhre) -->
+<!--X-Date: Tue, 25 May 1993 22:39:59 &#45;0400 -->
+<!--X-Message-Id: 9305260239.AA25670@morocco.Eng.Sun.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: &quot;cdpath&quot; searching, and pushd/popd too</title>
+<link rev="made" href="mailto:Doug.Landauer@Eng.Sun.COM">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00520.html">Date Prev</a>][<a href="msg00522.html">Date Next</a>][<a href="msg00513.html">Thread Prev</a>][<a href="msg00558.html">Thread Next</a>][<a href="maillist.html#00521">Date Index</a>][<a href="threads.html#00521">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: &quot;cdpath&quot; searching, and pushd/popd too</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: &quot;cdpath&quot; searching, and pushd/popd too</li>
+<li><em>From</em>: <a href="mailto:Doug.Landauer%40Eng.Sun.COM">Doug.Landauer@Eng.Sun.COM</a> (Doug Landauer)</li>
+<li><em>Date</em>: Tue, 25 May 1993 22:39:55 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; Myself, I have become addicted to pushd and popd, but I will not
+&gt; suggest adding them to es.
+
+Likewise.  *ALL* of my change-dir commands do a &quot;pushd&quot;-equivalent.
+I use a &quot;z&quot; command instead of &quot;cd&quot; and it *always* pushes the directory.
+
+&gt; Indeed I find them somewhat painful to
+&gt; use, even though I use them frequently:  Getting back to a particular
+&gt; directory requires a `dirs' followed by careful counting to figure out
+&gt; which number to give to `pushd'.
+
+Counting!?  Boy am I glad I never had to use csh and get my brain
+damaged that way.  :-).  [I used ksh for seven years, and got my
+brain damaged *that* way.]  Anyway, let a little bit of es code do
+that search!
+
+I have a &quot;zq&quot; command which takes a fragment of a directory pathname,
+and does the chdir, back to the first stack directory that matches your
+fragment.  It's much easier to use, since I usually either remember a
+unique piece of the directory name, or I can easily see it from a &quot;zc&quot;
+(like &quot;dirs&quot; but one per line) listing.
+
+&gt; This is still experimental, but I would like to know what others think
+&gt; of the idea and what other solutions to the same problem people have
+&gt; come up with.
+
+Since mine happens all automatically, without premeditation, whenever
+I move around, and it's still very easy to get back to any directory
+I've been in that session, I find it very easy to use.  If there's
+interest, I may find the time to sanitize &amp; share the es code that does
+this.  It's pretty easy to do, though -- much easier in es than it
+was in [gasp] ksh.
+
+&gt; Oh, there is one problem with this, as well as with the classical
+&gt; pushd/popd, and with back to:  We have a system where lots of file
+&gt; system are NFS mounted using the automounter.  Now trying to cd back
+&gt; to a directory that I didn't visit for a while can easily fail, as I
+&gt; haven't save the version of the path that will trigger the automounter
+&gt; to remount the volume.  Any good solutions for that one?
+
+I don't understand the problem.  Nearly every directory I use is also
+automounted, and I never run into this.  Maybe it's because I always save
+the directories' full pathnames?
+
+The transcript below is a wee bit confusing, because &quot;zc&quot; prints out the
+directory list in the form of &quot;z&quot; commands, to make it easier to pick/put
+them with a mouse; and because if the directory is under one of my most-
+commonly-used variables, I keep it condensed in '$varname' form.
+
+: /tmp ; z /usr/sbin
+: /usr/sbin ; z /etc
+: /etc ; z $wx
+: $wx ; zc
+z $wx
+z /etc
+z /usr/sbin
+z /tmp
+: $wx ; zq r/s
+z /usr/sbin
+: /usr/sbin ; zc
+z /usr/sbin
+z $wx
+z /etc
+z /tmp
+: /usr/sbin ;
+
+Anyway, hope this gives you some ideas.  Let me know if it'd be worth the
+effort to post &quot;z&quot; and friends.
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+Doug.Landauer@sun.com | &quot;Wow, look at the grass stains on my skin.  I say, if
+ SUNW[STE]-&gt;SunPro::  | your knees aren't green by the end of the day, you
+  Languages.IPE(C++); | ought to seriously re-examine your life.&quot; -- Calvin
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00558" href="msg00558.html">Re: &quot;cdpath&quot; searching, and pushd/popd too</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00520.html">Re: creature = `feep</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00522.html">Re: creature = `feep</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00513.html">Re: &quot;cdpath&quot; searching, and pushd/popd too</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00558.html">Re: &quot;cdpath&quot; searching, and pushd/popd too</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00521"><strong>Date</strong></a></li>
+<li><a href="threads.html#00521"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: feature to remove: free carets -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Sun, 30 May 1993 15:39:32 &#45;0400 -->
+<!--X-Message-Id: 9305301940.AA25844@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: feature to remove: free carets</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00595.html">Date Prev</a>][<a href="msg00597.html">Date Next</a>][<a href="msg00594.html">Thread Prev</a>][<a href="msg00610.html">Thread Next</a>][<a href="maillist.html#00596">Date Index</a>][<a href="threads.html#00596">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: feature to remove: free carets</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: feature to remove: free carets</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Sun, 30 May 1993 15:40:20 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>i'm opposed to removing free carets.  when writing scripts, i make a lot
+(but far from all) of my carets explicit, but on the command line i just
+type things and the carets work.  i'd hate to see (for example) things
+like
+	$f/AGaramond/Regular/font.ps
+	$i.c
+	../es-0.83/$i
+stop working.  i use a free caret in 50% of the uses of $ in my $history
+file, based on my skipping around.
+
+if you want to see what es is like without free carets, change the
+#define of InsertFreeCaret() in token.c to a no-op and try it for
+a while.  see if you really use the free carets as infrequently as
+you think you do.
+
+(to be more specific, change the definition to
+	#define	InsertFreeCaret()	NOP
+at roughly line 21 of token.c)
+
+i'm willing to seriously participate in a discussion on the topic of
+removing free careting from es (with the above stated opposition, though
+i am flexible:  i did change my position on cdpath, for example), but
+i will only pay attention to opinions from people who use *as their
+interactive shell* the hacked version of es described above for a week
+before they say anything.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00610" href="msg00610.html">Re: feature to remove: free carets</a></strong>
+<ul><li><em>From:</em> Steven M Rezsutek &lt;steve@baloo.gsfc.nasa.gov&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00595.html">Re: feature to remove: free carets</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00597.html">Re: feature to remove: free carets</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00594.html">Re:  feature to remove: free carets</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00610.html">Re: feature to remove: free carets</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00596"><strong>Date</strong></a></li>
+<li><a href="threads.html#00596"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

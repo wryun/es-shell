@@ -1,0 +1,106 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: rsh and (lack of) startup files -->
+<!--X-From-R13: Vnenyq Vnapur&#45;Ayfra <unapurNvzs.havg.ab> -->
+<!--X-Date: Mon, 25 Oct 1993 11:45:16 &#45;0400 -->
+<!--X-Message-Id: 199310251546.AA06129@chanur.imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>rsh and (lack of) startup files</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00707.html">Date Prev</a>][<a href="msg00709.html">Date Next</a>][<a href="msg00707.html">Thread Prev</a>][<a href="msg00709.html">Thread Next</a>][<a href="maillist.html#00708">Date Index</a>][<a href="threads.html#00708">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>rsh and (lack of) startup files</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: rsh and (lack of) startup files</li>
+<li><em>From</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Mon, 25 Oct 1993 11:46:30 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>The strategy adopted by es of only reading the .esrc file if es is a
+login shell seems reasonable much of the time, since subshells inherit
+functions and variables through the environment.  However, when you
+run `rsh machine command ...' this causes all sorts of troubles,
+because you're only given a rather minimal path on the remote machine,
+and the shell now does not source a file that you can use for the
+purpose.  One workaround is to use the following little function in
+place of rsh:
+
+fn res host cmd {rsh $host . '.!' $cmd}
+
+where .! is a mini version of my .esrc which executes its argument
+vector after setting up the environment.
+
+I am not really happy with this solution, though, since it requires me
+to use different commands depending on whether es is my login shell on
+the remote machine or not (as a rule, I use es as login shell only on
+machines where I have root privileges).
+
+I would welcome other suggestions on how to solve this sticky little
+problem, as well as a discussion on whether es should always source a
+file on startup (of course, it could do that in a predefined function
+that the user may redefine, so no init files are sourced in a
+subshell.  It could even redefine itself, so it only happens in
+situations like the rsh, or similar situations).
+
+- Harald
+
+PS.  The silence has been deafening here lately.  Everybody holding
+their breath waiting for a new version of es?  This could be dangerous
+to your health!   :-)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00707.html">Prettyprinter, anybody?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00709.html">Re: rsh and (lack of) startup files</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00707.html">Prettyprinter, anybody?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00709.html">Re: rsh and (lack of) startup files</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00708"><strong>Date</strong></a></li>
+<li><a href="threads.html#00708"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

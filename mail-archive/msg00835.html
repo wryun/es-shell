@@ -1,0 +1,109 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Settor functions and initialization -->
+<!--X-From-R13: "Vnenyq Vnapur&#45;Ayfra" <unapurNvzs.havg.ab> -->
+<!--X-Date: Thu, 11 May 1995 18:18:27 &#45;0400 -->
+<!--X-Message-Id: 9505120018.ZM12063@chanur.imf.unit.no -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9505112207.ZM12050@chanur.imf.unit.no -->
+<!--X-Reference: 9505112144.AA18552@tepui.cli.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Settor functions and initialization</title>
+<link rev="made" href="mailto:hanche@imf.unit.no">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00834.html">Date Prev</a>][<a href="msg00836.html">Date Next</a>][<a href="msg00834.html">Thread Prev</a>][<a href="msg00836.html">Thread Next</a>][<a href="maillist.html#00835">Date Index</a>][<a href="threads.html#00835">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Settor functions and initialization</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:friedman%40gnu.ai.mit.edu">friedman@gnu.ai.mit.edu</a></li>
+<li><em>Subject</em>: Re: Settor functions and initialization</li>
+<li><em>From</em>: &quot;Harald Hanche-Olsen&quot; &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+<li><em>Date</em>: Thu, 11 May 1995 18:18:02 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: friedman@gnu.ai.mit.edu (Noah Friedman)        &quot;Settor functions and initialization&quot; (May 11, 17:44)</li>
+<li><em>References</em>: &lt;<a href="msg00833.html">9505112207.ZM12050@chanur.imf.unit.no</a>&gt; 	&lt;<a href="msg00834.html">9505112144.AA18552@tepui.cli.com</a>&gt;</li>
+<li><em>Sender</em>: Harald Hanche-Olsen &lt;<a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>| Calling settors at startup time shouldn't be necessary at all, since all
+| the variables should be inherited from the environment unchanged (modulo
+| present bugs in closure preservation).
+
+Not true.  Consider the sequence
+
+; su
+Password:
+# es
+; 
+
+Doing su root changes $PATH. Entering es should then set $path
+accordingly. (As I have previously pointed out, exporting both PATH and
+path is wrong since in this case the result depends on which of set-path
+and set-PATH gets called first.)
+
+I am sure you can think of other cases where an intermediate process
+changes the environment so that an inferior es will have to change it back
+in order to keep things consistent.
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00833" href="msg00833.html">Settor functions and initialization</a></strong>
+<ul><li><em>From:</em> &quot;Harald Hanche-Olsen&quot; &lt;hanche@imf.unit.no&gt;</li></ul></li>
+<li><strong><a name="00834" href="msg00834.html">Settor functions and initialization</a></strong>
+<ul><li><em>From:</em> friedman@gnu.ai.mit.edu (Noah Friedman)</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00834.html">Settor functions and initialization</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00836.html">Re: Settor functions and initialization</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00834.html">Settor functions and initialization</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00836.html">Re: Settor functions and initialization</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00835"><strong>Date</strong></a></li>
+<li><a href="threads.html#00835"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

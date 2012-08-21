@@ -1,0 +1,120 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: split '' -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Thu, 15 Oct 1992 14:34:49 &#45;0400 -->
+<!--X-Message-Id: 9210151834.AA03876@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>split ''</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00062.html">Date Prev</a>][<a href="msg00064.html">Date Next</a>][<a href="msg00062.html">Thread Prev</a>][<a href="msg00064.html">Thread Next</a>][<a href="maillist.html#00063">Date Index</a>][<a href="threads.html#00063">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>split ''</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: split ''</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Thu, 15 Oct 1992 14:34:38 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>OK, here's another grotesque modification to es.  This one makes it
+possible to split a string into a list of its single characters, making
+%split symmetric with %flatten with respect to separator ''.
+
+	;; a = &lt;&gt;{%split '' 'xyz'}
+	;; echo $a
+	x y z
+
+The %fsplit operator isn't affected, so it would yield &quot;xyz&quot; in the above
+example - I don't know if that's good or bad, it just came out that way.
+I'm not dying to use this for some particular problem, it just seems
+like a useful way to approach some kinds of string manipulations.  Also
+I haven't thought very hard about what circumstances could produce this
+situation, other than to verify that `{} still works.
+
+The patch below is against version 0.67, which is what's available on
+white.utcs.toronto.edu.  I gather there are more recent versions -
+the discussion yesterday about formatting &quot;if&quot; blocks apparently involved
+more recent versions, since 0.67 still requires the } { to be on the same
+line, parenthesized or not.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+-------------------------------
+*** split.c.dist	Thu Oct  1 00:25:38 1992
+--- split.c	Thu Oct 15 11:01:13 1992
+***************
+*** 95,100 ****
+--- 95,108 ----
+  			bufend = bufp + buffer.len;
+  			*bufp++ = c;
+  			assert(bufp + 1 &lt; bufend);
++ 			if (!ifs[0]) {
++ 				Term *term;
++ 				*bufp++ = '\0';
++ 				term = mkterm(sealbuffer(bufp), NULL);
++ 				value = mklist(term, value);
++ 				bufend = bufp = NULL;
++ 				inword = FALSE;
++ 			}
+  		}
+  	}
+  
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00062.html">Re: coding style</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00064.html">Re:  split ''</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00062.html">Re: coding style</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00064.html">Re:  split ''</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00063"><strong>Date</strong></a></li>
+<li><a href="threads.html#00063"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

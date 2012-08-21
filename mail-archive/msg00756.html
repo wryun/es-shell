@@ -1,0 +1,126 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es bug -->
+<!--X-From-R13: Rnivq [p@no <zpanoNanf.anfn.tbi> -->
+<!--X-Date: Thu, 22 Sep 1994 14:31:16 &#45;0400 -->
+<!--X-Message-Id: 199409221831.LAA16242@dinsdale.nas.nasa.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es bug</title>
+<link rev="made" href="mailto:mcnab@nas.nasa.gov">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00755.html">Date Prev</a>][<a href="msg00757.html">Date Next</a>][<a href="msg00758.html">Thread Prev</a>][<a href="msg00757.html">Thread Next</a>][<a href="maillist.html#00756">Date Index</a>][<a href="threads.html#00756">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es bug</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: es bug</li>
+<li><em>From</em>: David McNab &lt;<a href="mailto:mcnab%40nas.nasa.gov">mcnab@nas.nasa.gov</a>&gt;</li>
+<li><em>Date</em>: Thu, 22 Sep 1994 14:31:13 -0400</li>
+<li><em>In-reply-to</em>: Your message of Thu, 22 Sep 94 11:56:43 MDT </li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Tom (tromey@busco.lanl.gov) wrote:
+|First, this isn't what happens.  Here is an example:
+|
+|; cd /tmp
+|; mkdir z
+|; cd z
+|; mkdir x y
+|; touch a b
+|; echo */
+|a/ b/ x/ y/
+|; 
+
+Not on my machine.  Maybe your es(1) is expanding the &quot;*&quot; to
+all the file names in the directory, treating the expansion
+as a list, and appending the &quot;/&quot;.  If you type echo h* in
+that directory do you get &quot;ha hb hx hy&quot; as output?
+
+|Second, I don't think of the &quot;/&quot; as the thing that is printed by ls
+|-F.  I think of it as a valid character in a directory name.  I know
+|this doesn't work on all systems, but on my Sun I can type &quot;rmdir f/&quot;,
+|and the directory will be removed.  (note that &quot;rmdir */.&quot; doesn't
+|work).
+
+You can think of it that way, but you are not being precise.
+You are confusing a psuedo-convention with &quot;reality&quot;.  If
+you opendir() the directory and read it there will be no
+trailing &quot;/&quot; characters.  If you type &quot;echo *&quot; or &quot;/bin/ls&quot;
+there will be no trailing &quot;/&quot;, or &quot;@&quot; for symbolic links, or
+&quot;=&quot; for UNIX domain sockets.
+
+The fact that rmdir(1) recognizes &quot;f/&quot; as a filename is an
+artifact of rmdir(1)'s parsing of its arguments, probably
+originating in its developers using csh(1) and wanting to be
+able to remove directories by doing things like &quot;rmdir */&quot;.
+
+|Third, the &quot;a/&quot; and &quot;b/&quot; values are completely bogus.  Is there any
+|other case where globbing yields completely invalid results?  I don't
+|think so.
+
+Yes, in the case where csh considers &quot;/&quot; to be part of a
+filename. :-)
+
+David McNab
+Parallel Systems Support
+CSC at NAS, NASA/Ames
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00757" href="msg00757.html">Re: es bug</a></strong>
+<ul><li><em>From:</em> tromey@busco.lanl.gov (Tom Tromey)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00755.html">Re: es bug</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00757.html">Re: es bug</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00758.html">Re: es bug</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00757.html">Re: es bug</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00756"><strong>Date</strong></a></li>
+<li><a href="threads.html#00756"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

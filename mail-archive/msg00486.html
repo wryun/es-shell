@@ -1,0 +1,231 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: everyone's least favorite creatures -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Mon, 24 May 1993 21:00:11 &#45;0400 -->
+<!--X-Message-Id: 9305250100.AA05227@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: everyone's least favorite creatures</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00485.html">Date Prev</a>][<a href="msg00487.html">Date Next</a>][<a href="msg00368.html">Thread Prev</a>][<a href="msg00505.html">Thread Next</a>][<a href="maillist.html#00486">Date Index</a>][<a href="threads.html#00486">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: everyone's least favorite creatures</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: everyone's least favorite creatures</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Mon, 24 May 1993 21:00:50 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Noah wrote, a long time ago
+&gt; &gt;what features of the language would you (everyone on the list) remove?
+
+&gt; 1) `%cdpathsearch', `%is-absolute', and the version of `cd' which use them.
+&gt;    Related things that can be eliminated are `set-cdpath', `set-CDPATH',
+&gt;    and the `cdpath' variable.
+
+i don't agree, but i could be convinced.  what do other people think.
+my first reaction was to keep these in the shell for cultural compatibility
+with other shells.
+
+&gt;    I don't see any good reason for making `pwd' a builtin, by the way.
+
+pwd won't be builtin.  (did anyone ever really suggest this?  i hope i didn't
+encourage it.)
+
+&gt; 2) The `apids', `var', `vars', and `whatis' commands.  Typing convenience
+&gt;    isn't a good enough rationale for having them.  If people want them,
+&gt;    they can put them in their .esrc (I see no reason why more sample .esrc
+&gt;    files can't be in the distribution).  Particularly for `apids' and
+&gt;    `var', doing by hand what they do is simply not that much effort. 
+
+vars: it's more than the others.  it actually does something useful.
+
+whatis:  catching the exception is enough to justify its presence.
+(did 0.84 catch the exception?  my current version does.)
+
+apids, var:  these two are not that important.  should they disappear?
+(note that %apids and %var would stay.)
+
+&gt;    I notice that %background seems to maintain a variable `apid' which may
+&gt;    in fact be different from what $&amp;apids returns.  I suggest one or the
+&gt;    other be eliminated.
+
+this is for compatibility with rc.  ($apid is exactly the same as rc's
+$apid, where ``apids'' is the same as rc's ``echo $apids'')  i don't
+do stuff in the background very often, so i use these just about never.
+
+(in fact, consulting my history log, i find 33 out of 19036 commands
+were run in the background.  of those, all but 12 were for testing
+es's implementation of backgrounding, and all but 2 of the remaining
+commands were ``rm -r'' or ``tail -f''.  when pushed, i would get
+backgrounding out of es before many of the other constructs under
+discussion, and replace it with an external program that forked
+and returned right away.)
+
+who uses these constructs?  are they useful?
+
+&gt; 3) Why are `true' and `false' primitives?  Aren't
+&gt;         fn true { result 0 }
+&gt;         fn false { result 1 }
+&gt;    good enough?  Maybe we don't really need them at all, in fact, since you
+&gt;    could just use {result 0} or {result 1} explicitly in place of them.
+
+i think they shouldn't be primitives, but should still be built into the
+language.  $&amp;true and $&amp;false are leaving the language soon.
+
+&gt; 4) Given that we have catch and throw, do we necessarily need
+&gt;    unwind-protect as a primitive?  (Do we need it at all?)  I *think* this
+&gt;    is a reliable implementation:
+&gt;         fn unwind-protect body cleanup {
+&gt;            catch @ args { $cleanup; throw $args } { $body }
+&gt;            $cleanup
+&gt;         }
+
+now that $&amp;noreturn has made it into the language, we probably don't
+need unwind-protect to be a primitive, but a correct implementation
+is hard so i'd like to retain it, but not as a primitive.
+
+&gt; 5) Since you can't change the state of the `-n', `-v', and `-x' flags
+&gt;    during the lifetime of the shell invocation, I think they and the
+&gt;    various `%eval-noprint', etc. dispatchers ought to be redone.  One idea
+&gt;    is to have a single dispatch function called %dispatch which users can
+&gt;    redefine to do what the various aforementioned flags normally cause to
+&gt;    happen (which is generally thoroughly trivial).
+
+perhaps.  i need to think more about this.
+
+btw, note that the value of those flags is effectively locally bound.
+each new interpreter invocation gets a new one.  (``. -vx file'' works,
+for example.)
+
+&gt; 6) Any history-related functions or variables.  Tacking them into the REPL
+&gt;    is trivial for those people who really want history mechanisms.
+
+difficult since %parse can't run es code.  (this is an implementation
+issue.)  $&amp;sethistory and $history can probably be moved to initial.es
+when/if the parser is revised, but that's a post-1.0 feature.
+
+&gt; 7) I have mixed feelings about getting rid of the read syntax for special
+&gt;    characters (e.g. `\n').  But I lean toward eliminating them for the sake
+&gt;    of simplicity and reliability.
+
+this is the one piece of es that nobody besides me seems to like at all.
+the complexity is very small, and it has some real advantages if you write
+scripts which include special characters.  i use \n all the time as the
+first argument to ``.
+
+&gt;    Sometimes you just *have* to use eval
+&gt;    (although, fortunately, it's necessary far less often in es than it is
+&gt;    in sh).
+
+very, very rarely.  the only eval in my own code is used for the output
+of -p and --p.  that's not to say that every use of eval is wrong, but
+you should think twice before using it.  it'll probably bite you.
+(i consider eval es's version of goto.)
+
+remember, the official definitions of scheme do not include an eval
+procedure, though almost every implementation does.
+
+&gt;    When you do, having special read syntaxes for those characters
+&gt;    is a major screw.
+
+really.  'splain further.  is it any worse than single quote?
+
+&gt; 8) Comments in initial.es suggest you are thinking of providing a getopt
+&gt;    builtin of some sort.  Please don't---getopt routines are invariably
+&gt;    deficient in various ways.  For example, would your primitive support
+&gt;    GNU-style long options (which I would personally require)?
+&gt;    Getopt can be done in es script, with maybe just a trivial amount of
+&gt;    help from sed.  I don't think it's worth adding as a builtin. 
+
+the comment is just idle musing.  i don't like the way that vars deals
+with its options, but adding getopt to es is unnecessary.  an external
+function would be useful, though.
+
+fixed in 0.9.  (the comment was removed.)
+
+
+and then, in a later note, Noah also writes
+
+&gt; $&amp;split and $&amp;flatten are arguably unnecessary, except possibly for
+&gt; performance reasons (though I haven't noticed much of a difference in the
+&gt; average case).  %split and %flatten can be implemented as follows:
+&gt;	...
+&gt; These could go in initial.es instead of using C primitives.
+
+the semantics don't exactly match, but it's not a big deal.  
+
+&gt; Another thought: Unless the \n, etc. hackery is removed from the shell
+&gt; (which I think I favor doing), get rid of the -n option to echo, and make
+&gt; echo not supply a terminating newline by default.  Lines which require a
+&gt; newline can do so explicitly.
+
+echo has exactly the right behavior right now, imho.  on the other hand,
+-- and -n interpretation could be done in initial.es rather than in $&amp;echo,
+and $&amp;echo could be a straight call to write(1, ...).  doesn't seem
+to make a big difference to me write now, so for now i'll keep it the
+way it is.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00505" href="msg00505.html">Re: everyone's least favorite creatures</a></strong>
+<ul><li><em>From:</em> hanche@ams.sunysb.edu (Harald Hanche-Olsen)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00485.html">Re:  Hierarchical lists, again</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00487.html">Re:  read in es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00368.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00505.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00486"><strong>Date</strong></a></li>
+<li><a href="threads.html#00486"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

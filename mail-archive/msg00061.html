@@ -1,0 +1,119 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: coding style -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Wed, 14 Oct 1992 19:35:09 &#45;0400 -->
+<!--X-Message-Id: 9210142334.AA23250@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: coding style</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00060.html">Date Prev</a>][<a href="msg00062.html">Date Next</a>][<a href="msg00060.html">Thread Prev</a>][<a href="msg00062.html">Thread Next</a>][<a href="maillist.html#00061">Date Index</a>][<a href="threads.html#00061">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: coding style</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: coding style</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 14 Oct 1992 19:34:48 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>|	if (
+|		{~ $#TERM 0 || ~ $TERM ''}	{ TERM = unknown }
+|		{~ $TERM *' '*}			{ TERM = &lt;&gt;{%flatten - &lt;&gt;{%split ' ' $TERM}} }
+|		{~ $TERM *vt520}		{ TERM = vt52 }
+|	)
+
+Whew, that's much better.  I broke the &quot;then&quot; clauses onto new lines, because
+multi-column code is too much work for me to keep aligned.  That leaves only
+the relatively trivial issue of where to put the brackets surrounding a block
+with more than one line.
+
+| steve's suggestion, which i love &amp; endorse is to take advantage of the fact that
+| within parens, newlines are treated just as spaces, so we don't need to use the
+| hanging braces (open brace at end of line) to continue a line.  this could be
+| written even more lispish as
+|	(if
+|		...
+|	)
+| but i think that that obfuscates rather than elucidates.
+
+I'm not too offended by it.  It has the advantage of being more obviously
+independent of &quot;if&quot;, that is, one could see &quot;if (&quot; and think ``Oh, right,
+the &quot;if (foo) {bar}&quot; statement, I know it well.''
+
+| two notes:  (1) i recommend against using %or and %and unless you really
+| want them.  if is usually more clear.
+
+Right, I just missed the implicit &quot;else&quot; in &quot;if&quot;, 
+
+|	i tend to try to stay away from using % commands except
+| when redefining them or a few other special purposes.  &amp;&amp; and || work in es, and
+| %or and %and are mainly around to support that funky syntax.  (2) i'm not sure
+| that my TERM setting code above does exactly what yours did---i tend to not like
+| using eval.  here i go against what i recommended earlier this paragraph and
+| used %flatten and %split, because there is no syntax to access them directly.
+
+It does, and I don't particularly either.  Minutes later I got onto that one
+myself.  I was using &quot;eval&quot; in the rc code this was based on.
+
+I see that there's also an &quot;fsplit&quot;?
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00060.html">Re: coding style</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00062.html">Re: coding style</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00060.html">Re: coding style</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00062.html">Re: coding style</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00061"><strong>Date</strong></a></li>
+<li><a href="threads.html#00061"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

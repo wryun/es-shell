@@ -1,0 +1,385 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Some comments about how the Eighth Edition version of upas worked -->
+<!--X-From-R13: Xbua ([bfg zbqrea pbzchgref jbhyq oernx vs lbh fgbbq ba gurz) [npxva <wbuaN	pvivy.fh.bm.nh> -->
+<!--X-Date: Sun, 21 Feb 1993 07:26:16 &#45;0500 -->
+<!--X-Message-Id: 199302212255.8997.es.bafor@civil.su.oz.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9302180101.AA00440@utopia.mv.us.adobe.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Some comments about how the Eighth Edition version of upas worked</title>
+<link rev="made" href="mailto:john@civil.su.oz.au">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00212.html">Date Prev</a>][<a href="msg00214.html">Date Next</a>][<a href="msg00211.html">Thread Prev</a>][<a href="msg00210.html">Thread Next</a>][<a href="maillist.html#00213">Date Index</a>][<a href="threads.html#00213">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Some comments about how the Eighth Edition version of upas worked</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: The es Mailing List &lt;<a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>&gt;</li>
+<li><em>Subject</em>: Some comments about how the Eighth Edition version of upas worked</li>
+<li><em>From</em>: John (Most modern computers would break if you stood on them) Mackin &lt;john@	civil.su.oz.au&gt;</li>
+<li><em>Date</em>: Sun, 21 Feb 1993 06:55:53 -0500</li>
+<li><em>In-reply-to</em>: &lt;<a href="msg00209.html">9302180101.AA00440@utopia.mv.us.adobe.com</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>    From: Paul Haahr &lt;haahr@mv.us.adobe.com&gt;
+    Date: Thu, 18 Feb 1993 12:01:16 +1100
+    Message-Id: &lt;<a href="msg00209.html">9302180101.AA00440@utopia.mv.us.adobe.com</a>&gt;
+
+    [...]
+    (for any of you that used it, upas, the v8 mailer, did something like
+    this for mail address rewriting, which was nice in theory, but i've
+    heard criticisms of it in practice.  i don't know how it dealt with
+    the multiple layers of () that rfc822 allows.)
+
+I did a lot of work with upas while we were running Eighth Edition on
+a 780 at Computer Science here at the University of Sydney in 1989-90.
+I was responsible for mail there then, and I used a heavily-modified
+version of upas successfully to do mail delivery for a large user
+population.  The way the rewrite file worked was, it had six fields per
+line.  The first field was an RE to match to trigger the use of this line --
+if it didn't match, it would go on to the next line.  The answer to
+Paul's puzzlement about comments is that this RE was matched against
+_addresses_, not headers.  As delivered, upas knew next to nothing
+about RFC822; it had input and output conversions that would make
+a 1127-style (Seventh Edition with just a From_ line) mail item from
+an RFC822 item (basically by throwing out all the headers), and vice
+versa (by generating some perhaps plausible headers), but that's all.
+That's why I modified it -- I turned it into a fully-822-capable
+and compliant (and indeed, strictly enforcing!) system.  So even
+in the case where there were complicated addresses in the headers,
+they'd be turned into canonical intersystem form (cf. RFC822, sec.
+3.1.4; especially see the note on page 8) before being matched
+against this RE, so comments were not an issue.  If a message
+was being sent to multiple addresses, each address would be
+processed on a separate pass through the rewrite file.
+
+The second field ... ah, to hell with all this typing.  I append
+a copy of mail.7 from my modified version of upas from all those
+years ago.  Enjoy.
+
+On a humourous note, one of the people fairly highly placed in
+the hierarchy of technical staff at Basser at that time absolutely
+loathed my modified version of upas _because_ it required 822
+conformant addresses.  He was (and still is, I suppose) in the
+habit of typing &quot;mail person.machine&quot;, with a dot where the @-sign
+should be, and due to various local considerations that had worked
+there until I installed that software.  (Well, it had worked for _some_
+addresses.  Clearly, he was unable to use that method to mail people who
+had dots in their local-parts.  I still remember having to do a mega-grep
+of our news spool to convince him that such people actually existed...)
+
+Anyway, he hated my new code 'cos it wouldn't allow him to continue
+with his broken, stupid habit.  I told him that if he couldn't change
+his habit he should write a personal front-end to turn the dot into an @.
+
+After he managed to have me sacked (not over this issue, and it took
+him a year to do it, what dedication), naturally enough, someone else
+had to be given the job of doing mail, and the first thing he told them
+to do was get rid of my code.  They did that by writing a delivery
+system from scratch.  That might have been a good move for someone with
+a deep understanding of mail.  For a graduate student with little understanding
+of anything, it was a total disaster.  I believe they are still considering
+how to get rid of _his_ code (he's subsequently left).
+
+Now we get to the funny bit: I don't know about now, but not so long ago,
+they were _still_ running my version of upas on one of their server machines.
+I suspect that they didn't even know they were doing it.  So I call it
+The Code That Would Not Die.
+
+OK,
+John.
+
+.TH MAIL 7
+.SH NAME
+mail \- address conventions and rewrite rules
+.SH DESCRIPTION
+.IR mail (1)
+accepts and converts among the addressing conventions of
+several computer networks, according to rules given in
+the file
+/usr/local/lib/upas/rewrite.
+Each line of the file is a rule, except as specified below.
+Blank lines and lines beginning with `#' 
+are ignored.
+.PP
+Each rewriting rule consists of (up to) 6 strings:
+.TP
+.I pattern
+An
+.IR ed (1)-like
+regular expression, with simple parentheses () playing the role
+of \e(\e) and with the + and ? operators of
+.IR egrep (1).
+The
+.I pattern
+is applied to mail addresses.
+.TP
+.I command
+An
+.IR ed (1)
+style replacement string to generate a
+command to deliver messages to the destination matched by the
+.I pattern.
+The substring
+.I `\|\es'
+is replaced by the address of the
+sender.
+The substrings
+.I `\|\eu'
+and
+.I `\|\eh'
+are replaced by the login name and host name of the
+sender, respectively.
+If the sender is local then the host name is null.
+The default is no command.
+.IP
+If the beginning of the command matches the string `MULTICAST\0',
+then instead of executing the command to deliver the message, the
+address is saved for later multicast delivery.  The remainder of the
+command must consist of a number, a colon, and a string.  The number
+is the
+.IR &quot;multicast class&quot; ,
+which specifies which multicast command will be used to deliver this
+address; see below.  The string, usually `&amp;', is the address to save
+for later substitution into the multicast command.
+.TP
+.I &quot;next hop&quot;
+An
+.IR ed (1)
+style replacement string that represents the name of
+next routing hop.
+The default is the empty string.
+See the section below on forwarding.
+.TP
+.I &quot;next address&quot;
+An
+.IR ed (1)
+style replacement string that represents the address
+as it will be seen at the next hop.
+The default is the empty string.
+See the section below on forwarding.
+.TP
+.I conversion
+The name of the conversion that must be performed
+before the message is piped to the 
+.IR command .
+If this field is empty, no conversion
+is performed.
+The only conversions now known are
+.IR rfc822 ,
+which makes the message conform to the
+ARPA RFC 822 mailer standard;
+and
+.IR ACSnet ,
+which makes the address in the From_ line
+into an ACSnet address (user@host.domain...).
+.TP
+.I system
+The name to use for the current system.
+The default name is found in
+.IR /etc/whoami .
+.PP
+Each field, except for
+.I pattern,
+is optional if it and all fields following it
+are to assume the default values.
+Any empty field (e.g. &quot;&quot;) assumes the default value.
+.PP
+When delivering a message,
+.I mail
+starts with the first rule and continues down the list until a pattern
+matches the destination address.
+If the rule contains no command, the mail is appended to the user's
+mailbox in the standard way (see
+.IR mail (1)).
+If the rule does contain a command, 
+.IR upas (8)
+starts the command and pipes the message to it,
+performing any requested conversion.
+.PP
+Forwarding is controlled using the
+.I &quot;next hop&quot;
+and
+.I &quot;next address&quot;
+fields and the forwarding files.
+Using these fields, the rewriting rules are recursively applied to 
+the source and destination addresses.
+If all hops in either source or destination are in the forwarding files,
+forwarding is allowed.
+If the forwarding files do not exist, blanket forwarding is assumed.
+.PP
+The
+.I pattern
+field (first field) of the line may take on one of several special values, in
+which case the line is not a rule but specifies something else, as follows:
+.TP
+.B TOPLEVEL
+Exactly one of these lines must be specified.  The rest of the line is a
+blank-separated list of domain names which are recognised by the address
+parser as top-level domains.
+.TP
+.B RELAYHOST
+The next field on the line specifies a host-part to deliver the address to
+if the local-part is not recognised on this host.  This provides an easy
+way to maintain aliases on only one machine: simply have all the other
+machines specify the machine with the aliases as the relayhost.
+.TP
+.B MULTICAST
+The first following field is the multicast class number, an integer
+identifying this type of multicasting.  The second field is the command
+to execute for the multicast delivery, with part of the command delimited
+by `\em{' and `}'; the characters between those brackets are repeated for
+each multicast destination.  Normally, there would be an `&amp;' somewhere
+between the
+brackets; the multicast hostname is substituted for the `&amp;'.
+The brackets themselves are not copied to the resulting command. 
+.SH EXAMPLES
+.ta 2m 4m
+.ig @@ \&quot; all the following is true at research but not at basser...
+Rewriting rules for major networks are:
+.PP
+network: UUCP (machine!machine!...!person)
+.IP
+^([^!]+)!([^!]+)$  \\1 \\
+.br
+	&quot;uux 2&gt;&gt;/tmp/uuxl \- \-a \\s \\1!rmail \\\\(\\2\\\\)&quot;
+.br
+^([^!]+)!((.+!)?([^!]+)![^!]+)$ \\4 &quot;uux \- \-a \\s \\1!rmail \\\\(\\2\\\\)&quot;
+.PP
+network: ARPANET (arpa!person@machine)
+.IP
+^arpa!(.+)$ csnet &quot;cs-inject \\1.csnet-relay&quot; rfc822
+.PP
+network: CSNET (csnet!person@machine)
+.IP
+^csnet!(.+)$ csnet &quot;cs-inject \\1.csnet-relay&quot; rfc822
+.PP
+network: CSNET or ARPANET (person@machine)
+.IP
+^.+[@%.][^@%.]+$ csnet &quot;cs-inject &amp;.csnet-relay&quot; rfc822
+.PP
+network: ACSNET (acsnet!person@machine.acsnet)
+.IP
+^acsnet!(.+)$ ACSnet &quot;acs-inject \\1&quot; rfc822
+.PP
+network: BITNET (bitnet!person@machine)
+.IP
+^bitnet!(.+)[.@](.+)$ csnet
+.br
+	&quot;cs-inject \\1%\\2.bitnet@wiscvm.arpa.csnet-relay&quot; rfc822
+.PP
+The address on incoming mail depends largely on 
+the originating mail program.
+However, the following can usually be relied upon
+to reach CS researchers at Bell Labs.
+.PP
+UUCP:  research!person
+.PP
+CSNET:  person@btl or person.machine@btl
+.PP
+ARPANET:  person@btl.csnet or person.btl@csnet-relay
+.PP
+ACSNET:  person@research or research!person
+.PP
+BITNET: person%btl.csnet@wiscvm
+.PP
+If in any of the above addresses, `person' is not on research, use
+`machine!...!person' in place of `person'.
+.@@
+ACSnet addresses are understood directly; to reach someone on an
+ACSnet host, just use person@host.domain..., and give a fully-qualified
+hierarchy if it is known.  Top-level domains are au (Australia), nz
+(New Zealand), and usa (just research.mh.nj.usa); but don't try to send mail to
+non-AT&amp;T US sites via research, it won't work.
+.PP
+A number of pseudo-domains are recognised in the topmost (rightmost)
+position in the address.  Mail for these is sent via an appropriate
+gateway.  In general, if a pseudo-domain is available for your address,
+you should use it; the gateway information will be updated as needed
+for the best route.  If you try to mail a person on a UUCP host as
+`person@machine.UUCP', and you get back a failure message saying that
+there is no route known to that host, you will need to supply an
+explicit UUCP path to a well-known host, and use the address
+`host1!host2!.\|.\|.\|!machine!person@munnari'.  The known
+pseudo-domains include: ARPA (obsolete, but a few hosts die hard),
+CSNET (use any available alternative in preference, as international
+CSNET traffic is considerably more expensive than other types),
+BITNET, UUCP (with auto-routing supplied at munnari, the
+international gateway at Melbourne University), MAILNET,
+EDU, COM, GOV, MIL, ORG, NET, JUNET, CDN, and SPAN.
+Internet country top-level domains (for example, US, CA, NL)
+are recognised; if the one you want doesn't work, or in general
+if the mail system fails to handle a domain-style Internet
+address you have been given, please mail postmaster.
+.PP
+Note that if mail, particularly international mail, is important
+to you, you should read the network newsgroup `aus.netstatus',
+in which important information concerning network link status
+is published.  Traffic in it is very low.
+.PP
+If you have any questions or problems regarding
+mail addressing, mail postmaster.
+.SH FILES
+.ta \w'/usr/local/lib/upas/rewrite 'u
+/usr/local/lib/upas/rewrite	the rewriting rules
+.SH &quot;SEE ALSO&quot;
+uucp(1), mail(1), upas(8)
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="00209" href="msg00209.html">Re:  syntax</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@mv.us.adobe.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00212.html">nuking `</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00214.html">es 0.8 is now released</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00211.html">Re:  syntax</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00210.html">Re:  syntax</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00213"><strong>Date</strong></a></li>
+<li><a href="threads.html#00213"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: call&#45;with&#45;current&#45;continuation -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Mon, 5 Oct 1992 17:44:23 &#45;0400 -->
+<!--X-Message-Id: 9210052146.AA08252@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: call-with-current-continuation</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00036.html">Date Prev</a>][<a href="msg00038.html">Date Next</a>][<a href="msg00036.html">Thread Prev</a>][<a href="msg00038.html">Thread Next</a>][<a href="maillist.html#00037">Date Index</a>][<a href="threads.html#00037">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: call-with-current-continuation</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: call-with-current-continuation</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Mon, 5 Oct 1992 17:46:07 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Scott writes, with John's AMEN!!
+&gt; The obvious response is that users would practically never actually use
+&gt; continuations that way.  The answer, as in scheme, is &quot;so what?&quot;
+&gt; Continuations are an invaluable abstraction for implementing language
+&gt; features, even if end users never touch them.
+
+i'm not sure that's true about continuations in the presence of fork and exec.
+on the other hand, people surely have said that about lambda, and i'm betting
+very hard that that's not true.
+
+as to Scott's concrete proposal about externalizing continuations by dumping
+the entire machine state to a file (actually, in the context of es, a string
+would make more sense), my first reaction was nausea, but, on second thought,
+it does make some sense, and could be quite nice for debugging, if the dumped
+form were readable.  i don't know, but we will consider it at the appropriate
+time in es's development.
+
+as for now, we have a shell to write.  as we've said many times so far, due to
+lack of time and the fact that what we're already doing with es is experimental
+enough that we don't know whether people will really want to use it, the first
+version will not be properly tail recursive or have first-class continuations.
+
+so, let's get this topic on the back burner.  we are interested in where v2
+es is going to go, but v1 is a more immediate concern.  please tell us, either
+by private mail or to the list, what you do think is missing from es.  knowing
+the source, job control will probably never be in the shell, but just about
+everything else is fair game.  of course, mechanisms which subsume other ones
+or allow us to move things from primitives to es are preferable.
+
+now back to regularly scheduled programming.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00038" href="msg00038.html">es v*1* features</a></strong>
+<ul><li><em>From:</em> John (_You_ hide, they seek.) Mackin &lt;john@civil.su.oz.au&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00036.html">Re: call-with-current-continuation</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00038.html">es v*1* features</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00036.html">Re: call-with-current-continuation</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00038.html">es v*1* features</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00037"><strong>Date</strong></a></li>
+<li><a href="threads.html#00037"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

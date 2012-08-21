@@ -1,0 +1,93 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: rsh and (lack of) startup files -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Mon, 25 Oct 1993 14:20:34 &#45;0400 -->
+<!--X-Message-Id: 9310251809.AA08216@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: rsh and (lack of) startup files</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00709.html">Date Prev</a>][<a href="msg00711.html">Date Next</a>][<a href="msg00713.html">Thread Prev</a>][<a href="msg00714.html">Thread Next</a>][<a href="maillist.html#00710">Date Index</a>][<a href="threads.html#00710">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: rsh and (lack of) startup files</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:hanche%40imf.unit.no">hanche@imf.unit.no</a></li>
+<li><em>Subject</em>: Re: rsh and (lack of) startup files</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Mon, 25 Oct 1993 14:09:06 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>My favorite strategy for making rshd shells run a startup script is a
+variation on the common hack of making a symbolic link with an explicit
+minus (e.g., ln -s /usr/local/bin/es /usr/local/bin/-es).
+
+The link trick works, but with two little flaws:
+  1. SHELL is /usr/local/bin/-es, so when invoked by vi or whatever, it's 
+     still a login shell.
+  2. The error messages look awful, like `` --es: directory not found ''
+
+So I wrote up a small C program.  It fixes SHELL, and puts the minus only in
+argv[0].  I can send it, if anyone wants, but it's probably more fun to write
+it yourself, just a few lines of code wrapped around an execve(2).
+
+Of course this means that in anticipation of being invoked as a login shell
+in a non-interactive situation, the .esrc needs to test accordingly.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00709.html">Re: rsh and (lack of) startup files</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00711.html">es and gcc-2.5.0</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00713.html">Re: rsh and (lack of) startup files</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00714.html">Re: rsh and (lack of) startup files</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00710"><strong>Date</strong></a></li>
+<li><a href="threads.html#00710"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

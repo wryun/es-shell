@@ -1,0 +1,251 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re:  es on ultrix with dec cc? -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Thu, 15 Apr 1993 20:43:58 &#45;0400 -->
+<!--X-Message-Id: 9304160043.AA05773@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re:  es on ultrix with dec cc?</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00303.html">Date Prev</a>][<a href="msg00305.html">Date Next</a>][<a href="msg00303.html">Thread Prev</a>][<a href="msg00305.html">Thread Next</a>][<a href="maillist.html#00304">Date Index</a>][<a href="threads.html#00304">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re:  es on ultrix with dec cc?</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:rittle%40comm.mot.com">rittle@comm.mot.com</a></li>
+<li><em>Subject</em>: Re:  es on ultrix with dec cc?</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Thu, 15 Apr 1993 20:43:46 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Date: 	Thu, 15 Apr 1993 19:12:44 -0400
+From: rittle@comm.mot.com (Loren James Rittle)
+Subject: Re:  es on ultrix with dec cc?
+
+| es will not build under the plain cc as shipped with ultrix.
+| I have built es with gcc 2.3.^(1 2) and dec's ansi c.
+| both work fine.  The shipped cc is not ansi or anywhere close
+| (doesn't take new style function declarations, etc).
+
+I'm no fan of the RISC Ultrix cc, but it does accept some ANSI C usage,
+including function declarations.  Just to see if it could be done, I
+built es on Ultrix 4.2, DECstation 5000/240.  It took an hour, and I did
+have to modify a couple of source files.  Mainly, however, there were a
+couple of switches that are already in the source, that helped a lot.
+Specifically, -DREISER_CPP=1 -DUSE_VOLATILE=0 -DUSE_CONST=0.  Obviously
+someone has given some thought to portability.
+
+A couple of patches are included below, but they aren't really adequate.
+If it really needs to compile under the RISC Ultrix cc, dump.c needs to
+know how to print out the TreeTypes macro, and I didn't bother to figure
+that out (I just copied it out of dump.c, and resumed the build, which
+of course had failed at initial.c.)  In fact, I hesitated to include
+these patches because I don't claim to have looked into any of it very
+hard.
+
+The result did run, although I didn't test it extensively.  Size:
+text    data    bss     dec     hex
+155648  77824   3088    236560  39c10
+(that's with neither -O nor -g)
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+-------------------------------
+*** dump.c.dist	Mon Apr 12 00:40:59 1993
+--- dump.c	Thu Apr 15 17:17:03 1993
+***************
+*** 113,119 ****
+  			panic(&quot;dumptree: bad node kind %d&quot;, tree-&gt;kind);
+  		case nWord: case nQword: case nPrim:
+  			print(
+! 				&quot;static const Tree_s %s = { n%s, { (char *) %s } };\n&quot;,
+  				name + 1,
+  				nodename(tree-&gt;kind),
+  				dumpstring(tree-&gt;u[0].s)
+--- 113,119 ----
+  			panic(&quot;dumptree: bad node kind %d&quot;, tree-&gt;kind);
+  		case nWord: case nQword: case nPrim:
+  			print(
+! 				&quot;static const Tree_s %s = { n%s, {{ (char *) %s }} };\n&quot;,
+  				name + 1,
+  				nodename(tree-&gt;kind),
+  				dumpstring(tree-&gt;u[0].s)
+***************
+*** 121,127 ****
+  			break;
+  		case nCall: case nThunk: case nVar:
+  			print(
+! 				&quot;static const Tree_p %s = { n%s, { (Tree *) %s } };\n&quot;,
+  				name + 1,
+  				nodename(tree-&gt;kind),
+  				dumptree(tree-&gt;u[0].p)
+--- 121,127 ----
+  			break;
+  		case nCall: case nThunk: case nVar:
+  			print(
+! 				&quot;static const Tree_p %s = { n%s, {{ (Tree *) %s }} };\n&quot;,
+  				name + 1,
+  				nodename(tree-&gt;kind),
+  				dumptree(tree-&gt;u[0].p)
+***************
+*** 131,137 ****
+  		case nLambda: case nLet: case nList:  case nLocal:
+  		case nMatch: case nVarsub:
+  			print(
+! 				&quot;static const Tree_pp %s = { n%s, { (Tree *) %s, (Tree *) %s } };\n&quot;,
+  				name + 1,
+  				nodename(tree-&gt;kind),
+  				dumptree(tree-&gt;u[0].p),
+--- 131,137 ----
+  		case nLambda: case nLet: case nList:  case nLocal:
+  		case nMatch: case nVarsub:
+  			print(
+! 				&quot;static const Tree_pp %s = { n%s, {{ (Tree *) %s}, { (Tree *) %s }} };\n&quot;,
+  				name + 1,
+  				nodename(tree-&gt;kind),
+  				dumptree(tree-&gt;u[0].p),
+*** input.c.dist	Mon Apr 12 00:41:00 1993
+--- input.c	Thu Apr 15 16:52:41 1993
+***************
+*** 281,286 ****
+--- 281,289 ----
+  extern List *runinput(Input *in, int flags) {
+  	Handler h;
+  	List *e, *repl, *arg, *result;
++ #ifdef ULTRIX
++ 	static
++ #endif
+  	const char *dispatcher[] = {
+  		&quot;fn-%eval-noprint&quot;,
+  		&quot;fn-%eval-print&quot;,
+*** input.h.dist	Mon Apr 12 00:41:05 1993
+--- input.h	Thu Apr 15 16:51:20 1993
+***************
+*** 4,11 ****
+--- 4,16 ----
+  
+  typedef struct Input Input;
+  struct Input {
++ #ifdef ULTRIX
++ 	int (*fill)(), (*rfill)();
++ 	void (*cleanup)();
++ #else
+  	int (*fill)(Input *self), (*rfill)(Input *self);
+  	void (*cleanup)(Input *self);
++ #endif
+  	Input *prev;
+  	const char *name;
+  	unsigned char *buf, *bufend, *bufbegin, *rbuf;
+*** main.c.dist	Mon Apr 12 00:41:01 1993
+--- main.c	Thu Apr 15 16:58:52 1993
+***************
+*** 47,64 ****
+  /* usage -- print usage message and die */
+  static noreturn usage(void) {
+  	eprint(
+! 		&quot;usage: es [-c command] [-silevxnpo] [file [args ...]]\n&quot;
+! 		&quot;	-c cmd	execute argument\n&quot;
+! 		&quot;	-s	read commands from standard input; stop option parsing\n&quot;
+! 		&quot;	-i	interactive shell\n&quot;
+! 		&quot;	-l	login shell\n&quot;
+! 		&quot;	-e	exit if any command exits with false status\n&quot;
+! 		&quot;	-v	print input to standard error\n&quot;
+! 		&quot;	-x	print commands to standard error before executing\n&quot;
+! 		&quot;	-n	just parse; don't execute\n&quot;
+! 		&quot;	-p	don't load functions from the environment\n&quot;
+! 		&quot;	-o	don't open stdin, stdout, and stderr if they were closed\n&quot;
+! 		&quot;	-d	don't ignore SIGQUIT or SIGTERM\n&quot;
+  	);
+  	exit(1);
+  }
+--- 47,64 ----
+  /* usage -- print usage message and die */
+  static noreturn usage(void) {
+  	eprint(
+! 		&quot;usage: es [-c command] [-silevxnpo] [file [args ...]]\n\
+! 	-c cmd	execute argument\n\
+! 	-s	read commands from standard input; stop option parsing\n\
+! 	-i	interactive shell\n\
+! 	-l	login shell\n\
+! 	-e	exit if any command exits with false status\n\
+! 	-v	print input to standard error\n\
+! 	-x	print commands to standard error before executing\n\
+! 	-n	just parse; don't execute\n\
+! 	-p	don't load functions from the environment\n\
+! 	-o	don't open stdin, stdout, and stderr if they were closed\n\
+! 	-d	don't ignore SIGQUIT or SIGTERM\n&quot;
+  	);
+  	exit(1);
+  }
+*** print.h.dist	Mon Apr 12 00:41:05 1993
+--- print.h	Thu Apr 15 16:48:49 1993
+***************
+*** 9,15 ****
+--- 9,19 ----
+      /* for the buffer maintainence routines */
+  	char *buf, *bufbegin, *bufend;
+  	int flushed;
++ #ifdef ULTRIX /* quick hack */
++ 	void (*grow)(Format *, unsigned long);
++ #else
+  	void (*grow)(Format *, size_t);
++ #endif
+  	union { int n; void *p; } u;
+  };
+  
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00303.html">Re:  es on ultrix with dec cc?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00305.html">Re: es on ultrix with dec cc?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00303.html">Re:  es on ultrix with dec cc?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00305.html">Re: es on ultrix with dec cc?</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00304"><strong>Date</strong></a></li>
+<li><a href="threads.html#00304"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

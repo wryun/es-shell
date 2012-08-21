@@ -1,0 +1,233 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Nifty hack -->
+<!--X-From-R13: "Epbgg Q. Uenl" <tenlNanf.anfn.tbi> -->
+<!--X-Date: Tue, 16 May 1995 20:53:13 &#45;0400 -->
+<!--X-Message-Id: 199505170052.RAA06009@hp08.nas.nasa.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Nifty hack</title>
+<link rev="made" href="mailto:gray@nas.nasa.gov">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00837.html">Date Prev</a>][<a href="msg00839.html">Date Next</a>][<a href="msg00816.html">Thread Prev</a>][<a href="msg00817.html">Thread Next</a>][<a href="maillist.html#00838">Date Index</a>][<a href="threads.html#00838">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Nifty hack</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Nifty hack</li>
+<li><em>From</em>: &quot;Scott C. Gray&quot; &lt;<a href="mailto:gray%40nas.nasa.gov">gray@nas.nasa.gov</a>&gt;</li>
+<li><em>Date</em>: Tue, 16 May 1995 20:52:38 -0400</li>
+<li><em>Reply-to</em>: <a href="mailto:gray%40nas.nasa.gov">gray@nas.nasa.gov</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>
+I don't know if anyone will be very interested in this, but here is
+another little hack that I dreamed up this weekend in an effort to
+create a single .esrc for every architecture that I commonly use.
+It isn't exactly blazingly fast (it adds about 1 second onto my login
+time), but it is pretty useful.
+
+The following function, build-fn, is used to dynamically build a 
+function, or alias, based off of a selection of similarly functional
+programs.  The best way to describe this is using a couple of 
+examples:
+
+   build-fn play   player splayer play \
+                   default {for (file = $*) {cat $file &gt; /dev/audio}}
+
+This will cause a new function 'play' to be created (actually, $fn-play);
+say player exists in your $path (in /usr/audio/bin, like it does on my 
+system), then:
+
+    ; echo $fn-play
+    @ * {/usr/audio/bin/player $*}
+
+If player doesn't exist in your path, but splayer does exist in
+/usr/local/bin, then:
+
+    ; echo $fn-play
+    @ * {/usr/local/bin/splayer $*}
+
+If there are no matches, then you get the following:
+
+    ; echo $fn-play
+    @ * {for(file=$*){%create 1 &lt;={%one /dev/audio} {cat $file}}}
+
+build-fn also allows you to override the default function created for
+programs that it manages to find.  For example:
+
+    build-fn ll   ll { @prog@ -F $* } \
+                  ls { @prog@ -lF $* }
+
+So, if you actually have a program called ll on your system (I do,
+in /bin), then:
+
+    ; echo $fn-ll
+    @ * {/bin/ll -F $*}
+
+If ll doesn't exist in your path, then:
+
+    ; echo $fn-ll
+    @ * {/bin/ls -lF $*}
+
+Note, that any instances of @prog@ in your supplied code fragment
+are replaced with the full path name of the program that matched within
+your list.
+
+Caveats:
+
+   o  You can't search for a program called 'default'.
+
+   o  It doesn't make sense supply @prog@ within a default
+      selection.
+
+   o  You can't stop @prog@ from being expanded within a code
+      fragment.
+
+Have fun!
+-scott
+
+--
+   _/    _/   _/_/_/  _/_/_/_/   _/_/_/  Scott C. Gray (gray@nas.nasa.gov)
+  _/_/  _/  _/    _/ _/_/      _/    _/  NASA Ames Research M/S 258-6
+ _/  _/_/  _/_/_/_/     _/_/  _/_/_/_/   For PGP public key, send me mail
+_/    _/  _/    _/ _/_/_/_/  _/    _/    with subject line of &quot;PGP request&quot;.
+
+----------------------------[ CUT HERE ]-----------------------------------
+
+fn choose-bin bin-list {
+   for ( bin = $bin-list ) {
+      for ( dir = $path ) {
+         if { access -rx $dir/$bin } {
+            return $dir/$bin
+         }
+      }
+   }
+   return
+}
+
+# build-fn function-name  { prog-name | default } [script] ...
+#
+# This function is used to dynamically build a function, or alias,
+# using the first occurance of prog-name that actually exists. 
+
+fn build-fn function-name args {
+
+   let ( 
+      default-fn     =        # script specified by the default key word
+      prog-name      =        # current program we are searching for
+      prog-name-full =        # fully specified program path
+      prog-script    =        # script to be used if prog-name is found
+      dir            =        # variable used in a loop
+      success        = false
+   ) {
+
+      while { ! ~ $#args 0 } {
+
+         prog-name   = $args(1)
+
+         if { ~ $args(2) '{'*'}' } {
+            prog-script = $args(2)
+            args = $args(3 ...)
+         } {
+            prog-script = 
+            args = $args(2 ...)
+         }
+
+         if { ~ $prog-name default } {
+
+            if { ~ $#prog-script 0 } {
+               throw error build-fn 'build-fn: No code with default'
+            }
+            default-fn = $prog-script
+
+         } {
+
+            prog-name-full = &lt;={ choose-bin $prog-name }
+
+            if { ! ~ $#prog-name-full 0 } {
+               if { ~ $#prog-script 0 } {
+                  prog-script = '@ * {'^$prog-name-full^' $*}'
+               } {
+                  prog-script = '@ *' `{echo $prog-script | \
+                     sed -e 's,@prog@,'^$prog-name-full^',g'}
+               }
+               fn-$function-name = $^prog-script
+               success     = true
+               break
+            }
+         }
+      }
+
+      if { ! ~ $success true } {
+         if { ! ~ $#default-fn 0 } {
+            default-fn   = '@ * ' ^ $^default-fn
+            fn-$function-name  = $^default-fn
+         } {
+            throw error build-fn 'build-fn: No match for '^$function-name
+         }
+      }
+   }
+   return 0
+}
+
+--
+   _/    _/   _/_/_/  _/_/_/_/   _/_/_/  Scott C. Gray (gray@nas.nasa.gov)
+  _/_/  _/  _/    _/ _/_/      _/    _/  NASA Ames Research M/S 258-6
+ _/  _/_/  _/_/_/_/     _/_/  _/_/_/_/   For PGP public key, send me mail
+_/    _/  _/    _/ _/_/_/_/  _/    _/    with subject line of &quot;PGP request&quot;.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00837.html">Re: Settor functions and initialization</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00839.html">Bug?</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00816.html">Re: Nifty hack</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00817.html">Fruits of my labor</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00838"><strong>Date</strong></a></li>
+<li><a href="threads.html#00838"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

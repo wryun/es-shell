@@ -1,0 +1,119 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es decompression hack -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Tue, 23 Mar 1993 00:05:01 &#45;0500 -->
+<!--X-Message-Id: 9303230505.AA11403@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es decompression hack</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00219.html">Date Prev</a>][<a href="msg00221.html">Date Next</a>][<a href="msg00219.html">Thread Prev</a>][<a href="msg00227.html">Thread Next</a>][<a href="maillist.html#00220">Date Index</a>][<a href="threads.html#00220">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es decompression hack</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:john%40civil.su.oz.au">john@civil.su.oz.au</a></li>
+<li><em>Subject</em>: Re: es decompression hack</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Tue, 23 Mar 1993 00:05:03 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre># Define a function that'll allow us to declare that certain commands
+# take filearguments (as opposed to, say, commands whose arguments
+# are hostnames/IP addresses, like telnet -- boy are we having fun
+# now, anyone for DNS-based spelling correction?)
+
+you know, this reminds me a lot of tcsh/zsh command completion,
+which is aware the types of arguments to programs, for similar
+reasons.  that's not a judgement, that's just an observation.
+it's surprising to me how willing i am now to look at ideas i
+used to dislike.
+
+as to the specifics of John's suggestions, i agree that the &lt; hack
+is inadequate, because you really want to be able to have any file
+automatically do the decompression, but you certainly don't want to
+make the kernel know rules like
+	$file : $file.Z := zcat $file.Z
+(adjust notation to taste, of course)  what we really need, of course,
+is kernel hooks, similar to the hooks in es, so you can catch calls
+to open() rather than just the calls to open in the shell.
+
+of course, this is what the newcastle connection folks did.  they
+replaced libc with one that ``knew'' that /../kremvax/etc/passwd
+really meant /etc/passwd on host kremvax, well before sun's nfs
+or even pjw's v8 rfs.  the only hitch was that you have to recompile
+(or at least relink) all your programs so that they would understand
+the new notations.  (actually, the main reason i've been so resistant
+to ~-expansion in shells is that it's not understood by open(), but
+this sort of hack would work for that as well.)
+
+anyway, dynamic libraries make the newcastle trick easier to pull off,
+and there were a couple of perfectly awful papers along those lines
+at the latest usenix, and at one point i'll have to tell you about my
+dwimming nfs file server (it's a bad idea, but that doesn't mean it
+doesn't run).  anyway, all these things are possible, and the shell
+preparsing command lines and figuring out which applications take
+which kind of arguments is one of the possible ways, but it's discussions
+like this that make me want something more than unix.
+
+anyway, i've rambled on for too long and am probably getting myself
+into trouble...
+
+thank you, John, for a stream of consciousness provoking note,
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00219.html">Re: es decompression hack</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00221.html">%assign</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00219.html">Re: es decompression hack</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00227.html">Re: es decompression hack</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00220"><strong>Date</strong></a></li>
+<li><a href="threads.html#00220"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

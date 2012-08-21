@@ -1,0 +1,125 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: coding style -->
+<!--X-From-R13: Bnhy Vnnue <unnueNzi.hf.nqbor.pbz> -->
+<!--X-Date: Wed, 14 Oct 1992 19:05:19 &#45;0400 -->
+<!--X-Message-Id: 9210142305.AA22408@utopia.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: coding style</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00059.html">Date Prev</a>][<a href="msg00061.html">Date Next</a>][<a href="msg00058.html">Thread Prev</a>][<a href="msg00061.html">Thread Next</a>][<a href="maillist.html#00060">Date Index</a>][<a href="threads.html#00060">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: coding style</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: coding style</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 14 Oct 1992 19:05:00 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>here's how i would indent that, based partially on a suggestion from
+steve@endgame.gsfc.nasa.gov.  note that es' if statement actually
+supports an arbitrary length chain of else-if tests, a la scheme's cond.
+
+rc code:
+&gt; if (~ $TERM () || ~ $TERM '') {
+&gt; 	TERM = unknown
+&gt; } else if (~ $TERM *' '*) {
+&gt; 	t = () {
+&gt; 		eval 't = (' $TERM ')'
+&gt; 		TERM = $t(1)^-^$t(2)
+&gt; 	}
+&gt; } else if (~ $TERM *vt520) {
+&gt; 	TERM = vt52
+&gt; }
+
+proposed es code:  (this shouldn't work because the %or does not
+cover multiple lines)
+&gt; %or     {%and {~ $TERM () || ~ $TERM ''} {TERM = unknown}}
+&gt; 	{%and {~ $TERM *' '*} {
+&gt; 		let (t = ()) {
+&gt; 			eval 't = (' $TERM ')'
+&gt; 			TERM = $t(1)^-^$t(2)
+&gt; 		}
+&gt; 	}}
+&gt; 	{%and {~ $TERM *vt520} {$TERM = vt52}}
+
+my version:
+	if (
+		{~ $#TERM 0 || ~ $TERM ''}	{ TERM = unknown }
+		{~ $TERM *' '*}			{ TERM = &lt;&gt;{%flatten - &lt;&gt;{%split ' ' $TERM}} }
+		{~ $TERM *vt520}		{ TERM = vt52 }
+	)
+
+steve's suggestion, which i love &amp; endorse is to take advantage of the fact that
+within parens, newlines are treated just as spaces, so we don't need to use the
+hanging braces (open brace at end of line) to continue a line.  this could be
+written even more lispish as
+	(if
+		...
+	)
+but i think that that obfuscates rather than elucidates.
+
+two notes:  (1) i recommend against using %or and %and unless you really want them.
+if is usually more clear.  i tend to try to stay away from using % commands except
+when redefining them or a few other special purposes.  &amp;&amp; and || work in es, and
+%or and %and are mainly around to support that funky syntax.  (2) i'm not sure
+that my TERM setting code above does exactly what yours did---i tend to not like
+using eval.  here i go against what i recommended earlier this paragraph and
+used %flatten and %split, because there is no syntax to access them directly.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00059.html">Re: cd w/o cdpath</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00061.html">Re: coding style</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00058.html">coding style</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00061.html">Re: coding style</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00060"><strong>Date</strong></a></li>
+<li><a href="threads.html#00060"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

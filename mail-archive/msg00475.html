@@ -1,0 +1,111 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Hierarchical lists, again -->
+<!--X-From-R13: unapurNnzf.fhalfo.rqh (Vnenyq Vnapur&#45;Ayfra) -->
+<!--X-Date: Mon, 24 May 1993 18:17:27 &#45;0400 -->
+<!--X-Message-Id: 9305242217.AA21269@ams.sunysb.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Hierarchical lists, again</title>
+<link rev="made" href="mailto:hanche@ams.sunysb.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00474.html">Date Prev</a>][<a href="msg00476.html">Date Next</a>][<a href="msg00474.html">Thread Prev</a>][<a href="msg00477.html">Thread Next</a>][<a href="maillist.html#00475">Date Index</a>][<a href="threads.html#00475">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Hierarchical lists, again</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Hierarchical lists, again</li>
+<li><em>From</em>: <a href="mailto:hanche%40ams.sunysb.edu">hanche@ams.sunysb.edu</a> (Harald Hanche-Olsen)</li>
+<li><em>Date</em>: Mon, 24 May 1993 18:17:09 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Forgive me if this has already been discussed to death, but I do have
+the impression that a concensus has not been reached on the subject of
+whether or not to add hierarchical lists to the es language.
+
+As I come from a scheme world myself, my first impulse was that &quot;yes,
+certainly I want hierarchical lists&quot;.  But now, I think I changed my
+mind.  I have come to appreciate the automatic flattening of lists as
+one of the conveniences of the es language:  If $x and $y are lists
+then ($x $y) is their concatenation rather than a two-element list,
+etc.  And this seems to be what is most frequently needed in shell
+programming.
+
+On the other hand, we sometimes need the ability to pass two or more
+lists into a function!  What to do?  Provide a mechanism for wrapping
+a list into a single entity, and then unwrapping it again.
+
+Such a capability need not be added to the language.  It is already
+there.  Look here.  This function does the wrapping:
+
+; fn % * {$&amp;result {$&amp;result $*}}
+
+And here is an example on its use.
+
+; w= &lt;={let (x=fee fie foe foo; y=, .) {result &lt;={% $x^$y}}}
+; echo $#w   # See, a single element only!
+1
+; echo &lt;=$w  # And this is how we unwrap the list.
+fee, fee. fie, fie. foe, foe. foo, foo.
+; let (x= &lt;=$w) {echo $#x}  # In case you doubt that it really got unpacked?
+8
+; 
+
+What could be easier?  Don't bother with adding hierarchical lists, is
+my opinion!
+
+- Harald
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00474.html">Re: readline trubble</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00476.html">read in es</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00474.html">Re: readline trubble</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00477.html">Re:  Hierarchical lists, again</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00475"><strong>Date</strong></a></li>
+<li><a href="threads.html#00475"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

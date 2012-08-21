@@ -1,0 +1,126 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: es %dup -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Fri, 16 Oct 1992 15:24:48 &#45;0400 -->
+<!--X-Message-Id: 9210161924.AA02449@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: es %dup</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00068.html">Date Prev</a>][<a href="msg00070.html">Date Next</a>][<a href="msg00068.html">Thread Prev</a>][<a href="msg00070.html">Thread Next</a>][<a href="maillist.html#00069">Date Index</a>][<a href="threads.html#00069">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: es %dup</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: es %dup</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Fri, 16 Oct 1992 15:24:05 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>| my current feeling is that if a %dup is executed with a file descriptor
+| that es is using (for example, the history file or the script es is running),
+| es should move the file descriptor it's using around to clear it out for
+| the user.  it seems to me that one never want to dup the history file
+| and hand it as input to some program, especially since there is no way
+| other than trial and error to get at it.
+
+If I get you right, here you're talking about the original file descriptor,
+e.g., in &quot;%dup 1 2 {foo}&quot; that would be &quot;1&quot;.  The user presumes that the
+original fd is open, and presumably has reason to suspect what's on it.
+I.e., if I take a notion to say &quot;foo &lt;[3=0]&quot;, it will be because I have
+previously arranged for a file to be open on 3, and if so es isn't going
+to open the history file on 3 because that fd is already open.  I'm not
+personally concerned about this one, although as you say it's not
+particularly useful to deliver internal file descriptors, however unlikely
+that anyone will ask for them.
+
+| anyhow, i think we will be able to implement those semantics, so expect
+| them in 0.7.  here's a question though, what should this do?
+| 
+|	echo ls &gt; foo
+|	echo 'exec {&lt;foo}' | es
+|
+| here's what is does in a couple of cases
+|
+| ;; echo ls &gt; foo
+| ;; echo 'exec &lt;foo' | rc
+| CHANGES         es.h            glom.c          makefile        parse.y 
+...
+
+| now it seems to me like this is wrong:  that is, in these examples, stdin (fd 0)
+| is owned by the shell and it shouldn't be touched by the user.
+|
+| comments, anyone?
+
+Well, I certainly agree, inasmuch as this is what my patch fixes.  I wouldn't
+put it exactly like that, though - the shell command input fd is owned by the
+shell, but of course the user has to be able to work with unit 0.  So, after
+the &quot;exec &lt;foo&quot;, an application invoked by es should find &quot;ls&quot; on its input
+stream, but the next es command still should come from the original command
+input stream.
+
+That's actually what happens when es is reading commands from a file or pipe,
+since the command stream gets buffered ahead of the execution of the dot-file.
+It just doesn't work currently with ttys, or with pipes that act like ttys in
+that the whole command stream doesn't arrive all at once, since es goes back
+to read more stuff from istack-&gt;fd, and someone switched horses in midstream.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00068.html">Re: es %dup</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00070.html">Re: es %dup</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00068.html">Re: es %dup</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00070.html">Re: es %dup</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00069"><strong>Date</strong></a></li>
+<li><a href="threads.html#00069"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

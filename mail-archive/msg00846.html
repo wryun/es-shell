@@ -1,0 +1,118 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Reading through files -->
+<!--X-From-R13: Egrir_YvyonarNprtryrpcebw.pb.hx (Egrir_Yvyonar) -->
+<!--X-Date: Tue, 20 Jun 1995 03:28:33 &#45;0400 -->
+<!--X-Message-Id: 9506200728.AA01500@spirit.cegelecproj.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Reading through files</title>
+<link rev="made" href="mailto:Steve_Kilbane@cegelecproj.co.uk">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00845.html">Date Prev</a>][<a href="msg00847.html">Date Next</a>][<a href="msg00849.html">Thread Prev</a>][<a href="msg00848.html">Thread Next</a>][<a href="maillist.html#00846">Date Index</a>][<a href="threads.html#00846">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Reading through files</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: Reading through files</li>
+<li><em>From</em>: <a href="mailto:Steve_Kilbane%40cegelecproj.co.uk">Steve_Kilbane@cegelecproj.co.uk</a> (Steve_Kilbane)</li>
+<li><em>Date</em>: Tue, 20 Jun 1995 03:28:12 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&quot;Gregory L. Snead&quot; &lt;gsnead@harlequin.com&gt; writes:
+&gt; I have a file that I want
+&gt;to read through one line at a time and perform some type of
+&gt;operation in es using the data read in.
+
+rittle@comm.mot.com (Loren James Rittle) replies:
+&gt; Here is a
+&gt; quick example:
+&gt; 
+&gt; for (i= `` \n {cat /etc/passwd})
+
+Ugh. Well, it works, and it's what I use, but
+it's lousy for use in scripts; es already takes up
+enough memory without snarfing a whole file (including
+putting it into the environment), when you only want
+to look at it one line at a time.
+
+This is something that used to come up on the list a
+lot when es first escaped (:-)), and I'm not tremendously
+happy with the final results - which, as it happens, I
+can't remember anyway.
+
+One method was to use line. Problem is, you can't tell
+if you've read a blank line or reached the end. This is
+my main bug-bear with rc/es. When I used rc, I used to
+hack each release so that I could do:
+
+while (x = `line) {
+	something_with $x
+}
+
+as you can do with the Bourne shell. I haven't bothered
+with es - I've just used Perl when I know I'm going to
+be processing arbitrarily large files.
+
+Sigh. I'd still like access to the status of `prog...
+
+steve
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00848" href="msg00848.html">Re: Reading through files</a></strong>
+<ul><li><em>From:</em> haahr@netcom.com (Paul Haahr)</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00845.html">Re: Reading through files</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00847.html">Re: Reading through files</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00849.html">Re: Reading through files</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00848.html">Re: Reading through files</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00846"><strong>Date</strong></a></li>
+<li><a href="threads.html#00846"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

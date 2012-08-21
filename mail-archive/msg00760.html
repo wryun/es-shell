@@ -1,0 +1,96 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: es on Solaris -->
+<!--X-From-R13: nagubalNgbal.jbeyqonax.bet (F Oagubal Oyyra) -->
+<!--X-Date: Fri, 23 Sep 1994 15:07:38 &#45;0400 -->
+<!--X-Message-Id: 9409231410.AA15981@tony.worldbank.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>es on Solaris</title>
+<link rev="made" href="mailto:anthony@tony.worldbank.org">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00759.html">Date Prev</a>][<a href="msg00761.html">Date Next</a>][<a href="msg00759.html">Thread Prev</a>][<a href="msg00761.html">Thread Next</a>][<a href="maillist.html#00760">Date Index</a>][<a href="threads.html#00760">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>es on Solaris</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: es on Solaris</li>
+<li><em>From</em>: <a href="mailto:anthony%40tony.worldbank.org">anthony@tony.worldbank.org</a> (T Anthony Allen)</li>
+<li><em>Date</em>: Fri, 23 Sep 1994 01:10:33 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Thanks to all who responded to my request for help on getting es to
+work correctly on Solaris. The solution was to make sure and compile es
+without bringing in the compatibility library. This can be accomplished
+by turning off USE_WAIT3 (on by default) in config.h before making es.
+
+As an aside, when I discovered that the compatibility library was the
+culprit, I suspected that it might also be the culprit on an
+application I manage that was exhibiting all sorts of bizarre
+behavior. Sure enough, stripping out the old calls I left in because I
+was lazy in converting fixed the problems (one of which, I kept getting
+alarm clock interrupts at strange times difficult to replicate).
+
+Cheers and thanks again.
+
+Tony
+
++-------------------------------+---------------------------------------+
+|  T Anthony Allen		| internet: anthony@tony.worldbank.org	|
+|  The World Bank		| Fax	: (202)522-3377			|
+|  Washington, D.C. 20433	| phone : (202)473-0199			|
++-------------------------------+---------------------------------------+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00759.html">Re: es bug</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00761.html">killing jobs in ex</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00759.html">Re: es bug</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00761.html">killing jobs in ex</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00760"><strong>Date</strong></a></li>
+<li><a href="threads.html#00760"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

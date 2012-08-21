@@ -1,0 +1,133 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: everyone's least favorite creatures -->
+<!--X-From-R13: Oyna Ingfba <nynaNbyqc.nfgeb.jvfp.rqh> -->
+<!--X-Date: Tue, 11 May 1993 16:18:52 &#45;0400 -->
+<!--X-Message-Id: 9305112018.AA12844@oldp.astro.wisc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: everyone's least favorite creatures</title>
+<link rev="made" href="mailto:alan@oldp.astro.wisc.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00367.html">Date Prev</a>][<a href="msg00369.html">Date Next</a>][<a href="msg00365.html">Thread Prev</a>][<a href="msg00486.html">Thread Next</a>][<a href="maillist.html#00368">Date Index</a>][<a href="threads.html#00368">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: everyone's least favorite creatures</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Re: everyone's least favorite creatures</li>
+<li><em>From</em>: Alan Watson &lt;<a href="mailto:alan%40oldp.astro.wisc.edu">alan@oldp.astro.wisc.edu</a>&gt;</li>
+<li><em>Date</em>: Tue, 11 May 1993 16:18:33 -0400</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Lest we replace the trimming knife with a hatchet, I'd like to
+make some comments on features.
+
+We all know why features are bad: primarily, each extra line in the man
+pages is something else to hold in our limited memories and distract our
+limited minds, and also each extra line of code introduces the
+possibilities for further bugs, and increases the size of the
+executable.
+
+But why and when are features good?  When they provide support for
+portability and inter-operability.  
+
+For example, if everyone were to write their own &quot;cd&quot;, with cdpath
+searching, symbolic link following, directory stacks, home directory
+support, directory echoing, and so on, I'm sure each of us would write
+something slightly different to all of the others.  But that wouldn't
+matter, because I doubt anyone will write a utility for general
+consumption which relies on the explicit behaviour of cd beyond &quot;cd
+/absolute/path&quot; or &quot;cd relative/path&quot;.
+
+However, if each of us were to write our own &quot;read&quot;, some reading from
+stdin, others from /dev/tty, some reading a whole line, others single
+tokens, some performing assignment, others writing to stdout, and others
+returning a value, and all of us indicating EOF or other failures in our
+own favorite ways.  We would have a tool which was completely useless
+for portable programs -- no one could rely on it and each would have to
+supply their own.  How much better would it be to have a single,
+well-definedi, ubiquitous, and bug-free (one would hope) tool?
+
+So, as I see it we have four kinds of features:
+
+   (a) Those necessary to provide the essential functions of a shell,
+       e.g., %cd, %or, %background.
+
+   (b) Those useful to interactive users, but otherwise of not essential,
+       e.g., cd with path searching, mapping ~ to home, syntactic sugar.
+
+   (c) Those useful to portable programming, e.g., a read.  These features
+       form the `libc' of es, along with sed, et al.
+
+   (d) Tacky features which should never have made it onto the man page,
+       e.g., `word rather than `{word}.  (Sorry, Paul, I couldn't resist.)
+
+I guess we also have:
+
+   (e) Features which are there for efficiency, e.g., echo over /bin/echo
+       (although because of -n and -- this is arguably in category (c)),
+       and fspilt over some dance involving sed.
+
+Now, the real debate should be which features are in categories (a),
+(b), (c), or (e), and so have at least some claim to legitimacy, and
+precisely how far into (b) do we want to go (i.e., we should keep
+syntactic sugar, but do we need to keep ~ and cdpathsearch as builtins
+-- why can't people use sed on ypcat or perform the search themselves?).
+When I get some time to think about this, I'll reply with my own
+preferences and prejudices.
+
+Alan.
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00367.html">Re: %and, %or, and the return value of assignment</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00369.html">Re: %and, %or, and the return value of assignment</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00365.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00486.html">Re: everyone's least favorite creatures</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00368"><strong>Date</strong></a></li>
+<li><a href="threads.html#00368"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

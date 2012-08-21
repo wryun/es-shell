@@ -1,0 +1,112 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: Small memory handling error in es&#45;0.9&#45;beta1.tar.gz -->
+<!--X-From-R13: Brgre Bragpuri <ebnzNbeovgry.ot> -->
+<!--X-Date: Tue, 12 Dec 2000 18:04:14 &#45;0500 -->
+<!--X-Message-Id: 20001208151035.D451@ringworld.oblivion.bg -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 200012080119.eB81JDe98193@latour.rsch.comm.mot.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: Small memory handling error in es-0.9-beta1.tar.gz</title>
+<link rev="made" href="mailto:roam@orbitel.bg">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01018.html">Date Prev</a>][<a href="msg01020.html">Date Next</a>][<a href="msg01018.html">Thread Prev</a>][<a href="msg01021.html">Thread Next</a>][<a href="maillist.html#01019">Date Index</a>][<a href="threads.html#01019">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: Small memory handling error in es-0.9-beta1.tar.gz</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:rittle%40rsch.comm.mot.com">rittle@rsch.comm.mot.com</a></li>
+<li><em>Subject</em>: Re: Small memory handling error in es-0.9-beta1.tar.gz</li>
+<li><em>From</em>: Peter Pentchev &lt;<a href="mailto:roam%40orbitel.bg">roam@orbitel.bg</a>&gt;</li>
+<li><em>Date</em>: Fri, 8 Dec 2000 08:10:35 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>, <a href="mailto:ports%40FreeBSD.org">ports@FreeBSD.org</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01018.html">200012080119.eB81JDe98193@latour.rsch.comm.mot.com</a>&gt;; from rittle@latour.rsch.comm.mot.com on Thu, Dec 07, 2000 at 07:19:13PM -0600</li>
+<li><em>Mail-followup-to</em>: <a href="mailto:rittle%40rsch.comm.mot.com">rittle@rsch.comm.mot.com</a>, <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a>,	<a href="mailto:ports%40FreeBSD.org">ports@FreeBSD.org</a></li>
+<li><em>References</em>: &lt;<a href="msg01018.html">200012080119.eB81JDe98193@latour.rsch.comm.mot.com</a>&gt;</li>
+<li><em>User-agent</em>: Mutt/1.2.5i</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Your patch has been added to the FreeBSD port, and ljrittle@acm.org
+is now listed as the port maintainer.  Congratulations for the new
+reason for people to bug you ;)
+
+G'luck,
+Peter
+
+-- 
+&quot;yields falsehood, when appended to its quotation.&quot; yields falsehood, when appended to its quotation.
+
+On Thu, Dec 07, 2000 at 07:19:13PM -0600, Loren James Rittle wrote:
+&gt; I have no idea if anyone besides me still runs es (or anyone cares to
+&gt; maintain their copies), but here is a patch to the last public release
+&gt; (that I know of).  It bites you when you configure --with-readline and
+&gt; then proceed to enter a really long command line under the built
+&gt; shell.  To ensure that you don't accidentally reverse patch it to a
+&gt; source tree where it was already done: It is strictly not legal to
+&gt; call the sequence: ``efree(X); X = erealloc(X, Y);''.
+&gt; 
+&gt; I always love it when you can fix a bug by removing code. ;-)
+&gt; 
+&gt; [Note to BSD ports maintainer: The port lives in /usr/ports/shells/es
+&gt;  and this patch has been tested as /usr/ports/shells/es/files/patch-ab .
+&gt;  Also (responding to the comment in revision 1.9 of the port's
+&gt;  Makefile), as a non-committer and only if it helps, I would be happy
+&gt;  to be listed in the Makefile as MAINTAINER= ljrittle@acm.org .]
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01018" href="msg01018.html">Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Loren James Rittle &lt;rittle@latour.rsch.comm.mot.com&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01018.html">Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01020.html">Possible fix for the signal-handling problem in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01018.html">Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01021.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01019"><strong>Date</strong></a></li>
+<li><a href="threads.html#01019"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

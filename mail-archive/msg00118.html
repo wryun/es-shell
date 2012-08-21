@@ -1,0 +1,155 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: protecting shell fds -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Wed, 21 Oct 1992 14:25:28 &#45;0400 -->
+<!--X-Message-Id: 9210211825.AA11434@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>protecting shell fds</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00117.html">Date Prev</a>][<a href="msg00119.html">Date Next</a>][<a href="msg00135.html">Thread Prev</a>][<a href="msg00123.html">Thread Next</a>][<a href="maillist.html#00118">Date Index</a>][<a href="threads.html#00118">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>protecting shell fds</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: protecting shell fds</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 21 Oct 1992 14:25:11 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Es 0.7 introduced a mechanism for protecting file descriptors in use by
+the shell, from the effects of dup2() following shell redirections.  As
+written, it doesn't work, but part of that is due to an acknowledged bug.
+
+Once the acknowledge bug is repaired, however, it still falls short of what
+I had expected in view of the list discussion of the matter, leading me to
+think that there has been some confusion over the matter.  I hope people
+will pardon me for returning to this tedious discussion, and will have the
+patience to read through this unfortunately lengthy message.  The short
+version is: line 424 of input.c, &quot;if (fd &gt;= 3) {&quot;, should be deleted.
+
+To recap my prior arguments on this, my feeling is that once the shell has
+begun reading a stream of commands, that command stream should be invulnerable
+to redirection from shell statements.  Es, and other conventional shells,
+fail to protect their internal descriptors, so that any yet unbuffered input
+will be read from whatever stream the file descriptor happens to point to.
+For example, if we execute the following statements from the tty;
+
+ $ es
+ ;; cat &gt; e3
+ echo say this is e3
+ ^D
+ ;; exec {&lt;[3] e3}
+ ;; cat &gt; e1
+ exec {&lt;[0=3]}			# bizarre but useful redirection in e1
+ echo say this is e1
+ ^D
+ ;; . ./e1			# going into e1, tty is current command stream
+ say this is e1
+ ;; say this is e3		# on return from e1, e3 is now current
+ ;; $				# on end of e3, shell exits.
+
+The correct thing, in my mind, is for the shell to separate its command input
+stream from the input stream that applications see.  The issue is principally
+what happens when the command input stream is unit 0, since that's when the
+potential for confusion arises.  When there's a need to redirect unit 0, then
+the desired effect is clearly for applications invoked by the shell to see
+the redirection.  Even if there were a desire to reach back into the command
+stack and switch streams, it wouldn't work reliably because of buffering
+effects.
+
+We find, however, that the code in es 0.7 that would shuffle command file
+descriptors in the event of a redirection, specifically excludes descriptors
+0, 1, and 2, which for my purposes defeats the whole point.  I have in fact
+a specific application for which I will need to use a hacked es, as long as
+this pointless restriction is in place.  (Descriptors 1 and 2 are not an
+issue for me - this shuffling of internal file descriptors is done for the
+command input streams, and if command input streams are being opened on units
+1 or 2 I believe that's probably an error anyway.)
+
+As a real example, the application where I need this effect is a graphic
+front end, that runs rc or es through a pipe.  An X front end was prototyped,
+but the application went into production as a simple menu driven tty
+interface.  The backend constructs the substance of a menu, writes the
+menu to the frontend, which presents it to the user.  When an entry in the
+menu is selected, the frontend writes the entry to the backend, which
+executes it.
+
+The frontend needs to read the tty, and the applications invoked by the
+backend need to read the tty, but the command input stream for the backend
+is of course the pipe.  (Also, the backend needs to be interactive, since
+the prompts are a critical part of the communication - wish UNIX had some
+way to notify the write end of a pipe when a read is blocking on the other
+end, VMS has this.)
+
+So, the backend is invoked with unit 0 reading the pipe, and it immediately
+reconfigures itself so that 0 reads from the tty.  At present, and including
+es 0.7, this requires a hack to the shell source, because the shell
+mistakenly allows that redirection to clobber its command input stream.
+I can do the hack, but it seems to me that there was general support for
+the idea of conceptually separating command input from unit 0.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00123" href="msg00123.html">Re: protecting shell fds</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00117.html">~ and a plea for peace</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00119.html">You said the J word</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00135.html">Re: ~ and a plea for peace</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00123.html">Re: protecting shell fds</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00118"><strong>Date</strong></a></li>
+<li><a href="threads.html#00118"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

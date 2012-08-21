@@ -1,0 +1,124 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: hello, world!\n -->
+<!--X-From-R13: Bnhy Vnnue <unnueNwvirgrpu.pbz> -->
+<!--X-Date: Thu, 13 Apr 2000 04:22:45 &#45;0400 -->
+<!--X-Message-Id: cUY17g4WF5c@iadd.jivetech.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.BSF.4.05.10004112003590.400&#45;100000@spotteswoode.de -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: hello, world!\n</title>
+<link rev="made" href="mailto:haahr@jivetech.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01002.html">Date Prev</a>][<a href="msg01005.html">Date Next</a>][<a href="msg01002.html">Thread Prev</a>][<a href="msg01005.html">Thread Next</a>][<a href="maillist.html#01006">Date Index</a>][<a href="threads.html#01006">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: hello, world!\n</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:inode%40freenet.de">inode@freenet.de</a></li>
+<li><em>Subject</em>: Re: hello, world!\n</li>
+<li><em>From</em>: Paul Haahr &lt;<a href="mailto:haahr%40jivetech.com">haahr@jivetech.com</a>&gt;</li>
+<li><em>Date</em>: Wed, 12 Apr 2000 02:04:00 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>In-reply-to</em>: &lt;<a href="msg01002.html">Pine.BSF.4.05.10004112003590.400-100000@spotteswoode.de</a>&gt;</li>
+<li><em>References</em>: &lt;<a href="msg01002.html">Pine.BSF.4.05.10004112003590.400-100000@spotteswoode.de</a>&gt;</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>fischer wrote
+&gt; am i the only person in the biz who uses es(local) as a login shell
+&gt; and, moreover, would be bold enough to post to this mailing list?
+
+No, but the list often has substantial delays before messages are
+delivered.  Since traffic tends to be on the order of a couple of
+messages a week, this isn't usually an issue.
+
+&gt; now for the good part:  it may happen to you as well, that you input a
+&gt; list of integers like this:
+&gt; 
+&gt; i = &lt;=%read
+&gt; 
+&gt; ...and want to use it like this:
+&gt; 
+&gt; echo $list($i)
+&gt; 
+&gt; ...just to see that only one single little value will be returned, the
+&gt; first one called for in the indice-list.  have no fear, because i got
+&gt; the solution.  when reading several values using %read, they will be
+&gt; returned in one simple flat value.  to index a list you would rather
+&gt; want several distinguishable values, and it happens like this:
+&gt; 
+&gt; i = &lt;=%read; i = `{echo $i}
+&gt; echo $list($i)
+&gt; 
+&gt; ...then will work as expected.
+
+%read is a really, really flakey part of es to be using.  If you want to
+use it and not go through the backquote mechanism, you could use:
+
+  i = &lt;={ %fsplit ' '\t &lt;=%read }
+
+But it's probably much better to use an external program like line,
+which reads a single line of input, prints it, and exits.  If you can't
+find line on your system or in some unix tools archive, this should work:
+
+  i = `{ awk '{ print $0; exit }' /dev/tty }
+
+--p
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<ul><li><strong>References</strong>:
+<ul>
+<li><strong><a name="01002" href="msg01002.html">hello, world!\n</a></strong>
+<ul><li><em>From:</em> fischer &lt;inode@freenet.de&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01002.html">hello, world!\n</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01005.html">Re: my recent request for help</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01002.html">hello, world!\n</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01005.html">Re: my recent request for help</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01006"><strong>Date</strong></a></li>
+<li><a href="threads.html#01006"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

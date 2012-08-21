@@ -1,0 +1,111 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: coding style -->
+<!--X-From-R13: Rbaa Qnir <qbaaNh.jnfuvatgba.rqh> -->
+<!--X-Date: Wed, 14 Oct 1992 18:07:28 &#45;0400 -->
+<!--X-Message-Id: 9210142207.AA18929@carson.u.washington.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>coding style</title>
+<link rev="made" href="mailto:donn@u.washington.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00057.html">Date Prev</a>][<a href="msg00059.html">Date Next</a>][<a href="msg00059.html">Thread Prev</a>][<a href="msg00060.html">Thread Next</a>][<a href="maillist.html#00058">Date Index</a>][<a href="threads.html#00058">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>coding style</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: coding style</li>
+<li><em>From</em>: Donn Cave &lt;<a href="mailto:donn%40u.washington.edu">donn@u.washington.edu</a>&gt;</li>
+<li><em>Date</em>: Wed, 14 Oct 1992 18:07:20 -0400</li>
+<li><em>Sender</em>: <a href="mailto:donn%40carson.u.washington.edu">donn@carson.u.washington.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Is anyone willing to step forth with ideas about how es code could look?
+Obviously, what works is the first criterion, but there seems to be a
+kind of a Lisping quality to es that benefits a lot from clear indenting,
+and possibly some logical operations that I don't see yet.
+
+for example, the following rc
+
+	if (~ $TERM () || ~ $TERM '') {
+		TERM = unknown
+	} else if (~ $TERM *' '*) {
+		t = () {
+			eval 't = (' $TERM ')'
+			TERM = $t(1)^-^$t(2)
+		}
+	} else if (~ $TERM *vt520) {
+		TERM = vt52
+	}
+
+translates to es?
+
+	%or	{%and {~ $TERM () || ~ $TERM ''} {TERM = unknown}}
+		{%and {~ $TERM *' '*} {
+			let (t = ()) {
+				eval 't = (' $TERM ')'
+				TERM = $t(1)^-^$t(2)
+			}
+		}}
+		{%and {~ $TERM *vt520} {$TERM = vt52}}
+
+(we were having problems with flaky TERM values, obviously)
+I'm not proposing the above, I'm exposing my ineptitude in the hope that
+someone will be inspired to improve on it.
+
+	Donn Cave, University Computing Services, University of Washington
+	donn@cac.washington.edu
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00057.html">Re: cd w/o cdpath</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00059.html">Re: cd w/o cdpath</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00059.html">Re: cd w/o cdpath</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00060.html">Re: coding style</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00058"><strong>Date</strong></a></li>
+<li><a href="threads.html#00058"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

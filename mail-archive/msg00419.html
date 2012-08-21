@@ -1,0 +1,139 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: ^Z signal -->
+<!--X-From-R13: unnueNzi.hf.nqbor.pbz (Bnhy Vnnue) -->
+<!--X-Date: Mon, 17 May 1993 17:54:14 &#45;0400 -->
+<!--X-Message-Id: 9305172154.AA18070@astro.mv.us.adobe.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: ^Z signal</title>
+<link rev="made" href="mailto:haahr@mv.us.adobe.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00418.html">Date Prev</a>][<a href="msg00420.html">Date Next</a>][<a href="msg00407.html">Thread Prev</a>][<a href="msg00420.html">Thread Next</a>][<a href="maillist.html#00419">Date Index</a>][<a href="threads.html#00419">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: ^Z signal</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:chet%40po.CWRU.Edu">chet@po.CWRU.Edu</a></li>
+<li><em>Subject</em>: Re: ^Z signal</li>
+<li><em>From</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a> (Paul Haahr)</li>
+<li><em>Date</em>: Mon, 17 May 1993 17:54:41 -0400</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>actually, job control in es is much harder than job control elsewhere,
+i think, which is one of the reasons we haven't put in the primitives.
+
+to give you an idea of what i mean, let's take a simple example:
+
+	touch foo; sleep 100; rm foo
+
+now, run this in a job controlling shell.  type control-z (or whatever
+character you use) during the sleep.  what happens?
+
+i've seen three answers, depending on which shell you use:
+
+	(a) the control-z is ignored
+	(b) the sleep is stopped, and if it is continued (fore- or
+	    background), the ``rm foo'' is ignored.
+	(c) the sleep is stopped and the rm happens right away
+
+note that i've found no shell which does
+
+	(d) the sleep is stopped, and when it is continued, the
+	    rm is executed
+
+the reason that no shell does (d) is not that it's the wrong thing
+(after thinking about it, it's really the only right answer) but it's
+very hard to do.
+
+i can come up with worse examples.  (try suspending backquoted commands,
+or replace the ``rm foo'' above with an assignment to a shell variable.)
+even worse, functions (in shells that support them) look like multiple
+commands separated by semicolons.
+
+the problem with job control for es is that everything just looks
+like an es command.  there is no separation *at the language level*
+between the internal things and the external ones.  the read-eval-print
+loop is written in es itself, so how do you distinguish it from
+a shell function?  if you don't implement job control in es as (d),
+it just won't work at all, because the whole shell looks like one
+convoluted shell command.
+
+but, wait, i hear Scott Schwartz yelling, if you just pass a continuation
+for the stopped job to the signal handler, you can make it all work.  well,
+yes, maybe you could, but es doesn't have first-class continuations, and
+there's still the problem of where it goes when it's done, and all sorts
+of problems still remain.  (one of these days, if i live long enough, es
+may have first-class continuations, but it's going to happen for the next
+couple of years.)
+
+the offer still stands, by the way.  if you can make job control in es
+work, more power to you, and if can be done in a small number of primitives
+with little change to the rest of the shell, we'll conditionally include it.
+
+but... i think you won't be able to get job control working in es without
+doing (d), and i think that the only way (d) can be done is with first-class
+continuations.  now, if you can get answer (a) through some hackery which
+i can't quite picture, great.  because so much of es is done in shell
+functions, however, (b) and (c) are really not useful enough to consider.
+
+paul
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00420" href="msg00420.html">Re: ^Z signal</a></strong>
+<ul><li><em>From:</em> Scott Schwartz &lt;schwartz@groucho.cs.psu.edu&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00418.html">Re: Multiple assignments?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00420.html">Re: ^Z signal</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00407.html">Re:  ^Z signal</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00420.html">Re: ^Z signal</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00419"><strong>Date</strong></a></li>
+<li><a href="threads.html#00419"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

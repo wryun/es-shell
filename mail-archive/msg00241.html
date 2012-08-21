@@ -1,0 +1,98 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Re: a note on notations (I'm going to be sorry I sent this to the list) -->
+<!--X-From-R13: neabyqNpp.tngrpu.rqh (Oeabyq Dboovaf) -->
+<!--X-Date: Wed, 31 Mar 1993 18:10:31 &#45;0500 -->
+<!--X-Message-Id: 9303312309.AA01477@penfold.cc.gatech.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Re: a note on notations (I'm going to be sorry I sent this to the list)</title>
+<link rev="made" href="mailto:arnold@cc.gatech.edu">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00240.html">Date Prev</a>][<a href="msg00242.html">Date Next</a>][<a href="msg00268.html">Thread Prev</a>][<a href="msg00243.html">Thread Next</a>][<a href="maillist.html#00241">Date Index</a>][<a href="threads.html#00241">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Re: a note on notations (I'm going to be sorry I sent this to the list)</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:haahr%40mv.us.adobe.com">haahr@mv.us.adobe.com</a></li>
+<li><em>Subject</em>: Re: a note on notations (I'm going to be sorry I sent this to the list)</li>
+<li><em>From</em>: <a href="mailto:arnold%40cc.gatech.edu">arnold@cc.gatech.edu</a> (Arnold Robbins)</li>
+<li><em>Date</em>: Wed, 31 Mar 1993 18:09:56 -0500</li>
+<li><em>Cc</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>&gt; while we're on the topic of syntax, anybody got a suggestion for the hook
+&gt; function that goes with the new &lt;&gt;?
+&gt; 	%openrw
+&gt; 	%openboth
+&gt; 	%open-modify
+&gt; all seem bad?  anybody got something nice and catchy?
+
+The semantics of &lt;&gt; in sh/ksh are open read/write *and* truncate, so
+I'd suggest %open-create.  While we're at it, let's go not just one, but
+two steps further.
+
+	Sugar	Function	Meaning
+	-----	--------	-------
+	&lt;&gt;	%open-create	open rw, truncate
+	&gt;&lt;	%open-write	open rw, no truncate
+	&lt;&gt;&gt;	%open-append	open rw, no truncate, all writes at end
+
+The heck with this minimalism stuff, anyway. :-)
+
+Arnold
+
+P.S. I knew I had an asbestos suit around here somewhere....
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00240.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00242.html">Re:  a note on notations</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00268.html">Re: a note on notations</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00243.html">Re: a note on notations (I'm going to be sorry I sent this to the list)</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00241"><strong>Date</strong></a></li>
+<li><a href="threads.html#00241"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

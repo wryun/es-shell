@@ -1,0 +1,115 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: Small memory handling error in es&#45;0.9&#45;beta1.tar.gz -->
+<!--X-From-R13: Zbera Xnzrf Dvggyr <evggyrNyngbhe.efpu.pbzz.zbg.pbz> -->
+<!--X-Date: Tue, 12 Dec 2000 17:56:37 &#45;0500 -->
+<!--X-Message-Id: 200012080119.eB81JDe98193@latour.rsch.comm.mot.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Small memory handling error in es-0.9-beta1.tar.gz</title>
+<link rev="made" href="mailto:rittle@latour.rsch.comm.mot.com">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01017.html">Date Prev</a>][<a href="msg01019.html">Date Next</a>][<a href="msg01017.html">Thread Prev</a>][<a href="msg01019.html">Thread Next</a>][<a href="maillist.html#01018">Date Index</a>][<a href="threads.html#01018">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>Small memory handling error in es-0.9-beta1.tar.gz</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: Small memory handling error in es-0.9-beta1.tar.gz</li>
+<li><em>From</em>: Loren James Rittle &lt;<a href="mailto:rittle%40latour.rsch.comm.mot.com">rittle@latour.rsch.comm.mot.com</a>&gt;</li>
+<li><em>Date</em>: Thu, 7 Dec 2000 20:19:13 -0500</li>
+<li><em>Cc</em>: <a href="mailto:ports%40FreeBSD.org">ports@FreeBSD.org</a></li>
+<li><em>Reply-to</em>: <a href="mailto:rittle%40rsch.comm.mot.com">rittle@rsch.comm.mot.com</a></li>
+<li><em>User-agent</em>: SEMI/1.13.7 (Awazu) FLIM/1.13.2 (Kasanui) Emacs/20.5 (i386-unknown-freebsdelf3.2) MULE/4.0 (HANANOEN)</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>I have no idea if anyone besides me still runs es (or anyone cares to
+maintain their copies), but here is a patch to the last public release
+(that I know of).  It bites you when you configure --with-readline and
+then proceed to enter a really long command line under the built
+shell.  To ensure that you don't accidentally reverse patch it to a
+source tree where it was already done: It is strictly not legal to
+call the sequence: ``efree(X); X = erealloc(X, Y);''.
+
+I always love it when you can fix a bug by removing code. ;-)
+
+[Note to BSD ports maintainer: The port lives in /usr/ports/shells/es
+ and this patch has been tested as /usr/ports/shells/es/files/patch-ab .
+ Also (responding to the comment in revision 1.9 of the port's
+ Makefile), as a non-committer and only if it helps, I would be happy
+ to be listed in the Makefile as MAINTAINER= ljrittle@acm.org .]
+
+*** input.c.orig	Tue Aug 12 18:59:26 1997
+--- input.c	Thu Dec  7 18:35:01 2000
+***************
+*** 307,313 ****
+  			if (in-&gt;buflen &lt; nread) {
+  				while (in-&gt;buflen &lt; nread)
+  					in-&gt;buflen *= 2;
+- 				efree(in-&gt;bufbegin);
+  				in-&gt;bufbegin = erealloc(in-&gt;bufbegin, in-&gt;buflen);
+  			}
+  			memcpy(in-&gt;bufbegin, rlinebuf, nread - 1);
+--- 307,312 ----
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="01063" href="msg01063.html">Problem with console and terminals</a></strong>
+<ul><li><em>From:</em> DaVinci &lt;bombadil@wanadoo.es&gt;</li></ul></li>
+<li><strong><a name="01021" href="msg01021.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Paul Haahr &lt;haahr@jivetech.com&gt;</li></ul></li>
+<li><strong><a name="01019" href="msg01019.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+<ul><li><em>From:</em> Peter Pentchev &lt;roam@orbitel.bg&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01017.html">Re: plan9 building?</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01019.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01017.html">Re: plan9 building?</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg01019.html">Re: Small memory handling error in es-0.9-beta1.tar.gz</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01018"><strong>Date</strong></a></li>
+<li><a href="threads.html#01018"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

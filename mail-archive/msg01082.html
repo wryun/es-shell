@@ -1,0 +1,122 @@
+<!-- MHonArc v2.6.18 -->
+<!--X-Subject: [Fwd: Re: job control for the es shell] -->
+<!--X-From-R13: Ayns Dbtnyfxl <Ayns.DbtnyfxlNculfvx.hav&#45;reynatra.qr> -->
+<!--X-Date: Mon, 29 Apr 2002 17:45:11 &#45;0500 -->
+<!--X-Message-Id: 3CCD9547.EDB4D662@physik.uni&#45;erlangen.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>[Fwd: Re: job control for the es shell]</title>
+<link rev="made" href="mailto:Olaf.Rogalsky@physik.uni-erlangen.de">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg01081.html">Date Prev</a>][<a href="msg01083.html">Date Next</a>][<a href="msg01081.html">Thread Prev</a>][Thread Next][<a href="maillist.html#01082">Date Index</a>][<a href="threads.html#01082">Thread Index</a>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>[Fwd: Re: job control for the es shell]</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:es%40hawkwind.utcs.toronto.edu">es@hawkwind.utcs.toronto.edu</a></li>
+<li><em>Subject</em>: [Fwd: Re: job control for the es shell]</li>
+<li><em>From</em>: Olaf Rogalsky &lt;<a href="mailto:Olaf.Rogalsky%40physik.uni-erlangen.de">Olaf.Rogalsky@physik.uni-erlangen.de</a>&gt;</li>
+<li><em>Date</em>: Mon, 29 Apr 2002 14:47:35 -0500</li>
+<li><em>Sender</em>: <a href="mailto:rogalsky%40max5.rrze.uni-erlangen.de">rogalsky@max5.rrze.uni-erlangen.de</a></li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Paul Haahr wrote:
+&gt;   (1) Correct job control in es requires some notion of (internal-to-es)
+&gt;       thread (or process or ...) that can be stopped and started.
+Indeed. The only stoppable objects in my patch are forked processes 
+(process groups).
+
+&gt;   (2) The right way to implement threads in es is using first class
+&gt;       continuations (e.g., call/cc).
+It would be much easier, if unix had rich return values. Then a simple
+fork will allmost do the trick. Allmost ... 
+
+&gt; What do I mean by ``correct''?  Basically, that es commands can be
+&gt; seemlessly interrupted and restarted regardless of whether they're
+&gt; running within the shell or in forked processes.  I only tried your
+&gt; patch very quickly, but it doesn't appear to satisfy that criteria.
+No, it doesn't. Unfortunately.
+
+&gt; For examples, try interrupting (&amp; restarting) things like
+&gt;   while true { sleep 1 }
+&gt;   while true { echo t }
+&gt;   x = `{ date; sleep 100; date }
+How do other shells do job control on those examples?
+Ksh88: 
+  Ksh simply disables job control for command sequences! A simple approach,
+  but clean and predictable.
+bash2.0: 
+  Pressing ^Z or ^C has the expected result on all external processes in a
+  sequence of commands. Any intenal (to bash) command is interrupted and not
+  restartable.
+  But there are bugs, too. Try to stop and then kill the following:
+    echo $(sleep 9999|sleep 9999)
+mypatch:
+  I have put a new version of the patch with several bugfixes on my web page:
+  <a  rel="nofollow" href="http://theorie1.physik.uni-erlangen.de/rogalsky/es">http://theorie1.physik.uni-erlangen.de/rogalsky/es</a>
+  It's still not fully tested, but at least the first two examples of yours 
+  are now interruptable. The last example only examplifies, that my patch
+  isn't ``correct''.
+
+Thanks for your tests,
+    Olaf
+
+
+-- 
++----------------------------------------------------------------------+
+I Dipl. Phys. Olaf Rogalsky                 Institut f. Theo. Physik I I
+I Tel.: 09131 8528440                       Univ. Erlangen-Nuernberg   I
+I Fax.: 09131 8528444                       Staudtstrasse 7 B3         I
+I rogalsky@theorie1.physik.uni-erlangen.de  D-91058 Erlangen           I
++----------------------------------------------------------------------+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg01081.html">Re: job control for the es shell</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg01083.html">Re: multiple variable reference</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg01081.html">Re: job control for the es shell</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#01082"><strong>Date</strong></a></li>
+<li><a href="threads.html#01082"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>
