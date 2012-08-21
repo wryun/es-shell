@@ -14,7 +14,7 @@ rm -f conftest*
 ])
 
 
-use_readline=no
+use_readline=yes
 use_editline=no
 
 AC_ARG_WITH(readline,

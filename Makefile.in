@@ -80,8 +80,8 @@ MANIFEST:
 	find . -type f | sed s/..// > MANIFEST
 
 install : es
-	$(INSTALL) $(srcdir)/es $(bindir)
-	$(INSTALL) $(srcdir)/es.1 $(mandir)/man1
+	$(INSTALL) -s $(srcdir)/es $(bindir)
+	$(INSTALL) $(srcdir)/doc/es.1 $(mandir)/man1
 
 test	: trip
 
