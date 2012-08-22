@@ -1,0 +1,9 @@
+# add this to your .profile file or similar for programs (like xsession or gdm)
+# that like running sh
+
+# load .esrc environment
+if [ -f "$HOME/.esrc" ]; then
+    eval "`es -l <<-x
+        sh <<<'export -p'
+    x`"
+fi

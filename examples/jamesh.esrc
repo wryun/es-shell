@@ -1,0 +1,91 @@
+# this file basically make 'es' look more like a modern bash prompt
+# (in terms of following symlinks, colours, cd - (+ enhancements))
+
+# symlink cd (and pwd)
+
+fn pwd {
+    if {~ $#cwd 0} {
+        noexport = $noexport cwd
+        cwd = `` \n /bin/pwd
+    }
+    echo $cwd
+}
+
+let (cd = $fn-cd) fn cd dir {
+    if {~ $#cwd 0} {
+        noexport = $noexport cwd
+    }
+    if {~ $#dir 0} {
+        $cd
+        cwd = ~
+    } {
+        let (current = <={
+            if {~ $dir /*} {
+                result
+            } {
+                if {~ $#cwd 0} {
+                    cwd = `` \n /bin/pwd
+                }
+                %split / $cwd
+            }
+        }) {
+            for (name = <={%split / $dir}) {
+                if {~ $name ..} {
+                    if {!~ $#current 0} {
+                        let (x = 1 $current) current = $x(2 ... $#current)
+                    }
+                } {!~ $name . ''} {
+                    current = $current $name
+                }
+            }
+            let (path = / ^ <={ %flatten / $current }) {
+                $cd $path
+                cwd = $path
+            }
+        }
+    }
+}
+
+# go back -N directories in cd (cd -1 prints stack, cd - goes to previous)
+#
+let (cd = $fn-cd; cd-stack = (. . . . . . . . . .)) fn cd dir { 
+    if {~ $dir -*} {
+        let (index = <={%split - $dir}) {
+            if {~ $#index 0} {
+                index = 2
+            }
+            if {~ $index [2-9]} {
+                dir = $cd-stack($index)
+            } {~ $index 1} {
+                echo $cd-stack >[1=2]
+                return 0
+            } {
+                throw error cd 'cd: invalid argument'
+            }
+        }
+    }
+    $cd $dir
+    cd-stack = (`pwd $cd-stack(1 ... 9))
+}
+
+# colourful prompt
+let (cd = $fn-cd; c = \1\033; z=\2) fn cd {
+    $cd $*;
+    let (w = `pwd) {
+        if {~ $^w $home^*} {
+            w = '~'^<={~~ $^w $home^*}
+        }
+        prompt = $c[4\;35m$z`{hostname}^$c[0m$z:$c[1\;34m$z$^w$c[0m$z^'; '
+    }
+}
+
+# colourful programs (symlinks to colorgcc in ~/bin)
+for (prog = ls grep) {
+    let (o = `{which $prog}) fn $prog {$o --color\=auto $*}
+}
+
+# when we start, we should 'cd .' to set the colourful prompt
+fn %prompt {
+    cd .
+    fn %prompt # now lose the prompt function
+}
