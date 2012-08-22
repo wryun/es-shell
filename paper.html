@@ -1,0 +1,1429 @@
+<html>
+<head><title>Es: A shell with higher-order functions</title></head>
+<body style="width: 700px; margin: auto;">
+
+<center>
+<h1><i>Es</i>: A shell with higher-order functions</h1>
+
+<a href="mailto:paul@paulhaahr.com"><I>Paul Haahr</I></a>
+-- Adobe Systems Incorporated
+<a href="#erratum1" name="erratum1-use">[Errata note 1]</a>
+<br>
+<a href="http://www.rakitzis.com/resume.html"><I>Byron Rakitzis</I></a>
+-- Network Appliance Corporation
+</center>
+
+<A NAME="Abstract"><H3>Abstract</H3></A>
+
+<p>
+
+In the fall of 1990, one of us (Rakitzis) re-implemented the Plan 9
+command interpreter, <I>rc</I>, for use as a UNIX shell.
+Experience with that shell led us to wonder whether a more general
+approach to the design of shells was possible, and this paper
+describes the result of that experimentation. We applied concepts
+from modern functional programming languages, such as Scheme and ML,
+to shells, which typically are more concerned with UNIX
+features than language design. Our shell is both simple and highly
+programmable. By exposing many of the internals and adopting
+constructs from functional programming languages, we have created a
+shell which supports new paradigms for programmers.
+
+<p>
+
+<b>Note:</b>
+
+This web page is an HTML version of a paper which was presented at the
+Winter 1993 Usenix Conference in San Diego, California.
+The paper corresponds to an out-of-date release of <i>es</i>;  see
+the Errata section for changes which affect parts of the paper.
+<a href="ftp://ftp.sys.utoronto.ca/pub/es/es-0.9-alpha1.tar.gz">
+Source code for the current version of <i>es</i></a> and
+a <a href="ftp://ftp.sys.utoronto.ca/pub/es/usenix-w93.ps.Z">
+PostScript copy of this paper</a>,
+from which the version appearing in the proceedings was typeset,
+are available by anonymous FTP.
+
+<A NAME="Table-of-Contents"><H3>Table of Contents</H3></A>
+
+<ul>
+<LI><A HREF="#Introduction">Introduction</A>
+<LI><A HREF="#Using-es-Commands">Using es Commands</A>
+<LI><A HREF="#Functions">Functions</A>
+<LI><A HREF="#Variables">Variables</A>
+<LI><A HREF="#Binding">Binding</A>
+<LI><A HREF="#Settor-Variables">Settor Variables</A>
+<LI><A HREF="#Return-Values">Return Values</A>
+<LI><A HREF="#Exceptions">Exceptions</A>
+<LI><A HREF="#Spoofing">Spoofing</A>
+<LI><A HREF="#Implementation">Implementation</A>
+<LI><A HREF="#Initialization">Initialization</A>
+<LI><A HREF="#The-Environment">The Environment</A>
+<LI><A HREF="#Interactions-With-UNIX">Interactions With UNIX</A>
+<LI><A HREF="#Garbage-Collection">Garbage Collection</A>
+<LI><A HREF="#Future-Work">Future Work</A>
+<LI><A HREF="#Conclusions">Conclusions</A>
+<LI><A HREF="#Acknowledgements">Acknowledgements</A>
+<LI><A HREF="#Footnotes">Footnotes</A>
+<LI><A HREF="#Errata">Errata</A>
+<LI><A HREF="#References">References</A>
+<LI><A HREF="#Author-Information">Author Information</A>
+</ul>
+
+<p>
+
+<hr>
+
+<p>
+
+<I>
+Although most users think of the shell as an interactive command
+interpreter, it is really a programming language in which each
+statement runs a command. Because it must satisfy both the interactive
+and programming aspects of command execution, it is a strange
+language, shaped as much by history as by design.</I>
+<br>-- Brian Kernighan &amp; Rob Pike <a href="#ref1">[1]</a>
+
+<A NAME="Introduction"><H3>Introduction</H3></A>
+
+A shell is both a programming language and the core of an interactive
+environment. The ancestor of most current shells is the 7th Edition
+Bourne shell<a href="#ref2">[2]</a>, which is characterized by simple
+semantics, a minimal set of interactive features, and syntax that is
+all too reminiscent of Algol. One recent shell, <I>rc</I>
+<a href="#ref3">[3]</a>, substituted a cleaner syntax but kept most of
+the Bourne shell's attributes. However, most recent developments in
+shells (e.g., <I>csh</I>, <I>ksh</I>, <I>zsh</I>) have focused on
+improving the interactive environment without changing the structure
+of the underlying language -- shells have proven to be resistant to
+innovation in programming languages.
+
+<p>
+
+While <I>rc</I> was an experiment in adding modern syntax to Bourne
+shell semantics, <I>es</I> is an exploration of new semantics combined
+with <I>rc</I>-influenced syntax:  <I>es</I> has lexically scoped
+variables, first-class functions, and an exception mechanism, which
+are concepts borrowed from modern programming languages such as Scheme
+and ML.  [<a href="#ref4">4</a>, <a href="#ref5">5</a>]
+
+<p>
+
+In <I>es</I>, almost all standard shell constructs (e.g., pipes and
+redirection) are translated into a uniform representation: function
+calls. The primitive functions which implement those constructs can be
+manipulated the same way as all other functions: invoked, replaced, or
+passed as arguments to other functions.  The ability to replace
+primitive functions in <I>es</I> is key to its extensibility; for
+example, a user can override the definition of pipes to cause remote
+execution, or the path-searching machinery to implement a path look-up
+cache.
+
+<p>
+
+At a superficial level, <I>es</I> looks like most UNIX
+shells. The syntax for pipes, redirection, background jobs, etc., is
+unchanged from the Bourne shell.  <I>Es</I>'s programming constructs
+are new, but reminiscent of <I>rc</I> and Tcl<a href="#ref6">[6]</a>.
+
+<p>
+
+<I>Es</I> is freely redistributable, and is available by anonymous ftp
+from <code>ftp.white.toronto.edu</code>.
+
+<A NAME="Using-es-Commands"><H3>Using es Commands</H3></A>
+
+For simple commands, <I>es</I> resembles other shells. For
+example, newline usually acts as a command terminator.  These are
+familiar commands which all work in <I>es</I>:
+
+<pre>
+  cd /tmp
+  rm Ex*
+  ps aux | grep '^byron' | awk '{print $2}' | xargs kill -9
+</pre>
+
+For simple uses, <I>es</I> bears a close resemblance to <I>rc</I>.
+For this reason, the reader is referred to the paper on <I>rc</I> for
+a discussion of quoting rules, redirection, and so on. (The examples
+shown here, however, will try to aim for a lowest common denominator
+of shell syntax, so that an understanding of <I>rc</I> is not a
+prerequisite for understanding this paper.)
+
+<A NAME="Functions"><H3>Functions</H3></A>
+
+<I>Es</I> can be programmed through the use of shell functions. Here
+is a simple function to print the date in <I>yy-mm-dd</I> format:
+
+<pre>
+  fn d {
+    date +%y-%m-%d
+  }
+</pre>
+
+Functions can also be called with arguments.  <I>Es</I> allows
+parameters to be specified to functions by placing them between the
+function name and the open-brace. This function takes a command
+<CODE>cmd</CODE> and arguments <CODE>args</CODE> and applies the
+command to each argument in turn:
+
+<pre>
+  fn apply cmd args {
+    for (i = $args)
+      $cmd $i
+  }
+</pre>
+
+For example: <a href="#footnote1" name="footnote1-use">[Footnote 1]</a>
+
+<pre>
+  es&gt; <I>apply echo testing 1.. 2.. 3..</i>
+  testing
+  1..
+  2..
+  3..
+</pre>
+
+Note that <CODE>apply</CODE> was called with more than two arguments;
+<I>es</I> assigns arguments to parameters one-to-one, and any
+leftovers are assigned to the last parameter. For example:
+
+<pre>
+  es&gt; <I>fn rev3 a b c {
+  echo $c $b $a
+  }</I>
+  es&gt; <I>rev3 1 2 3 4 5</I>
+  3 4 5 2 1
+</pre>
+
+If there are fewer arguments than parameters, <I>es</I> leaves the
+leftover parameters null:
+
+<pre>
+  es&gt; <I>rev3 1</I>
+  1
+</pre>
+
+So far we have only seen simple strings passed as arguments. However,
+<I>es</I> functions can also take program fragments (enclosed in
+braces) as arguments. For example, the <CODE>apply</CODE> function
+defined above can be used with program fragments typed directly on the
+command line:
+
+<pre>
+  es&gt; <I>apply @ i {cd $i; rm -f *} /tmp /usr/tmp</I>
+</pre>
+
+This command contains a lot to understand, so let us break it up
+slowly.
+
+<p>
+
+In any other shell, this command would usually
+be split up into two separate commands:
+
+<pre>
+  es&gt; <I>fn cd-rm i {
+    cd $i
+    rm -f *
+  }</I>
+  es&gt; <CI>apply cd-rm /tmp /usr/tmp</I>
+</pre>
+
+Therefore, the construct
+
+<pre>
+  @ i {cd $i; rm -f *}
+</pre>
+
+is just a way of inlining a function on the
+command-line. This is called a <I>lambda</I>.
+<a href="#footnote2" name="footnote2-use">[Footnote 2]</a>
+It takes the form
+
+<blockquote>
+<code>@</code> <i>parameters</i> <code>{</code> <i>commands</i> <code>}</code>
+</blockquote>
+
+<P>
+
+</CODE>
+In effect, a lambda is a procedure "waiting to
+happen." For example, it is possible to type:
+
+<pre>
+  es&gt; <I>@ i {cd $i; rm -f *} /tmp</I>
+</pre>
+
+directly at the shell, and this runs the inlined
+function directly on the argument <CODE>/tmp</CODE>.
+
+<p>
+
+There is one more thing to notice: the inline function that was
+supplied to <CODE>apply</CODE> had a parameter named <CODE>i</CODE>,
+and the <CODE>apply</CODE> function itself used a reference to a
+variable called <CODE>i</CODE>. Note that the two uses did not
+conflict: that is because <I>es</I> function parameters are
+<I>lexically scoped</I>, much as variables are in C and Scheme.
+
+<A NAME="Variables"><H3>Variables</H3></A>
+
+The similarity between shell functions and lambdas is not
+accidental. In fact, function definitions are rewritten as assignments
+of lambdas to shell variables. Thus these two <I>es</I> commands are
+entirely equivalent:
+
+<pre>
+  fn echon args {echo -n $args}
+  fn-echon = @ args {echo -n $args}
+</pre>
+
+In order not to conflict with regular variables, function variables
+have the prefix <CODE>fn-</CODE> prepended to their names. This
+mechanism is also used at execution time; when a name like
+<CODE>apply</CODE> is seen by <I>es</I>, it first looks in its symbol
+table for a variable by the name <CODE>fn-apply</CODE>.  Of course, it
+is always possible to execute the contents of any variable by
+dereferencing it explicitly with a dollar sign:
+
+<pre>
+  es&gt; <I>silly-command = {echo hi}</I>
+  es&gt; <I>$silly-command</I>
+  hi
+</pre>
+
+The previous examples also show that variables
+can be set to contain program fragments as well as
+simple strings. In fact, the two can be intermixed:
+
+<pre>
+  es&gt; <I>mixed = {ls} hello, {wc} world</I>
+  es&gt; <I>echo $mixed(2) $mixed(4)</I>
+  hello, world
+  es&gt; <I>$mixed(1) | $mixed(3)</I>
+  61 61 478
+</pre>
+
+Variables can hold a list of commands, or even
+a list of lambdas. This makes variables into versatile
+tools. For example, a variable could be used as a
+function dispatch table.
+
+<A NAME="Binding"><H3>Binding</H3></A>
+
+In the section on functions, we mentioned that function parameters are
+lexically scoped. It is also possible to use lexically-scoped
+variables directly.  For example, in order to avoid interfering with a
+global instance of <CODE>i</CODE>, the following scoping syntax can be
+used:
+
+<pre>
+  let (<I>var</I> = <I>value</I>) {
+    <I>commands which use $var</I>
+  }
+</pre>
+
+Lexical binding is useful in shell functions, where it becomes
+important to have shell functions that do not clobber each others'
+variables.
+
+<p>
+
+<I>Es</I> code fragments, whether used as arguments to commands or
+stored in variables, capture the values of enclosing lexically scoped
+values. For example,
+
+<p>
+
+<pre>
+  es&gt; <I>let (h=hello; w=world) {
+    hi = { echo $h, $w }
+  }</I>
+  es&gt; <I>$hi</I>
+  hello, world
+</pre>
+
+One use of lexical binding is in redefining functions. A new
+definition can store the previous definition in a lexically scoped
+variable, so that it is only available to the new function. This
+feature can be used to define a function for tracing calls to other
+functions:
+
+<pre>
+  fn trace functions {
+    for (func = $functions)
+      let (old = $(fn-$func))
+      fn $func args {
+        echo calling $func $args
+        $old $args
+      }
+  }
+</pre>
+
+The <CODE>trace</CODE> function redefines all the functions which are
+named on its command line with a function that prints the function
+name and arguments and then calls the previous definition, which is
+captured in the lexically bound variable <CODE>old</CODE>. Consider a
+recursive function <CODE>echo-nl</CODE> which prints its arguments,
+one per line:
+
+<pre>
+  es&gt; <I>fn echo-nl head tail {
+    if {!~ $#head 0} {
+      echo $head
+      echo-nl $tail
+    }
+  }</I>
+  es&gt; <I>echo-nl a b c</I>
+  a
+  b
+  c
+</pre>
+
+Applying <CODE>trace</CODE> to this function yields:
+
+<pre>
+  es&gt; <I>trace echo-nl</I>
+  es&gt; <I>echo-nl a b c</I>
+  calling echo-nl a b c
+  a
+  calling echo-nl b c
+  b
+  calling echo-nl c
+  c
+  calling echo-nl
+</pre>
+
+The reader should note that
+
+<blockquote>
+<code>!</code> <i>cmd</i>
+</blockquote>
+
+is <I>es</I>'s "not" command, which inverts the sense of the return
+value of <I>cmd</I>, and
+
+<blockquote>
+<code>~</code> <i>subject</i> <i>pattern</i>
+</blockquote>
+
+matches <I>subject</I> against <I>pattern</I> and returns true if the
+subject is the same as the pattern. (In fact, the matching is a bit
+more sophisticated, for the pattern may include wildcards.)
+
+<p>
+
+Shells like the Bourne shell and <I>rc</I> support a form of local
+assignment known as <I>dynamic binding</I>.  The shell syntax for
+this is typically:
+
+<blockquote>
+<i>var</i><code>=</code><i>value</i> <i>command</i>
+</blockquote>
+
+That notation conflicts with <I>es</I>'s syntax for assignment (where
+zero or more words are assigned to a variable), so dynamic binding has
+the syntax:
+
+<pre>
+  local (<I>var</I> = <I>value</I>) {
+    <I>commands which use $var</I>
+  }
+</pre>
+
+The difference between the two forms of binding can be seen in an example:
+
+<pre>
+  es&gt; <I>x = foo</I>
+  es&gt; <I>let (x = bar) {
+    echo $x
+    fn lexical { echo $x }
+  }</I>
+  bar
+  es&gt; <I>lexical</I>
+  bar
+  es&gt; <I>local (x = baz) {
+    echo $x
+    fn dynamic { echo $x }
+  }</I>
+  baz
+  es&gt; <I>dynamic</I>
+  foo
+</pre>
+
+<A NAME="Settor-Variables"><H3>Settor Variables</H3></A>
+
+In addition to the prefix (<CODE>fn-</CODE>) for function execution
+described earlier, <I>es</I> uses another prefix to search for
+<I>settor variables</I>. A settor variable <CODE>set-</CODE><I>foo</I>
+is a variable which gets evaluated every time the variable <I>foo</I>
+changes value. A good example of settor variable use is the
+<CODE>watch</CODE> function:
+
+<pre>
+  fn watch vars {
+    for (var = $vars) {
+      set-$var = @ {
+        echo old $var '=' $$var
+        echo new $var '=' $*
+        return $*
+      }
+    }
+  }
+</pre>
+
+<CODE>Watch</CODE> establishes a settor function for each of its
+parameters; this settor prints the old and new values of the variable
+to be set, like this:
+
+<pre>
+  es&gt; <I>watch x</I>
+  es&gt; <I>x=foo bar</I>
+  old x =
+  new x = foo bar
+  es&gt; <I>x=fubar</I>
+  old x = foo bar
+  new x = fubar
+</pre>
+
+<A NAME="Return-Values"><H3>Return Values</H3></A>
+
+UNIX programs exit with a single number between 0 and 255
+reported as their statuses.  <I>Es</I> supplants the notion of an exit
+status with "rich" return values. An <I>es</I> function can return
+not only a number, but any object: a string, a program fragment, a
+lambda, or a list which mixes such values.
+
+<p>
+
+The return value of a command is accessed by
+prepending the command with <CODE>&lt;&gt;</CODE>:
+<a href="#erratum2" name="erratum2-use">[Errata note 2]</a>
+
+<pre>
+  es&gt; <I>fn hello-world {
+    return 'hello, world'
+  }</I>
+  es&gt; <I>echo &lt;&gt;{hello-world}</I>
+  hello, world
+</pre>
+
+This example shows rich return values being
+used to implement hierarchical lists:
+
+<pre>
+  fn cons a d {
+    return @ f { $f $a $d }
+  }
+  fn car p { $p @ a d { return $a } }
+  fn cdr p { $p @ a d { return $d } }
+</pre>
+
+The first function, <CODE>cons</CODE>, returns a function which takes
+as its argument another function to run on the parameters
+<CODE>a</CODE> and <CODE>d</CODE>.  <CODE>car</CODE> and
+<CODE>cdr</CODE> each invoke the kind of function returned by
+<CODE>cons</CODE>, supplying as the argument a function which returns
+the first or second parameter, respectively. For example:
+
+<pre>
+  es&gt; <I>echo &lt;&gt;{car &lt;&gt;{cdr &lt;&gt;{
+    cons 1 &lt;&gt;{cons 2 &lt;&gt;{cons 3 nil}}
+  }}}</I>
+  2
+</pre>
+
+<A NAME="Exceptions"><H3>Exceptions</H3></A>
+
+In addition to traditional control flow constructs -- loops,
+conditionals, subroutines -- <I>es</I> has an exception mechanism
+which is used for implementing non-structured control flow. The
+built-in function <CODE>throw</CODE> raises an exception, which
+typically consists of a string which names the exception and other
+arguments which are specific to the named exception type. For example,
+the exception <CODE>error</CODE> is caught by the default interpreter
+loop, which treats the remaining arguments as an error message.
+<a href="#erratum3" name="erratum3-use">[Errata note 3]</a>
+Thus:
+
+<pre>
+  es&gt; <I>fn in dir cmd {
+    if {~ $#dir 0} {
+      throw error 'usage: in dir cmd'
+    }
+    fork # run in a subshell <a href="#erratum4" name="erratum4-use">[Errata note 4]</a>
+    cd $dir
+    $cmd
+  }</I>
+  es&gt; <I>in</I>
+  usage: in dir cmd
+  es&gt; <I>in /tmp ls</I>
+  webster.socket yacc.312
+</pre>
+
+By providing a routine which catches <CODE>error</CODE> exceptions, a
+programmer can intercept internal shell errors before the message gets
+printed.
+
+<p>
+
+Exceptions are also used to implement the <CODE>break</CODE> and
+<CODE>return</CODE> control flow constructs, and to provide a way for
+user code to interact with UNIX signals. While six error types
+are known to the interpreter and have special meanings, any set of
+arguments can be passed to <CODE>throw</CODE>.
+
+<p>
+
+Exceptions are trapped with the built-in <CODE>catch</CODE>, which
+typically takes the form
+
+<pre>
+  catch @ e args { <I>handler</I> } { <I>body</I> }
+</pre>
+
+<CODE>Catch</CODE> first executes <I>body</I>; if no exception is
+raised, <CODE>catch</CODE> simply returns, passing along <I>body</I>'s
+return value. On the other hand, if anything invoked by <I>body</I>
+throws an exception, <I>handler</I> is run, with <CODE>e</CODE> bound
+to the exception that caused the problem. For example, the last two
+lines of <CODE>in</CODE> above can be replaced with:
+
+<p>
+
+<pre>
+  catch @ e msg {
+    if {~ $e error} {
+      echo &gt;[1=2] in $dir: $msg
+    } {
+      throw $e $msg
+    }
+  } {
+    cd $dir
+    $cmd
+  }
+</pre>
+
+to better identify for a user where an error came from:
+
+<pre>
+  es&gt; <I>in /temp ls</I>
+  in /temp: chdir /temp:
+  No such file or directory
+</pre>
+
+<A NAME="Spoofing"><H3>Spoofing</H3></A>
+
+<I>Es</I>'s versatile functions and variables are only half of the
+story; the other part is that <I>es</I>'s shell syntax is just a front
+for calls on built-in functions. For example:
+
+<pre>
+  ls &gt; /tmp/foo
+</pre>
+
+is internally rewritten as
+
+<pre>
+  %create 1 /tmp/foo {ls}
+</pre>
+
+before it is evaluated.  <CODE>%create</CODE> is the built-in function
+which opens <CODE>/tmp/foo</CODE> on file-descriptor 1 and
+runs<CODE>ls</CODE>.
+
+<p>
+
+The value of this rewriting is that the <CODE>%create</CODE> function
+(and that of just about any other shell service) can be
+<I>spoofed</I>, that is, overridden by the user: when a new
+<CODE>%create</CODE> function is defined, the default action of
+redirection is overridden.
+
+<p>
+
+Furthermore, <CODE>%create</CODE> is not really the built-in file
+redirection service. It is a hook to the <I>primitive</I>
+<CODE>$&amp;create</CODE>, which itself cannot be overridden.  That
+means that it is always possible to access the underlying shell
+service, even when its hook has been reassigned.
+
+<p>
+
+Keeping this in mind, here is a spoof of the redirection operator that
+we have been discussing.  This spoof is simple: if the file to be
+created exists (determined by running <CODE>test -f</CODE>), then the
+command is not run, similar to the C-shell's "noclobber" option:
+
+<pre>
+  fn %create fd file cmd {
+    if {test -f $file} {
+      throw error $file exists
+    } {
+      $&amp;create $fd $file $cmd
+    }
+  }
+</pre>
+
+In fact, most redefinitions do not refer to the
+<CODE>$&amp;</CODE>-forms explicitly, but capture references to them
+with lexical scoping. Thus, the above redefinition would usually
+appear as
+
+<pre>
+  let (create = $fn-%create)
+    fn %create fd file cmd {
+      if {test -f $file} {
+        throw error $file exists
+      } {
+        $create $fd $file $cmd
+      }
+    }
+</pre>
+
+The latter form is preferable because it allows multiple
+redefinitions of a function; the former version
+would always throw away any previous redefinitions.
+
+<p>
+
+Overriding traditional shell built-ins is another common example of
+spoofing. For example, a <CODE>cd</CODE> operation which also places
+the current directory in the title-bar of the window (via the
+hypothetical command <CODE>title</CODE>) can be written as:
+
+
+<pre>
+  let (cd = $fn-%cd)
+  fn cd {
+    $cd $*
+    title `{pwd}
+  }
+</pre>
+
+Spoofing can also be used for tasks which other shells cannot do; one
+example is timing each element of a pipeline by spoofing
+<CODE>%pipe</CODE>, along the lines of the pipeline profiler suggested
+by Jon Bentley<a href="#ref7">[7]</a>; see Figure 1.
+<a href="#erratum5" name="erratum5-use">[Errata note 5]</a>
+
+<p>
+<hr>
+
+<pre>
+  es&gt; <I>let (pipe = $fn-%pipe) {
+    fn %pipe first out in rest {
+      if {~ $#out 0} {
+        time $first
+      } {
+        $pipe {time $first} $out $in {%pipe $rest}
+      }
+    }
+  }</I>
+  es&gt; <I>cat paper9 | tr -cs a-zA-Z0-9 '\012' | sort | uniq -c | sort -nr | sed 6q</I>
+   213 the
+   150 a
+   120 to
+   115 of
+   109 is
+    96 and
+     2r   0.3u   0.2s   cat paper9
+     2r   0.3u   0.2s   tr -cs a-zA-Z0-9 \012
+     2r   0.5u   0.2s   sort
+     2r   0.4u   0.2s   uniq -c
+     3r   0.2u   0.1s   sed 6q
+     3r   0.6u   0.2s   sort -nr
+</pre>
+
+<center>Figure 1: Timing pipeline elements</center>
+
+<p>
+<hr>
+<p>
+
+Many shells provide some mechanism for caching the full pathnames of
+executables which are looked up in a user's <CODE>$PATH</CODE>.
+<I>Es</I> does not provide this functionality in the shell, but it can
+easily be added by any user who wants it. The function
+<CODE>%pathsearch</CODE> (see Figure 2) is invoked to lookup
+non-absolute file names which are used as commands.
+
+<p>
+<hr>
+
+<pre>
+  let (search = $fn-%pathsearch) {
+    fn %pathsearch prog {
+      let (file = &lt;&gt;{$search $prog}) {
+        if {~ $#file 1 &amp;&amp; ~ $file /*} {
+          path-cache = $path-cache $prog
+          fn-$prog = $file
+        }
+        return $file
+      }
+    }
+  }
+  fn recache {
+    for (i = $path-cache)
+      fn-$i =
+    path-cache =
+  }
+</pre>
+
+<center>Figure 2: Path caching</center>
+
+<p>
+<hr>
+<p>
+
+One other piece of <I>es</I> which can be replaced is the interpreter
+loop. In fact, the default interpreter is written in <I>es</I> itself;
+see Figure 3.
+
+<p>
+<hr>
+
+<pre>
+  fn %interactive-loop {
+    let (result = 0) {
+      catch @ e msg {
+        if {~ $e eof} {
+          return $result
+        } {~ $e error} {
+          echo &gt;[1=2] $msg
+        } {
+          echo &gt;[1=2] uncaught exception: $e $msg
+        }
+        throw retry
+      } {
+        while {} {
+          %prompt
+          let (cmd = &lt;&gt;{%parse $prompt}) {
+            result = &lt;&gt;{$cmd}
+          }
+        }
+      }
+    }
+  }
+</pre>
+
+<center>Figure 3: Default interactive loop</center>
+
+<p>
+<hr>
+<p>
+
+A few details from this example need further explanation. The
+exception <CODE>retry</CODE> is intercepted by <CODE>catch</CODE> when
+an exception handler is running, and causes the body of the
+<CODE>catch</CODE> routine to be re-run.  <CODE>%parse</CODE> prints
+its first argument to standard error, reads a command (potentially
+more than one line long) from the current source of command input, and
+throws the <CODE>eof</CODE> exception when the input source is
+exhausted. The hook <CODE>%prompt</CODE> is provided for the user to
+redefine, and by default does nothing.
+
+<p>
+
+Other spoofing functions which either have been suggested or are in
+active use include: a version of <CODE>cd</CODE> which asks the user
+whether to create a directory if it does not already exist; versions
+of redirection and program execution which try spelling correction if
+files are not found; a <CODE>%pipe</CODE> to run pipeline elements on
+(different) remote machines to obtain parallel execution; automatic
+loading of shell functions; and replacing the function which is used
+for tilde expansion to support alternate definitions of home
+directories. Moreover, for debugging purposes, one can use
+<CODE>trace</CODE> on hook functions.
+
+<A NAME="Implementation"><H3>Implementation</H3></A>
+
+<I>Es</I> is implemented in about 8000 lines of C.  Although we
+estimate that about 1000 lines are devoted to portability issues
+between different versions of UNIX, there are also a number of
+work-arounds that <I>es</I> must use in order to blend with
+UNIX.  The <CODE>path</CODE> variable is a good example.
+
+<p>
+
+The <I>es</I> convention for path searching involves looking through
+the list elements of a variable called <CODE>path</CODE>. This has the
+advantage that all the usual list operations can be applied equally to
+<CODE>path</CODE> as any other variable. However, UNIX
+programs expect the path to be a colon-separated list stored in
+<CODE>PATH</CODE>.  Hence <I>es</I> must maintain a copy of each
+variable, with a change in one reflected as a change in the other.
+
+<A NAME="Initialization"><H3>Initialization</H3></A>
+
+</B> Much of <I>es</I>'s initialization is actually done by an
+<I>es</I> script, called <CODE>initial.es</CODE>, which is converted
+by a shell script to a C character string at compile time and stored
+internally. The script illustrates how the default actions for
+<I>es</I>'s parser is set up, as well as features such as the
+<CODE>path</CODE>/<CODE>PATH</CODE> aliasing mentioned above.
+<a href="#erratum6" name="erratum6-use">[Errata note 6]</a>
+
+<p>
+
+Much of the script consists of lines like:
+
+<pre>
+  fn-%and = $&amp;and
+  fn-%append = $&amp;append
+  fn-%background = $&amp;background
+</pre>
+
+which bind the shell services such as short-circuit-and,
+backgrounding, etc., to the <CODE>%</CODE>-prefixed hook variables.
+
+<p>
+
+There are also a set of assignments which bind
+the built-in shell functions to their hook variables:
+
+<pre>
+  fn-. = $&amp;dot
+  fn-break = $&amp;break
+  fn-catch = $&amp;catch
+</pre>
+
+The difference with these is that they are given names invoked
+directly by the user; "<CODE>.</CODE>" is the Bourne-compatible
+command for "sourcing" a file.
+
+<p>
+
+Finally, some settor functions are defined to work around UNIX
+path searching (and other) conventions. For example,
+
+<pre>
+  set-path = @ {
+    local (set-PATH = )
+      PATH = &lt;&gt;{%flatten : $*}
+    return $*
+  }
+  set-PATH = @ {
+    local (set-path = )
+      path = &lt;&gt;{%fsplit : $*}
+    return $*
+  }
+</pre>
+
+A note on implementation: these functions temporarily assign their
+opposite-case settor cousin to null before making the assignment to
+the opposite-case variable.  This avoids infinite recursion between
+the two settor functions.
+
+<A NAME="The-Environment"><H3>The Environment</H3></A>
+
+UNIX shells typically maintain a table of variable definitions
+which is passed on to child processes when they are created. This
+table is loosely referred to as the environment or the environment
+variables.  Although traditionally the environment has been used to
+pass values of variables only, the duality of functions and variables
+in <I>es</I> has made it possible to pass down function definitions to
+subshells. (While <I>rc</I> also offered this functionality, it was
+more of a kludge arising from the restriction that there was not a
+separate space for "environment functions.")
+
+<p>
+
+Having functions in the environment brings them into the same
+conceptual framework as variables -- they follow identical rules for
+creation, deletion, presence in the environment, and so on.
+Additionally, functions in the environment are an optimization for
+file I/O and parsing time. Since nearly all shell state can now be
+encoded in the environment, it becomes superfluous for a new instance
+of <I>es</I>, such as one started by <I>xterm</I> (1), to run a
+configuration file. Hence shell startup becomes very quick.
+
+<p>
+
+As a consequence of this support for the environment, a fair amount of
+<I>es</I> must be devoted to "unparsing" function definitions so
+that they may be passed as environment strings. This is complicated a
+bit more because the lexical environment of a function definition must
+be preserved at unparsing. This is best illustrated by an example:
+
+<pre>
+  es&gt; <I>let (a=b) fn foo {echo $a}</I>
+</pre>
+
+which lexically binds <CODE>b</CODE> to the variable <CODE>a</CODE>
+for the scope of this function definition. Therefore, the external
+representation of this function must make this information
+explicit. It is encoded as:
+
+<pre>
+  es&gt; <I>whatis foo</I>
+  %closure(a=b)@ * {echo $a}
+</pre>
+
+(Note that for cultural compatibility with other shells, functions
+with no named parameters use "<CODE>*</CODE>" for binding
+arguments.)
+
+<A NAME="Interactions-With-UNIX"><H3>Interactions With UNIX</H3></A>
+
+Unlike most traditional shells, which have feature sets dictated by
+the UNIX system call interface, <I>es</I> contains features
+which do not interact well with UNIX itself. For example,
+rich return values make sense from shell functions (which are run
+inside the shell itself) but cannot be returned from shell scripts or
+other external programs, because the <I>exit</I>/<I>wait</I> interface
+only supports passing small integers. This has forced us to build some
+things into the shell which otherwise could be external.
+
+<p>
+
+The exception mechanism has similar problems.  When an exception is
+raised from a shell function, it propagates as expected; if raised
+from a subshell, it cannot be propagated as one would like it to be:
+instead, a message is printed on exit from the subshell and a false
+exit status is returned. We consider this unfortunate, but there
+seemed no reasonable way to tie exception propagation to any existing
+UNIX mechanism. In particular, the signal machinery is
+unsuited to the task. In fact, signals complicate the control flow in
+the shell enough, and cause enough special cases throughout the shell,
+so as to be more of a nuisance than a benefit.
+
+<p>
+
+One other unfortunate consequence of our shoehorning <I>es</I> onto
+UNIX systems is the interaction between lexically scoped
+variables, the environment, and subshells. Two functions, for example,
+may have been defined in the same lexical scope. If one of them
+modifies a lexically scoped variable, that change will affect the
+variable as seen by the other function. On the other hand, if the
+functions are run in a subshell, the connection between their lexical
+scopes is lost as a consequence of them being exported in separate
+environment strings. This does not turn out to be a significant
+problem, but it does not seem intuitive to a programmer with a
+background in functional languages.
+
+<p>
+
+One restriction on <I>es</I> that arose because it had to work in a
+traditional UNIX environment is that lists are not
+hierarchical; that is, lists may not contain lists as elements. In
+order to be able to pass lists to external programs with the same
+semantics as passing them to shell functions, we had to restrict lists
+to the same structure as <I>exec</I>-style argument vectors.
+Therefore all lists are flattened, as in <I>rc</I> and <I>csh</I>.
+
+<p>
+
+<A NAME="Garbage-Collection"><H3>Garbage Collection</H3></A>
+
+Since <I>es</I> incorporates a true lambda calculus, it includes the
+ability to create true recursive structures, that is, objects which
+include pointers to themselves, either directly or indirectly. While
+this feature can be useful for programmers, it has the unfortunate
+consequence of making memory management in <I>es</I> more complex than
+that found in other shells. Simple memory reclamation strategies such
+as arena style allocation <a href="#ref8">[8]</a> or reference counting are unfortunately
+inadequate; a full garbage collection system is required to plug all
+memory leaks.
+
+<p>
+
+Based on our experience with <I>rc</I>'s memory use, we decided that a
+copying garbage collector would be appropriate for <I>es</I>. The
+observations leading to this conclusion were: (1) between two separate
+commands little memory is preserved (it roughly corresponds to the
+storage for environment variables); (2) command execution can consume
+large amounts of memory for a short time, especially when loops are
+involved; and, (3) however much memory is used, the working set of the
+shell will typically be much smaller than the physical memory
+available. Thus, we picked a strategy where we traded relatively fast
+collection times for being somewhat wasteful in the amount of memory
+used in exchange. While a generational garbage collector might have
+made sense for the same reasons that we picked a copying collector, we
+decided to avoid the added complexity implied by switching to the
+generational model.
+
+<p>
+
+During normal execution of the shell, memory is acquired by
+incrementing a pointer through a pre-allocated block. When this block
+is exhausted, all live pointers from outside of garbage collector
+memory, the <I>rootset</I>, are examined, and any structure that they
+point to is copied to a new block. When the rootset has been scanned,
+all the freshly copied data is scanned similarly, and the process is
+repeated until all reachable data has been copied to the new block. At
+this point, the memory request which triggered the collection should
+be able to succeed. If not, a larger block is allocated and the
+collection is redone.
+
+<p>
+
+During some parts of the shell's execution -- notably while the
+<I>yacc</I> parser driver is running -- it is not possible to identify
+all of the rootset, so garbage collection is disabled. If an
+allocation request is made during this time for which there is not
+enough memory available in the arena, a new chunk of memory is grabbed
+so that allocation can continue.
+
+<p>
+
+Garbage collectors have developed a reputation for being hard to
+debug. The collection routines themselves typically are not the source
+of the difficulty. Even more sophisticated algorithms than the one
+found in <I>es</I> are usually only a few hundred lines of
+code. Rather, the most common form of GC bug is failing to identify
+all elements of the rootset, since this is a rather open-ended problem
+which has implications for almost every routine. To find this form of
+bug, we used a modified version of the garbage collector which has two
+key features: (1) a collection is initiated at every allocation when
+the collector is not disabled, and (2) after a collection finishes,
+access to all the memory from the old region is disabled.
+<a href="#footnote3" name="footnote3-use">[Footnote 3]</a>
+Thus, any reference to a pointer in garbage collector space which
+could be invalidated by a collection immediately causes a memory
+protection fault. We strongly recommend this technique to anyone
+implementing a copying garbage collector.
+
+<p>
+
+There are two performance implications of the garbage collector; the
+first is that, occasionally, while the shell is running, all action
+must stop while the collector is invoked. This takes roughly 4% of the
+running time of the shell. More serious is that at the time of any
+potential allocation, either the collector must be disabled, or all
+pointers to structures in garbage collector memory must be identified,
+effectively requiring them to be in memory at known addresses, which
+defeats the registerization optimizations required for good
+performance from modern architectures. It is hard to quantify the
+performance consequences of this restriction.
+
+<p>
+
+The garbage collector consists of about 250 lines of code for the
+collector itself (plus another 300 lines of debugging code), along
+with numerous declarations that identify variables as being part of
+the rootset and small (typically 5 line) procedures to allocate, copy,
+and scan all the structure types allocated from collector space.
+
+<A NAME="Future-Work"><H3>Future Work</H3></A>
+
+There are several places in <I>es</I> where one would expect to
+be able to redefine the built-in behavior and no such hook exists. The
+most notable of these is the wildcard expansion, which behaves
+identically to that in traditional shells. We hope to expose some of
+the remaining pieces of <I>es</I> in future versions.
+
+<p>
+
+One of the least satisfying pieces of <I>es</I> is its parser. We have
+talked of the distinction between the core language and the full
+language; in fact, the translation of <I>syntactic sugar</I> (i.e.,
+the convenient UNIX shell syntax presented to the user) to core
+language features is done in the same <I>yacc</I>-generated parser as
+the recognition of the core language.  Unfortunately, this ties the
+full language in to the core very tightly, and offers little room for
+a user to extend the syntax of the shell.
+
+<p>
+
+We can imagine a system where the parser only recognizes the core
+language, and a set of exposed transformation rules would map the
+extended syntax which makes <I>es</I> feel like a shell, down to the
+core language. The <I>extend-syntax</I> <a href="#ref9">[9]</a> system
+for Scheme provides a good example of how to design such a mechanism,
+but it, like most other macro systems designed for Lisp-like
+languages, does not mesh well with the free-form syntax that has
+evolved for UNIX shells.
+
+
+<p>
+
+The current implementation of <I>es</I> has the undesirable
+property that all function calls cause the C stack to nest. In
+particular, tail calls consume stack space, something they could be
+optimized not to do. Therefore, properly tail recursive functions,
+such as <CODE>echo-nl</CODE> above, which a Scheme or ML programmer
+would expect to be equivalent to looping, have hidden costs. This is
+an implementation deficiency which we hope to remedy in the near
+future.
+
+<p>
+
+<I>Es</I>, in addition to being a good language for shell programming,
+is a good candidate for a use as an embeddable "scripting" language,
+along the lines of Tcl.  <I>Es</I>, in fact, borrows much from Tcl --
+most notably the idea of passing around blocks of code as unparsed
+strings -- and, since the requirements on the two languages are
+similar, it is not surprising that the syntaxes are so similar.
+<I>Es</I> has two advantages over most embedded languages: (1) the
+same code can be used by the shell or other programs, and many
+functions could be identical; and (2) it supports a wide variety of
+programming constructs, such as closures and exceptions. We are
+currently working on a "library" version of <I>es</I> which could be
+used stand-alone as a shell or linked in other programs, with or
+without shell features such as wildcard expansion or pipes.
+
+<p>
+
+<A NAME="Conclusions"><H3>Conclusions</H3></A>
+
+<p>
+
+</B> There are two central ideas behind <I>es</I>. The first is that
+a system can be made more programmable by exposing its internals to
+manipulation by the user.  By allowing spoofing of heretofore
+unmodifiable shell features, <I>es</I> gives its users great
+flexibility in tailoring their programming environment, in ways that
+earlier shells would have supported only with modification of shell
+source itself.
+
+<p>
+
+Second, <I>es</I> was designed to support a model of programming where
+code fragments could be treated as just one more form of data. This
+feature is often approximated in other shells by passing commands
+around as strings, but this approach requires resorting to baroque
+quoting rules, especially if the nesting of commands is several layers
+deep. In <I>es</I>, once a construct is surrounded by braces, it can
+be stored or passed to a program with no fear of mangling.
+
+<p>
+
+<I>Es</I> contains little that is completely new. It is a synthesis of
+the attributes we admire most from two shells -- the venerable Bourne
+shell and Tom Duff's <I>rc</I> -- and several programming languages,
+notably Scheme and Tcl.  Where possible we tried to retain the
+simplicity of <I>es</I>'s predecessors, and in several cases, such as
+control flow constructs, we believe that we have simplified and
+generalized what was found in earlier shells.
+
+<p>
+
+We do not believe that <I>es</I> is the ultimate shell.  It has a
+cumbersome and non-extensible syntax, the support for traditional
+shell notations forced some unfortunate design decisions, and some of
+<I>es</I>'s features, such as exceptions and rich return values, do
+not interact as well with UNIX as we would like them to. Nonetheless,
+we think that <I>es</I> is successful as both a shell and a
+programming language, and would miss its features and extensibility if
+we were forced to revert to other shells.
+
+<p>
+
+<A NAME="Acknowledgements"><H3>Acknowledgements</H3></A>
+
+<p>
+
+We'd like to thank the many people who helped both with the
+development of <I>es</I> and the writing of this paper. Dave Hitz
+supplied essential advice on where to focus our efforts. Chris
+Siebenmann maintained the <I>es</I> mailing list and ftp distribution
+of the source. Donn Cave, Peter Ho, Noel Hunt, John Mackin, Bruce
+Perens, Steven Rezsutek, Rich Salz, Scott Schwartz, Alan Watson, and
+all other contributors to the list provided many suggestions, which
+along with a ferocious willingness to experiment with a
+not-ready-for-prime-time shell, were vital to <I>es</I>'s
+development. Finally, Susan Karp and Beth Mitcham read many drafts of
+this paper and put up with us while <I>es</I> was under development.
+
+<p>
+
+<A NAME="Footnotes"><H3>Footnotes</H3></A>
+
+<a name="footnote1" href="#footnote1-use">1.</a>
+
+In our examples, we use "<CODE>es&gt;</CODE>" as <I>es</I>'s
+prompt. The default prompt, which may be overridden, is
+"<CODE>; </CODE>" which is interpreted by <I>es</I> as a null
+command followed by a command separator. Thus, whole lines, including
+prompts, can be cut and pasted back to the shell for re-execution. In
+examples, an italic fixed width font indicates user input.</a>
+
+<p>
+
+<a name="footnote2" href="#footnote2-use">2.</a>
+
+The keyword <CODE>@</CODE> introduces the lambda. Since <CODE>@</CODE>
+is not a special character in <I>es</I> it must be surrounded by white
+space.  <CODE>@</CODE> is a poor substitute for the Greek letter
+lambda, but it was one of the few characters left on a standard
+keyboard which did not already have a special meaning.
+
+<p>
+
+<a name="footnote3" href="#footnote3-use">3.</a>
+
+This disabling depends on operating system support.
+
+<A NAME="Errata"><H3>Errata</H3></A>
+
+This section covers changes to <I>es</I> since original publication of
+the paper.  If you are aware of any undocumented differences, please
+contact the authors.
+
+<p>
+
+<a name="erratum1" href="#erratum1-use">1.</a>
+
+Haahr's present affiliation is
+<a href="http://www.jivetech.com/">Jive Technology</a>,
+and he can be reached by email at
+<a href="mailto:haahr@jivetech.com">haahr@jivetech.com</a>.
+
+<p>
+
+<a name="erratum2" href="#erratum2-use">2.</a>
+
+The <code>&lt;&gt</code> operator for obtaining the return value of a
+command has been renamed <code>&lt;=</code> to avoid conflicting with
+the POSIX-compatible defintion of <code>&lt;&gt</code> as "open for
+reading and writing."
+
+<p>
+
+<a name="erratum3" href="#erratum3-use">3.</a>
+
+<code>error</code> exceptions now have an additional piece of
+information.  The second word (the one after <code>error</code>) is
+now the name of the routine which caused the error.  Thus, in the new
+version of <code>in</code> below, the <code>throw</code> command has
+an extra <code>in</code> in it.
+
+<p>
+
+<a name="erratum4" href="#erratum4-use">4.</a>
+
+This example users an obsolete version of the <code>fork</code>
+builtin.  The <code>in</code> function should now be
+
+<pre>
+  fn in dir cmd {
+    if {~ $#dir 0} {
+      throw error in 'usage: in dir cmd'
+    }
+    fork {    # run in a subshell
+      cd $dir
+      $cmd
+    }
+  }
+</pre>
+
+<p>
+
+<a name="erratum5" href="#erratum5-use">5.</a>
+
+The pipe timing example may not work on all systems.  It depends on
+having a version of <code>time</code> that understands <i>es</i>,
+either by building it in to <i>es</i> or having an external time use
+the <code>SHELL</code> environment variable.  <i>Es</i> will include a
+(minimal) time function if it is built with the compilation option
+<code>BUITIN_TIME</code>.
+
+<p>
+
+<a name="erratum6" href="#erratum6-use">6.</a>
+
+The initialization procedure as originally described lead to
+performance problems, for two reasons.  The first is the time needed
+to parse and run the initialization code;  the second that the data
+created by running the code (variable names and function definitions,
+for example) had to be garbage collected.  <i>Es</i> solves both
+problems by moving this work to compile-time.
+
+<p>
+
+When <i>es</i> is built, an executable called <code>esdump</code> is
+created, which is a trimmed down version of the shell.  That program
+is run, with the initialization file <code>initial.es</code> as its
+input.  The last thing done in the initialization file is a call to a
+primitive <code>$&amp;dump</code>, which is only included in
+<code>esdump</code>, that writes out the entire memory state of the
+shell as declarations in C source code.  The generated C code is
+compiled and linked with the rest of the source to produce the real
+shell executable.  The data from the dumping is not garbage collected
+and is declared <code>const</code> so that the C compiler can put it
+into read-only memory, if possible.
+
+<A NAME="References"><H3>References</H3></A>
+
+<a name="ref1">1.</a>
+Brian W. Kernighan and Rob Pike, <I>The UNIX Programming
+Environment</I>, Prentice-Hall, 1984.
+
+<p>
+
+<a name="ref2">2.</a>
+S. R. Bourne, "The UNIX Shell," <I>Bell Sys. Tech. J.</I>, vol. 57,
+no. 6, pp. 1971-1990, 1978.
+
+<p>
+
+<a name="ref3">3.</a>
+Tom Duff, "Rc -- A Shell for Plan 9 and UNIX Systems," in <I>UKUUG
+Conference Proceedings</I>, pp. 21-33, Summer 1990.
+
+<p>
+
+<a name="ref4">4.</a>
+William Clinger and Jonathan Rees (editors), <I>The Revised^4 Report
+on the Algorithmic Language Scheme</I>, 1991.
+
+<p>
+
+<a name="ref5">5.</a>
+Robin Milner, Mads Tofte, and Robert Harper, <I>The Definition of
+Standard ML</I>, MIT Press, 1990.
+
+<p>
+
+<a name="ref6">6.</a>
+John Ousterhout, "Tcl: An Embeddable Command Language," in <I>Usenix
+Conference Proceedings</I>, pp. 133-146, Winter 1990.
+
+<p>
+
+<a name="ref7">7.</a>
+Jon L. Bentley, <I>More Programming Pearls</I>, Addison-Welsey, 1988.
+
+<p>
+
+<a name="ref8">8.</a>
+David R. Hanson, "Fast allocation and deallocation of memory based on
+object lifetimes," <I>Software -- Practice and Experience</I>,
+vol. 20, no.  1, pp. 5-12, January, 1990.
+
+<p>
+
+<a name="ref9">9.</a>
+R. Kent Dybvig, <I>The Scheme Programming Language</I>, Prentice-Hall,
+1987.
+
+<A NAME="Author-Information"><H3>Author Information</H3></A>
+
+Paul Haahr is a computer scientist at Adobe Systems Incorporated where
+he works on font rendering technology. His interests include
+programming languages, window systems, and computer architecture. Paul
+received an A.B. in computer science from Princeton University in
+1990. He can be reached by electronic mail at <I>haahr@adobe.com</I>
+or by surface mail at Adobe Systems Incorporated, 1585 Charleston
+Road, Mountain View, CA 94039.  <a href="#erratum1">[Errata note 1]</a>
+
+<p>
+
+Byron Rakitzis is a system programmer at Network Appliance
+Corporation, where he works on the design and implementation of their
+network file server. In his spare time he works on shells and window
+systems.  His free-software contributions include a UNIX
+version of <I>rc</I>, the Plan 9 shell, and <I>pico</I>, a version of
+Gerard Holzmann's picture editor <I>popi</I> with code generators for
+SPARC and MIPS. He received an A.B. in Physics from Princeton
+University in 1990.  He has two cats, Pooh-Bah and Goldilocks, who try
+to rule his home life. Byron can be reached at
+<a href="http://www.rakitzis.com/resume.html">byron@netapp.com</a>
+or at
+<a href="http://www.netapp.com/">Network Appliance Corporation</a>,
+2901 Tasman Drive, Suite 208, Santa Clara, CA 95054.
+
+</body>
+</html>

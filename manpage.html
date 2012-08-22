@@ -1,0 +1,3312 @@
+<!-- Creator     : groff version 1.21 -->
+<!-- CreationDate: Wed Aug 22 13:04:51 2012 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       body    { margin: auto; width: 700px; }
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>ES</title>
+
+</head>
+<body>
+
+<h1 align="center">ES</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#LANGUAGE">LANGUAGE</a><br>
+<a href="#SPECIAL VARIABLES">SPECIAL VARIABLES</a><br>
+<a href="#SYNTACTIC SUGAR">SYNTACTIC SUGAR</a><br>
+<a href="#BUILTINS">BUILTINS</a><br>
+<a href="#PRIMITIVES">PRIMITIVES</a><br>
+<a href="#OPTIONS">OPTIONS</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#BUGS">BUGS</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
+
+<hr>
+
+
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">es &minus;
+extensible shell</p>
+
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>es</b>
+[<b>&minus;silevxnpo</b>] [<b>&minus;c</b> <i>command</i> |
+<i>file</i>] [<i>arguments</i>]</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><i>Es</i> is a
+command interpreter and programming language which combines
+the features of other Unix shells and the features of a
+functional programming language such as Scheme. The syntax
+is derived from <i>rc</i>(1). <i>Es</i> is intended for use
+both as an interactive shell and a programming language for
+scripts.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><i>Es</i> is an
+extremely customizable language. The semantics can be
+altered radically by redefining functions that are called to
+implement internal operations. This manual page describes
+the default, initial configuration. See the section entitled
+<b>Hook Functions</b> for details on entry points which can
+be redefined to give the shell extended semantics.</p>
+
+<h2>LANGUAGE
+<a name="LANGUAGE"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><i>Es</i> is an
+interpreter which reads commands and executes them. The
+simplest form of command in <i>es</i> is a sequence of words
+separated by white space (space and tab) characters. A word
+is either a string or a program fragment (see below). The
+first word is the command to be executed; the remaining
+words are passed as arguments to that command. If the first
+word is a string, it is a interpreted as the name of a
+program or shell function to run. If the name is the name of
+a shell function, that function is executed. Otherwise, the
+name is used as the name of an executable file. If the name
+begins with /, ./, or ../, then it is used as the absolute
+path name of a file; if not, <i>es</i> looks for an
+executable file in the directories named by $path.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Commands are
+terminated by newline or semicolon (;). A command may also
+be terminated by an ampersand (&amp;), which causes the
+command to be run in the background: the shell does not wait
+for the command to finish before continuing execution.
+Background processes have an implicit redirection of
+/dev/null as their standard input that may be overridden by
+an explicit redirection.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Quoting</b>
+<i><br>
+Es</i> gives several characters special meaning; special
+characters automatically terminate words. The following
+characters, along with space, tab, and newline, are
+special:</p>
+
+<p style="margin-left:18%; margin-top: 1em"># $ &amp;
+&acute; ( ) ; &lt; = &gt; \ ^ ` { | }</p>
+
+<p style="margin-left:11%; margin-top: 1em">The single
+quote (&rsquo;) prevents special treatment of any character
+other than itself. Any characters between single quotes,
+including newlines, backslashes, and control characters, are
+treated as an uninterpreted string. A quote character itself
+may be quoted by placing two quotes in a row. A single quote
+character is therefore represented by the sequence
+&rsquo;&rsquo;&rsquo;&rsquo;. The empty string is
+represented by &rsquo;&rsquo;. Thus:</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo
+&rsquo;What&rsquo;&rsquo;s the plan, Stan?&rsquo;</p>
+
+<p style="margin-left:11%; margin-top: 1em">prints out</p>
+
+<p style="margin-left:18%; margin-top: 1em">What&rsquo;s
+the plan, Stan?</p>
+
+<p style="margin-left:11%; margin-top: 1em">The backslash
+(\) quotes the immediately following character, if it is one
+of the special characters, except for newline. In addition,
+<i>es</i> recognizes backslash sequences similar to those
+used in C strings:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\a</p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>alert (bell)</p></td>
+<td width="31%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\b</p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>backspace</p></td>
+<td width="31%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\e</p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>escape</p></td>
+<td width="31%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\f</p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>form-feed</p></td>
+<td width="31%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\n</p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>newline</p></td>
+<td width="31%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\r</p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>carriage return</p></td>
+<td width="31%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\t</p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>tab</p></td>
+<td width="31%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\x<i>nn</i></p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>hexadecimal character <i>nn</i></p></td>
+<td width="31%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="6%">
+
+
+<p>\<i>nnn</i></p></td>
+<td width="4%"></td>
+<td width="37%">
+
+
+<p>octal character <i>nnn</i></p></td>
+<td width="31%">
+</td></tr>
+</table>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Comments</b>
+<br>
+The number sign (#) begins a comment in <i>es</i>. All
+characters up to but not including the next newline are
+ignored.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Line
+continuation</b> <br>
+A long logical line may be continued over several physical
+lines by terminating each line (except the last) with a
+backslash (\). The backslash-newline sequence is treated as
+a space. Note that line continuation does not work in
+comments, where the backslash is treated as part of the
+comment, and inside quoted strings, where the backslash and
+newline are quoted.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Lists</b>
+<br>
+The primary data structure in <i>es</i> is the list, which
+is a sequence of words. Parentheses are used to group lists.
+The empty list is represented by (). Lists have no
+hierarchical structure; a list inside another list is
+expanded so that the outer list contains all the elements of
+the inner list. Thus, the following are all equivalent:</p>
+
+<p style="margin-left:18%; margin-top: 1em">one two three
+<br>
+(one two three) <br>
+((one) () ((two three)))</p>
+
+<p style="margin-left:11%; margin-top: 1em">Note that the
+null string, &rsquo;&rsquo;, and the empty list, (), are two
+very different things. Assigning the null string to variable
+is a valid operation, but it does not remove its
+definition.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Concatenation</b>
+<br>
+Two lists may be joined by the concatenation operator (^). A
+single word is a list of length one, so</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo
+foo^bar</p>
+
+<p style="margin-left:11%; margin-top: 1em">produces the
+output</p>
+
+<p style="margin-left:18%; margin-top: 1em">foobar</p>
+
+<p style="margin-left:11%; margin-top: 1em">For lists of
+more than one element, concatenation produces the cross
+(Cartesian) product of the elements in both lists:</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo (a&minus;
+b&minus; c&minus;)^(1 2)</p>
+
+<p style="margin-left:11%; margin-top: 1em">produces the
+output</p>
+
+<p style="margin-left:18%; margin-top: 1em">a&minus;1
+a&minus;2 b&minus;1 b&minus;2 c&minus;1 c&minus;2</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Variables</b>
+<br>
+A list may be assigned to a variable, using the
+notation:</p>
+
+<p style="margin-left:18%; margin-top: 1em"><i>var</i> =
+<i>list</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">Any sequence of
+non-special characters, except a sequence including only
+digits, may be used as a variable name. <i>Es</i> exports
+all user-defined variables into the environment unless it is
+explicitly told not to.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The value of a
+variable is referenced with the notation:</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">$<i>var</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">Any variable
+which has not been assigned a value returns the empty list
+when referenced. In addition, multiple references are
+allowed:</p>
+
+<p style="margin-left:18%; margin-top: 1em">a = foo <br>
+b = a <br>
+echo $$b</p>
+
+<p style="margin-left:11%; margin-top: 1em">prints</p>
+
+<p style="margin-left:18%; margin-top: 1em">foo</p>
+
+<p style="margin-left:11%; margin-top: 1em">A
+variable&rsquo;s definition may also be removed by assigning
+the empty list to a variable:</p>
+
+
+<p style="margin-left:18%; margin-top: 1em"><i>var</i>=</p>
+
+<p style="margin-left:11%; margin-top: 1em">Multiple
+variables may be assigned with a single assignment
+statement. The left hand side of the assignment operation
+consists of a list of variables which are assigned, one by
+one, to the values in the list on the right hand side. If
+there are more variables than values in the list, the empty
+list is assigned to the remaining variables. If there are
+fewer variables than elements in the list, the last variable
+is bound to all the remaining list values.</p>
+
+<p style="margin-left:11%; margin-top: 1em">For
+example,</p>
+
+<p style="margin-left:18%; margin-top: 1em">(a b) = 1 2
+3</p>
+
+<p style="margin-left:11%; margin-top: 1em">has the same
+effect as</p>
+
+<p style="margin-left:18%; margin-top: 1em">a = 1 <br>
+b = 2 3</p>
+
+<p style="margin-left:11%; margin-top: 1em">and</p>
+
+<p style="margin-left:18%; margin-top: 1em">(a b c) = 1
+2</p>
+
+<p style="margin-left:11%; margin-top: 1em">is the same
+as</p>
+
+<p style="margin-left:18%; margin-top: 1em">a = 1 <br>
+b = 2 <br>
+c =</p>
+
+<p style="margin-left:11%; margin-top: 1em">Note that when
+assigning values to more than one variable, the list of
+variables must be enclosed in parentheses.</p>
+
+<p style="margin-left:11%; margin-top: 1em">For
+&rsquo;&rsquo;free careting&rsquo;&rsquo; (see below) to
+work correctly, <i>es</i> must make certain assumptions
+about what characters may appear in a variable name.
+<i>Es</i> assumes that a variable name consists only of
+alphanumeric characters, percent (%), star (*), dash (-),
+and underscore (_). To reference a variable with other
+characters in its name, quote the variable name. Thus:</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo
+$&rsquo;we$Irdriab!le&rsquo;</p>
+
+<p style="margin-left:11%; margin-top: 1em">A variable name
+produced by some complex operation, such as concatenation,
+should be enclosed in parentheses:</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">$(<i>var</i>)</p>
+
+<p style="margin-left:11%; margin-top: 1em">Thus:</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">Good&minus;Morning
+= Bonjour <br>
+Guten = Good <br>
+Morgen = Morning <br>
+echo $($Guten^&minus;^$Morgen)</p>
+
+<p style="margin-left:11%; margin-top: 1em">prints</p>
+
+<p style="margin-left:18%; margin-top: 1em">Bonjour</p>
+
+<p style="margin-left:11%; margin-top: 1em">Each element of
+the list in parentheses is treated as an independent
+variable and expanded separately. Thus, given the above
+definitions,</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo $(Guten
+Morgen)</p>
+
+<p style="margin-left:11%; margin-top: 1em">prints</p>
+
+<p style="margin-left:18%; margin-top: 1em">Good
+Morning</p>
+
+<p style="margin-left:11%; margin-top: 1em">To count the
+number of elements in a variable, use</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">$#<i>var</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">This returns a
+single-element list with the number of elements in
+$<i>var</i>.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Subscripting</b>
+<br>
+Variables may be indexed with the notation</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">$<i>var</i>(<i>n</i>)</p>
+
+<p style="margin-left:11%; margin-top: 1em">where <i>n</i>
+is a list of integers or ranges. Subscript indexes are based
+at one. The list of subscripts need not be in order or even
+unique. Thus, if</p>
+
+<p style="margin-left:18%; margin-top: 1em">a = one two
+three</p>
+
+<p style="margin-left:11%; margin-top: 1em">then</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo $a(3 3
+3)</p>
+
+<p style="margin-left:11%; margin-top: 1em">prints</p>
+
+<p style="margin-left:18%; margin-top: 1em">three three
+three</p>
+
+<p style="margin-left:11%; margin-top: 1em">Subscript
+indices which refer to nonexistent elements expand to the
+empty list. Thus, given the definition above</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo $a(3 1 4 1
+5 9 2 6 5)</p>
+
+<p style="margin-left:11%; margin-top: 1em">prints</p>
+
+<p style="margin-left:18%; margin-top: 1em">three one one
+two</p>
+
+<p style="margin-left:11%; margin-top: 1em">Subscript
+ranges are of the form <i>lo</i>...<i>hi</i> and refer to
+all the elements between <i>lo</i> and <i>hi</i>. If
+<i>lo</i> is omitted, then 1 is used as a default value; if
+<i>hi</i> is omitted, the length of the list is used.
+Thus</p>
+
+<p style="margin-left:18%; margin-top: 1em">* = $*(2
+...)</p>
+
+<p style="margin-left:11%; margin-top: 1em">removes the
+first element of *, similar to the effect of shift in
+<i>rc</i>(1) or <i>sh</i>(1).</p>
+
+<p style="margin-left:11%; margin-top: 1em">The notation
+$<i>n</i>, where <i>n</i> is an integer, is a shorthand for
+$*(<i>n</i>). Thus, <i>es</i>&rsquo;s arguments may be
+referred to as $1, $2, and so on.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Note that the
+list of subscripts may be given by any <i>es</i> expression,
+so</p>
+
+<p style="margin-left:18%; margin-top: 1em">$var(`{awk
+&rsquo;BEGIN{for(i=1;i&lt;=10;i++)print i;exit
+}&rsquo;})</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns the
+first 10 elements of $var.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Free
+Carets</b> <i><br>
+Es</i> inserts carets (concatenation operators) for free in
+certain situations, in order to save some typing on the
+user&rsquo;s behalf. For example, the following are all
+equivalent:</p>
+
+<p style="margin-left:18%; margin-top: 1em">cc &minus;O
+&minus;g &minus;c malloc.c alloca.c <br>
+cc &minus;^(O g c) (malloc alloca)^.c <br>
+opts=O g c; files=malloc alloca; cc &minus;$opts
+$files.c</p>
+
+<p style="margin-left:11%; margin-top: 1em"><i>Es</i>
+inserts a free-caret between the
+&rsquo;&rsquo;&minus;&rsquo;&rsquo; and $opts, as well as
+between $files and .c. The rule for free carets is as
+follows: if a word or keyword is immediately followed by
+another word, keyword, dollar-sign or backquote without any
+intervening spaces, then <i>es</i> inserts a caret between
+them.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Flattened
+Lists</b> <br>
+To create a single-element list from a multi-element list,
+with the components space-separated, use</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">$^<i>var</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">Flattening is
+useful when the normal list concatenation rules need to be
+bypassed. For example, to append a single period at the end
+of $path, use:</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo
+$^path.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Wildcard
+Expansion</b> <i><br>
+Es</i> expands wildcards in filenames if possible. When the
+characters *, [ or ? occur in an argument or command,
+<i>es</i> looks at the argument as a pattern for matching
+against files. (Contrary to the behavior some other shells
+exhibit, <i>es</i> will only perform pattern matching if a
+metacharacter occurs unquoted and literally in the input.
+Thus,</p>
+
+<p style="margin-left:18%; margin-top: 1em">foo =
+&rsquo;*&rsquo; <br>
+echo $foo</p>
+
+<p style="margin-left:11%; margin-top: 1em">will always
+echo just a star. In order for non-literal metacharacters to
+be expanded, an eval statement must be used in order to
+rescan the input.) Pattern matching occurs according to the
+following rules: a * matches any number (including zero) of
+characters. A ? matches any single character, and a [
+followed by a number of characters followed by a ] matches a
+single character in that class. The rules for character
+class matching are the same as those for <i>ed</i>(1), with
+the exception that character class negation is achieved with
+the tilde (~), not the caret (^), since the caret already
+means something else in <i>es</i>. The filename component
+separator, slash (/), must appear explicitly in patterns. *
+and ? do not match a dot character (.) at the beginning of a
+filename component.</p>
+
+<p style="margin-left:11%; margin-top: 1em">A tilde (~) as
+the first character of an argument is used to refer to home
+directories. A tilde alone or followed by a slash (/) is
+replaced by the value of $home, which is usually the home
+directory of the current user. A tilde followed by a
+username is replaced with the home directory of that user,
+according to <i>getpwent</i>(3).</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Pattern
+Matching</b> <br>
+The tilde (~) operator is used in <i>es</i> for matching
+strings against wildcard patterns. The command</p>
+
+<p style="margin-left:18%; margin-top: 1em">~ <i>subject
+pattern pattern</i> ...</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns a true
+value if and only if the subject matches any of the
+patterns. The matching follows the same rules as wildcard
+expansion, except that slashes (/) are not considered
+significant, leading dots (.) do not have to be matched
+explicitly, and home directory expansion does not occur.
+Thus</p>
+
+<p style="margin-left:18%; margin-top: 1em">~ foo f*</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns zero
+(true), while</p>
+
+<p style="margin-left:18%; margin-top: 1em">~ (bar baz)
+f*</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns one
+(false). The null list is matched by the null list, so</p>
+
+<p style="margin-left:18%; margin-top: 1em">~ $foo ()</p>
+
+<p style="margin-left:11%; margin-top: 1em">checks to see
+whether $foo is empty or not. This may also be achieved by
+the test</p>
+
+<p style="margin-left:18%; margin-top: 1em">~ $#foo 0</p>
+
+<p style="margin-left:11%; margin-top: 1em">Note that
+inside a ~ command <i>es</i> does not match patterns against
+file names, so it is not necessary to quote the characters
+*, [ and ?. However, <i>es</i> does expand the subject
+against filenames if it contains metacharacters. Thus, the
+command</p>
+
+<p style="margin-left:18%; margin-top: 1em">~ * ?</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns true if
+any of the files in the current directory have a
+single-character name. Note that if the ~ command is given a
+list as its first argument, then a successful match against
+any of the elements of that list will cause ~ to return
+true. For example:</p>
+
+<p style="margin-left:18%; margin-top: 1em">~ (foo goo zoo)
+z*</p>
+
+<p style="margin-left:11%; margin-top: 1em">is true.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Pattern
+Extraction</b> <br>
+The double-tilde (~~) operator is used in <i>es</i> for
+extracting the parts of strings that match patterns. The
+command</p>
+
+<p style="margin-left:18%; margin-top: 1em">~~ <i>subject
+pattern pattern</i> ...</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns the
+parts of each matching subject which correspond to the
+wildcards.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Each subject is
+checked in order against each pattern; if it matches the
+pattern, the parts of the subject which matched each *, ?,
+or [] character range are extracted, and processing moves on
+to the next subject. If the subject does not match, the next
+pattern is tried.</p>
+
+<p style="margin-left:11%; margin-top: 1em">For example,
+the result of the extraction operation</p>
+
+<p style="margin-left:18%; margin-top: 1em">~~ (foo.c foo.x
+bar.h) *.[ch]</p>
+
+<p style="margin-left:11%; margin-top: 1em">is the list
+(foo c bar h).</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Command
+Substitution</b> <br>
+A list may be formed from the output of a command by using
+backquote substitution:</p>
+
+<p style="margin-left:18%; margin-top: 1em">`{
+<i>command</i> }</p>
+
+<p style="margin-left:11%; margin-top: 1em">returns a list
+formed from the standard output of the command in braces.
+The characters stored in the variable $ifs (for
+&rsquo;&rsquo;input field separator&rsquo;&rsquo;) are used
+to split the output into list elements. By default, $ifs has
+the value space-tab-newline. The braces may be omitted if
+the command is a single word. Thus `ls may be used instead
+of `{ls}. This last feature is useful when defining
+functions that expand to useful argument lists. A frequent
+use is:</p>
+
+<p style="margin-left:18%; margin-top: 1em">fn src { echo
+*.[chy] }</p>
+
+<p style="margin-left:11%; margin-top: 1em">followed by</p>
+
+<p style="margin-left:18%; margin-top: 1em">wc `src</p>
+
+<p style="margin-left:11%; margin-top: 1em">(This will
+print out a word-count of all C and Yacc source files in the
+current directory.)</p>
+
+<p style="margin-left:11%; margin-top: 1em">In order to
+override the value of $ifs for a single command
+substitution, use:</p>
+
+<p style="margin-left:18%; margin-top: 1em">``
+<i>ifs-list</i> { <i>command</i> }</p>
+
+<p style="margin-left:11%; margin-top: 1em">$ifs will be
+temporarily ignored and the command&rsquo;s output will be
+split as specified by the list following the double
+backquote. For example:</p>
+
+<p style="margin-left:18%; margin-top: 1em">`` :\n {cat
+/etc/passwd}</p>
+
+<p style="margin-left:11%; margin-top: 1em">splits up
+/etc/passwd into fields.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Return
+Values</b> <br>
+The return value of a command is obtained with the
+construct</p>
+
+<p style="margin-left:18%; margin-top: 1em">&lt;={
+<i>command</i> }</p>
+
+<p style="margin-left:11%; margin-top: 1em">The return
+value of an external program is its exit status (which in
+other shells can be found in special variables such as $? or
+$status), as either a small integer or the name of signal.
+Thus</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo &lt;={test
+&minus;f /etc/motd} &lt;={test &minus;w /vmunix}
+&lt;=a.out</p>
+
+<p style="margin-left:11%; margin-top: 1em">might produce
+the output</p>
+
+<p style="margin-left:18%; margin-top: 1em">0 1
+sigsegv+core</p>
+
+<p style="margin-left:11%; margin-top: 1em">along with any
+output or error messages from the programs.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><i>Es</i>
+functions and primitives can produce &rsquo;&rsquo;rich
+return values,&rsquo;&rsquo; that is, arbitrary lists as
+return values.</p>
+
+<p style="margin-left:11%; margin-top: 1em">When return
+values are interpreted as truth values, an extension of the
+normal shell conventions apply. If any element of a list is
+not equal to &rsquo;&rsquo;0&rsquo;&rsquo; (or the empty
+string), that list is considered false.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The return
+value of an assignment operation is the assigned value.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Logical
+Operators</b> <br>
+There are a number of operators in <i>es</i> which depend on
+the exit status of a command.</p>
+
+
+<p style="margin-left:18%; margin-top: 1em"><i>command1</i>
+&amp;&amp; <i>command2</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">executes the
+first command and then executes the second command if and
+only if the first command has a
+&rsquo;&rsquo;true&rsquo;&rsquo; return value.</p>
+
+
+<p style="margin-left:18%; margin-top: 1em"><i>command1</i>
+|| <i>command2</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">executes the
+first command and then executes the second command if and
+only if the first command has a
+&rsquo;&rsquo;false&rsquo;&rsquo; return value.</p>
+
+<p style="margin-left:18%; margin-top: 1em">!
+<i>command</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">inverts the
+truth value of the exit status of a command.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Input and
+output</b> <br>
+The standard output of a command may be redirected to a file
+with</p>
+
+<p style="margin-left:18%; margin-top: 1em">command &gt;
+file</p>
+
+<p style="margin-left:11%; margin-top: 1em">and the
+standard input may be taken from a file with</p>
+
+<p style="margin-left:18%; margin-top: 1em">command &lt;
+file</p>
+
+<p style="margin-left:11%; margin-top: 1em">File
+descriptors other than 0 and 1 may be specified also. For
+example, to redirect standard error to a file, use:</p>
+
+<p style="margin-left:18%; margin-top: 1em">command &gt;[2]
+file</p>
+
+<p style="margin-left:11%; margin-top: 1em">In order to
+duplicate a file descriptor, use &gt;[<i>n</i>=<i>m</i>].
+Thus to redirect both standard output and standard error to
+the same file, use</p>
+
+<p style="margin-left:18%; margin-top: 1em">command &gt;
+file &gt;[2=1]</p>
+
+<p style="margin-left:11%; margin-top: 1em">To close a file
+descriptor that may be open, use &gt;[<i>n</i>=]. For
+example, to close file descriptor 7:</p>
+
+<p style="margin-left:18%; margin-top: 1em">command
+&gt;[7=]</p>
+
+<p style="margin-left:11%; margin-top: 1em">In order to
+place the output of a command at the end of an already
+existing file, use:</p>
+
+<p style="margin-left:18%; margin-top: 1em">command
+&gt;&gt; file</p>
+
+<p style="margin-left:11%; margin-top: 1em">If the file
+does not exist, then it is created.</p>
+
+<p style="margin-left:11%; margin-top: 1em">To open a file
+for reading and writing, use the &lt;&gt; redirection
+operator; for reading and appending, use &lt;&gt;&gt;. Both
+of these operators use file descriptor 0 (standard input) by
+default. Similarly, &gt;&lt; truncates a file and opens it
+for reading and writing, and &gt;&gt;&lt; opens a file for
+reading and appending; these operators use file descriptor 1
+by default.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em">&rsquo;&rsquo;Here
+documents&rsquo;&rsquo; are supported as in <i>sh</i>(1)
+with the use of</p>
+
+<p style="margin-left:18%; margin-top: 1em">command
+&lt;&lt; &rsquo;eof-marker&rsquo;</p>
+
+<p style="margin-left:11%; margin-top: 1em">If the
+end-of-file marker is quoted, then no variable substitution
+occurs inside the here document. Otherwise, every variable
+is substituted by its space-separated-list value (see
+<b>Flat Lists</b>, below), and if a ^ character follows a
+variable name, it is deleted. This allows the unambiguous
+use of variables adjacent to text, as in</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">$variable^follow</p>
+
+<p style="margin-left:11%; margin-top: 1em">To include a
+literal $ in a here document created with an unquoted
+end-of-file marker, use $$.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Additionally,
+<i>es</i> supports &rsquo;&rsquo;here strings&rsquo;&rsquo;,
+which are like here documents, except that input is taken
+directly from a string on the command line. Its use is
+illustrated here:</p>
+
+<p style="margin-left:18%; margin-top: 1em">cat
+&lt;&lt;&lt; &rsquo;this is a here string&rsquo; | wc</p>
+
+<p style="margin-left:11%; margin-top: 1em">(This feature
+enables <i>es</i> to export functions that use here
+documents.)</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Pipes</b>
+<br>
+Two or more commands may be combined in a pipeline by
+placing the vertical bar (|) between them. The standard
+output (file descriptor 1) of the command on the left is
+tied to the standard input (file descriptor 0) of the
+command on the right. The notation |[<i>n</i>=<i>m</i>]
+indicates that file descriptor <i>n</i> of the left process
+is connected to file descriptor <i>m</i> of the right
+process. |[<i>n</i>] is a shorthand for |[<i>n</i>=0]. As an
+example, to pipe the standard error of a command to
+<i>wc</i>(1), use:</p>
+
+<p style="margin-left:18%; margin-top: 1em">command |[2]
+wc</p>
+
+<p style="margin-left:11%; margin-top: 1em">The exit status
+of a pipeline is considered true if and only if every
+command in the pipeline exits true.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Input/Output
+Substitution</b> <br>
+Some commands, like <i>cmp</i>(1) or <i>diff</i>(1), take
+their input from named files on the command line, and do not
+use standard input. It is convenient sometimes to build
+nonlinear pipelines so that a command like <i>cmp</i> can
+read the output of two commands at once. <i>Es</i> does it
+like this:</p>
+
+<p style="margin-left:18%; margin-top: 1em">cmp
+&lt;{command1} &lt;{command2}</p>
+
+<p style="margin-left:11%; margin-top: 1em">compares the
+output of the two commands. Note: on some systems, this form
+of redirection is implemented with pipes, and since one
+cannot <i>lseek</i>(2) on a pipe, commands that use
+<i>lseek</i> will hang. For example, most versions of
+<i>diff</i> seek on their inputs.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Data can be
+sent down a pipe to several commands using <i>tee</i>(1) and
+the output version of this notation:</p>
+
+<p style="margin-left:18%; margin-top: 1em">echo hi there |
+tee &gt;{sed &rsquo;s/^/p1 /&rsquo;} &gt;{sed &rsquo;s/^/p2
+/&rsquo;}</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Program
+Fragments</b> <i><br>
+Es</i> allows the intermixing of code with strings. A
+program fragment, which is a group of commands enclosed in
+braces ({ and }), may be used anywhere a word is expected,
+and is treated as an indivisible unit. For example, a
+program fragment may be passed as an argument, stored in a
+variable, or written to a file or pipe. If a program
+fragment appears as the first word in a command, it is
+executed, and any arguments are ignored. Thus the following
+all produce the same output:</p>
+
+<p style="margin-left:18%; margin-top: 1em">{ echo hello,
+world } <br>
+{ echo hello, world } foo bar <br>
+es -c { echo hello, world } <br>
+x = { echo hello, world }; $x <br>
+echo { echo hello, world } | es <br>
+echo { echo hello, world } &gt; foo; es &lt; foo</p>
+
+<p style="margin-left:11%; margin-top: 1em">Since program
+fragments in the first position in a command are executed,
+braces may be used as a grouping mechanism for commands. For
+example, to run several commands, with output from all of
+them redirected to the same file, one can do</p>
+
+<p style="margin-left:18%; margin-top: 1em">{ date; ps
+agux; who } &gt; snapshot</p>
+
+<p style="margin-left:11%; margin-top: 1em">In addition,
+program fragments can continue across multiple physical
+lines without explicit line continuations, so the above
+command could also be written:</p>
+
+<p style="margin-left:18%; margin-top: 1em">{ <br>
+date <br>
+ps agux <br>
+who <br>
+} &gt; snapshot</p>
+
+<p style="margin-left:11%; margin-top: 1em">A <i>lambda</i>
+is a variant on a program fragment which takes arguments. A
+lambda has the form</p>
+
+<p style="margin-left:18%; margin-top: 1em">@
+<i>parameters</i> { <i>commands</i> }</p>
+
+<p style="margin-left:11%; margin-top: 1em">The
+<i>parameters</i> are one or more variable names, to which
+arguments of the lambda are assigned while the
+<i>commands</i> are run. The first argument is assigned to
+the first variable, the second to the second, and so on. If
+there are more arguments than parameters, the last named
+variable is assigned all the remaining arguments; if there
+are fewer, the parameters for which there are no arguments
+are bound to the empty list. If no parameters are listed,
+the variable named * is assigned all the arguments of the
+lambda. Note that @ is a keyword and not a special character
+in <i>es</i>, so it must be separated by whitespace from
+other words.</p>
+
+<p style="margin-left:11%; margin-top: 1em">As a small
+example,</p>
+
+<p style="margin-left:18%; margin-top: 1em">@ { echo $* }
+hi</p>
+
+<p style="margin-left:11%; margin-top: 1em">is a
+complicated way of producing the output hi. The first word
+is a function which echoes its arguments, and the second
+word is the argument to the function, the word hi.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Lambdas, like
+other program fragments, can appear anywhere in a list. A
+more complicated example in the same spirit:</p>
+
+<p style="margin-left:18%; margin-top: 1em">@ cmd arg {
+$cmd $arg } @ { echo $* } hi</p>
+
+<p style="margin-left:11%; margin-top: 1em">This command
+executes a lambda which runs its first argument, named cmd,
+using its second argument, named arg, as the argument for
+the first. The first argument of this function is another
+lambda, seen previously, and the second argument is the word
+hi.</p>
+
+<p style="margin-left:11%; margin-top: 1em">These lambda
+expressions</p>
+
+<p style="margin-left:18%; margin-top: 1em">@ a b c { echo
+$c $b $a } 1 2 <br>
+@ a b c { echo $c $b $a } 1 2 3 4 5</p>
+
+<p style="margin-left:11%; margin-top: 1em">produce this
+output:</p>
+
+<p style="margin-left:18%; margin-top: 1em">2 1 <br>
+3 4 5 2 1</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Functions</b>
+<br>
+A function in <i>es</i> is introduced with the syntax</p>
+
+<p style="margin-left:18%; margin-top: 1em">fn <i>name
+parameters</i> { <i>commands</i> }</p>
+
+<p style="margin-left:11%; margin-top: 1em">If the function
+name appears as the first word of a command, the commands
+are run, with the named parameters bound to the arguments to
+the function.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The similarity
+between functions and lambdas is not coincidental. A
+function in <i>es</i> is a variable of the form
+fn&minus;<i>name</i>. If name for which the appropriate fn-
+variable exists is found in the first position of a command,
+the value of the variable is substituted for the first word.
+The above syntax for creating functions is equivalent to the
+variable assignment</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">fn&minus;<i>name</i>
+= @ <i>parameters</i> { <i>commands</i> }</p>
+
+<p style="margin-left:11%; margin-top: 1em">Functions may
+be deleted with the syntax</p>
+
+<p style="margin-left:18%; margin-top: 1em">fn
+<i>name</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">which is
+equivalent to the assignment</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">fn&minus;<i>name</i>=</p>
+
+<p style="margin-left:11%; margin-top: 1em">If, as the most
+common case, a function variable is bound to a lambda, when
+the function is invoked, the variable $0 is bound
+(dynamically, see below) to the name of the function.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Lambdas are
+just another form of code fragment, and, as such, can be
+exported in the environment, passed as arguments, etc. The
+central difference between the two forms is that lambdas
+bind their arguments, while simple brace-enclosed groups
+just ignore theirs.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Local
+Variables</b> <br>
+Variable assignments may be made local to a set of commands
+with the local construct:</p>
+
+<p style="margin-left:18%; margin-top: 1em">local
+(<i>var</i> = <i>value</i>; <i>var</i> = <i>value ...</i>)
+<i>command</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">The command may
+be a program fragment, so for example:</p>
+
+<p style="margin-left:18%; margin-top: 1em">local (path =
+/bin /usr/bin; ifs = ) { <br>
+... <br>
+}</p>
+
+<p style="margin-left:11%; margin-top: 1em">sets path to a
+minimal useful path and removes ifs for the duration of one
+long compound command.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Local-bound
+variables are exported into the environment, and will invoke
+appropriately named settor functions (see below).</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Lexically
+Scoped Variables</b> <br>
+In addition to local variables, <i>es</i> supports a
+different form of temporary variable binding, using
+let-bound, or &rsquo;&rsquo;lexically scoped,&rsquo;&rsquo;
+variables. (Lexical scoping is the form of binding used by
+most compiled programming languages, such as C or Scheme.) A
+lexically scoped variable is introduced with a let
+statement:</p>
+
+<p style="margin-left:18%; margin-top: 1em">let (<i>var</i>
+= <i>value</i>; <i>var</i> = <i>value ...</i>)
+<i>command</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">All references
+to any of the variables defined in a let statement by any
+code located lexically (that is, textually) within the
+<i>command</i> portion of the statement will refer to the
+let-bound variable rather than any environment or
+local-bound variable; the immediate text of the let
+statement is the complete extent of that binding. That is,
+lexically bound variables surrounding code fragments follow
+those code fragments around.</p>
+
+<p style="margin-left:11%; margin-top: 1em">An example best
+shows the difference between let and local (also known as
+&rsquo;&rsquo;dynamic&rsquo;&rsquo;) binding: (note that
+&rsquo;&rsquo;; &rsquo;&rsquo; is <i>es</i>&rsquo;s default
+prompt.)</p>
+
+<p style="margin-left:18%; margin-top: 1em">; x = foo <br>
+; let (x = bar) { <br>
+echo $x <br>
+fn lexical { echo $x } <br>
+} <br>
+bar <br>
+; local (x = baz) { <br>
+echo $x <br>
+fn dynamic { echo $x } <br>
+} <br>
+baz <br>
+; lexical <br>
+bar <br>
+; dynamic <br>
+foo <br>
+;</p>
+
+<p style="margin-left:11%; margin-top: 1em">Lexically bound
+variables are not exported into the environment, and never
+cause the invocation of settor functions. Function (lambda)
+parameters are lexically bound to their values.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>For
+loops</b> <br>
+The command</p>
+
+<p style="margin-left:18%; margin-top: 1em">for (<i>var</i>
+= <i>list</i>) <i>command</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">Runs the
+<i>command</i> once for each element of the <i>list</i>,
+with the named variable bound lexically to each element of
+the list, in order.</p>
+
+<p style="margin-left:11%; margin-top: 1em">If multiple
+bindings are given in the for statement, the looping occurs
+in parallel and stops when all lists are exhausted. When one
+list is finished before the others, the corresponding
+variable is bound to the empty list for the remaining
+iterations. Thus the loop</p>
+
+<p style="margin-left:18%; margin-top: 1em">for (i = a b c;
+j = x y) echo $#i $i $#j $j</p>
+
+<p style="margin-left:11%; margin-top: 1em">produces the
+output</p>
+
+<p style="margin-left:18%; margin-top: 1em">1 a 1 x <br>
+1 b 1 y <br>
+1 c 0</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Settor
+Functions</b> <br>
+A settor function is a variable of the form set-<i>var</i>,
+which is typically bound to a lambda. Whenever a value is
+assigned to the named variable, the lambda is invoked with
+its arguments bound to the new value. While the settor
+function is running, the variable $0 is bound to the name of
+the variable being assigned. The result of the settor
+function is used as the actual value in the assignment.</p>
+
+<p style="margin-left:11%; margin-top: 1em">For example,
+the following settor function is used to keep the shell
+variables home and HOME synchronized.</p>
+
+<p style="margin-left:18%; margin-top: 1em">set-HOME = @ {
+<br>
+local (set-home = ) <br>
+home = $* <br>
+result $* <br>
+}</p>
+
+<p style="margin-left:11%; margin-top: 1em">This settor
+function is called when any assignment is made to the
+variable HOME. It assigns the new value to the variable
+home, but disables any settor function for home to prevent
+an infinite recursion. Then it returns its argument
+unchanged for use in the actual assignment to HOME.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Settor
+functions do not apply to lexically bound variables.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Primitives</b>
+<br>
+Primitives are internal <i>es</i> operations that cannot or
+should not (for reasons of performance) be written in the
+interpreter&rsquo;s language. The set of primitives makes up
+the run-time library for <i>es</i>.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Primitives can
+be used with the syntax</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">$&amp;<i>name</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">A primitive can
+be used anywhere a lambda is expected. The list of
+primitives is returned as the result of running the
+primitive $&amp;primitives.</p>
+
+<p style="margin-left:11%; margin-top: 1em">For details on
+specific primitives, see the section entitled
+<b>PRIMITIVES</b> below.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Exceptions</b>
+<br>
+Exceptions in <i>es</i> are used for many forms of
+non-structured control flow, notably error reporting,
+signals, and flow of control constructs such as break and
+return.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Exceptions are
+passed up the call chain to catching routines. A catcher may
+decide to intercept an exception, retry the code that caused
+the exception, or pass the exception along. There can only
+be one exception raised at any time.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Exceptions are
+represented by lists. The first word of an exception is, by
+convention, the type of exception being raised. The
+following exceptions are known: <br>
+break <i>value</i></p>
+
+<p style="margin-left:22%;">Exit from a loop. The return
+value of the loop is the argument to the exception.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p>eof</p></td>
+<td width="7%"></td>
+<td width="76%">
+
+
+<p>Raised by %parse when the end of input is reached.</p></td>
+<td width="2%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;">error <i>source message</i></p>
+
+<p style="margin-left:22%;">A run-time error. Almost all
+shell errors are reported with the error exception. The
+default interactive loop and the outermost level of the
+interpreter catch this exception and print the message.
+<i>Source</i> is the name of the routine (typically a
+primitive) which raised the error.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p>retry</p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>When raised from a signal catcher, causes the body of
+the catch clause to be run again.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;">return <i>value</i></p>
+
+<p style="margin-left:22%;">Causes the current function to
+exit, with <i>value</i> as the return value (exit
+status).</p>
+
+<p style="margin-left:11%;">signal <i>signame</i></p>
+
+<p style="margin-left:22%;">Raised when the shell itself
+receives a signal, and the signal is listed in the variable
+signals. <i>Signame</i> is the name of the signal that was
+raised.</p>
+
+<p style="margin-left:11%; margin-top: 1em">See the builtin
+commands catch and throw for details on how to manipulate
+exceptions.</p>
+
+<h2>SPECIAL VARIABLES
+<a name="SPECIAL VARIABLES"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Several
+variables are known to <i>es</i> and are treated specially.
+Redefining these variables can change interpreter semantics.
+Note that only dynamically bound (top-level or local-bound)
+variables are interpreted in this way; the names of
+lexically bound variables are unimportant.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p>*</p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>The argument list of <i>es</i>. $1, $2, etc. are the
+same as $*(1), $*(2), etc.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p>$0</p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>Holds the value of argv[0] with which <i>es</i> was
+invoked. Additionally, $0 is set to the name of a function
+for the duration of the execution of that function, and $0
+is also set to the name of the file being interpreted for
+the duration of a . command.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p>apid</p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>The process ID of the last process started in the
+background.</p> </td></tr>
+</table>
+
+<p style="margin-left:11%;">history</p>
+
+<p style="margin-left:22%;">The name of a file to which
+commands are appended as <i>es</i> reads them. This
+facilitates the use of a stand-alone history program (such
+as <i>history</i>(1)) which parses the contents of the
+history file and presents them to <i>es</i> for
+reinterpretation. If history is not set, then <i>es</i> does
+not append commands to any file.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p>home</p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>The current user&rsquo;s home directory, used in tilde
+(~) expansion, as the default directory for the builtin cd
+command, and as the directory in which <i>es</i> looks to
+find its initialization file, .esrc, if <i>es</i> has been
+started up as a login shell. Like path and PATH, home and
+HOME are aliased to each other.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p>ifs</p></td>
+<td width="5%"></td>
+<td width="78%">
+
+
+<p>The default input field separator, used for splitting up
+the output of backquote commands for digestion as a list.
+The initial value of ifs is space-tab-newline.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;">noexport</p>
+
+<p style="margin-left:22%;">A list of variables which
+<i>es</i> will not export. All variables except for the ones
+on this list and lexically bound variables are exported.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p>path</p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>This is a list of directories to search in for commands.
+The empty string stands for the current directory. Note also
+that an assignment to path causes an automatic assignment to
+PATH, and vice-versa. If neither path nor PATH are set at
+startup time, path assumes a default value suitable for your
+system. This is typically /usr/ucb /usr/bin /bin
+&rsquo;&rsquo;.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p>pid</p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>The process ID of the currently running <i>es</i>.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p>prompt</p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>This variable holds the two prompts (in list form) that
+<i>es</i> prints. $prompt(1) is printed before each command
+is read, and $prompt(2) is printed when input is expected to
+continue on the next line. (See %parse for details.)
+<i>es</i> sets $prompt to (&rsquo;; &rsquo; &rsquo;&rsquo;)
+by default. The reason for this is that it enables an
+<i>es</i> user to grab commands from previous lines using a
+mouse, and to present them to <i>es</i> for
+re-interpretation; the semicolon prompt is simply ignored by
+<i>es</i>. The null $prompt(2) also has its justification:
+an <i>es</i> script, when typed interactively, will not
+leave $prompt(2)&rsquo;s on the screen, and can therefore be
+grabbed by a mouse and placed directly into a file for use
+as a shell script, without further editing being
+necessary.</p> </td></tr>
+</table>
+
+<p style="margin-left:11%;">signals</p>
+
+<p style="margin-left:22%;">Contains a list of the signals
+which <i>es</i> traps. Any signal name which is added to
+this list causes that signal to raise an <i>es</i>
+exception. For example, to run some commands and make sure
+some cleanup routine is called even if the user interrupts
+or disconnects during the script, one can use the form:</p>
+
+<p style="margin-left:29%; margin-top: 1em">local (signals
+= $signals sighup sigint) { <br>
+catch @ e { <br>
+cleanup <br>
+throw $e <br>
+} { <br>
+... <br>
+} <br>
+}</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="78%">
+
+
+<p>A signal name prefixed by a hyphen (-) causes that
+signal to be ignored by <i>es</i> and all of its child
+processes, unless one of them resets its handler. A signal
+prefixed by a slash (/) is ignored in the current shell, but
+retains default behavior in child processes. In addition,
+the signal sigint may be preceded by the prefix (.) to
+indicate that normal shell interrupt processing (i.e., the
+printing of an extra newline) occurs. By default <i>es</i>
+starts up with the values</p></td></tr>
+</table>
+
+<p style="margin-left:29%; margin-top: 1em">.sigint
+/sigquit /sigterm</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em">in $signals; other values will
+be on the list if the shell starts up with some signals
+ignored.</p> </td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">The values of
+path and home are derived from the environment values of
+PATH and HOME if those values are present. This is for
+compatibility with other Unix programs, such as
+<i>sh</i>(1). $PATH is assumed to be a colon-separated
+list.</p>
+
+<h2>SYNTACTIC SUGAR
+<a name="SYNTACTIC SUGAR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><i>Es</i>
+internally rewrites much of the syntax presented thus far in
+terms of calls to shell functions. Most features of
+<i>es</i> that resemble traditional shell features are
+included in this category. This rewriting occurs at parse
+time, as commands are recognized by the interpreter. The
+shell functions that are the results of rewriting are some
+of the hook functions documented below.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The following
+tables list all of the major rewriting which <i>es</i> does,
+with the forms typically entered by the user on the left and
+their internal form on the right. There is no reason for the
+user to avoid using the right-hand side forms, except that
+they are usually less convenient. To see the internal form
+of a specific command, a user can run <i>es</i> with the
+&minus;n and &minus;x options; when invoked in this way, the
+shell prints the internal form of its commands rather than
+executing them.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Control
+Flow</b></p>
+
+<p style="margin-left:18%;">! <i>cmd</i> %not
+{<i>cmd</i>}</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &amp;</p></td>
+<td width="65%">
+
+
+<p>%background {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd1</i> ; <i>cmd2</i></p></td>
+<td width="65%">
+
+
+<p>%seq {<i>cmd1</i>} {<i>cmd2</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd1</i> &amp;&amp; <i>cmd2</i></p></td>
+<td width="65%">
+
+
+<p>%and {<i>cmd1</i>} {<i>cmd2</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd1</i> || <i>cmd2</i></p></td>
+<td width="65%">
+
+
+<p>%or {<i>cmd1</i>} {<i>cmd2</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p>fn <i>name args</i> { <i>cmd</i> }</p></td>
+<td width="65%">
+
+
+<p>fn-^<i>name</i> = @ <i>args</i> {<i>cmd</i>}</p></td></tr>
+</table>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Input/Output
+Commands</b></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &lt; <i>file</i></p></td>
+<td width="65%">
+
+
+<p>%open 0 <i>file</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &gt; <i>file</i></p></td>
+<td width="65%">
+
+
+<p>%create 1 <i>file</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &gt;[<i>n</i>] <i>file</i></p></td>
+<td width="65%">
+
+
+<p>%create <i>n file</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &gt;&gt; <i>file</i></p></td>
+<td width="65%">
+
+
+<p>%append 1 <i>file</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &lt;&gt; <i>file</i></p></td>
+<td width="65%">
+
+
+<p>%open-write 0 <i>file</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &lt;&gt;&gt; <i>file</i></p></td>
+<td width="65%">
+
+
+<p>%open-append 0 <i>file</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &gt;&lt; <i>file</i></p></td>
+<td width="65%">
+
+
+<p>%open-create 1 <i>file</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &gt;&gt;&lt; <i>file</i></p></td>
+<td width="65%">
+
+
+<p>%open-append 1 <i>file</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &gt;[<i>n</i>=]</p></td>
+<td width="65%">
+
+
+<p>%close <i>n</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &gt;[<i>m</i>=<i>n</i>]</p></td>
+<td width="65%">
+
+
+<p>%dup <i>m n</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &lt;&lt; tag <i>input</i> tag</p></td>
+<td width="65%">
+
+
+<p>%here 0 <i>input</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd</i> &lt;&lt;&lt; <i>string</i></p></td>
+<td width="65%">
+
+
+<p>%here 0 <i>string</i> {<i>cmd</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd1</i> | <i>cmd2</i></p></td>
+<td width="65%">
+
+
+<p>%pipe {<i>cmd1</i>} 1 0 {<i>cmd2</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd1</i> |[<i>m</i>=<i>n</i>] <i>cmd2</i></p></td>
+<td width="65%">
+
+
+<p>%pipe {<i>cmd1</i>} <i>m n</i> {<i>cmd2</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd1</i> &gt;{ <i>cmd2</i> }</p></td>
+<td width="65%">
+
+
+<p>%writeto <i>var</i> {<i>cmd2</i>} {<i>cmd1</i>
+$<i>var</i>}</p> </td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p><i>cmd1</i> &lt;{ <i>cmd2</i> }</p></td>
+<td width="65%">
+
+
+<p>%readfrom <i>var</i> {<i>cmd2</i>} {<i>cmd1</i>
+$<i>var</i>}</p> </td></tr>
+</table>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Expressions</b></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p>$#<i>var</i></p></td>
+<td width="65%">
+
+
+<p>&lt;={%count $<i>var</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p>$^<i>var</i></p></td>
+<td width="65%">
+
+
+<p>&lt;={%flatten &rsquo; &rsquo; $<i>var</i>}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p>`{<i>cmd args</i>}</p></td>
+<td width="65%">
+
+
+<p>&lt;={%backquote &lt;={%flatten &rsquo;&rsquo; $ifs}
+{<i>cmd args</i>}}</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="17%">
+
+
+<p>``<i>ifs</i> {<i>cmd args</i>}</p></td>
+<td width="65%">
+
+
+<p>&lt;={%backquote &lt;={%flatten &rsquo;&rsquo;
+<i>ifs</i>} {<i>cmd args</i>}}</p></td></tr>
+</table>
+
+<h2>BUILTINS
+<a name="BUILTINS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Builtin
+commands are shell functions that exist at shell startup
+time. Most builtins are indistinguishable from external
+commands, except that they run in the context of the shell
+itself rather than as a child process. Many builtins are
+implemented with primitives (see above).</p>
+
+<p style="margin-left:11%; margin-top: 1em">Some builtin
+functions have names that begin with a percent character
+(%). These are commands with some special meaning to the
+shell, or are meant for use only by users customizing the
+shell. (This distinction is somewhat fuzzy, and the
+decisions about which functions have %-names are somewhat
+arbitrary.)</p>
+
+<p style="margin-left:11%; margin-top: 1em">All builtins
+can be redefined and extended by the user.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Builtin
+Commands</b> <br>
+. [-einvx] <i>file</i> [<i>args ...</i>]</p>
+
+<p style="margin-left:22%;">Reads <i>file</i> as input to
+<i>es</i> and executes its contents. The options are a
+subset of the invocation options for the shell (see
+below).</p>
+
+<p style="margin-left:11%;">access [-n <i>name</i>] [-1e]
+[-rwx] [-fdcblsp] <i>path ...</i></p>
+
+<p style="margin-left:22%;">Tests if the named paths are
+accessible according to the options presented. Normally,
+access returns zero (true) for files which are accessible
+and a printable error message (which evaluates as false,
+according to shell rules) for files which are not
+accessible. If the &minus;1 option is used, the name of the
+first file which the test succeeds for is returned; if the
+test succeeds for no file, the empty list is returned.
+However, if the &minus;e option was used, access raises an
+error exception. If the &minus;n option is used, the
+pathname arguments are treated as a list of directories, and
+the <i>name</i> option argument is used as a file in those
+directories (i.e., &minus;n is used for path searching).</p>
+
+<p style="margin-left:22%; margin-top: 1em">The default
+test is whether a file exists. These options change the
+test:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;r</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file readable (by the current user)?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;w</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file writable?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;x</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file executable?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;f</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file a plain file?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;d</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file a directory?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;c</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file a character device?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;b</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file a block device?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;l</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file a symbolic link?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;s</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file a socket?</p></td>
+<td width="2%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;p</p></td>
+<td width="7%"></td>
+<td width="66%">
+
+
+<p>Is the file a named pipe (FIFO)?</p></td>
+<td width="2%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;">break <i>value</i></p>
+
+<p style="margin-left:22%;">Exits the current loop.
+<i>Value</i> is used as the return value for the loop
+command.</p>
+
+<p style="margin-left:11%;">catch <i>catcher body</i></p>
+
+<p style="margin-left:22%;">Runs <i>body</i>. If it raises
+an exception, <i>catcher</i> is run and passed the exception
+as an argument.</p>
+
+<p style="margin-left:11%;">cd [<i>directory</i>]</p>
+
+<p style="margin-left:22%;">Changes the current directory
+to <i>directory</i>. With no argument, cd changes the
+current directory to $home.</p>
+
+<p style="margin-left:11%;">echo [-n] [--] <i>args
+...</i></p>
+
+<p style="margin-left:22%;">Prints its arguments to
+standard output, terminated by a newline. Arguments are
+separated by spaces. If the first argument is &minus;n no
+final newline is printed. If the first argument is
+&minus;&minus;, then all other arguments are echoed
+literally; this is used for echoing a literal &minus;n.</p>
+
+<p style="margin-left:11%;">eval <i>list</i></p>
+
+<p style="margin-left:22%;">Concatenates the elements of
+<i>list</i> with spaces and feeds the resulting string to
+the interpreter for rescanning and execution.</p>
+
+<p style="margin-left:11%;">exec <i>cmd</i></p>
+
+<p style="margin-left:22%;">Replaces <i>es</i> with the
+given command. If the exec contains only redirections, then
+these redirections apply to the current shell and the shell
+does not exit. For example,</p>
+
+<p style="margin-left:29%; margin-top: 1em">exec {&gt;[2]
+err.out}</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="78%">
+
+
+<p>places further output to standard error in the file
+<i>err.out</i>. Unlike some other shells, <i>es</i> requires
+that redirections in an exec be enclosed in a program
+fragment.</p> </td></tr>
+</table>
+
+<p style="margin-left:11%;">exit [<i>status</i>]</p>
+
+<p style="margin-left:22%;">Causes the current shell to
+exit with the given exit <i>status</i>. If no argument is
+given, zero (true) is used. (This is different from other
+shells, that often use the status of the last command
+executed.)</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p>false</p></td>
+<td width="4%"></td>
+<td width="72%">
+
+
+<p>Always returns a false (non-zero) return value.</p></td>
+<td width="6%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;">forever <i>cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command repeatedly,
+until the shell exits or the command raises an exception.
+This is equivalent to a while {true} {<i>cmd</i>} loop
+except that forever does not catch any exceptions, including
+break.</p>
+
+<p style="margin-left:11%;">fork <i>cmd</i></p>
+
+<p style="margin-left:22%;">Runs a command in a subshell.
+This insulates the parent shell from the effects of state
+changing operations such as cd and variable assignments. For
+example:</p>
+
+<p style="margin-left:29%; margin-top: 1em">fork {cd ..;
+make}</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="78%">
+
+
+<p>runs <i>make</i>(1) in the parent directory (..), but
+leaves the shell in the current directory.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;">if [<i>test then</i>]
+<i>...</i> [<i>else</i>]</p>
+
+<p style="margin-left:22%;">Evaluates the command
+<i>test</i>. If the result is true, the command <i>then</i>
+is run and if completes. If the result of the test is false,
+the next <i>test-then</i> pair is checked, until one where
+the <i>test</i> is true is found. If none of the
+<i>test</i>s are true, the <i>else</i> command is run.</p>
+
+<p style="margin-left:11%;">limit [-h] [<i>resource</i>
+[<i>value</i>]]</p>
+
+<p style="margin-left:22%;">Similar to the <i>csh</i>(1)
+limit builtin, this command operates upon the resource
+limits of a process. With no arguments, limit prints all the
+current limits; with one argument, limit prints the named
+limit; with two arguments, it sets the named limit to the
+given value. The &minus;h flag displays/alters the hard
+limits. The resources which can be shown or altered are
+cputime, filesize, datasize, stacksize, coredumpsize and
+memoryuse. For example:</p>
+
+<p style="margin-left:29%; margin-top: 1em">limit
+coredumpsize 0</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="78%">
+
+
+<p>disables core dumps.</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="78%">
+
+
+<p>The limit values must either be the word
+&rsquo;&rsquo;unlimited&rsquo;&rsquo; or a number with an
+optional suffix indicating units. For size limits, the
+suffixes k (kilobytes), m (megabytes), and g (gigabytes) are
+recognized. For time limits, s (seconds), m (minutes), and h
+(hours) are known; in addition, times of the form
+<i>hh</i>:<i>mm</i>:<i>ss</i> and <i>mm</i>:<i>ss</i> are
+accepted. See <i>getrlimit</i>(2) for details on resource
+limit semantics.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;">newpgrp</p>
+
+<p style="margin-left:22%;">Puts <i>es</i> into a new
+process group. This builtin is useful for making <i>es</i>
+behave like a job-control shell in a hostile environment.
+One example is the NeXT Terminal program, which implicitly
+assumes that each shell it forks will put itself into a new
+process group. Note that the controlling tty for the process
+must be on standard error (file descriptor 2) when this
+operation is run.</p>
+
+<p style="margin-left:11%;">result <i>value ...</i></p>
+
+<p style="margin-left:22%;">Returns its arguments. This is
+<i>es</i>&rsquo;s identity function.</p>
+
+<p style="margin-left:11%;">return <i>value</i></p>
+
+<p style="margin-left:22%;">Causes the current function to
+exit, returning the named <i>value</i>.</p>
+
+<p style="margin-left:11%;">throw <i>exception arg
+...</i></p>
+
+<p style="margin-left:22%;">Raise the named exception,
+passing all of the arguments to throw to the enclosing
+exception handler.</p>
+
+<p style="margin-left:11%;">time <i>cmd arg ...</i></p>
+
+<p style="margin-left:22%;">Prints, on the shell&rsquo;s
+standard error, the real, user, and system time consumed by
+executing the command.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="6%">
+
+
+<p>true</p></td>
+<td width="5%"></td>
+<td width="64%">
+
+
+<p>Always returns a true (zero) return value.</p></td>
+<td width="14%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;">umask [<i>mask</i>]</p>
+
+<p style="margin-left:22%;">Sets the current umask (see
+<i>umask</i>(2)) to the octal <i>mask</i>. If no argument is
+present, the current mask value is printed.</p>
+
+<p style="margin-left:11%;">unwind-protect <i>body
+cleanup</i></p>
+
+<p style="margin-left:22%;">Runs <i>body</i> and, when it
+completes or raises an exception, runs <i>cleanup</i>.</p>
+
+<p style="margin-left:11%;">var <i>var ...</i></p>
+
+<p style="margin-left:22%;">Prints definitions of the named
+variables, suitable for being used as input to the
+shell.</p>
+
+<p style="margin-left:11%;">vars [-vfs] [-epi]</p>
+
+<p style="margin-left:22%;">Prints all shell variables,
+functions, and settor functions (in a form suitable for use
+as shell input), which match the criteria specified by the
+options.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;v</p></td>
+<td width="7%"></td>
+<td width="68%">
+
+
+<p>variables (that are not functions or settor
+functions)</p> </td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;f</p></td>
+<td width="7%"></td>
+<td width="68%">
+
+
+<p>functions</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;s</p></td>
+<td width="7%"></td>
+<td width="68%">
+
+
+<p>settor functions</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;e</p></td>
+<td width="7%"></td>
+<td width="68%">
+
+
+<p>exported values</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;p</p></td>
+<td width="7%"></td>
+<td width="68%">
+
+
+<p>private (not exported) values</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;i</p></td>
+<td width="7%"></td>
+<td width="68%">
+
+
+<p>internal (predefined and builtin) values</p></td></tr>
+<tr valign="top" align="left">
+<td width="22%"></td>
+<td width="3%">
+
+
+<p>&minus;a</p></td>
+<td width="7%"></td>
+<td width="68%">
+
+
+<p>all of the above</p></td></tr>
+</table>
+
+<p style="margin-left:22%; margin-top: 1em">If none of
+&minus;v, &minus;f, or &minus;s are specified, &minus;v is
+used. If none of &minus;e, &minus;p, or &minus;i are
+specified, &minus;e is used.</p>
+
+<p style="margin-left:11%;">wait [<i>pid</i>]</p>
+
+<p style="margin-left:22%;">Waits for the specified
+<i>pid</i>, which must have been started by <i>es</i>. If no
+<i>pid</i> is specified, waits for any child process to
+exit.</p>
+
+<p style="margin-left:11%;">whatis <i>program ...</i></p>
+
+<p style="margin-left:22%;">For each named <i>program</i>,
+prints the pathname, primitive, lambda, or code fragment
+which would be run if the program appeared as the first word
+of a command.</p>
+
+<p style="margin-left:11%;">while <i>test body</i></p>
+
+<p style="margin-left:22%;">Evaluates the <i>test</i> and,
+if it is true, runs the <i>body</i> and repeats.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p>%read</p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Reads from standard input and returns either the empty
+list (in the case of end-of-file) or a single element string
+with up to one line of data, including possible
+redirections. This function reads one character at a time in
+order to not read more data out of a pipe than it should.
+The terminating newline (if present) is not included in the
+returned string.</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Hook
+Functions</b> <br>
+A subset of the %-named functions are known as
+&rsquo;&rsquo;hook functions.&rsquo;&rsquo; The hook
+functions are called to implement some internal shell
+operations, and are available as functions in order that
+their values can be changed. Typically, a call to a hook
+function is from code generated by the syntactic sugar
+rewritings. <br>
+%and <i>cmd ...</i></p>
+
+<p style="margin-left:22%;">Runs the commands in order,
+stopping after the first one that has a false return value.
+Returns the result of the last command run.</p>
+
+<p style="margin-left:11%;">%append <i>fd file cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with file
+descriptor <i>fd</i> set up to append to the
+<i>file</i>.</p>
+
+<p style="margin-left:11%;">%background <i>cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command in the
+background. The shell variable apid contains the process ID
+of the background process, which is printed if the shell is
+interactive (according to %is-interactive).</p>
+
+<p style="margin-left:11%;">%backquote <i>separator
+cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command in a child
+process and returns its standard output as a list, separated
+(with the same rules used in %split) into elements according
+to <i>separator</i>.</p>
+
+<p style="margin-left:11%;">%batch-loop</p>
+
+<p style="margin-left:22%;">Parses commands from the
+current input source and passes the commands to the function
+<i>%dispatch</i>, which is usually a dynamically bound
+identifier. This function catches the exception eof which
+causes it to return. This function is invoked by the shell
+on startup and from the dot (.) and eval commands, when the
+input source is not interactive. (See also
+%interactive-loop.)</p>
+
+<p style="margin-left:11%;">%close <i>fd cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with the given
+file descriptor closed.</p>
+
+<p style="margin-left:11%;">%count <i>list</i></p>
+
+<p style="margin-left:22%;">Returns the number of arguments
+to the primitive.</p>
+
+<p style="margin-left:11%;">%create <i>fd file cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with file
+descriptor <i>fd</i> set up to write to the <i>file</i>.</p>
+
+<p style="margin-left:11%;">%dup <i>newfd oldfd cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with the file
+descriptor <i>oldfd</i> copied (via <i>dup</i>(2)) to file
+descriptor <i>newfd</i>.</p>
+
+<p style="margin-left:11%;">%eval-noprint <i>cmd</i></p>
+
+<p style="margin-left:22%;">Run the command. (Passed as the
+argument to %batch-loop and %interactive-loop.)</p>
+
+<p style="margin-left:11%;">%eval-print <i>cmd</i></p>
+
+<p style="margin-left:22%;">Print and run the command.
+(Passed as the argument to %batch-loop and %interactive-loop
+when the &minus;x option is used.)</p>
+
+<p style="margin-left:11%;">%exec-failure <i>file argv0
+args ...</i></p>
+
+<p style="margin-left:22%;">This function, if it exists, is
+called in the context of a child process if an executable
+file was found but <i>execve</i>(2) could not run it. If the
+function returns, an error message is printed and the shell
+exits, but the function can exec a program if it thinks it
+knows what to do. Note that the name of the program appears
+twice in the arguments to %exec-failure, once as a filename
+and once as the first element of the argv array; in some
+cases the two will be identical, but in others the former
+will be a full pathname and the latter will just be the
+basename. Some versions of <i>es</i> may provide a builtin
+version of this function to handle #!-style shell scripts if
+the kernel does not.</p>
+
+<p style="margin-left:11%;">%exit-on-false <i>cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command, and exits if
+any command (except those executing as the tests of
+conditional statements) returns a non-zero status. (This
+function is used as an argument to %batch-loop and
+%interactive-loop when the shell is invoked with the
+&minus;e option.)</p>
+
+<p style="margin-left:11%;">%flatten <i>separator
+list</i></p>
+
+<p style="margin-left:22%;">Concatenate the elements of
+<i>list</i> into one string, separated by the string
+<i>separator</i>.</p>
+
+<p style="margin-left:11%;">%here <i>fd word ...
+cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with the
+<i>word</i>s passed as input on file descriptor
+<i>fd</i>.</p>
+
+<p style="margin-left:11%;">%home [<i>user</i>]</p>
+
+<p style="margin-left:22%;">Returns the home directory of
+the named user, or $home if there are no arguments.</p>
+
+<p style="margin-left:11%;">%interactive-loop</p>
+
+<p style="margin-left:22%;">Prompts, parses commands from
+the current input source and passes the commands to the
+function <i>%dispatch</i>, which is usually a dynamically
+bound identifier. This function catches the exception eof
+which causes it to return. This function is invoked by the
+shell on startup and from the dot (.) commands, when the
+input source is interactive. (See also %batch-loop.)</p>
+
+<p style="margin-left:11%;">%noeval-noprint <i>cmd</i></p>
+
+<p style="margin-left:22%;">Do nothing. (Passed as the
+argument to %batch-loop and %interactive-loop when the
+&minus;n option is used.)</p>
+
+<p style="margin-left:11%;">%noeval-print <i>cmd</i></p>
+
+<p style="margin-left:22%;">Print but don&rsquo;t run the
+command. (Passed as the argument to %batch-loop and
+%interactive-loop when the &minus;x and &minus;n options are
+used.)</p>
+
+<p style="margin-left:11%;">%not <i>cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command and returns
+false if its exit status was true, otherwise returns
+true.</p>
+
+<p style="margin-left:11%;">%one <i>list</i></p>
+
+<p style="margin-left:22%;">If <i>list</i> is one element
+long, %one returns its value; otherwise it raises an
+exception. %one is used to ensure that redirection
+operations get passed exactly one filename.</p>
+
+<p style="margin-left:11%;">%open <i>fd file cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with
+<i>file</i> open for reading on file descriptor
+<i>fd</i>.</p>
+
+<p style="margin-left:11%;">%open-append <i>fd file
+cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with
+<i>file</i> open for reading and appending on file
+descriptor <i>fd</i>.</p>
+
+<p style="margin-left:11%;">%open-create <i>fd file
+cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with
+<i>file</i> open for reading and writing on file descriptor
+<i>fd</i>. If the file already exists, it is truncated.</p>
+
+<p style="margin-left:11%;">%open-write <i>fd file
+cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with
+<i>file</i> open for reading and writing on file descriptor
+<i>fd</i>.</p>
+
+<p style="margin-left:11%;">%openfile <i>mode fd file
+cmd</i></p>
+
+<p style="margin-left:22%;">Runs the command with
+<i>file</i> opened according to <i>mode</i> on file
+descriptor <i>fd</i>. The modes (r, w, a, r+, w+, and a+)
+have the same meanings in %openfile as they do in
+<i>fopen</i>(3). %openfile is invoked by the redirection
+hook functions: %append, %create, %open, %open-append,
+%open-create, and %open-write.</p>
+
+<p style="margin-left:11%;">%or <i>cmd ...</i></p>
+
+<p style="margin-left:22%;">Runs the commands in order,
+stopping after the first one that has a true return value.
+Returns the result of the last command run.</p>
+
+<p style="margin-left:11%;">%parse <i>prompt1
+prompt2</i></p>
+
+<p style="margin-left:22%;">Reads input from the current
+input source, printing <i>prompt1</i> before reading
+anything and <i>prompt2</i> before reading continued lines.
+Returns a code fragment suitable for execution. Raises the
+exception eof on end of input.</p>
+
+<p style="margin-left:11%;">%pathsearch <i>program</i></p>
+
+<p style="margin-left:22%;">Looks for an executable file
+named <i>program</i> in the directories listed in $path. If
+such a file is found, it is returned; if one is not found,
+an error exception is raised.</p>
+
+<p style="margin-left:11%;">%pipe <i>cmd</i> [<i>outfd infd
+cmd</i>] ...</p>
+
+<p style="margin-left:22%;">Runs the commands, with the
+file descriptor <i>outfd</i> in the left-hand process
+connected by a pipe to the file descriptor <i>infd</i> in
+the right-hand process. If there are more than two commands,
+a multi-stage pipeline is created.</p>
+
+<p style="margin-left:11%;">%prompt</p>
+
+<p style="margin-left:22%;">Called by %interactive-loop
+before every call to %parse. This function allows the user
+to provide any actions that he or she may wish to have
+executed before being prompted (e.g., updating the value of
+the prompt variable to contain all or part of the current
+working directory).</p>
+
+<p style="margin-left:11%;">%readfrom <i>var input
+cmd</i></p>
+
+<p style="margin-left:22%;">Runs <i>cmd</i> with the
+variable <i>var</i> locally bound to the name of a file
+which contains the output of running the command
+<i>input</i>.</p>
+
+<p style="margin-left:11%;">%seq <i>cmd ...</i></p>
+
+<p style="margin-left:22%;">Runs the commands, in
+order.</p>
+
+<p style="margin-left:11%;">%whatis <i>program ...</i></p>
+
+<p style="margin-left:22%;">For each named <i>program</i>,
+returns the pathname, primitive, lambda, or code fragment
+which would be run if the program appeared as the first word
+of a command.</p>
+
+<p style="margin-left:11%;">%writeto <i>var output
+cmd</i></p>
+
+<p style="margin-left:22%;">Runs <i>cmd</i> with the
+variable <i>var</i> locally bound to the name of a file
+which is used as the input for the command
+<i>output</i>.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Utility
+Functions</b> <br>
+These functions are useful for people customizing the shell,
+may be used by other builtin commands, and probably
+don&rsquo;t make much sense to replace, though that is
+always possible.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p>%apids</p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Returns the process IDs of all background processes that
+the shell has not yet waited for.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;">%fsplit <i>separator</i>
+[<i>args ...</i>]</p>
+
+<p style="margin-left:22%;">Splits its arguments into
+separate strings at every occurrence of any of the
+characters in the string <i>separator</i>. Repeated
+instances of separator characters cause null strings to
+appear in the result. (This function is used by some builtin
+settor functions.)</p>
+
+<p style="margin-left:11%;">%is-interactive</p>
+
+<p style="margin-left:22%;">Returns true if the current
+interpreter context is interactive; that is, if shell
+command input is currently coming from an interactive user.
+More precisely, this is true if the innermost enclosing
+read-eval-print loop is %interactive-loop rather than
+%batch-loop.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p>%newfd</p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Returns a file descriptor that the shell thinks is not
+currently in use.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;">%run <i>program argv0 args
+...</i></p>
+
+<p style="margin-left:22%;">Run the named program, which is
+not searched for in $path, with the argument vector set to
+the remaining arguments. This builtin can be used to set
+argv[0] (by convention, the name of the program) to
+something other than file name.</p>
+
+<p style="margin-left:11%;">%split <i>separator</i>
+[<i>args ...</i>]</p>
+
+<p style="margin-left:22%;">Splits its arguments into
+separate strings at every occurrence of any of the
+characters in the string <i>separator</i>. Repeated
+instances of separator characters are coalesced. Backquote
+substitution splits with the same rules.</p>
+
+<p style="margin-left:11%;">%var <i>var ...</i></p>
+
+<p style="margin-left:22%;">For each named variable,
+returns a string which, if interpreted by <i>es</i> would
+assign to the variable its current value.</p>
+
+<h2>PRIMITIVES
+<a name="PRIMITIVES"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Primitives
+exist in <i>es</i> so that, in the presence of spoofing and
+redefinitions, there is a way to refer to built-in
+behaviors. This ability is necessary for the shell to be
+able to unambiguously refer to itself, but is also useful
+for users who have otherwise made their environment
+unnecessary but don&rsquo;t want to kill the current
+shell.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Primitives are
+referenced with the</p>
+
+
+<p style="margin-left:18%; margin-top: 1em">$&amp;<i>name</i></p>
+
+<p style="margin-left:11%; margin-top: 1em">notation. In
+this section, the &rsquo;&rsquo;$&amp;&rsquo;&rsquo;
+prefixes will be omitted when primitive names are mentioned.
+Note that, by convention, primitive names follow C
+identifier names where <i>es</i> variable and function names
+often contain &rsquo;&rsquo;%&rsquo;&rsquo; and
+&rsquo;&rsquo;-&rsquo;&rsquo; characters.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The following
+primitives directly implement the builtin functions with the
+same names:</p>
+
+<p style="margin-left:18%; margin-top: 1em">access forever
+throw</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>catch</p></td>
+<td width="28%">
+
+
+<p>fork</p></td>
+<td width="46%">
+
+
+<p>umask</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>echo</p></td>
+<td width="28%">
+
+
+<p>if</p></td>
+<td width="46%">
+
+
+<p>wait</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>exec</p></td>
+<td width="28%">
+
+
+<p>newpgrp</p></td>
+<td width="46%">
+</td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>exit</p></td>
+<td width="28%">
+
+
+<p>result</p></td>
+<td width="46%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">In addition,
+the primitive dot implements the
+&rsquo;&rsquo;.&rsquo;&rsquo; builtin function.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The cd
+primitive is used in the implementation of the cd builtin,
+but does not understand no arguments to imply $home. The
+vars and internals primitives are used by the implementation
+of the vars builtin.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The following
+primitives implement the hook functions of the same names,
+with &rsquo;&rsquo;%&rsquo;&rsquo; prefixes:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>apids</p></td>
+<td width="28%">
+
+
+<p>here</p></td>
+<td width="46%">
+
+
+<p>read</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>close</p></td>
+<td width="28%">
+
+
+<p>home</p></td>
+<td width="46%">
+
+
+<p>run</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>count</p></td>
+<td width="28%">
+
+
+<p>newfd</p></td>
+<td width="46%">
+
+
+<p>seq</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>dup</p></td>
+<td width="28%">
+
+
+<p>openfile</p></td>
+<td width="46%">
+
+
+<p>split</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>flatten</p></td>
+<td width="28%">
+
+
+<p>parse</p></td>
+<td width="46%">
+
+
+<p>var</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>fsplit</p></td>
+<td width="28%">
+
+
+<p>pipe</p></td>
+<td width="46%">
+
+
+<p>whatis</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">The following
+primitives implement the similar named hook functions, with
+&rsquo;&rsquo;%&rsquo;&rsquo; prefixes and internal
+hyphens:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>batchloop</p></td>
+<td width="28%">
+
+
+<p>exitonfalse</p></td>
+<td width="46%">
+
+
+<p>isinteractive</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">The background
+primitive is used to implement the %background hook
+function, but does not print the process ID of the
+background process or set $apid. The backquote primitive is
+used to implement the %backquote hook function, but returns
+the exit status of the child as the first value of its
+result instead of setting $bqstatus to it.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The following
+primitives implement the similarly named settor
+functions:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="8%">
+
+
+<p>sethistory</p></td>
+<td width="28%">
+
+
+<p>setnoexport</p></td>
+<td width="46%">
+
+
+<p>setsignals</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">Some primitives
+are included in <i>es</i> conditionally, based on
+compile-time configuration options. Those primitives, and
+the functions to which they are bound, are</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="13%">
+
+
+<p>execfailure</p></td>
+<td width="69%">
+
+
+<p>%exec-failure</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="13%">
+
+
+<p>limit</p></td>
+<td width="69%">
+
+
+<p>limit</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="13%">
+
+
+<p>readfrom</p></td>
+<td width="69%">
+
+
+<p>%readfrom</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="13%">
+
+
+<p>time</p></td>
+<td width="69%">
+
+
+<p>time</p></td></tr>
+<tr valign="top" align="left">
+<td width="18%"></td>
+<td width="13%">
+
+
+<p>writeto</p></td>
+<td width="69%">
+
+
+<p>%writeto</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">The primitive
+resetterminal is if <i>es</i> is compiled with support for
+the <i>readline</i> or <i>editline</i> libraries. It is used
+in the implementation of settor functions of the TERM and
+TERMCAP variables to notify the line editing packages that
+the terminal configuration has changed.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Several
+primitives are not directly associated with other function.
+They are: <br>
+$&amp;collect</p>
+
+<p style="margin-left:22%;">Invokes the garbage collector.
+The garbage collector in <i>es</i> runs rather frequently;
+there should be no reason for a user to issue this
+command.</p>
+
+<p style="margin-left:11%;">$&amp;noreturn <i>lambda args
+...</i></p>
+
+<p style="margin-left:22%;">Call the <i>lambda</i>, but in
+such a way that it does not catch the return exception. This
+primitive exists in order that some control-flow operations
+in <i>es</i> (e.g., while and &amp;&amp;) can be implemented
+as lambdas rather than primitives.</p>
+
+<p style="margin-left:11%;">$&amp;primitives</p>
+
+<p style="margin-left:22%;">Returns a list of the names of
+es primitives.</p>
+
+<p style="margin-left:11%;">$&amp;version</p>
+
+<p style="margin-left:22%;">Returns the current version
+number and release date for <i>es</i>.</p>
+
+<h2>OPTIONS
+<a name="OPTIONS"></a>
+</h2>
+
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p style="margin-top: 1em">&minus;c</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em">Run the given <i>command</i>,
+placing the rest of the arguments to <i>es</i> in $*.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;s</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Read commands from standard input; i.e., put the first
+argument to <i>es</i> in $* rather than using it as the name
+of a file to source.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;i</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Force <i>es</i> to be an interactive shell. Normally
+<i>es</i> is only interactive if it is run with commands
+coming from standard input and standard input is connected
+to a terminal.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;l</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Run $home/.esrc on startup, i.e., be a login shell.
+&minus;l is implied if the name the shell was run under
+(that is, argv[0]) starts with a dash (-).</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;e</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Exit if any command (except those executing as the tests
+of conditional statements) returns a non-zero status.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;v</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Echo all input to standard error.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;x</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Print commands to standard error before executing
+them.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;n</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Turn off execution of commands. This can be used for
+checking the syntax of scripts. When combined with &minus;x,
+<i>es</i> prints the entered command based on the internal
+(parsed) representation.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;p</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Don&rsquo;t initialize functions from the environment.
+This is used to help make scripts that don&rsquo;t break
+unexpectedly when the environment contains functions that
+would override commands used in the script.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;o</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Don&rsquo;t open /dev/null on file descriptors 0, 1, and
+2, if any of those descriptors are inherited closed.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p>&minus;d</p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Don&rsquo;t trap SIGQUIT or SIGTERM. This is used for
+debugging.</p> </td></tr>
+</table>
+
+<h2>FILES
+<a name="FILES"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">$home/.esrc,
+/dev/null</p>
+
+<h2>BUGS
+<a name="BUGS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Lexical scope
+which is shared by two variables (or closures) in a parent
+shell is split in child shells.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The interpreter
+should be properly tail recursive; that is, tail calls
+should not consume stack space.</p>
+
+<p style="margin-left:11%; margin-top: 1em">break and
+return should have lexical scope.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Woe betide the
+environment string set by some other program to contain
+either the character control-o or the sequence control-n
+followed by control-o or control-n.</p>
+
+<p style="margin-left:11%; margin-top: 1em">&minus;x is not
+nearly as useful as it should be.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Line numbers in
+error messages refer to the last line parsed, rather than
+something more useful.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Too many
+creatures have fept in.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Please send bug
+reports to haahr@adobe.com and byron@netapp.com.</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><i>history</i>(1),
+<i>rc</i>(1), <i>sh</i>(1), <i>execve</i>(2),
+<i>getrlimit</i>(2), <i>fopen</i>(3), <i>getpwent</i>(3)</p>
+
+<p style="margin-left:11%; margin-top: 1em">Paul Haahr and
+Byron Rakitzis, <i>Es &mdash; A shell with higher-order
+functions,</i> Proceedings of the Winter 1993 Usenix
+Conference, San Diego, CA.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Tom Duff, <i>Rc
+&mdash; A Shell for Plan 9 and UNIX Systems,</i> Unix
+Research System, 10th Edition, Volume 2. (Saunders College
+Publishing)</p>
+<hr>
+</body>
+</html>
