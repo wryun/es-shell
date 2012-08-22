@@ -7,8 +7,8 @@
  * meta-information for exported environment strings
  */
 
-#define ENV_SEPARATOR	'\001'		/* control-A */
-#define	ENV_ESCAPE	'\002'		/* control-B */
+#define ENV_SEPARATOR	'\017'		/* control-O */
+#define	ENV_ESCAPE	'\016'		/* control-N */
 
 
 /*
