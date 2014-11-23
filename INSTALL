@@ -8,6 +8,14 @@ fine.  To do this, just type:
    % ./configure
    % make
 
+   If you're building from the source repository rather than a
+distribution, it won't have a generated configure file. To generate it,
+you'll need to have autotools, and run:
+
+   % aclocal
+   % autoconf
+   % automake --add-missing
+
    Es needs an ANSI compiler (or at least a compiler that respects
 protoypes and provides large portions of the ANSI library).
 Otherwise it should build with the basic tools available on most UNIX
@@ -35,7 +43,7 @@ variables will cause those to be used in the Makefile.
 Es Options
 ----------
 
-  Es can be built to link to two command line editting libraries:
+  Es can be built to link to two command line editing libraries:
 GNU readline and editline.  For information about obtaining these, see
 the README file.  These may used by providing, respectively, the
 --with-readline or --with-editline respectively.  Readline is currently
