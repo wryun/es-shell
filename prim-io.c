@@ -25,10 +25,10 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 	destfd = getnumber(getstr(lp->term));
 	lp = (*rop)(&srcfd, lp->next);
 
+	ticket = (srcfd == -1)
+		   ? defer_close(inparent, destfd)
+		   : defer_mvfd(inparent, srcfd, destfd);
 	ExceptionHandler
-		ticket = (srcfd == -1)
-			   ? defer_close(inparent, destfd)
-			   : defer_mvfd(inparent, srcfd, destfd);
 		lp = eval(lp, NULL, evalflags);
 		undefer(ticket);
 	CatchException (e)
