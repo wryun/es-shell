@@ -3,7 +3,7 @@ AC_INIT(access.c)
 AC_CONFIG_HEADER(config.h)
 
 dnl AC_CMDSTDOUT_CPP(variable, command, headers)
-AC_DEFUN(AC_CMDSTDOUT_CPP,
+AC_DEFUN([AC_CMDSTDOUT_CPP],
 [cat > conftest.$ac_ext <<EOF
 [#]line __oline__ "configure"
 #include "confdefs.h"
@@ -147,15 +147,15 @@ grep rlim_cur | sed -e 's/rlim_cur.*//' -e 's/^ //g' -e 's/^	//g' -e q,
 #endif],long))
 
 AC_CACHE_CHECK(for files to extract signal information from,
-SIGFILES,
-AC_CMDSTDOUT_CPP(SIGFILES,
+es_cv_sigfiles,
+AC_CMDSTDOUT_CPP(es_cv_sigfiles,
 [changequote(,)
 egrep '^#[ 	]+1[	 ]+' | sed 's/.*"\(.*\)".*/\1/' |sort -u |  
 grep '^/' |tr '\012' ' ' 
 changequote([,])],
 [#include <signal.h>], /usr/include/signal.h))
 
-AC_SUBST(SIGFILES)
+AC_SUBST(SIGFILES, $es_cv_sigfiles)
 
 AC_DEFINE_UNQUOTED(LIMIT_T, $es_cv_rlimit_t)
 

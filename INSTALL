@@ -14,7 +14,7 @@ you'll need to have autotools, and run:
 
    % aclocal
    % autoconf
-   % automake --add-missing
+   % libtoolize -qi
 
    Es needs an ANSI compiler (or at least a compiler that respects
 protoypes and provides large portions of the ANSI library).

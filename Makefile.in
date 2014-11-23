@@ -26,6 +26,7 @@
 # to get definitions of all signals from <sys/signal.h>.
 # _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones.
 
+datarootdir = @datarootdir@
 prefix  = @prefix@
 exec_prefix	= @exec_prefix@
 mandir	= @mandir@
