@@ -119,13 +119,20 @@ top:
 			int status;
 			if (proc->alive) {
 				int deadpid;
+				int seen_eintr = FALSE;
 				while ((deadpid = dowait(&proc->status)) != pid)
 					if (deadpid != -1)
 						reap(deadpid, proc->status);
-					else if (errno != EINTR)
+					else if (errno == EINTR) {
+						if (interruptible)
+							SIGCHK();
+						seen_eintr = TRUE;
+					} else if (errno == ECHILD && seen_eintr)
+						/* TODO: not clear on why this is necessary
+						 * (child procs _sometimes_ disappear after SIGINT) */
+						break;
+					else
 						fail("es:ewait", "wait: %s", esstrerror(errno));
-					else if (interruptible)
-						SIGCHK();
 				proc->alive = FALSE;
 #if HAVE_WAIT3
 				proc->rusage = wait_rusage;
