@@ -304,8 +304,8 @@ static int fdfill(Input *in) {
 			if (*rlinebuf != '\0')
 				add_history(rlinebuf);
 			nread = strlen(rlinebuf) + 1;
-			if (in->buflen < nread) {
-				while (in->buflen < nread)
+			if (in->buflen < (unsigned int)nread) {
+				while (in->buflen < (unsigned int)nread)
 					in->buflen *= 2;
 				in->bufbegin = erealloc(in->bufbegin, in->buflen);
 			}

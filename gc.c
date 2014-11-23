@@ -386,7 +386,7 @@ extern void gcdisable(void) {
 
 /* gcreserve -- provoke a collection if there's not a certain amount of space around */
 extern void gcreserve(size_t minfree) {
-	if (SPACEFREE(new) < minfree) {
+	if (SPACEFREE(new) < (int)minfree) {
 		if (minspace < minfree)
 			minspace = minfree;
 		gc();

@@ -15,7 +15,7 @@
 #define	OTHER	0
 
 /* ingroupset -- determine whether gid lies in the user's set of groups */
-static Boolean ingroupset(int gid) {
+static Boolean ingroupset(gidset_t gid) {
 #ifdef NGROUPS
 	int i;
 	static int ngroups;
@@ -34,7 +34,7 @@ static Boolean ingroupset(int gid) {
 
 static int testperm(struct stat *stat, int perm) {
 	int mask;
-	static int uid, gid;
+	static gidset_t uid, gid;
 	static Boolean initialized = FALSE;
 	if (perm == 0)
 		return 0;
@@ -54,7 +54,7 @@ static int testperm(struct stat *stat, int perm) {
 	return (stat->st_mode & mask) ? 0 : EACCES;
 }
 
-static int testfile(char *path, int perm, int type) {
+static int testfile(char *path, int perm, unsigned int type) {
 	struct stat st;
 #ifdef S_IFLNK
 	if (type == S_IFLNK) {

@@ -148,7 +148,7 @@ extern void *qsort(
 #define	NOP			if (1) ; else
 #else
 #define	STMT(stmt)		do { stmt; } while (0)
-#define	NOP			do ; while (0)
+#define	NOP			do {} while (0)
 #endif
 
 #if REISER_CPP

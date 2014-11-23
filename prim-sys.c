@@ -20,6 +20,8 @@
 #endif
 #endif
 
+#include <sys/stat.h>
+
 PRIM(newpgrp) {
 	int pid;
 	if (list != NULL)
@@ -88,8 +90,7 @@ PRIM(umask) {
 		mask = strtol(s, &t, 8);
 		if ((t != NULL && *t != '\0') || ((unsigned) mask) > 07777)
 			fail("$&umask", "bad umask: %s", s);
-		if (umask(mask) == -1)
-			fail("$&umask", "umask %04o: %s", mask, esstrerror(errno));
+		umask(mask);
 		return true;
 	}
 	fail("$&umask", "usage: umask [mask]");
@@ -217,8 +218,8 @@ static void printlimit(const Limit *limit, Boolean hard) {
 	}
 }
 
-static LIMIT_T parselimit(const Limit *limit, char *s) {
-	LIMIT_T lim;
+static long parselimit(const Limit *limit, char *s) {
+	long lim;
 	char *t;
 	const Suffix *suf = limit->suffix;
 	if (streq(s, "unlimited"))
@@ -275,15 +276,15 @@ PRIM(limit) {
 		if (lp == NULL)
 			printlimit(lim, hard);
 		else {
-			LIMIT_T n;
+			long n;
 			struct rlimit rlim;
 			getrlimit(lim->flag, &rlim);
 			if ((n = parselimit(lim, getstr(lp->term))) < 0)
 				fail("$&limit", "%s: bad limit value", getstr(lp->term));
 			if (hard)
-				rlim.rlim_max = n;
+				rlim.rlim_max = (LIMIT_T)n;
 			else
-				rlim.rlim_cur = n;
+				rlim.rlim_cur = (LIMIT_T)n;
 			if (setrlimit(lim->flag, &rlim) == -1)
 				fail("$&limit", "setrlimit: %s", esstrerror(errno));
 		}
