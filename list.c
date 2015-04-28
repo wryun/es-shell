@@ -99,8 +99,7 @@ extern List *listify(int argc, char **argv) {
 
 /* nth -- return nth element of a list, indexed from 1 */
 extern Term *nth(List *list, int n) {
-	assert(n > 0);
-	for (; list != NULL; list = list->next) {
+	for (; n > 0 && list != NULL; list = list->next) {
 		assert(list->term != NULL);
 		if (--n == 0)
 			return list->term;
