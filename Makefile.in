@@ -37,6 +37,7 @@ srcdir  = @srcdir@
 SHELL	= /bin/sh
 CC	= @CC@
 INSTALL	= @INSTALL@
+MKDIR_P = @MKDIR_P@
 
 
 ## Bison is generating incorrect parsers.  So do not use, for now
@@ -82,7 +83,9 @@ MANIFEST:
 	find . -type f | sed s/..// > MANIFEST
 
 install : es
+	$(MKDIR_P) $(bindir)
 	$(INSTALL) -s $(srcdir)/es $(bindir)
+	$(MKDIR_P) $(mandir)/man1
 	$(INSTALL) $(srcdir)/doc/es.1 $(mandir)/man1
 
 test	: trip
