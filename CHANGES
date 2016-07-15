@@ -1,6 +1,19 @@
 CHANGES
 =======
 
+0.9 to 0.9.1
+------------
+
+Let's use semver, and fix a couple of bugs:
+
+ - not properly closing file handles on exceptions (thanks, mwgamera)
+ - not using ctrl-a/ctrl-b for internal environment processing
+   so they can be used by libreadline properly
+
+Unfortunately, there are still problems around signal handling which I
+thought I'd fixed earlier. In practice, these have never affected me. See:
+https://github.com/wryun/es-shell/issues/7
+
 0.9beta1 to 0.9
 ---------------
 
