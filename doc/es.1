@@ -820,7 +820,9 @@ substitution:
 .De
 .PP
 returns a list formed from the standard output of the command in braces.
-The characters stored in the variable
+Its return value is stored in the variable $bqstatus.
+.PP
+The characters in the variable
 .Cr $ifs
 (for ``input field separator'')
 are used to split the output into list elements.
