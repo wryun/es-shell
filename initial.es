@@ -713,7 +713,7 @@ set-max-eval-depth	= $&setmaxevaldepth
 #	or editline is being used), setting the variables $TERM or $TERMCAP
 #	should notify the line editor library.
 
-if {~ <=$&primitives restterminal} {
+if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }
 	set-TERMCAP	= @ { $&resetterminal; result $* }
 }
