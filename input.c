@@ -35,6 +35,7 @@ static int historyfd = -1;
 int rl_meta_chars;	/* for editline; ignored for gnu readline */
 extern char *readline(char *);
 extern void add_history(char *);
+extern int read_history(char *);
 extern void rl_reset_terminal(char *);
 extern char *rl_basic_word_break_characters;
 extern char *rl_completer_quote_characters;
@@ -117,6 +118,8 @@ extern void sethistory(char *file) {
 		close(historyfd);
 		historyfd = -1;
 	}
+	// Attempt to populate readline history with new history file.
+	read_history(file); // ignore errors - best effort
 	history = file;
 }
 
@@ -224,7 +227,7 @@ static char *esgetenv(const char *name) {
 	List *value = varlookup(name, NULL);
 	if (value == NULL)
 		return NULL;
-	else { 
+	else {
 		char *export;
 		static Dict *envdict;
 		static Boolean initialized = FALSE;
@@ -416,7 +419,7 @@ extern List *runinput(Input *in, int runflags) {
 		if (flags & eval_exitonfalse)
 			dispatch = mklist(mkstr("%exit-on-false"), dispatch);
 		varpush(&push, "fn-%dispatch", dispatch);
-	
+
 		repl = varlookup((flags & run_interactive)
 				   ? "fn-%interactive-loop"
 				   : "fn-%batch-loop",
@@ -424,7 +427,7 @@ extern List *runinput(Input *in, int runflags) {
 		result = (repl == NULL)
 				? prim("batchloop", NULL, NULL, flags)
 				: eval(repl, NULL, flags);
-	
+
 		varpop(&push);
 
 	CatchException (e)
