@@ -70,7 +70,7 @@ es	: ${OFILES} initial.o
 	${CC} -o es ${LDFLAGS} ${OFILES} initial.o ${LIBS}
 
 esdump	: ${OFILES} dump.o
-	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
+	${CC_FOR_BUILD} -o esdump ${LDFLAGS_FOR_BUILD} ${CFILES} dump.c ${LIBS}
 
 clean	:
 	rm -f es ${OFILES} ${GEN} dump.o initial.o
