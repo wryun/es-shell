@@ -83,10 +83,10 @@ MANIFEST:
 	find . -type f | sed s/..// > MANIFEST
 
 install : es
-	$(MKDIR_P) $(bindir)
-	$(INSTALL) -s $(srcdir)/es $(bindir)
-	$(MKDIR_P) $(mandir)/man1
-	$(INSTALL) $(srcdir)/doc/es.1 $(mandir)/man1
+	$(MKDIR_P) $(DESTDIR)$(bindir)
+	$(INSTALL) -s $(srcdir)/es $(DESTDIR)$(bindir)
+	$(MKDIR_P) $(DESTDIR)$(mandir)/man1
+	$(INSTALL) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
 
 test	: trip
 
