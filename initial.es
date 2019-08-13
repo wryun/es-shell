@@ -309,7 +309,9 @@ fn vars {
 #		$#var                  <={%count $var}
 #		$^var                  <={%flatten ' ' $var}
 #		`{cmd args}            <={%backquote <={%flatten '' $ifs} {cmd args}}
+#		`^{cmd args}           <={%flatten ' ' <={backquote <={%flatten '' $ifs} {cmd args}}}
 #		``ifs {cmd args}       <={%backquote <={%flatten '' ifs} {cmd args}}
+#		``^ifs {cmd args}      <={%flatten ' ' <={backquote <={%flatten '' ifs} {cmd args}}}
 
 fn-%count	= $&count
 fn-%flatten	= $&flatten
