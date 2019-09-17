@@ -204,6 +204,11 @@ typedef GETGROUPS_T gidset_t;
 #define	VARARGS2(t1, v1, t2, v2)	(v1, v2, va_alist) t1 v1; t2 v2; va_dcl
 #define	VA_START(ap, var)		va_start(ap)
 
+/* __va_* are defined by the compiler */
+#define va_start(ap)		__va_start(ap)
+#define va_copy(dest, src)	__va_copy(dest, src)
+#define va_end(ap)		__va_end(ap)
+
 #endif
 
 

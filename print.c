@@ -273,15 +273,10 @@ extern int fmtprint VARARGS2(Format *, format, const char *, fmt) {
 	va_list saveargs = format->args;
 #endif
 
-
 	VA_START(format->args, fmt);
 	n += printfmt(format, fmt);
 	va_end(format->args);
-#ifndef __va_copy
-	format->args = saveargs;
-#else
-	__va_copy(format->args, saveargs);
-#endif
+	va_copy(format->args, saveargs);
 
 	return n + format->flushed;
 }
