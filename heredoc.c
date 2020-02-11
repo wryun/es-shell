@@ -17,11 +17,13 @@ static Here *hereq;
 extern Tree *getherevar(void) {
 	int c;
 	char *s;
+	size_t len;
 	Buffer *buf = openbuffer(0);
 	while (!dnw[c = GETC()])
 		buf = bufputc(buf, c);
+	len = buf->len;
 	s = sealcountedbuffer(buf);
-	if (buf->len == 0) {
+	if (len == 0) {
 		yyerror("null variable name in here document");
 		return NULL;
 	}

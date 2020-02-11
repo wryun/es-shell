@@ -208,8 +208,14 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		return '!';
 	case '`':
 		c = GETC();
-		if (c == '`')
+		if (c == '`') {
+			c = GETC();
+			if (c == '^')
+				return BBFLAT;
+			UNGETC(c);
 			return BACKBACK;
+		} else if (c == '^')
+			return BFLAT;
 		UNGETC(c);
 		return '`';
 	case '$':
