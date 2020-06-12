@@ -1,4 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ([2.58])
 AC_INIT(access.c)
 AC_CONFIG_HEADER(config.h)
 
@@ -14,13 +15,15 @@ rm -f conftest*
 ])
 
 
-use_readline=yes
-use_editline=no
-
-AC_ARG_WITH(readline,
---with-readline		Use GNU Readline, use_readline=yes)
-AC_ARG_WITH(editline,
---with-editline		Use the Editline library, use_editline=yes)
+AC_ARG_WITH([readline],
+	[AS_HELP_STRING([--without-readline], [Do not use GNU Readline])],
+	[],
+	[with_readline=check])
+AC_ARG_WITH([editline],
+	[AS_HELP_STRING([--with-editline],
+		[Use the readline emulation of Editline])],
+	[],
+	[with_editline=no])
 
 AC_CANONICAL_HOST
 
@@ -60,18 +63,30 @@ dnl Checks for libraries.
 
 AC_CHECK_LIB(sun, getpwuid)
 
-if test "$use_readline" = yes || test "$use_editline" = yes
+if test "${with_readline}" != no || test "${with_editline}" = yes
 then
-	AC_CHECK_LIB(terminfo, main)
-	AC_CHECK_LIB(termcap, main)
-	if test "$use_readline" = yes
-	then
-		AC_CHECK_LIB(readline, readline)
-	elif test "$use_editline" = yes
-	then
-		AC_CHECK_LIB(edit, readline)
+	if test "${with_readline}" = yes
+	then readline_libs=readline
 	fi
-
+	if test "${with_editline}" = yes
+	then readline_libs="${readline_libs} edit"
+	fi
+	if test "${with_readline}" = check
+	then readline_libs="${readline_libs} readline"
+	fi
+	AC_SEARCH_LIBS([readline], [${readline_libs}],
+		[],
+		[AC_MSG_ERROR([readline/editline not found])])
+	if \
+		test "${with_readline}" = check &&
+		test "${with_editline}" = yes &&
+		test "${ac_cv_search_readline}" = "-lreadline"
+	then AC_MSG_WARN([editline not found, using readline])
+	fi
+	AC_DEFINE([HAVE_READLINE])
+	AC_SEARCH_LIBS([tputs], [terminfo tinfo termcap],
+		[],
+		[AC_MSG_ERROR([terminfo/termcap library not found])])
 fi
 
 

@@ -89,20 +89,11 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
-/* Define if you have the editline library (-leditline).  */
-#undef HAVE_LIBEDITLINE
-
-/* Define if you have the readline library (-lreadline).  */
-#undef HAVE_LIBREADLINE
+/* Define if you have a readline function (-lreadline/-ledit).  */
+#undef HAVE_READLINE
 
 /* Define if you have the sun library (-lsun).  */
 #undef HAVE_LIBSUN
-
-/* Define if you have the termcap library (-ltermcap).  */
-#undef HAVE_LIBTERMCAP
-
-/* Define if you have the terminfo library (-lterminfo).  */
-#undef HAVE_LIBTERMINFO
 
 /* Do you have a /dev/fd/ directory? */
 #undef HAVE_DEV_FD
