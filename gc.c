@@ -635,6 +635,8 @@ static char *tree2name(NodeKind k) {
 	case nLocal:	return "Local";
 	case nMatch:	return "Match";
 	case nExtract:	return "Extract";
+	case nSwitch:	return "Switch";
+	case nCase:	return "Case";
 	case nVarsub:	return "Varsub";
 	}
 }

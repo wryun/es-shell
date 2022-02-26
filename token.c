@@ -194,6 +194,10 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			return EXTRACT;
 		else if (streq(buf, "%closure"))
 			return CLOSURE;
+		else if (streq(buf, "switch"))
+			return SWITCH;
+		else if (streq(buf, "case"))
+			return CASE;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;

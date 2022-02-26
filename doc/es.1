@@ -782,6 +782,51 @@ For example:
 .De
 .PP
 is true.
+.SS "Matching multiple patterns"
+While pattern matching using the tilde
+.Cr ( ~ )
+operator is powerful, it can feel limiting when you need to perform one of
+several possible actions depending on which patterns match the subject.
+For this situation,
+.I es
+has a
+.Cr switch
+command that can simplify things:
+.Ds
+.Cr "switch \fIsubject\fP {"
+.Cr "  case \fIpattern1 pattern2 pattern3\fP"
+.Cr "    action1"
+.Cr "  case \fIpattern4 pattern5\fP"
+.Cr "    action2"
+.Cr "  case (\fIpattern6 pattern7 pattern8\fP)"
+.Cr "    action3"
+.Cr "  case \fIpattern9\fP"
+.Cr "    ..."
+.Cr "  case *"
+.Cr "    default"
+.Cr "}"
+.De
+.PP
+The behavior is exactly the same as multiple
+.Cr ~
+commands, and each case is evaluated in the order listed.
+This means each case is a list and multiple lists in a single case are
+flattened.
+As a result, the behaviors of the switch and the if below are exactly the
+same:
+.Ds
+.Cr "                   bc = bang crack"
+.Cr "                   bp = biff plop"
+.Cr "                   bw = bam boom wham"
+
+.Cr "switch $onomatopoeia {"
+.Cr "case $bc $bp                   if {~ $onomatopoeia $bc $bp} {"
+.Cr "    result 3                       result 3"
+.Cr "case $bw *ow                   } {~ $onomatopoeia $bw *ow} {"
+.Cr "case *another-match*           } {~ $onomatopoeia *another-match*} {"
+.Cr "    result 7                       result 7"
+.Cr "}                              }"
+.De
 .SS "Pattern Extraction"
 The double-tilde
 .Rc ( ~~ )
@@ -924,7 +969,6 @@ the first command has a ``false'' return value.
 .PP
 inverts the truth value of the exit status of a command.
 .SS "Input and output"
-.PP
 The standard output of a command may be redirected to a file with
 .Ds
 .Cr "command > file"
@@ -1190,7 +1234,7 @@ A function in
 .I es
 is introduced with the syntax
 .Ds
-.Ci fn " name parameters " { " commands " } "
+.Ci fn " name parameters " { " commands " }
 .De
 .PP
 If the function name appears as the first word of a command,
@@ -1314,7 +1358,7 @@ Function (lambda) parameters are lexically bound to their values.
 .SS "For loops"
 The command
 .Ds
-.Cr "for (\fIvar\fP = \fIlist\fP) \fIcommand\fP
+.Cr "for (\fIvar\fP = \fIlist\fP) \fIcommand\fP"
 .De
 .PP
 Runs the
@@ -1707,6 +1751,7 @@ when invoked in this way, the shell prints the internal form of its commands
 rather than executing them.
 .ta 2.3i
 .SS "Control Flow"
+\&
 .Ds
 .ft \*(Cf
 ! \fIcmd\fP	%not {\fIcmd\fP}
@@ -1718,6 +1763,7 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Input/Output Commands"
+\&
 .Ds
 .ft \*(Cf
 \fIcmd\fP < \fIfile\fP	%open 0 \fIfile\fP {\fIcmd\fP}
@@ -1739,6 +1785,7 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Expressions"
+\&
 .Ds
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
@@ -1840,6 +1887,16 @@ Is the file a named pipe (FIFO)?
 Exits the current loop.
 .I Value
 is used as the return value for the loop command.
+Unlike some other languages,
+.Cr break
+is not special inside
+.Cr switch
+command.
+It will exit a loop enclosing the
+.Cr switch
+command, not just the
+.Cr switch
+itself.
 .TP
 .Cr "catch \fIcatcher body\fP"
 Runs
@@ -2124,7 +2181,7 @@ If no
 is specified, waits for any child process to exit.
 .TP
 .Cr "whatis \fIprogram ...\fP"
-For each named 
+For each named
 .IR program ,
 prints the pathname, primitive, lambda, or code fragment which
 would be run if the program appeared as the first word of a command.
@@ -2259,7 +2316,7 @@ shell scripts if the kernel does not.
 Runs the command, and exits if any command
 (except those executing as the tests of conditional statements)
 returns a non-zero status.
-(This function is used as an argument to 
+(This function is used as an argument to
 .Cr %batch-loop
 and
 .Cr %interactive-loop
@@ -2449,7 +2506,7 @@ the command
 Runs the commands, in order.
 .TP
 .Cr "%whatis \fIprogram ...\fP"
-For each named 
+For each named
 .IR program ,
 returns the pathname, primitive, lambda, or code fragment which
 would be run if the program appeared as the first word of a command.
@@ -2549,8 +2606,8 @@ builtin functions with the same names:
 access	forever	throw
 catch	fork	umask
 echo	if	wait
-exec	newpgrp	
-exit	result	
+exec	newpgrp
+exit	result
 .ft R
 .De
 .PP
@@ -2723,7 +2780,7 @@ on startup, i.e., be a login shell.
 .Cr \-l
 is implied if the name the shell was run under (that is,
 .Cr argv[0] )
-starts with a dash 
+starts with a dash
 .Rc ( - ).
 .TP
 .Cr \-e

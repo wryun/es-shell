@@ -86,17 +86,19 @@ static const char *nodename(NodeKind k) {
 	default:	panic("nodename: bad node kind %d", k);
 	case nAssign:	return "Assign";
 	case nCall:	return "Call";
+	case nCase:	return "Case";
 	case nClosure:	return "Closure";
 	case nConcat:	return "Concat";
+	case nExtract:	return "Extract";
 	case nFor:	return "For";
 	case nLambda:	return "Lambda";
 	case nLet:	return "Let";
 	case nList:	return "List";
 	case nLocal:	return "Local";
 	case nMatch:	return "Match";
-	case nExtract:	return "Extract";
 	case nPrim:	return "Prim";
 	case nQword:	return "Qword";
+	case nSwitch:	return "Switch";
 	case nThunk:	return "Thunk";
 	case nVar:	return "Var";
 	case nVarsub:	return "Varsub";
@@ -121,9 +123,10 @@ static char *dumptree(Tree *tree) {
 			print("static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n",
 			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p));
 			break;
-		    case nAssign:  case nConcat: case nClosure: case nFor:
+		    case nAssign: case nConcat: case nClosure: case nFor:
 		    case nLambda: case nLet: case nList:  case nLocal:
 		    case nVarsub: case nMatch: case nExtract:
+		    case nCase: case nSwitch:
 			print("static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n",
 			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p), dumptree(tree->u[1].p));
 		}
@@ -248,7 +251,7 @@ static void printheader(List *title) {
 
 extern void runinitial(void) {
 	List *title = runfd(0, "initial.es", 0);
-	
+
 	gcdisable();
 
 	cvars = mkdict();

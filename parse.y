@@ -11,8 +11,9 @@
 %token	LOCAL LET FOR CLOSURE FN
 %token	ANDAND BACKBACK BBFLAT BFLAT EXTRACT CALL COUNT DUP FLAT OROR PRIM REDIR SUB
 %token	NL ENDFILE ERROR
+%token	SWITCH CASE
 
-%left	LOCAL LET FOR CLOSURE ')'
+%left	SWITCH LOCAL LET FOR CLOSURE ')'
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
@@ -29,6 +30,7 @@
 %type <tree>	REDIR PIPE DUP
 		body cmd cmdsa cmdsan comword first fn line word param assign
 		binding bindings params nlwords words simple redir sword
+		cases case
 %type <kind>	binder
 
 %start es
@@ -65,6 +67,13 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
+	| SWITCH word '{' nl cases '}' 		{ $$ = mk(nSwitch, $2, $5); }
+
+cases	:				{ $$ = NULL; }
+	| cases case			{ $$ = treeconsend2($1, $2); }
+
+case	: CASE words ';' body		{ $$ = mk(nCase, $2, thunkify($4)); }
+	| CASE words NL body		{ $$ = mk(nCase, $2, thunkify($4)); }
 
 simple	: first				{ $$ = treecons2($1, NULL); }
 	| simple word			{ $$ = treeconsend2($1, $2); }
@@ -137,9 +146,10 @@ binder	: LOCAL	        { $$ = nLocal; }
 keyword	: '!'		{ $$ = "!"; }
 	| '~'		{ $$ = "~"; }
 	| EXTRACT	{ $$ = "~~"; }
-        | LOCAL 	{ $$ = "local"; }
+	| LOCAL 	{ $$ = "local"; }
 	| LET		{ $$ = "let"; }
 	| FOR		{ $$ = "for"; }
 	| FN		{ $$ = "fn"; }
 	| CLOSURE	{ $$ = "%closure"; }
+	| SWITCH	{ $$ = "switch"; }
 

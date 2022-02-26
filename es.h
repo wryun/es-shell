@@ -43,9 +43,11 @@ struct Closure {
  */
 
 typedef enum {
-	nAssign, nCall, nClosure, nConcat, nFor, nLambda, nLet, nList, nLocal,
-	nMatch, nExtract, nPrim, nQword, nThunk, nVar, nVarsub, nWord,
-	nRedir, nPipe		/* only appear during construction */
+	nAssign, nCall, nCase, nClosure, nConcat, nExtract, nFor, nLambda,
+	nLet, nList, nLocal, nMatch, nPrim, nQword, nSwitch, nThunk, nVar,
+	nVarsub, nWord,
+	/* only appear during construction */
+	nRedir, nPipe
 } NodeKind;
 
 struct Tree {
@@ -495,7 +497,7 @@ extern List *raised(List *e);
 		_localhandler.up = tophandler; \
 		tophandler = &_localhandler; \
 		if (!setjmp(_localhandler.label)) {
-	
+
 #define CatchException(e) \
 			pophandler(&_localhandler); \
 		} else { \
