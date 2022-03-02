@@ -634,6 +634,16 @@ use:
 .Ds
 .Cr "echo $^path."
 .De
+.PP
+To flatten the output of a command, use
+.Ds
+.Ci `\^{cmd args}
+.De
+.PP
+See the section entitled
+.B "Command Substitution"
+for more information.
+
 .SS "Wildcard Expansion"
 .I Es
 expands wildcards in filenames if possible.
@@ -912,6 +922,11 @@ For example:
 splits up
 .Cr /etc/passwd
 into fields.
+.PP
+A caret
+.Rc ( ^ )
+can be added after the backquote to flatten the list output back into a single
+element (using space as the separator).
 .SS "Return Values"
 The return value of a command is obtained with the construct
 .Ds

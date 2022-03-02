@@ -1,0 +1,6 @@
+* Rename fpath to load-path.  Rename FPATH to ESLOADPATH.
+* Convert compress table frobs in compress.es to generic boxes.
+* Finish tc.es.
+* Finish list.es.
+* Fix the definition of `console?' in subr.es.
+* Change `featurep' to `feature?' in require.es and throughout.

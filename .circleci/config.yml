@@ -11,14 +11,13 @@ jobs:
           name: Install dependencies
           command: |
             apt-get update
-            apt-get install -qy make gcc libtool automake bison flex libreadline-dev
+            apt-get install -qy make gcc libtool autoconf automake bison flex libreadline-dev
 
       - run:
           name: Autotools
           command: |
-            aclocal
-            autoconf
             libtoolize -qi
+            autoreconf
 
       - run:
           name: Configure

@@ -3,7 +3,7 @@
 #include "es.h"
 #include "sigmsgs.h"
 
-typedef Sigresult (*Sighandler)(int);
+typedef void (*Sighandler)(int);
 
 Boolean sigint_newline = TRUE;
 
