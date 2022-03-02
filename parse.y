@@ -17,7 +17,7 @@
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
-%right	'$' 
+%right	'$'
 %left	SUB
 
 %union {
@@ -30,7 +30,7 @@
 %type <tree>	REDIR PIPE DUP
 		body cmd cmdsa cmdsan comword first fn line word param assign
 		binding bindings params nlwords words simple redir sword
-		cases case
+		cases case optcases
 %type <kind>	binder
 
 %start es
@@ -67,13 +67,20 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
-	| SWITCH word '{' nl cases '}' 		{ $$ = mk(nSwitch, $2, $5); }
+	| SWITCH word '{' cases '}' 		{ $$ = mk(nSwitch, $2, $4); }
 
-cases	:				{ $$ = NULL; }
-	| cases case			{ $$ = treeconsend2($1, $2); }
+cases	: nl				{ $$ = NULL; }
+	| nl case			{ $$ = treecons2($2, NULL); }
+	| nl case csep optcases		{ $$ = treecons2($2, $4); }
 
-case	: CASE words ';' body		{ $$ = mk(nCase, $2, thunkify($4)); }
-	| CASE words NL body		{ $$ = mk(nCase, $2, thunkify($4)); }
+optcases:				{ $$ = NULL; }
+	| case				{ $$ = treecons2($1, NULL); }
+	| case csep optcases		{ $$ = treecons2($1, $3); }
+
+case	: CASE word first		{ $$ = mk(nCase, $2, $3); }
+
+csep	: ';' nl
+	| NL nl
 
 simple	: first				{ $$ = treecons2($1, NULL); }
 	| simple word			{ $$ = treeconsend2($1, $2); }
@@ -152,4 +159,5 @@ keyword	: '!'		{ $$ = "!"; }
 	| FN		{ $$ = "fn"; }
 	| CLOSURE	{ $$ = "%closure"; }
 	| SWITCH	{ $$ = "switch"; }
+	| CASE		{ $$ = "case"; }
 

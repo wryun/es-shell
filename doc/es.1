@@ -804,16 +804,18 @@ has a
 command that can simplify things:
 .Ds
 .Cr "switch \fIsubject\fP {"
-.Cr "  case \fIpattern1 pattern2 pattern3\fP"
-.Cr "    action1"
-.Cr "  case \fIpattern4 pattern5\fP"
-.Cr "    action2"
-.Cr "  case (\fIpattern6 pattern7 pattern8\fP)"
-.Cr "    action3"
-.Cr "  case \fIpattern9\fP"
+.Cr "  case (\fIpattern1 pattern2\fP) {action1}"
+.Cr "  case \fIpattern3\fP            {action2}"
+.Cr "  case (\fIpattern4 pattern5\fP) {action3}"
+.Cr "  case (\fIpattern6 pattern7 pattern8\fP) {"
+.Cr "    action4"
+.Cr "  }"
+.Cr "  case \fIpattern9\fP {"
 .Cr "    ..."
-.Cr "  case *"
-.Cr "    default"
+.Cr "  }"
+.Cr "  case * {"
+.Cr "    throw error example no matching patterns"
+.Cr "  }"
 .Cr "}"
 .De
 .PP
@@ -830,12 +832,13 @@ same:
 .Cr "                   bw = bam boom wham"
 
 .Cr "switch $onomatopoeia {"
-.Cr "case $bc $bp                   if {~ $onomatopoeia $bc $bp} {"
-.Cr "    result 3                       result 3"
-.Cr "case $bw *ow                   } {~ $onomatopoeia $bw *ow} {"
-.Cr "case *another-match*           } {~ $onomatopoeia *another-match*} {"
-.Cr "    result 7                       result 7"
-.Cr "}                              }"
+.Cr "  case ($bc $bp) {result 3}      if {~ $onomatopoeia $bc $bp} {"
+.Cr "                                     result 3"
+.Cr "  case ($bw *ow) {               } {~ $onomatopoeia $bw *ow} {"
+.Cr "  }; case *another-match* {      } {~ $onomatopoeia *another-match*} {"
+.Cr "    result 7                         result 7"
+.Cr "  }                              }"
+.Cr "}"
 .De
 .SS "Pattern Extraction"
 The double-tilde
