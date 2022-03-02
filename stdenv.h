@@ -175,14 +175,6 @@ typedef volatile sig_atomic_t Atomic;
 typedef volatile int Atomic;
 #endif
 
-#if VOID_SIGNALS
-typedef void Sigresult;
-#define	SIGRESULT
-#else
-typedef int Sigresult;
-#define	SIGRESULT	0
-#endif
-
 typedef GETGROUPS_T gidset_t;
 
 

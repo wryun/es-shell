@@ -172,10 +172,7 @@
  *		BSD-style wait3(2) system call.  by default, it is on.
  *		if this option is false and the BUILTIN_TIME is true,
  *		the times(2) call must exist.
- *
- *	VOID_SIGNALS
- *		define this as true if signal handlers are declared with void
- *		return type; otherwise es uses int for signal returns. */
+ */
 
 
 /*

@@ -12,9 +12,12 @@ fine.  To do this, just type:
 distribution, it won't have a generated configure file. To generate it,
 you'll need to have autotools, and run:
 
-   % aclocal
-   % autoconf
    % libtoolize -qi
+   % autoreconf
+
+   Libtoolize -qi installs a bunch of dependencies that we'd otherwise
+get from automake, except that we're not actually using automake so
+we ask libtoolize to do the work.
 
    Es needs an ANSI compiler (or at least a compiler that respects
 protoypes and provides large portions of the ANSI library).
