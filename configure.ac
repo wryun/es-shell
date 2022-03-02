@@ -21,8 +21,6 @@ use_editline=no
 
 AC_ARG_WITH(readline,
 --with-readline		Use GNU Readline, use_readline=yes)
-AC_ARG_WITH(editline,
---with-editline		Use the Editline library, use_editline=yes)
 
 AC_CANONICAL_HOST
 
