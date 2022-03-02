@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+0.9.1 to 0.9.2
+--------------
+
+- readline now reads your history file (if set) into its history on startup
+  (set history with history=~/.es_history or similar)
+- minor cleanups/fixes (@eadwardus, @mwgamera, @tmmcguire)
+- @eadwardus added flatten support to command substitution (e.g. `^{echo hello world})
+
 0.9 to 0.9.1
 ------------
 

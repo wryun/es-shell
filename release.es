@@ -12,5 +12,4 @@ if {! grep -q $1 version.c} {
     echo '(yes, this should be automated)'
 }
 
-tar chzvf ../es-$1.tar.gz --exclude\=.gitignore --exclude\=release.es `{git ls-files} config.guess config.sub configure install-sh
-
+tar chzvf ../es-$1.tar.gz --exclude\=.circleci --exclude\=.gitignore --exclude\=release.es `{git ls-files} config.guess config.sub config.h.in configure install-sh
