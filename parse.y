@@ -77,8 +77,7 @@ optcases:				{ $$ = NULL; }
 	| case				{ $$ = treecons2($1, NULL); }
 	| case csep optcases		{ $$ = treecons2($1, $3); }
 
-case	: CASE word			{ $$ = mk(nCase, $2, NULL); }
-	| CASE word first		{ $$ = mk(nCase, $2, $3); }
+case	: CASE word first		{ $$ = mk(nCase, $2, $3); }
 
 csep	: ';' nl
 	| NL nl
