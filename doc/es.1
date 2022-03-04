@@ -796,7 +796,8 @@ is true.
 While pattern matching using the tilde
 .Cr ( ~ )
 operator is powerful, it can feel limiting when you need to perform one of
-several possible actions depending on which patterns match the subject.
+several possible actions depending on which patterns match the same subject
+every time.
 For this situation,
 .I es
 has a
@@ -804,40 +805,36 @@ has a
 command that can simplify things:
 .Ds
 .Cr "switch \fIsubject\fP {"
-.Cr "  case (\fIpattern1 pattern2\fP) {action1}"
-.Cr "  case \fIpattern3\fP            {action2}"
-.Cr "  case (\fIpattern4 pattern5\fP) {action3}"
-.Cr "  case (\fIpattern6 pattern7 pattern8\fP) {"
-.Cr "    action4"
+.Cr "  case \fIpattern1\fP            {action1}"
+.Cr "  case (\fIpattern2 pattern3\fP) {action2}"
+.Cr "  case (\fIpattern4 pattern5 pattern6\fP) {"
+.Cr "    action3"
 .Cr "  }"
-.Cr "  case \fIpattern9\fP {"
-.Cr "    ..."
-.Cr "  }"
+.Cr "  ..."
 .Cr "  case * {"
 .Cr "    throw error example no matching patterns"
 .Cr "  }"
 .Cr "}"
 .De
 .PP
-The behavior is exactly the same as multiple
+The behavior is exactly the same as
+.Cr if
+with multiple
 .Cr ~
-commands, and each case is evaluated in the order listed.
-This means each case is a list and multiple lists in a single case are
-flattened.
-As a result, the behaviors of the switch and the if below are exactly the
-same:
+commands as arguments, and each case is evaluated in the order listed.
+For example, the switch command and the if command below have exactly the
+same behavior:
 .Ds
-.Cr "                   bc = bang crack"
-.Cr "                   bp = biff plop"
-.Cr "                   bw = bam boom wham"
+.Cr "               bc = bang crack"
+.Cr "               bp = biff plop"
+.Cr "               bw = bam boom wham"
 
-.Cr "switch $onomatopoeia {"
-.Cr "  case ($bc $bp) {result 3}      if {~ $onomatopoeia $bc $bp} {"
-.Cr "                                     result 3"
-.Cr "  case ($bw *ow) {               } {~ $onomatopoeia $bw *ow} {"
-.Cr "  }; case *another-match* {      } {~ $onomatopoeia *another-match*} {"
-.Cr "    result 7                         result 7"
-.Cr "  }                              }"
+.Cr "switch $sound {              if {~ $sound $bc} {"
+.Cr "  case $bc {result 3}          result 3"
+.Cr "  case ($bp $bw *ow) {}      } {~ $sound $bp $bw *ow} {"
+.Cr "  case * {                   } {"
+.Cr "    false                      false"
+.Cr "  }                          }"
 .Cr "}"
 .De
 .SS "Pattern Extraction"
