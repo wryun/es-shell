@@ -100,10 +100,6 @@ top:
 		return FALSE;
 
 
-	case nSwitch:
-		fmtprint(f, "switch %#T {%T}", n->u[0].p, n->u[1].p);
-		return FALSE;
-
 	case nLocal:
 		binding(f, "local", n);
 		tailcall(n->u[1].p, FALSE);
@@ -146,10 +142,6 @@ top:
 			fmtprint(f, "%T", n->u[0].p);
 		fmtprint(f, "{%T}", n->u[1].p);
 		return FALSE;
-
-	case nCase:
-		fmtprint(f, "case %#T;", n->u[0].p);
-		tailcall(n->u[1].p, FALSE);
 
 	case nList:
 		if (!group) {
@@ -449,14 +441,6 @@ static Boolean Bconv(Format *f) {
 
 	case nExtract:
 		fmtprint(f, "(extract %B %B)", n->u[0].p, n->u[1].p);
-		break;
-
-	case nSwitch:
-		fmtprint(f, "(switch %B %B)", n->u[0].p, n->u[1].p);
-		break;
-
-	case nCase:
-		fmtprint(f, "(case %B %B)", n->u[0].p, n->u[1].p);
 		break;
 
 	case nRedir:

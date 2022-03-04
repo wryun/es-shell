@@ -67,7 +67,7 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
-	| SWITCH word '{' cases '}' 		{ $$ = mk(nSwitch, $2, $4); }
+	| SWITCH word '{' cases '}' 		{ $$ = swrewrite($2, $4); }
 
 cases	: nl				{ $$ = NULL; }
 	| nl case			{ $$ = treecons2($2, NULL); }
@@ -77,7 +77,7 @@ optcases:				{ $$ = NULL; }
 	| case				{ $$ = treecons2($1, NULL); }
 	| case csep optcases		{ $$ = treecons2($1, $3); }
 
-case	: CASE word first		{ $$ = mk(nCase, $2, $3); }
+case	: CASE word first		{ $$ = mk(nList, $2, $3); }
 
 csep	: ';' nl
 	| NL nl

@@ -108,7 +108,7 @@ extern Tree *mkseq(char *op, Tree *t1, Tree *t2) {
 		if (t2 == NULL)
 			return t1;
 	}
-	
+
 	sametail = firstis(t2, op);
 	tail = sametail ? t2->CDR : treecons(thunkify(t2), NULL);
 	if (firstis(t1, op))
@@ -230,4 +230,33 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 	assert(t == NULL || t->kind == nList);
 	*tp = mk(nRedir, r, t);
 	return tree;
+}
+
+/* swrewrite -- rewrite switch as appropriate if command */
+extern Tree *swrewrite(Tree *subj, Tree *cases) {
+	Tree *if_prefix = mk(nWord, "if");
+	if (cases == NULL) {
+		if (subj == NULL)
+			return treecons(if_prefix, NULL);
+		return treecons(
+			if_prefix,
+			treecons(
+				thunkify(mk(nMatch, subj, NULL)),
+				NULL
+			)
+		);
+	}
+	Tree *matches = NULL;
+	for (; cases != NULL; cases = cases->CDR) {
+		Tree *pattlist = cases->CAR->CAR;
+		Tree *cmd = cases->CAR->CDR;
+		if (pattlist != NULL && pattlist->kind != nList)
+			pattlist = treecons(pattlist, NULL);
+		Tree *match = treecons(
+			thunkify(mk(nMatch, subj, pattlist)),
+			treecons(cmd, NULL)
+		);
+		matches = treeappend(matches, match);
+	}
+	return treecons(if_prefix, matches);
 }

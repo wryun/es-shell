@@ -263,30 +263,6 @@ static List *extractpattern(Tree *subjectform0, Tree *patternform0,
 	RefReturn(result);
 }
 
-/* switchpattern -- does the text match any of the patterns in the cases? */
-static List *switchpattern(Tree *subjectform0, Tree *cases0,
-			   Binding *binding, int evalflags) {
-	Ref(List *, result, true);
-	Ref(Binding *, bp, binding);
-	Ref(Tree *, cases, cases0);
-	Ref(List *, subject, glom(subjectform0, bp, TRUE));
-	if (subject != NULL && cases == NULL)
-		result = false;
-	for (; cases != NULL; cases = cases->u[1].p) {
-		if (istrue(matchpattern(subjectform0,
-		                        cases->u[0].p->u[0].p,
-		                        binding))) {
-			result = walk(cases->u[0].p->u[1].p,
-			              binding,
-			              evalflags & (cases->u[1].p == NULL
-			                           ? eval_inchild : 0));
-			break;
-		}
-	}
-	RefEnd3(subject, cases, bp);
-	RefReturn(result);
-}
-
 /* walk -- walk through a tree, evaluating nodes */
 extern List *walk(Tree *tree0, Binding *binding0, int flags) {
 	Tree *volatile tree = tree0;
@@ -331,9 +307,6 @@ top:
 
 	    case nExtract:
 		return extractpattern(tree->u[0].p, tree->u[1].p, binding);
-
-	    case nSwitch:
-		return switchpattern(tree->u[0].p, tree->u[1].p, binding, flags);
 
 	    default:
 		panic("walk: bad node kind %d", tree->kind);
