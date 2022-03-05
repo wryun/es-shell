@@ -234,18 +234,13 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 
 /* swrewrite -- rewrite switch as appropriate if command */
 extern Tree *swrewrite(Tree *subj, Tree *cases) {
-	Tree *if_prefix = mk(nWord, "if");
-	if (cases == NULL) {
-		if (subj == NULL)
-			return treecons(if_prefix, NULL);
-		return treecons(
-			if_prefix,
-			treecons(
-				thunkify(mk(nMatch, subj, NULL)),
-				NULL
-			)
-		);
-	}
+	/*
+	 * Empty switch -- with no patterns to match the subject,
+	 * it's like saying {if}, which simply returns true.
+	 * This avoids an unnecessary call.
+	 */
+	if (cases == NULL)
+		return thunkify(NULL);
 	Tree *matches = NULL;
 	for (; cases != NULL; cases = cases->CDR) {
 		Tree *pattlist = cases->CAR->CAR;
@@ -258,5 +253,5 @@ extern Tree *swrewrite(Tree *subj, Tree *cases) {
 		);
 		matches = treeappend(matches, match);
 	}
-	return treecons(if_prefix, matches);
+	return prefix("if", matches);
 }

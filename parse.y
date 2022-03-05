@@ -70,8 +70,8 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| SWITCH word '{' nl cases '}' 		{ $$ = swrewrite($2, $5); }
 
 cases	:				{ $$ = NULL; }
-	| case				{ $$ = treecons2($1, NULL); }
-	| case csep cases		{ $$ = treecons2($1, $3); }
+	| case				{ $$ = treecons($1, NULL); }
+	| case csep cases		{ $$ = treecons($1, $3); }
 
 case	: CASE word first		{ $$ = mk(nList, $2, thunkify($3)); }
 
