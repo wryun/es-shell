@@ -73,7 +73,7 @@ cases	:				{ $$ = NULL; }
 	| case				{ $$ = treecons2($1, NULL); }
 	| case csep cases		{ $$ = treecons2($1, $3); }
 
-case	: CASE word first		{ $$ = mk(nList, $2, $3); }
+case	: CASE word first		{ $$ = mk(nList, $2, thunkify($3)); }
 
 csep	: ';' nl
 	| NL nl
