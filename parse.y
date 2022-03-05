@@ -30,7 +30,7 @@
 %type <tree>	REDIR PIPE DUP
 		body cmd cmdsa cmdsan comword first fn line word param assign
 		binding bindings params nlwords words simple redir sword
-		cases case optcases
+		cases case
 %type <kind>	binder
 
 %start es
@@ -67,15 +67,11 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
-	| SWITCH word '{' cases '}' 		{ $$ = swrewrite($2, $4); }
+	| SWITCH word '{' nl cases '}' 		{ $$ = swrewrite($2, $5); }
 
-cases	: nl				{ $$ = NULL; }
-	| nl case			{ $$ = treecons2($2, NULL); }
-	| nl case csep optcases		{ $$ = treecons2($2, $4); }
-
-optcases:				{ $$ = NULL; }
+cases	:				{ $$ = NULL; }
 	| case				{ $$ = treecons2($1, NULL); }
-	| case csep optcases		{ $$ = treecons2($1, $3); }
+	| case csep cases		{ $$ = treecons2($1, $3); }
 
 case	: CASE word first		{ $$ = mk(nList, $2, $3); }
 
