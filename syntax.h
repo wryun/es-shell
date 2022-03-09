@@ -30,7 +30,7 @@ extern Tree *mkredir(Tree *cmd, Tree *file);
 extern Tree *mkredircmd(char *cmd, int fd);
 extern Tree *redirappend(Tree *t, Tree *r);
 
-extern Tree *swrewrite(Tree *subj, Tree *cases);
+extern Tree *mkmatch(Tree *subj, Tree *cases);
 
 /* heredoc.c */
 

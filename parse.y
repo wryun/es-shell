@@ -11,9 +11,9 @@
 %token	LOCAL LET FOR CLOSURE FN
 %token	ANDAND BACKBACK BBFLAT BFLAT EXTRACT CALL COUNT DUP FLAT OROR PRIM REDIR SUB
 %token	NL ENDFILE ERROR
-%token	SWITCH
+%token	MATCH
 
-%left	SWITCH LOCAL LET FOR CLOSURE ')'
+%left	MATCH LOCAL LET FOR CLOSURE ')'
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
@@ -67,7 +67,7 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
-	| SWITCH word '{' nl cases '}' 		{ $$ = swrewrite($2, $5); }
+	| MATCH word '{' nl cases '}' 		{ $$ = mkmatch($2, $5); }
 
 cases	:				{ $$ = NULL; }
 	| case				{ $$ = treecons($1, NULL); }
@@ -154,5 +154,5 @@ keyword	: '!'		{ $$ = "!"; }
 	| FOR		{ $$ = "for"; }
 	| FN		{ $$ = "fn"; }
 	| CLOSURE	{ $$ = "%closure"; }
-	| SWITCH	{ $$ = "switch"; }
+	| MATCH		{ $$ = "match"; }
 

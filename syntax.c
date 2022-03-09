@@ -232,10 +232,10 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 	return tree;
 }
 
-/* swrewrite -- rewrite switch as appropriate if command */
-extern Tree *swrewrite(Tree *subj, Tree *cases) {
+/* mkmatch -- rewrite match as appropriate if with ~ commands */
+extern Tree *mkmatch(Tree *subj, Tree *cases) {
 	/*
-	 * Empty switch -- with no patterns to match the subject,
+	 * Empty match -- with no patterns to match the subject,
 	 * it's like saying {if}, which simply returns true.
 	 * This avoids an unnecessary call.
 	 */
