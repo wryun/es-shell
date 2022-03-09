@@ -11,7 +11,7 @@
 %token	LOCAL LET FOR CLOSURE FN
 %token	ANDAND BACKBACK BBFLAT BFLAT EXTRACT CALL COUNT DUP FLAT OROR PRIM REDIR SUB
 %token	NL ENDFILE ERROR
-%token	SWITCH CASE
+%token	SWITCH
 
 %left	SWITCH LOCAL LET FOR CLOSURE ')'
 %left	ANDAND OROR NL
@@ -73,7 +73,7 @@ cases	:				{ $$ = NULL; }
 	| case				{ $$ = treecons($1, NULL); }
 	| case csep cases		{ $$ = treecons($1, $3); }
 
-case	: CASE word first		{ $$ = mk(nList, $2, thunkify($3)); }
+case	: word first			{ $$ = mk(nList, $1, thunkify($2)); }
 
 csep	: ';' nl
 	| NL nl
@@ -155,5 +155,4 @@ keyword	: '!'		{ $$ = "!"; }
 	| FN		{ $$ = "fn"; }
 	| CLOSURE	{ $$ = "%closure"; }
 	| SWITCH	{ $$ = "switch"; }
-	| CASE		{ $$ = "case"; }
 
