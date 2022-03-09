@@ -241,6 +241,14 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 	 */
 	if (cases == NULL)
 		return thunkify(NULL);
+	/*
+	 * Prevent backquote substitution in the subject from executing
+	 * repeatedly by assigning it to a temporary variable and using that
+	 * variable as the first argument to '~' .
+	 */
+	const char *varname = "__es_matchtmp";
+	Tree *sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
+	Tree *svar = mk(nVar, mk(nWord, varname));
 	Tree *matches = NULL;
 	for (; cases != NULL; cases = cases->CDR) {
 		Tree *pattlist = cases->CAR->CAR;
@@ -248,10 +256,11 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 		if (pattlist != NULL && pattlist->kind != nList)
 			pattlist = treecons(pattlist, NULL);
 		Tree *match = treecons(
-			thunkify(mk(nMatch, subj, pattlist)),
+			thunkify(mk(nMatch, svar, pattlist)),
 			treecons(cmd, NULL)
 		);
 		matches = treeappend(matches, match);
 	}
-	return prefix("if", matches);
+	matches = thunkify(prefix("if", matches));
+	return mk(nLet, sass, matches);
 }
