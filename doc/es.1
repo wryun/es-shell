@@ -801,17 +801,17 @@ every time.
 For this situation,
 .I es
 has a
-.Cr switch
+.Cr match
 command that can simplify things:
 .Ds
-.Cr "switch \fIsubject\fP {"
-.Cr "  case \fIpattern1\fP            {action1}"
-.Cr "  case (\fIpattern2 pattern3\fP) {action2}"
-.Cr "  case (\fIpattern4 pattern5 pattern6\fP) {"
+.Cr "match \fIsubject\fP {"
+.Cr "  \fIpattern1\fP            {action1}"
+.Cr "  (\fIpattern2 pattern3\fP) {action2}"
+.Cr "  (\fIpattern4 pattern5 pattern6\fP) {"
 .Cr "    action3"
 .Cr "  }"
 .Cr "  ..."
-.Cr "  case * {"
+.Cr "  * {"
 .Cr "    throw error example no matching patterns"
 .Cr "  }"
 .Cr "}"
@@ -822,19 +822,19 @@ The behavior is exactly the same as
 with multiple
 .Cr ~
 commands as arguments, and each case is evaluated in the order listed.
-For example, the switch command and the if command below have exactly the
+For example, the match command and the if command below have exactly the
 same behavior:
 .Ds
 .Cr "               bc = bang crack"
 .Cr "               bp = biff plop"
 .Cr "               bw = bam boom wham"
 
-.Cr "switch $sound {              if {~ $sound $bc} {"
-.Cr "  case $bc {result 3}          result 3"
-.Cr "  case ($bp $bw *ow) {}      } {~ $sound $bp $bw *ow} {"
-.Cr "  case * {                   } {"
-.Cr "    false                      false"
-.Cr "  }                          }"
+.Cr "match $sound {          if {~ $sound $bc} {"
+.Cr "  $bc {result 3}          result 3"
+.Cr "  ($bp $bw *ow) {}      } {~ $sound $bp $bw *ow} {"
+.Cr "  * {                   } {"
+.Cr "    false                 false"
+.Cr "  }                     }"
 .Cr "}"
 .De
 .SS "Pattern Extraction"
@@ -1902,16 +1902,6 @@ Is the file a named pipe (FIFO)?
 Exits the current loop.
 .I Value
 is used as the return value for the loop command.
-Unlike some other languages,
-.Cr break
-is not special inside
-.Cr switch
-command.
-It will exit a loop enclosing the
-.Cr switch
-command, not just the
-.Cr switch
-itself.
 .TP
 .Cr "catch \fIcatcher body\fP"
 Runs
