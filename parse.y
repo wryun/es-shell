@@ -67,16 +67,14 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
-	| MATCH word '{' nl cases '}' 		{ $$ = mkmatch($2, $5); }
+	| MATCH word nl '(' cases ')'		{ $$ = mkmatch($2, $5); }
 
-cases	:				{ $$ = NULL; }
-	| case				{ $$ = treecons($1, NULL); }
-	| case csep cases		{ $$ = treecons($1, $3); }
+cases	: case				{ $$ = treecons2($1, NULL); }
+	| cases ';' case		{ $$ = treeconsend2($1, $3); }
+	| cases NL case			{ $$ = treeconsend2($1, $3); }
 
-case	: word first			{ $$ = mk(nList, $1, thunkify($2)); }
-
-csep	: ';' nl
-	| NL nl
+case	:				{ $$ = NULL; }
+	| word first			{ $$ = mk(nList, $1, thunkify($2)); }
 
 simple	: first				{ $$ = treecons2($1, NULL); }
 	| simple word			{ $$ = treeconsend2($1, $2); }

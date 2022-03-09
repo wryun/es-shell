@@ -804,7 +804,7 @@ has a
 .Cr match
 command that can simplify things:
 .Ds
-.Cr "match \fIsubject\fP {"
+.Cr "match \fIsubject\fP ("
 .Cr "  \fIpattern1\fP            {action1}"
 .Cr "  (\fIpattern2 pattern3\fP) {action2}"
 .Cr "  (\fIpattern4 pattern5 pattern6\fP) {"
@@ -814,28 +814,28 @@ command that can simplify things:
 .Cr "  * {"
 .Cr "    throw error example no matching patterns"
 .Cr "  }"
-.Cr "}"
+.Cr ")"
 .De
 .PP
-The behavior is exactly the same as
+The behavior is the same as an
 .Cr if
-with multiple
+command with multiple
 .Cr ~
-commands as arguments, and each case is evaluated in the order listed.
-For example, the match command and the if command below have exactly the
-same behavior:
+commands and command blocks as arguments, and each list of patterns is
+evaluated in the order presented.
+For example, the match command and the if command below are equivalent:
 .Ds
 .Cr "               bc = bang crack"
 .Cr "               bp = biff plop"
 .Cr "               bw = bam boom wham"
 
-.Cr "match $sound {          if {~ $sound $bc} {"
+.Cr "match $sound (          if {~ $sound $bc} {"
 .Cr "  $bc {result 3}          result 3"
 .Cr "  ($bp $bw *ow) {}      } {~ $sound $bp $bw *ow} {"
 .Cr "  * {                   } {"
 .Cr "    false                 false"
 .Cr "  }                     }"
-.Cr "}"
+.Cr ")"
 .De
 .SS "Pattern Extraction"
 The double-tilde
