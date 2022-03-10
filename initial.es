@@ -744,7 +744,7 @@ max-eval-depth	= 640
 #	is does.  fn-%dispatch is really only important to the current
 #	interpreter loop.
 
-noexport = noexport pid signals apid bqstatus fn-%dispatch path home
+noexport = noexport pid signals apid bqstatus fn-%dispatch path home matchexpr
 
 
 #

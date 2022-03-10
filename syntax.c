@@ -246,7 +246,7 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 	 * repeatedly by assigning it to a temporary variable and using that
 	 * variable as the first argument to '~' .
 	 */
-	const char *varname = "__es_matchtmp";
+	const char *varname = "matchexpr";
 	Tree *sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
 	Tree *svar = mk(nVar, mk(nWord, varname));
 	Tree *matches = NULL;
@@ -262,5 +262,5 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 		matches = treeappend(matches, match);
 	}
 	matches = thunkify(prefix("if", matches));
-	return mk(nLet, sass, matches);
+	return mk(nLocal, sass, matches);
 }
