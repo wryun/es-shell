@@ -108,7 +108,7 @@ extern Tree *mkseq(char *op, Tree *t1, Tree *t2) {
 		if (t2 == NULL)
 			return t1;
 	}
-	
+
 	sametail = firstis(t2, op);
 	tail = sametail ? t2->CDR : treecons(thunkify(t2), NULL);
 	if (firstis(t1, op))
@@ -230,4 +230,17 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 	assert(t == NULL || t->kind == nList);
 	*tp = mk(nRedir, r, t);
 	return tree;
+}
+
+/* firstprepend -- insert a command node before its arg nodes after all redirections */
+extern Tree *firstprepend(Tree *first, Tree *args) {
+	Tree *t, **tp;
+	assert(first != NULL);
+	for (t = args, tp = &args; t != NULL && t->kind == nRedir; t = *(tp = &t->CDR))
+		;
+	assert(t == NULL || t->kind == nList);
+	*tp = treecons(first, t);
+	if (args->kind == nRedir)
+		return args;
+	return *tp;
 }

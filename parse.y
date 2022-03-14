@@ -12,11 +12,12 @@
 %token	ANDAND BACKBACK BBFLAT BFLAT EXTRACT CALL COUNT DUP FLAT OROR PRIM REDIR SUB
 %token	NL ENDFILE ERROR
 
+%left	'^' '='
 %left	LOCAL LET FOR CLOSURE ')'
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
-%right	'$' 
+%right	'$'
 %left	SUB
 
 %union {
@@ -28,7 +29,7 @@
 %type <str>	WORD QWORD keyword
 %type <tree>	REDIR PIPE DUP
 		body cmd cmdsa cmdsan comword first fn line word param assign
-		binding bindings params nlwords words simple redir sword
+		args binding bindings params nlwords words simple redir sword
 %type <kind>	binder
 
 %start es
@@ -67,8 +68,12 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
 
 simple	: first				{ $$ = treecons2($1, NULL); }
-	| simple word			{ $$ = treeconsend2($1, $2); }
-	| simple redir			{ $$ = redirappend($1, $2); }
+	| first args			{ $$ = firstprepend($1, $2); }
+
+args	: word				{ $$ = treecons2($1, NULL); }
+	| redir				{ $$ = redirappend(NULL, $1); }
+	| args word			{ $$ = treeconsend2($1, $2); }
+	| args redir			{ $$ = redirappend($1, $2); }
 
 redir	: DUP				{ $$ = $1; }
 	| REDIR word			{ $$ = mkredir($1, $2); }
@@ -79,7 +84,7 @@ bindings: binding			{ $$ = treecons2($1, NULL); }
 
 binding	:				{ $$ = NULL; }
 	| fn				{ $$ = $1; }
-	| word assign			{ $$ = mk(nAssign, $1, $2); }
+	| first assign			{ $$ = mk(nAssign, $1, $2); }
 
 assign	: caret '=' caret words		{ $$ = $4; }
 
@@ -126,18 +131,19 @@ nlwords :				{ $$ = NULL; }
 nl	:
 	| nl NL
 
-caret 	:
+caret 	:	%prec '^'
 	| '^'
 
-binder	: LOCAL	        { $$ = nLocal; }
+binder	: LOCAL		{ $$ = nLocal; }
 	| LET		{ $$ = nLet; }
 	| FOR		{ $$ = nFor; }
 	| CLOSURE	{ $$ = nClosure; }
 
 keyword	: '!'		{ $$ = "!"; }
 	| '~'		{ $$ = "~"; }
+	| '='		{ $$ = "="; }
 	| EXTRACT	{ $$ = "~~"; }
-        | LOCAL 	{ $$ = "local"; }
+	| LOCAL 	{ $$ = "local"; }
 	| LET		{ $$ = "let"; }
 	| FOR		{ $$ = "for"; }
 	| FN		{ $$ = "fn"; }
