@@ -29,6 +29,7 @@ extern Tree *redirect(Tree *t);
 extern Tree *mkredir(Tree *cmd, Tree *file);
 extern Tree *mkredircmd(char *cmd, int fd);
 extern Tree *redirappend(Tree *t, Tree *r);
+extern Tree *firstprepend(Tree *first, Tree *args);
 
 extern Tree *mkmatch(Tree *subj, Tree *cases);
 

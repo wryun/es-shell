@@ -200,14 +200,15 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		y->str = gcdup(buf);
 		return WORD;
 	}
-	if (c == '`' || c == '!' || c == '$' || c == '\'') {
+	if (c == '`' || c == '!' || c == '$' || c == '\'' || c == '=') {
 		InsertFreeCaret();
-		if (c == '!')
+		if (c == '!' || c == '=')
 			w = KW;
 	}
 	switch (c) {
 	case '!':
-		return '!';
+	case '=':
+		return c;
 	case '`':
 		c = GETC();
 		if (c == '`') {
@@ -326,7 +327,6 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 	case ';':
 	case '^':
 	case ')':
-	case '=':
 	case '{': case '}':
 		w = NW;
 		return c;

@@ -13,6 +13,7 @@
 %token	NL ENDFILE ERROR
 %token	MATCH
 
+%left	'^' '='
 %left	MATCH LOCAL LET FOR CLOSURE ')'
 %left	ANDAND OROR NL
 %left	'!'
@@ -29,7 +30,7 @@
 %type <str>	WORD QWORD keyword
 %type <tree>	REDIR PIPE DUP
 		body cmd cmdsa cmdsan comword first fn line word param assign
-		binding bindings params nlwords words simple redir sword
+		args binding bindings params nlwords words simple redir sword
 		cases case
 %type <kind>	binder
 
@@ -77,8 +78,12 @@ case	:				{ $$ = NULL; }
 	| word first			{ $$ = mk(nList, $1, thunkify($2)); }
 
 simple	: first				{ $$ = treecons2($1, NULL); }
-	| simple word			{ $$ = treeconsend2($1, $2); }
-	| simple redir			{ $$ = redirappend($1, $2); }
+	| first args			{ $$ = firstprepend($1, $2); }
+
+args	: word				{ $$ = treecons2($1, NULL); }
+	| redir				{ $$ = redirappend(NULL, $1); }
+	| args word			{ $$ = treeconsend2($1, $2); }
+	| args redir			{ $$ = redirappend($1, $2); }
 
 redir	: DUP				{ $$ = $1; }
 	| REDIR word			{ $$ = mkredir($1, $2); }
@@ -89,7 +94,7 @@ bindings: binding			{ $$ = treecons2($1, NULL); }
 
 binding	:				{ $$ = NULL; }
 	| fn				{ $$ = $1; }
-	| word assign			{ $$ = mk(nAssign, $1, $2); }
+	| first assign			{ $$ = mk(nAssign, $1, $2); }
 
 assign	: caret '=' caret words		{ $$ = $4; }
 
@@ -136,16 +141,17 @@ nlwords :				{ $$ = NULL; }
 nl	:
 	| nl NL
 
-caret 	:
+caret 	:	%prec '^'
 	| '^'
 
-binder	: LOCAL	        { $$ = nLocal; }
+binder	: LOCAL		{ $$ = nLocal; }
 	| LET		{ $$ = nLet; }
 	| FOR		{ $$ = nFor; }
 	| CLOSURE	{ $$ = nClosure; }
 
 keyword	: '!'		{ $$ = "!"; }
 	| '~'		{ $$ = "~"; }
+	| '='		{ $$ = "="; }
 	| EXTRACT	{ $$ = "~~"; }
 	| LOCAL 	{ $$ = "local"; }
 	| LET		{ $$ = "let"; }

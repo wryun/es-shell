@@ -264,3 +264,16 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 	matches = thunkify(prefix("if", matches));
 	return mk(nLocal, sass, matches);
 }
+
+/* firstprepend -- insert a command node before its arg nodes after all redirections */
+extern Tree *firstprepend(Tree *first, Tree *args) {
+	Tree *t, **tp;
+	assert(first != NULL);
+	for (t = args, tp = &args; t != NULL && t->kind == nRedir; t = *(tp = &t->CDR))
+		;
+	assert(t == NULL || t->kind == nList);
+	*tp = treecons(first, t);
+	if (args->kind == nRedir)
+		return args;
+	return *tp;
+}
