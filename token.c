@@ -194,6 +194,8 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			return EXTRACT;
 		else if (streq(buf, "%closure"))
 			return CLOSURE;
+		else if (streq(buf, "match"))
+			return MATCH;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;

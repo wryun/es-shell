@@ -232,6 +232,39 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 	return tree;
 }
 
+/* mkmatch -- rewrite match as appropriate if with ~ commands */
+extern Tree *mkmatch(Tree *subj, Tree *cases) {
+	/*
+	 * Empty match -- with no patterns to match the subject,
+	 * it's like saying {if}, which simply returns true.
+	 * This avoids an unnecessary call.
+	 */
+	if (cases == NULL)
+		return thunkify(NULL);
+	/*
+	 * Prevent backquote substitution in the subject from executing
+	 * repeatedly by assigning it to a temporary variable and using that
+	 * variable as the first argument to '~' .
+	 */
+	const char *varname = "matchexpr";
+	Tree *sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
+	Tree *svar = mk(nVar, mk(nWord, varname));
+	Tree *matches = NULL;
+	for (; cases != NULL; cases = cases->CDR) {
+		Tree *pattlist = cases->CAR->CAR;
+		Tree *cmd = cases->CAR->CDR;
+		if (pattlist != NULL && pattlist->kind != nList)
+			pattlist = treecons(pattlist, NULL);
+		Tree *match = treecons(
+			thunkify(mk(nMatch, svar, pattlist)),
+			treecons(cmd, NULL)
+		);
+		matches = treeappend(matches, match);
+	}
+	matches = thunkify(prefix("if", matches));
+	return mk(nLocal, sass, matches);
+}
+
 /* firstprepend -- insert a command node before its arg nodes after all redirections */
 extern Tree *firstprepend(Tree *first, Tree *args) {
 	Tree *t, **tp;

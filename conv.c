@@ -9,7 +9,7 @@ static Boolean Lconv(Format *f) {
 	List *lp, *next;
 	char *sep;
 	const char *fmt = (f->flags & FMT_altform) ? "%S%s" : "%s%s";
-	
+
 	lp = va_arg(f->args, List *);
 	sep = va_arg(f->args, char *);
 	for (; lp != NULL; lp = next) {
@@ -308,7 +308,7 @@ quoteit:
 static Boolean Zconv(Format *f) {
 	StrList *lp, *next;
 	char *sep;
-	
+
 	lp = va_arg(f->args, StrList *);
 	sep = va_arg(f->args, char *);
 	for (; lp != NULL; lp = next) {
@@ -322,7 +322,7 @@ static Boolean Zconv(Format *f) {
 static Boolean Fconv(Format *f) {
 	int c;
 	unsigned char *name, *s;
-	
+
 	name = va_arg(f->args, unsigned char *);
 
 	for (s = name; (c = *s) != '\0'; s++)
@@ -439,7 +439,7 @@ static Boolean Bconv(Format *f) {
 		fmtprint(f, "(match %B %B)", n->u[0].p, n->u[1].p);
 		break;
 
-	case nMatch:
+	case nExtract:
 		fmtprint(f, "(extract %B %B)", n->u[0].p, n->u[1].p);
 		break;
 
