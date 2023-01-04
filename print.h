@@ -6,7 +6,7 @@ struct Format {
 	va_list args;
 	long flags, f1, f2;
 	int invoker;
-    /* for the buffer maintainence routines */
+    /* for the buffer maintenance routines */
 	char *buf, *bufbegin, *bufend;
 	int flushed;
 	void (*grow)(Format *, size_t);
