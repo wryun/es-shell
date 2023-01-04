@@ -74,7 +74,7 @@ sed -n '
 		mesg["SIGMSG"]		= "input data is in the HFT ring buffer"
 		mesg["SIGPRE"]		= "programming exception"
 		mesg["SIGPTY"]		= "pty I/O available"
-		mesg["SIGRETRACT"]	= "HFT monitor mode should be relinguished"
+		mesg["SIGRETRACT"]	= "HFT monitor mode should be relinquished"
 		mesg["SIGSAK"]		= "secure attention key"
 		mesg["SIGSOUND"]	= "HFT sound control has completed"
 		mesg["SIGSTKFLT"]	= "stack fault"

@@ -126,7 +126,7 @@
  *
  *	SYSV_SIGNALS
  *		True if signal handling follows System V behavior;
- *		otherwise, berkeley signals are assumed.  If you set
+ *		otherwise, Berkeley signals are assumed.  If you set
  *		USE_SIGACTION, this value is ignore.  By System V
  *		behavior, we mean, signal must be called to reinstall
  *		the signal handler after it is invoked.  This behavior

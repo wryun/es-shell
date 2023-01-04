@@ -1,7 +1,7 @@
 The section named ``Return Values'' on page 56 introduces the <>
 operator for obtaining the return value of a command.  That operator
 has been renamed <= to avoid conflicting with the posix-compatible
-defintion of <> as ``open for reading and writing.''
+definition of <> as ``open for reading and writing.''
 
 error exceptions now have an additional piece of information.
 the second word (the one after ``error'') is now the name of
