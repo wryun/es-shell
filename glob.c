@@ -276,7 +276,8 @@ extern List *glob(List *list, StrList *quote) {
 				Ref(StrList *, q0, quote);
 				Ref(StrList *, qr, qp);
 				str = expandhome(str, qp);
-				lr->term = mkstr(str);
+				Term *tmp = mkstr(str);
+				lr->term = tmp;
 				lp = lr;
 				qp = qr;
 				list = l0;
