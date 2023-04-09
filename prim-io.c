@@ -15,15 +15,12 @@ static int getnumber(const char *s) {
 	return result;
 }
 
-static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags) {
-	int destfd, srcfd;
+static List *redireval(int destfd, int srcfd, List *list, int evalflags) {
 	volatile int inparent = (evalflags & eval_inchild) == 0;
 	volatile int ticket = UNREGISTERED;
 
 	assert(list != NULL);
 	Ref(List *, lp, list);
-	destfd = getnumber(getstr(lp->term));
-	lp = (*rop)(&srcfd, lp->next);
 
 	ticket = (srcfd == -1)
 		   ? defer_close(inparent, destfd)
@@ -35,6 +32,19 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 		undefer(ticket);
 		throw(e);
 	EndExceptionHandler
+
+	RefReturn(lp);
+}
+
+static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags) {
+	int destfd, srcfd;
+
+	assert(list != NULL);
+	Ref(List *, lp, list);
+	destfd = getnumber(getstr(lp->term));
+
+	lp = (*rop)(&srcfd, lp->next);
+	lp = redireval(destfd, srcfd, lp, evalflags);
 
 	RefReturn(lp);
 }
@@ -193,7 +203,7 @@ PRIM(pipe) {
 	n = length(list);
 	if ((n % 3) != 1)
 		fail("$&pipe", "usage: pipe cmd [ outfd infd cmd ] ...");
-	n = (n + 2) / 3;
+	n = (n - 1) / 3;
 	if (n > pidmax) {
 		pids = erealloc(pids, n * sizeof *pids);
 		pidmax = n;
@@ -202,10 +212,9 @@ PRIM(pipe) {
 
 	infd = inpipe = -1;
 
-	for (;; list = list->next) {
-		int p[2], pid;
-		
-		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork(p, &inpipe);
+	for (; list->next != NULL; list = list->next) {
+		int p[2];
+		int pid = pipefork(p, &inpipe);
 
 		if (pid == 0) {		/* child */
 			if (inpipe != -1) {
@@ -213,18 +222,14 @@ PRIM(pipe) {
 				releasefd(infd);
 				mvfd(inpipe, infd);
 			}
-			if (list->next != NULL) {
-				int fd = getnumber(getstr(list->next->term));
-				releasefd(fd);
-				mvfd(p[1], fd);
-				close(p[0]);
-			}
+			int fd = getnumber(getstr(list->next->term));
+			releasefd(fd);
+			mvfd(p[1], fd);
+			close(p[0]);
 			exit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
 		}
 		pids[n++] = pid;
 		close(inpipe);
-		if (list->next == NULL)
-			break;
 		list = list->next->next;
 		infd = getnumber(getstr(list->term));
 		inpipe = p[0];
@@ -232,6 +237,9 @@ PRIM(pipe) {
 	}
 
 	Ref(List *, result, NULL);
+	Ref(List *, lastres, NULL);
+	lastres = redireval(infd, inpipe, list, evalflags);
+
 	do {
 		Term *t;
 		int status = ewaitfor(pids[--n]);
@@ -239,8 +247,13 @@ PRIM(pipe) {
 		t = mkstr(mkstatus(status));
 		result = mklist(t, result);
 	} while (0 < n);
+
+	result = append(result, lastres);
+
 	if (evalflags & eval_inchild)
 		exit(exitstatus(result));
+
+	RefEnd(lastres);
 	RefReturn(result);
 }
 
