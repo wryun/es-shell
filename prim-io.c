@@ -217,12 +217,13 @@ PRIM(pipe) {
 		int pid = pipefork(p, &inpipe);
 
 		if (pid == 0) {		/* child */
+			int fd;
 			if (inpipe != -1) {
 				assert(infd != -1);
 				releasefd(infd);
 				mvfd(inpipe, infd);
 			}
-			int fd = getnumber(getstr(list->next->term));
+			fd = getnumber(getstr(list->next->term));
 			releasefd(fd);
 			mvfd(p[1], fd);
 			close(p[0]);
