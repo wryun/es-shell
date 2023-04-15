@@ -271,12 +271,13 @@ extern List *glob(List *list, StrList *quote) {
 			Ref(char *, str, getstr(lp->term));
 			assert(qp->str == UNQUOTED || strlen(qp->str) == strlen(str));
 			if (hastilde(str, qp->str)) {
+				Term *tmp;
 				Ref(List *, l0, list);
 				Ref(List *, lr, lp);
 				Ref(StrList *, q0, quote);
 				Ref(StrList *, qr, qp);
 				str = expandhome(str, qp);
-				Term *tmp = mkstr(str);
+				tmp = mkstr(str);
 				lr->term = tmp;
 				lp = lr;
 				qp = qr;

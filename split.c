@@ -36,19 +36,20 @@ extern void startsplit(const char *sep, Boolean coalescef) {
 	}
 }
 
-// Re-entrant version of splitstring.  Returns a pointer to the next substring,
-// or NULL if the end of string has been found.
-extern char *splitstring_r(char *in, size_t len, Boolean endword) {
+extern char *stepsplit(char *in, size_t len, Boolean endword) {
 	Buffer *buf = buffer;
 	unsigned char *s = (unsigned char *) in, *inend = s + len;
 
 	if (splitchars) {
+		Boolean end;
+		Term *term;
+
 		if (*s == '\0') return NULL;
 		assert(buf == NULL);
 
-		Boolean end = *(s + 1) == '\0';
+		end = *(s + 1) == '\0';
 
-		Term *term = mkstr(gcndup((char *) s, 1));
+		term = mkstr(gcndup((char *) s, 1));
 		value = mklist(term, value);
 
 		if (end) return NULL;
@@ -86,7 +87,7 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 	char *s = in;
 	do {
 		remainder = len - (s - in);
-		s = splitstring_r(s, remainder, endword);
+		s = stepsplit(s, remainder, endword);
 	} while (s != NULL);
 }
 
@@ -112,7 +113,7 @@ extern List *fsplit(const char *sep, List *list, Boolean coalesce) {
 			char *ns = getstr(lp->term);
 			s = ns + (s - bs);
 			bs = ns;
-			s = splitstring_r(s, strlen(s), TRUE);
+			s = stepsplit(s, strlen(s), TRUE);
 		} while (s != NULL);
 	}
 	RefEnd(lp);
