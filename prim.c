@@ -13,6 +13,20 @@ extern List *prim(char *s, List *list, Binding *binding, int evalflags) {
 	return (*p)(list, binding, evalflags);
 }
 
+static char *list_prefix;
+
+static void listwithprefix(void *arg, char *key, void *value) {
+	if (strneq(key, list_prefix, strlen(list_prefix)))
+		addtolist(arg, key, value);
+}
+
+extern List *primswithprefix(char *prefix) {
+	Ref(List *, primlist, NULL);
+	list_prefix = prefix;
+	dictforall(prims, listwithprefix, &primlist);
+	RefReturn(primlist);
+}
+
 PRIM(primitives) {
 	static List *primlist = NULL;
 	if (primlist == NULL) {
