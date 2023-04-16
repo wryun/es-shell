@@ -196,11 +196,11 @@ extern Tree *mkpass(Tree *t1, Tree *t2) {
 		tail = t2->CDR;
 	} else if (t2 != NULL) {
 		t2 = injectpassvar(t2);
-		/* if (t2->CAR->kind == nThunk && t2->CDR == NULL) {
+		if (t2->CAR->kind == nThunk && t2->CDR == NULL) {
 			tail = t2;
-		} else { */
+		} else {
 			tail = treecons(thunkify(t2), NULL);
-		/* } */
+		}
 	}
 	if (firstis(t1, "%pass"))
 		return treeappend(t1, tail);
