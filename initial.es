@@ -377,6 +377,11 @@ fn-%or = $&noreturn @ first rest {
 	}
 }
 
+fn-%pass = $&noreturn @ first rest {
+	local (- = <={$first})
+		for (cmd = $rest) - = <=$cmd
+}
+
 #	Background commands could use the $&background primitive directly,
 #	but some of the user-friendly semantics ($apid, printing of the
 #	child process id) were easier to write in es.

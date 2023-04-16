@@ -207,8 +207,15 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 	}
 	switch (c) {
 	case '!':
+		return '!';
 	case '=':
-		return c;
+		c = GETC();
+		if (c == '>') {
+			w = NW;
+			return PASS;
+		}
+		UNGETC(c);
+		return '=';
 	case '`':
 		c = GETC();
 		if (c == '`') {

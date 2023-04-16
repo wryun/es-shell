@@ -22,6 +22,7 @@ extern Tree *fnassign(Tree *name, Tree *defn);
 extern Tree *mklambda(Tree *params, Tree *body);
 extern Tree *mkseq(char *op, Tree *t1, Tree *t2);
 extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2);
+extern Tree *mkpass(Tree *t1, Tree *t2);
 
 extern Tree *mkclose(int fd);
 extern Tree *mkdup(int fd0, int fd1);
