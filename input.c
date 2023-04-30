@@ -649,7 +649,6 @@ static char *list_completion_function(const char *text, int state) {
 char **builtin_completion(const char *text, int start, int end) {
 	char **matches = NULL;
 
-	/* var/prim completion.  TODO: complex expressions like `$(a b c)` */
 	if (*text == '$') {
 		wordslistgen = varswithprefix;
 		complprefix = "$";
@@ -665,11 +664,8 @@ char **builtin_completion(const char *text, int start, int end) {
 	}
 
 	/* ~foo => username.  ~foo/bar already gets completed as filename. */
-	/* TODO: deglob the dir as well? i.e., ~foo => /home/foo? */
 	if (!matches && *text == '~' && !strchr(text, '/'))
 		matches = rl_completion_matches(text, rl_username_completion_function);
-
-	/* TODO: command-name completion.  Difficult because of %pathsearch. */
 
 	return matches;
 }
@@ -699,6 +695,7 @@ extern void initinput(void) {
 #if READLINE
 	rl_readline_name = "es";
 
+	/* these two word_break_characters exclude '&' due to primitive completion */
 	rl_completer_word_break_characters = " \t\n\\'`$><=;|{()}";
 	rl_basic_word_break_characters = " \t\n\\'`$><=;|{()}";
 	rl_completer_quote_characters = "'";
