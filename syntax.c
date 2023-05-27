@@ -72,6 +72,7 @@ static Boolean firstis(Tree *t, const char *s) {
 /* isredir -- check if the tree is a redirection */
 static Boolean isredir(Tree *t) {
 	char *s;
+
 	if (t == NULL || t->kind != nList)
 		return FALSE;
 	t = t->CAR;
@@ -81,14 +82,23 @@ static Boolean isredir(Tree *t) {
 	s = t->u[0].s;
 	assert(s != NULL);
 
-	if (streq(s, "%open")) return TRUE;
-	if (streq(s, "%create")) return TRUE;
-	if (streq(s, "%append")) return TRUE;
-	if (streq(s, "%open-write")) return TRUE;
-	if (streq(s, "%open-append")) return TRUE;
-	if (streq(s, "%open-create")) return TRUE;
-	if (streq(s, "%openfile")) return TRUE;
-	if (streq(s, "%here")) return TRUE;
+	if (*s++ != '%') return FALSE;
+
+	if (streq(s, "create")) return TRUE;
+	if (streq(s, "append")) return TRUE;
+	if (streq(s, "here")) return TRUE;
+
+	if (!strneq(s, "open", 4)) return FALSE;
+	s += 4;
+
+	if (*s == '\0' || streq(s, "file")) return TRUE;
+
+	if (*s++ != '-') return FALSE;
+
+	if (streq(s, "write")) return TRUE;
+	if (streq(s, "append")) return TRUE;
+	if (streq(s, "create")) return TRUE;
+
 	return FALSE;
 }
 
