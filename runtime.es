@@ -185,13 +185,13 @@ fn %dot args {
 				break
 			}
 			for (f = <={%fsplit '' <={~~ $a -*}}) {
-				if (
-					{~ $f e} {flags = $flags exitonfalse}
-					{~ $f i} {flags = $flags interactive}
-					{~ $f n} {flags = $flags noexec}
-					{~ $f v} {flags = $flags echoinput}
-					{~ $f x} {flags = $flags printcmds}
-						{usage}
+				match $f (
+					e {flags = $flags exitonfalse}
+					i {flags = $flags interactive}
+					n {flags = $flags noexec}
+					v {flags = $flags echoinput}
+					x {flags = $flags printcmds}
+					* {usage}
 				)
 			}
 		}
@@ -240,18 +240,18 @@ es:main = @ argv {
 				break
 			}
 			for (f = <={%fsplit '' <={~~ $a -*}}) {
-				if (
-					{~ $f c} {(cmd argv) = $argv}
-					{~ $f e} {flags = $flags exitonfalse}
-					{~ $f i} {flags = $flags interactive}
-					{~ $f v} {flags = $flags echoinput}
-					{~ $f L} {flags = $flags lisptrees}
-					{~ $f x} {flags = $flags printcmds}
-					{~ $f n} {flags = $flags noexec}
-					{~ $f l} {flags = $flags login}
-					{~ $f o} {keepclosed = true}
-					{~ $f d} {allowdumps = true}
-					{~ $f s} {stdin = true; break}
+				match $f (
+					c {(cmd argv) = $argv}
+					e {flags = $flags exitonfalse}
+					i {flags = $flags interactive}
+					v {flags = $flags echoinput}
+					L {flags = $flags lisptrees}
+					x {flags = $flags printcmds}
+					n {flags = $flags noexec}
+					l {flags = $flags login}
+					o {keepclosed = true}
+					d {allowdumps = true}
+					s {stdin = true; break}
 				)
 			}
 		}
