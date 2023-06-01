@@ -9,9 +9,9 @@
 #	batch, and there is a hook function for each form.  It is the
 #	responsibility of the REPL to call the parser for reading commands,
 #	hand those commands to an appropriate dispatch function, and handle
-#	any exceptions that may be raised.  The function %is-interactive
-#	can be used to determine whether the most closely binding REPL is
-#	interactive or batch.
+#	any exceptions that may be raised.  The 'interactive' runflag can be
+#	used to determine whether the most closely binding REPL is interactive
+#	or batch.
 #
 #	The REPLs are invoked by the shell's es:main function or the . or
 #	eval builtins.  If the -i flag is used or the shell determines that
@@ -28,10 +28,9 @@
 #
 #	By convention, the REPL must pass commands to the fn %dispatch,
 #	which has the actual responsibility for executing the command.
-#	Whatever routine invokes the REPL (internal, for now) has
-#	the responsibility of setting up fn %dispatch appropriately;
-#	it is used for implementing the -e, -n, and -x options.
-#	Typically, fn %dispatch is locally bound.
+#	Whatever routine invokes the REPL has the responsibility of setting up
+#	fn %dispatch appropriately; it is used for implementing the -e, -n, and
+#	-x options.  Typically, fn %dispatch is locally bound.
 #
 #	The %parse function raises the eof exception when it encounters
 #	an end-of-file on input.  You can probably simulate the C shell's
@@ -110,17 +109,21 @@ fn %interactive-loop {
 # $runflags may be modified, and will (typically) modify the shell's
 # behavior when changed.
 #
-# $runflags may contain arbitrary words, but only 'exitonfalse',
-# 'interactive', 'noexec', 'echoinput', 'printcmds', and 'lisptrees'
-# (if support is compiled in) do anything by default.
+# $runflags may contain arbitrary words.  The only words that have an
+# effect by default are
+#  - exitonfalse
+#  - interactive
+#  - noexec
+#  - echoinput
+#  - printcmds
+# and, if support is compiled in,
+#  - lisptrees
+#  - gcinfo
+#  - gcverbose
 #
 # In several of the following functions, we call '$fn-<foo>' instead
 # of the usual '<foo>'.  This is to prevent these infrastructural
 # functions from mangling the expected value of '$0'.
-
-fn %is-interactive {
-	~ $runflags interactive
-}
 
 set-runflags = @ new {
 	let (nf = ()) {
@@ -156,7 +159,7 @@ noexport = $noexport fn-%dispatch runflags
 
 fn %run-input file {
 	$&runinput {
-		if %is-interactive {
+		if {~ $runflags interactive} {
 			$fn-%interactive-loop
 		} {
 			$fn-%batch-loop
@@ -225,24 +228,24 @@ es:main = @ argv {
 		allowdumps = false
 		protected = false
 
-		fn-usage = {
-echo 'usage: es [-c command] [-silevxnpo] [file [args ...]]'
-echo '	-c cmd	execute argument'
-echo '	-s	read commands from standard input; stop option parsing'
-echo '	-i	interactive shell'
-echo '	-l	login shell'
-echo '	-e	exit if any command exits with false status'
-echo '	-v	print input to standard error'
-echo '	-x	print commands to standard error before executing'
-echo '	-n	just parse; don''t execute'
-echo '	-p	don''t load functions from the environment'
-echo '	-o	don''t open stdin, stdout, and stderr if they were closed'
-echo '	-d	don''t ignore SIGQUIT or SIGTERM'
-echo '	-I	print garbage collector information (if compiled in)'
-echo '	-G	print verbose garbage collector information (if compiled in)'
-echo '	-L	print parser results in LISP format (if compiled in)'
-exit 1
-}
+		fn usage {
+			echo 'usage: es [-c command] [-silevxnpo] [file [args ...]]'
+			echo '	-c cmd	execute argument'
+			echo '	-s	read commands from standard input; stop option parsing'
+			echo '	-i	interactive shell'
+			echo '	-l	login shell'
+			echo '	-e	exit if any command exits with false status'
+			echo '	-v	print input to standard error'
+			echo '	-x	print commands to standard error before executing'
+			echo '	-n	just parse; don''t execute'
+			echo '	-p	don''t load functions from the environment'
+			echo '	-o	don''t open stdin, stdout, and stderr if they were closed'
+			echo '	-d	don''t ignore SIGQUIT or SIGTERM'
+			echo '	-I	print garbage collector information (if compiled in)'
+			echo '	-G	print verbose garbage collector information (if compiled in)'
+			echo '	-L	print parser results in LISP format (if compiled in)'
+			exit 1
+		}
 	) {
 		if {!~ $#argv 0} {
 			(es argv) = $argv
@@ -335,10 +338,10 @@ exit 1
 		} {!~ $cmd ()} {
 			if {!~ $#argv 0} {
 				local ((0 *) = $argv)
-					$fn-eval $cmd
+					$fn-%dispatch '{'^$^cmd^'}'
 			} {
 				local ((0 *) = $es)
-					$fn-eval $cmd
+					$fn-%dispatch '{'^$^cmd^'}'
 			}
 		} {
 			local ((0 *) = $es $argv)

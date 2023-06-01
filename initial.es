@@ -384,7 +384,7 @@ fn-%or = $&noreturn @ first rest {
 
 fn %background cmd {
 	let (pid = <={$&background $cmd}) {
-		if {%is-interactive} {
+		if {~ $runflags interactive} {
 			echo >[1=2] $pid
 		}
 		apid = $pid

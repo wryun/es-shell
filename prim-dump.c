@@ -1,4 +1,4 @@
-/* prim-etc.c -- miscellaneous primitives ($Revision: 1.2 $) */
+/* prim-dump.c -- primitives for the esdump step ($Revision: 1.0 $) */
 
 #include "es.h"
 #include "prim.h"
