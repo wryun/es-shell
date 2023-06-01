@@ -156,7 +156,7 @@ extern void getsigeffects(Sigeffect effects[]) {
  * initialization
  */
 
-extern void initsignals(Boolean interactive, Boolean allowdumps) {
+extern void initsignals() {
 	int sig;
 	Push settor;
 
@@ -189,15 +189,6 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 				"initsignals: bad incoming signal value for %s: %x",
 				signame(sig), h
 			);
-	}
-
-	if (interactive || sigeffect[SIGINT] == sig_default)
-		esignal(SIGINT, sig_special);
-	if (!allowdumps) {
-		if (interactive)
-			esignal(SIGTERM, sig_noop);
-		if (interactive || sigeffect[SIGQUIT] == sig_default)
-			esignal(SIGQUIT, sig_noop);
 	}
 
 	/* here's the end-run around set-signals */

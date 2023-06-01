@@ -286,15 +286,16 @@ extern Boolean isinteractive(void);
 extern void initinput(void);
 extern void resetparser(void);
 
-extern List *runfd(int fd, const char *name, int flags);
-extern List *runstring(const char *str, const char *name, int flags);
+extern void setrunflags(int flags);
+extern List *runflags_from_int(int);
+extern int runflags_to_int(List *);
+extern List *runinput(char *name, List *cmd);
+extern List *runfd(int fd, const char *name, List *cmd);
 
 /* eval_* flags are also understood as runflags */
-#define	run_interactive		 4	/* -i or $0[0] = '-' */
-#define	run_noexec		 8	/* -n */
-#define	run_echoinput		16	/* -v */
-#define	run_printcmds		32	/* -x */
-#define	run_lisptrees		64	/* -L and defined(LISPTREES) */
+#define	run_interactive		4	/* -i or $0[0] = '-' */
+#define	run_echoinput		8	/* -v */
+#define	run_lisptrees		16	/* -L and defined(LISPTREES) */
 
 #if READLINE
 extern Boolean resetterminal;
@@ -313,6 +314,7 @@ extern List *esoptend(void);
 
 extern List *prim(char *s, List *list, Binding *binding, int evalflags);
 extern void initprims(void);
+extern void initdumpprims(void);
 
 
 /* split.c */
@@ -337,7 +339,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect);
 extern void setsigeffects(const Sigeffect effects[]);
 extern void getsigeffects(Sigeffect effects[]);
 extern List *mksiglist(void);
-extern void initsignals(Boolean interactive, Boolean allowdumps);
+extern void initsignals();
 extern Atomic slow, interrupted;
 extern jmp_buf slowlabel;
 extern Boolean sigint_newline;

@@ -3,6 +3,7 @@
 #include "es.h"
 #include "var.h"
 #include "term.h"
+#include "prim.h"
 
 #define	MAXVARNAME 20
 
@@ -247,8 +248,10 @@ static void printheader(List *title) {
 }
 
 extern void runinitial(void) {
-	List *title = runfd(0, "initial.es", 0);
-	
+	initdumpprims();
+
+	List *title = runfd(0, "initial.es", mklist(mkstr("$&batchloop"), NULL));
+
 	gcdisable();
 
 	cvars = mkdict();

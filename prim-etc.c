@@ -40,41 +40,23 @@ PRIM(exec) {
 	return eval(list, NULL, evalflags | eval_inchild);
 }
 
-PRIM(dot) {
-	int c, fd;
-	Push zero, star;
-	volatile int runflags = (evalflags & eval_inchild);
-	const char * const usage = ". [-einvx] file [arg ...]";
+PRIM(setrunflags) {
+	setrunflags(runflags_to_int(list));
+	return list;
+}
 
-	esoptbegin(list, "$&dot", usage);
-	while ((c = esopt("einvx")) != EOF)
-		switch (c) {
-		case 'e':	runflags |= eval_exitonfalse;	break;
-		case 'i':	runflags |= run_interactive;	break;
-		case 'n':	runflags |= run_noexec;		break;
-		case 'v':	runflags |= run_echoinput;	break;
-		case 'x':	runflags |= run_printcmds;	break;
-		}
-
+PRIM(runinput) {
+	if (list == NULL)
+		fail("$&runinput", "usage: $&runinput command [file]");
 	Ref(List *, result, NULL);
-	Ref(List *, lp, esoptend());
-	if (lp == NULL)
-		fail("$&dot", "usage: %s", usage);
+	Ref(List *, cmd, mklist(list->term, NULL));
 
-	Ref(char *, file, getstr(lp->term));
-	lp = lp->next;
-	fd = eopen(file, oOpen);
-	if (fd == -1)
-		fail("$&dot", "%s: %s", file, esstrerror(errno));
+	result = runinput((list->next == NULL
+				? NULL
+				: getstr(list->next->term)),
+			cmd);
 
-	varpush(&star, "*", lp);
-	varpush(&zero, "0", mklist(mkstr(file), NULL));
-
-	result = runfd(fd, file, runflags);
-
-	varpop(&zero);
-	varpop(&star);
-	RefEnd2(file, lp);
+	RefEnd(cmd);
 	RefReturn(result);
 }
 
@@ -183,42 +165,6 @@ PRIM(exitonfalse) {
 	return eval(list, NULL, evalflags | eval_exitonfalse);
 }
 
-PRIM(batchloop) {
-	Ref(List *, result, true);
-	Ref(List *, dispatch, NULL);
-
-	SIGCHK();
-
-	ExceptionHandler
-
-		for (;;) {
-			List *parser, *cmd;
-			parser = varlookup("fn-%parse", NULL);
-			cmd = (parser == NULL)
-					? prim("parse", NULL, NULL, 0)
-					: eval(parser, NULL, 0);
-			SIGCHK();
-			dispatch = varlookup("fn-%dispatch", NULL);
-			if (cmd != NULL) {
-				if (dispatch != NULL)
-					cmd = append(dispatch, cmd);
-				result = eval(cmd, NULL, evalflags);
-				SIGCHK();
-			}
-		}
-
-	CatchException (e)
-
-		if (!termeq(e->term, "eof"))
-			throw(e);
-		RefEnd(dispatch);
-		if (result == true)
-			result = true;
-		RefReturn(result);
-
-	EndExceptionHandler
-}
-
 PRIM(collect) {
 	gc();
 	return true;
@@ -240,10 +186,6 @@ PRIM(vars) {
 
 PRIM(internals) {
 	return listvars(TRUE);
-}
-
-PRIM(isinteractive) {
-	return isinteractive() ? true : false;
 }
 
 PRIM(noreturn) {
@@ -296,7 +238,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(count);
 	X(version);
 	X(exec);
-	X(dot);
+	X(setrunflags);
+	X(runinput);
 	X(flatten);
 	X(whatis);
 	X(sethistory);
@@ -304,14 +247,12 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(fsplit);
 	X(var);
 	X(parse);
-	X(batchloop);
 	X(collect);
 	X(home);
 	X(setnoexport);
 	X(vars);
 	X(internals);
 	X(result);
-	X(isinteractive);
 	X(exitonfalse);
 	X(noreturn);
 	X(setmaxevaldepth);
