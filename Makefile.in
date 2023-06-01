@@ -102,7 +102,7 @@ y.tab.c y.tab.h : parse.y
 token.h : y.tab.h
 	-cmp -s y.tab.h token.h || cp y.tab.h token.h
 
-initial.c : esdump $(srcdir)/initial.es
+initial.c : esdump $(srcdir)/initial.es $(srcdir)/runtime.es
 	./esdump < $(srcdir)/initial.es > initial.c
 
 sigmsgs.c : mksignal $(SIGFILES)
