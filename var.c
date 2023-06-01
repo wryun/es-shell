@@ -409,8 +409,8 @@ static void importvar(char *name0, char *value) {
 }
 
 
-/* initenv -- load variables from the environment */
-extern void initenv(char **envp, Boolean protected) {
+/* importenv -- load variables from the environment */
+extern void importenv(char **envp, Boolean funcs) {
 	char *envstr;
 	size_t bufsize = 1024;
 	char *buf = ealloc(bufsize);
@@ -435,8 +435,7 @@ extern void initenv(char **envp, Boolean protected) {
 		memcpy(buf, envstr, nlen);
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
-		if (!protected
-		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
+		if (funcs == (hasprefix(name, "fn-") || hasprefix(name, "set-")))
 			importvar(name, eq);
 	}
 

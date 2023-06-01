@@ -187,7 +187,7 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes);
 /* var.c */
 
 extern void initvars(void);
-extern void initenv(char **envp, Boolean protected);
+extern void importenv(char **envp, Boolean funcs);
 extern void hidevariables(void);
 extern void validatevar(const char *var);
 extern List *varlookup(const char *name, Binding *binding);

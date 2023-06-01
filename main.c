@@ -16,7 +16,6 @@ Boolean gcinfo		= FALSE;	/* -I */
 extern int optind;
 extern char *optarg;
 
-/* extern int isatty(int fd); */
 extern char **environ;
 
 
@@ -71,14 +70,12 @@ static noreturn usage(void) {
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
 	int c;
-	volatile Boolean protected = FALSE;
 
 	initgc();
 	initconv();
 
 	while ((c = getopt(argc, argv, "eilxvnpodsc:?GIL")) != EOF)
 		switch (c) {
-		case 'p':	protected = TRUE;		break;
 #if GCVERBOSE
 		case 'G':	gcverbose = TRUE;		break;
 #endif
@@ -88,6 +85,7 @@ int main(int argc, char **argv) {
 		case 's':	goto getopt_done;
 		case 'c':	/* All the remaining cases are vestigial, while */
 		case 'e':	/* argument parsing is moved to es:main */
+		case 'p':
 		case 'i':
 		case 'n':
 		case 'v':
@@ -116,7 +114,7 @@ getopt_done:
 		initpid();
 		initsignals();
 		hidevariables();
-		initenv(environ, protected);
+		importenv(environ, FALSE);
 
 		Ref(List *, args, listify(argc, argv));
 

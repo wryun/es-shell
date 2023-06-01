@@ -221,6 +221,13 @@ PRIM(setmaxevaldepth) {
 	RefReturn(lp);
 }
 
+extern char **environ;
+
+PRIM(importenvfuncs) {
+	importenv(environ, TRUE);
+	return true;
+}
+
 #if READLINE
 PRIM(resetterminal) {
 	resetterminal = TRUE;
@@ -256,6 +263,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(exitonfalse);
 	X(noreturn);
 	X(setmaxevaldepth);
+	X(importenvfuncs);
 #if READLINE
 	X(resetterminal);
 #endif

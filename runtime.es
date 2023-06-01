@@ -223,6 +223,7 @@ es:main = @ argv {
 		keepclosed = false
 		stdin = false
 		allowdumps = false
+		protected = false
 	) {
 		if {!~ $#argv 0} {
 			(es argv) = $argv
@@ -251,6 +252,7 @@ es:main = @ argv {
 					l {flags = $flags login}
 					o {keepclosed = true}
 					d {allowdumps = true}
+					p {protected = true}
 					s {stdin = true; break}
 				)
 			}
@@ -285,6 +287,10 @@ es:main = @ argv {
 				}
 			}
 			signals = $s
+		}
+
+		if {!$protected} {
+			$&importenvfuncs
 		}
 
 		if {~ $runflags login} {
