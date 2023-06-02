@@ -18,11 +18,10 @@ PRIM(batchloop) {
 
 		if (!termeq(e->term, "eof"))
 			throw(e);
-		if (result == true)
-			result = true;
-		RefReturn(result);
 
 	EndExceptionHandler
+
+	RefReturn(result);
 }
 
 
