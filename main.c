@@ -2,10 +2,6 @@
 
 #include "es.h"
 
-/* #if 0 && !HPUX && !defined(linux) && !defined(sgi) */
-/* extern int getopt (int argc, char **argv, const char *optstring); */
-/* #endif */
-
 extern int optind;
 extern char *optarg;
 
