@@ -2,11 +2,7 @@
 
 #include "es.h"
 
-extern int optind;
-extern char *optarg;
-
 extern char **environ;
-
 
 /* initpath -- set $path based on the configuration default */
 static void initpath(void) {
