@@ -222,5 +222,5 @@ getopt_done:
 		return 1;
 
 	EndExceptionHandler
-	RefEnd(argp);
+	RefEnd2(argp, args);
 }
