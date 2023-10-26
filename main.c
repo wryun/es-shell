@@ -99,7 +99,6 @@ static noreturn usage(void) {
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
 	int c;
-	Ref(List *, args, NULL);
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */
@@ -121,8 +120,7 @@ int main(int argc, char **argv) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	args = listify(argc, argv);
-
+	Ref(List *, args, listify(argc, argv));
 	esoptbegin(args->next, NULL, NULL, FALSE);
 	while ((c = esopt("eilxvnpodsc:?GIL")) != EOF)
 		switch (c) {
