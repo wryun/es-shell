@@ -238,13 +238,13 @@ static List *matchpattern(Tree *subjectform0, Tree *patternform0,
 			  Binding *binding) {
 	Boolean result;
 	List *pattern;
-	StrList *quote = NULL;
 	Ref(Binding *, bp, binding);
 	Ref(Tree *, patternform, patternform0);
 	Ref(List *, subject, glom(subjectform0, bp, TRUE));
+	Ref(StrList *, quote, NULL);
 	pattern = glom2(patternform, bp, &quote);
 	result = listmatch(subject, pattern, quote);
-	RefEnd3(subject, patternform, bp);
+	RefEnd4(quote, subject, patternform, bp);
 	return result ? true : false;
 }
 
@@ -252,14 +252,14 @@ static List *matchpattern(Tree *subjectform0, Tree *patternform0,
 static List *extractpattern(Tree *subjectform0, Tree *patternform0,
 			    Binding *binding) {
 	List *pattern;
-	StrList *quote = NULL;
 	Ref(List *, result, NULL);
 	Ref(Binding *, bp, binding);
 	Ref(Tree *, patternform, patternform0);
 	Ref(List *, subject, glom(subjectform0, bp, TRUE));
+	Ref(StrList *, quote, NULL);
 	pattern = glom2(patternform, bp, &quote);
 	result = (List *) extractmatches(subject, pattern, quote);
-	RefEnd3(subject, patternform, bp);
+	RefEnd4(quote, subject, patternform, bp);
 	RefReturn(result);
 }
 
