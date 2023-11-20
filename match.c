@@ -121,7 +121,9 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote) {
 		Ref(StrList *, q, quote);
 		for (; p != NULL; p = p->next, q = q->next) {
 			/* one or more stars match null */
-			char *pw = getstr(p->term), *qw = q->str;
+			char *pw = getstr(p->term), *qw;
+			assert(q != NULL);
+			qw = q->str;
 			if (*pw != '\0' && qw != QUOTED) {
 				int i;
 				Boolean matched = TRUE;
@@ -247,6 +249,7 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes) {
 		     pattern = pattern->next, quote = quote->next) {
 			List *match;
 			char *pat = getstr(pattern->term);
+			assert(quote != NULL);
 			match = extractsinglematch(getstr(subject->term),
 						   pat, quote->str, NULL);
 			if (match != NULL) {
