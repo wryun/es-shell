@@ -104,7 +104,7 @@ PRIM(access) {
 	const char * const usage = "access [-n name] [-1e] [-rwx] [-fdcblsp] path ...";
 
 	gcdisable();
-	esoptbegin(list, "$&access", usage);
+	esoptbegin(list, "$&access", usage, TRUE);
 	while ((c = esopt("bcdefln:prswx1")) != EOF)
 		switch (c) {
 		case 'n':	suffix = getstr(esoptarg());	break;
