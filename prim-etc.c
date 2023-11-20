@@ -46,7 +46,7 @@ PRIM(dot) {
 	volatile int runflags = (evalflags & eval_inchild);
 	const char * const usage = ". [-einvx] file [arg ...]";
 
-	esoptbegin(list, "$&dot", usage);
+	esoptbegin(list, "$&dot", usage, TRUE);
 	while ((c = esopt("einvx")) != EOF)
 		switch (c) {
 		case 'e':	runflags |= eval_exitonfalse;	break;

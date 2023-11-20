@@ -13,9 +13,6 @@ Boolean gcinfo		= FALSE;	/* -I */
 /* extern int getopt (int argc, char **argv, const char *optstring); */
 /* #endif */
 
-extern int optind;
-extern char *optarg;
-
 /* extern int isatty(int fd); */
 extern char **environ;
 
@@ -102,8 +99,6 @@ static noreturn usage(void) {
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
 	int c;
-	volatile int ac;
-	char **volatile av;
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */
@@ -125,9 +120,11 @@ int main(int argc, char **argv) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	while ((c = getopt(argc, argv, "eilxvnpodsc:?GIL")) != EOF)
+	Ref(List *, args, listify(argc, argv));
+	esoptbegin(args->next, NULL, NULL, FALSE);
+	while ((c = esopt("eilxvnpodsc:?GIL")) != EOF)
 		switch (c) {
-		case 'c':	cmd = optarg;			break;
+		case 'c':	cmd = getstr(esoptarg());	break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
 		case 'i':	runflags |= run_interactive;	break;
 		case 'n':	runflags |= run_noexec;		break;
@@ -140,7 +137,7 @@ int main(int argc, char **argv) {
 		case 'p':	protected = TRUE;		break;
 		case 'o':	keepclosed = TRUE;		break;
 		case 'd':	allowquit = TRUE;		break;
-		case 's':	cmd_stdin = TRUE;			goto getopt_done;
+		case 's':	cmd_stdin = TRUE;		goto getopt_done;
 #if GCVERBOSE
 		case 'G':	gcverbose = TRUE;		break;
 #endif
@@ -152,6 +149,8 @@ int main(int argc, char **argv) {
 		}
 
 getopt_done:
+	Ref(List *, argp, esoptend());
+
 	if (cmd_stdin && cmd != NULL) {
 		eprint("es: -s and -c are incompatible\n");
 		exit(1);
@@ -165,14 +164,11 @@ getopt_done:
 
 	if (
 		cmd == NULL
-	     && (optind == argc || cmd_stdin)
+	     && (argp == NULL || cmd_stdin)
 	     && (runflags & run_interactive) == 0
 	     && isatty(0)
 	)
 		runflags |= run_interactive;
-
-	ac = argc;
-	av = argv;
 
 	ExceptionHandler
 		roothandler = &_localhandler;	/* unhygeinic */
@@ -192,20 +188,21 @@ getopt_done:
 		if (loginshell)
 			runesrc();
 	
-		if (cmd == NULL && !cmd_stdin && optind < ac) {
+		if (cmd == NULL && !cmd_stdin && argp != NULL) {
 			int fd;
-			char *file = av[optind++];
+			char *file = getstr(argp->term);
+			argp = argp->next;
 			if ((fd = eopen(file, oOpen)) == -1) {
 				eprint("%s: %s\n", file, esstrerror(errno));
 				return 1;
 			}
-			vardef("*", NULL, listify(ac - optind, av + optind));
+			vardef("*", NULL, argp);
 			vardef("0", NULL, mklist(mkstr(file), NULL));
 			return exitstatus(runfd(fd, file, runflags));
 		}
 	
-		vardef("*", NULL, listify(ac - optind, av + optind));
-		vardef("0", NULL, mklist(mkstr(av[0]), NULL));
+		vardef("*", NULL, argp);
+		vardef("0", NULL, mklist(mkstr(argv[0]), NULL));
 		if (cmd != NULL)
 			return exitstatus(runstring(cmd, NULL, runflags));
 		return exitstatus(runfd(0, "stdin", runflags));
@@ -223,4 +220,5 @@ getopt_done:
 		return 1;
 
 	EndExceptionHandler
+	RefEnd2(argp, args);
 }
