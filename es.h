@@ -302,15 +302,17 @@ extern Boolean resetterminal;
 
 
 /* history.c */
+#if READLINE
 extern void inithistory(void);
+
+extern void sethistory(char *file);
+extern void loghistory(char *cmd);
+#endif
 
 extern Boolean pendinghistory(void);
 extern void addhistbuf(char *line, size_t len);
 extern char *dumphistbuf(void);
 extern void discardhistbuf(void);
-
-extern void sethistory(char *file);
-extern void loghistory(char *cmd);
 
 
 /* opt.c */

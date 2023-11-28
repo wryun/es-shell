@@ -17,7 +17,6 @@
  */
 
 static Buffer *histbuffer = NULL;
-static char *history;
 
 #if READLINE
 extern void add_history(char *);
@@ -26,6 +25,8 @@ extern void stifle_history(int);
 extern int append_history(int, const char *);
 extern void using_history(void);
 
+static char *history;
+
 #if 0
 /* These split history file entries by timestamp, which allows readline to pick up
  * multi-line commands correctly across process boundaries.  Disabled by default,
@@ -33,8 +34,6 @@ extern void using_history(void);
 static int history_write_timestamps = 1;
 static char history_comment_char = '#';
 #endif
-#else
-static int historyfd = -1;
 #endif
 
 
@@ -112,32 +111,6 @@ extern void sethistory(char *file) {
 	read_history(file);
 	history = file;
 }
-#else /* !READLINE */
-extern void loghistory(char *cmd) {
-	size_t len;
-	if (cmd == NULL || history == NULL)
-		return;
-	if (historyfd == -1) {
-		historyfd = eopen(history, oAppend);
-		if (historyfd == -1) {
-			eprint("history(%s): %s\n", history, esstrerror(errno));
-			vardef("history", NULL, NULL);
-			return;
-		}
-	}
-	len = strlen(cmd);
-	ewrite(historyfd, cmd, len);
-	ewrite(historyfd, "\n", 1);
-}
-
-extern void sethistory(char *file) {
-	if (historyfd != -1) {
-		close(historyfd);
-		historyfd = -1;
-	}
-	history = file;
-}
-#endif
 
 
 /*
@@ -148,11 +121,6 @@ extern void sethistory(char *file) {
 extern void inithistory(void) {
 	/* declare the global roots */
 	globalroot(&history);		/* history file */
-
-#if READLINE
 	using_history();
-#else
-	/* mark the historyfd as a file descriptor to hold back from forked children */
-	registerfd(&historyfd, TRUE);
-#endif
 }
+#endif

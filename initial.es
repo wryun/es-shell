@@ -626,9 +626,20 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%parse	= $&parse
-fn-%batch-loop	= $&batchloop
-fn-%is-interactive = $&isinteractive
+fn-%parse = $&parse
+
+if {~ <=$&primitives writehistory} {
+	fn-%write-history = $&writehistory
+} {
+	fn %write-history cmd {
+		if {!~ $history ()} {
+			echo $cmd >> $history
+		}
+	}
+}
+
+fn-%is-interactive	= $&isinteractive
+fn-%batch-loop		= $&batchloop
 
 fn %interactive-loop {
 	let (result = <=true) {
@@ -653,8 +664,9 @@ fn %interactive-loop {
 				if {!~ $#fn-%prompt 0} {
 					%prompt
 				}
-				let (code = <={%parse $prompt}) {
+				let ((code line) = <={%parse $prompt}) {
 					if {!~ $#code 0} {
+						%write-history $line
 						result = <={$fn-%dispatch $code}
 					}
 				}
@@ -706,14 +718,17 @@ set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
-#	If the primitive $&resetterminal is defined (meaning that readline
-#	or editline is being used), setting the variables $TERM or $TERMCAP
-#	should notify the line editor library.
+#	If the primitives $&sethistory or $&resetterminal are defined (meaning
+#	that readline or editline is being used), setting the variables $TERM,
+#	$TERMCAP, or $history should notify the line editor library.
+
+if {~ <=$&primitives sethistory} {
+	set-history = $&sethistory
+}
 
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }

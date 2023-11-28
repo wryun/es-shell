@@ -321,10 +321,6 @@ extern Tree *parse(char *pr1, char *pr2) {
 		fail("$&parse", "%s", e);
 	}
 
-	if (input->runflags & run_interactive)
-		loghistory(dumphistbuf());
-        else discardhistbuf();
-
 #if LISPTREES
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", parsetree);
@@ -474,6 +470,7 @@ extern Tree *parseinput(Input *in) {
 
 	ExceptionHandler
 		result = parse(NULL, NULL);
+		discardhistbuf();
 		if (get(in) != EOF)
 			fail("$&parse", "more than one value in term");
 	CatchException (e)
