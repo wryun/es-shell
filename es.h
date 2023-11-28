@@ -282,7 +282,6 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 extern char *prompt, *prompt2;
 extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
-extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 extern void initinput(void);
 extern void resetparser(void);
@@ -300,6 +299,18 @@ extern List *runstring(const char *str, const char *name, int flags);
 #if READLINE
 extern Boolean resetterminal;
 #endif
+
+
+/* history.c */
+extern void inithistory(void);
+
+extern Boolean pendinghistory(void);
+extern void addhistbuf(char *line, size_t len);
+extern char *dumphistbuf(void);
+extern void discardhistbuf(void);
+
+extern void sethistory(char *file);
+extern void loghistory(char *cmd);
 
 
 /* opt.c */

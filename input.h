@@ -27,7 +27,6 @@ struct Input {
 
 extern Input *input;
 extern void unget(Input *in, int c);
-extern Boolean disablehistory;
 extern void yyerror(char *s);
 
 

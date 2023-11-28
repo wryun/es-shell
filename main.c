@@ -174,6 +174,7 @@ getopt_done:
 		roothandler = &_localhandler;	/* unhygeinic */
 
 		initinput();
+		inithistory();
 		initprims();
 		initvars();
 	
