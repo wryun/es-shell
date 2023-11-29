@@ -599,12 +599,12 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	%batch-loop is used.
 #
 #	The function %parse can be used to call the parser, which returns
-#	an es command.  %parse takes two arguments, which are used as the
-#	main and secondary prompts, respectively.  %parse typically returns
-#	one line of input, but es allows commands (notably those with braces
-#	or backslash continuations) to continue across multiple lines; in
-#	that case, the complete command and not just one physical line is
-#	returned.
+#	an es command and the input string which was parsed to generate the
+#	command.  %parse takes two arguments, which are used as the main and
+#	secondary prompts, respectively.  %parse typically returns one line of
+#	input, but es allows commands (notably those with braces or backslash
+#	continuations) to continue across multiple lines; in that case, the
+#	complete command and not just one physical line is returned.
 #
 #	By convention, the REPL must pass commands to the fn %dispatch,
 #	which has the actual responsibility for executing the command.
@@ -612,6 +612,12 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	the responsibility of setting up fn %dispatch appropriately;
 #	it is used for implementing the -e, -n, and -x options.
 #	Typically, fn %dispatch is locally bound.
+#
+#	The input line which is returned as the second value from %parse is
+#	passed to the %write-history function.  If the $&writehistory primitive
+#	is available (when readline support is compiled in), %write-history is
+#	set by default to that.  Otherwise, %write-history appends the input
+#	line to $history, if set.
 #
 #	The %parse function raises the eof exception when it encounters
 #	an end-of-file on input.  You can probably simulate the C shell's
