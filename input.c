@@ -313,12 +313,21 @@ extern Tree *parse(char *pr1, char *pr2) {
 	gcenable();
 
 	if (result || error != NULL) {
-		char *e;
+		char *e, *h;
 		assert(error != NULL);
 		e = error;
 		error = NULL;
-		discardhistbuf();
-		fail("$&parse", "%s", e);
+		gcdisable();
+		h = dumphistbuf();
+		Ref(List *, ex, mklist(mkstr("error"),
+				       mklist(mkstr("$&parse"),
+					      mklist(mkstr(e),
+						     (h == NULL
+						      ? NULL
+						      : mklist(mkstr(h), NULL))))));
+		gcenable();
+		throw(ex);
+		RefEnd(ex);
 	}
 
 #if LISPTREES

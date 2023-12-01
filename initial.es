@@ -655,6 +655,10 @@ fn %interactive-loop {
 			} {~ $e exit} {
 				throw $e $type $msg
 			} {~ $e error} {
+				if {~ $type '$&parse' && ~ $msg(1) 'syntax error'} {
+					%write-history $msg(2)
+					msg = $msg(1)
+				}
 				echo >[1=2] $msg
 				$fn-%dispatch false
 			} {~ $e signal} {
