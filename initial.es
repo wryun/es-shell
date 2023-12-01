@@ -635,7 +635,7 @@ fn %interactive-loop {
 		catch @ e type msg {
 			if {~ $e eof} {
 				return $result
-			} {~ $e exit} {
+			} {~ $e exit || ~ $e false} {
 				throw $e $type $msg
 			} {~ $e error} {
 				echo >[1=2] $msg

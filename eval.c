@@ -459,7 +459,7 @@ restart:
 done:
 	--evaldepth;
 	if ((flags & eval_exitonfalse) && !istrue(list))
-		exit(exitstatus(list));
+		throw(mklist(mkterm("false", NULL), list));
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }

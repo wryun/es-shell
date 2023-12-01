@@ -1518,6 +1518,19 @@ and the signal is listed in the variable
 .Cr signals .
 .I Signame
 is the name of the signal that was raised.
+.TP
+.Cr "exit \fIcode\fP"
+Raised by the
+.Cr exit
+command.
+Causes the shell to exit with the given
+.Cr code .
+.TP
+.Cr "false \fIvalue\fP"
+Raised by the
+.Cr $&exitonfalse
+primitive when a command exits with a falsey status.
+Causes the shell to exit if not caught.
 .PP
 See the builtin commands
 .Cr catch
@@ -2325,7 +2338,9 @@ may provide a builtin version of this function to handle
 shell scripts if the kernel does not.
 .TP
 .Cr "%exit-on-false \fIcmd\fP"
-Runs the command, and exits if any command
+Runs the command, and throws the
+.Cr false
+exception if any command
 (except those executing as the tests of conditional statements)
 returns a non-zero status.
 (This function is used as an argument to
@@ -2335,6 +2350,9 @@ and
 when the shell is invoked with the
 .Cr \-e
 option.)
+The uncaught
+.Cr false
+exception causes the shell to exit.
 .TP
 .Cr "%flatten \fIseparator list\fP"
 Concatenate the elements of
