@@ -934,7 +934,7 @@ The return value of a command is obtained with the construct
 .De
 .PP
 The return value of an external program is its exit status
-(which in other shells can be found in special variables such as
+(which in other shells must be determined from special variables such as
 .Cr $?
 or
 .Cr $status ),
@@ -962,6 +962,11 @@ If any element of a list is not equal to
 (or the empty string), that list is considered false.
 .PP
 The return value of an assignment operation is the assigned value.
+.PP
+The default interactive loop makes the return value of the previous command
+available via the
+.Cr $status
+variable.
 .SS "Logical Operators"
 There are a number of operators in
 .I es
