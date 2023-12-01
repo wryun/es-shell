@@ -153,7 +153,7 @@ fn-%whatis	= $&whatis
 #	users don't have to type the infamous <= (nee <>) operator.
 #	Whatis also protects the used from exceptions raised by %whatis.
 
-fn var		{ for (i = $*) echo <={%var $i} }
+fn var		{ for (i = $*) %var $i => echo }
 
 fn whatis {
 	let (result = ) {
@@ -165,7 +165,7 @@ fn whatis {
 				echo >[1=2] $message
 				result = $result 1
 			} {
-				echo <={%whatis $i}
+				%whatis $i => echo
 				result = $result 0
 			}
 		}
@@ -270,7 +270,7 @@ fn vars {
 			dovar = @ var {
 				# print functions and/or settor vars
 				if {if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
-					echo <={%var $var}
+					%var $var => echo
 				}
 			}
 		) {
