@@ -177,7 +177,8 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
 static Tree *injectpassvar(Tree *tree) {
 	Tree *nv = mk(nVar, mk(nWord, "-"));
 	switch (tree->kind) {
-	case nLet: case nLocal: case nClosure: case nAssign:
+	case nLet: case nLocal: case nClosure: case nAssign: case nFor:
+		/* FIXME: should all these be allowed??? */
 		tree->CDR = treeconsend2(tree->CDR, nv);
 		break;
 	default: {
@@ -189,8 +190,13 @@ static Tree *injectpassvar(Tree *tree) {
 				body = body->u[i < 3].p;
 			}
 		}
-		if (body->kind == nThunk)
+		if (body == NULL)
+			/* redirection with empty body */
+			yyerror("bad redirect in %pass statement");
+		else if (body->kind == nThunk)
 			body = treecons(body, treecons(nv, NULL));
+		else if (body->kind == nMatch || body->kind == nExtract)
+			body->u[1].p = nv;
 		else
 			body = treeconsend2(body, nv);
 	}}
