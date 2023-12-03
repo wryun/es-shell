@@ -74,6 +74,11 @@ static void warn(char *s) {
 	eprint("warning: %s\n", locate(input, s));
 }
 
+
+/*
+ * runflags
+ */
+
 #define NRUNFLAGS 4
 static struct{
 	int mask;
@@ -440,53 +445,23 @@ extern void resetparser(void) {
 	error = NULL;
 }
 
-/* fdcleanup -- cleanup after running from a file descriptor */
-static void fdcleanup(Input *in) {
-	unregisterfd(&in->fd);
-	if (in->fd != -1)
-		close(in->fd);
-	efree(in->bufbegin);
-}
+/* runinput -- run from an input source */
+extern List *runinput(Input *in, List *cmd) {
+	List * volatile result = NULL;
 
-/* runinput -- run a command with a file as input */
-extern List *runinput(char *name, List *cmd) {
-	int fd = 0;
-	if (name != NULL && (fd = eopen(name, oOpen)) == -1)
-		fail("$&runinput", "%s: %s\n", name, esstrerror(errno));
-
-	return runfd(fd, name, cmd);
-}
-
-extern List *runfd(int fd, const char *name, List *cmd) {
-	Input in;
-	List *result;
-
-	memzero(&in, sizeof (Input));
-	in.lineno = 1;
-	in.fill = fdfill;
-	in.cleanup = fdcleanup;
-	in.fd = fd;
 	if (input != NULL)
-		in.runflags = input->runflags;
+		in->runflags = input->runflags;
 	else
-		in.runflags = runflags_to_int(varlookup("runflags", NULL));
-	registerfd(&in.fd, TRUE);
-	in.buflen = BUFSIZE;
-	in.bufbegin = in.buf = ealloc(in.buflen);
-	in.bufend = in.bufbegin;
-	in.name = (name == NULL) ? "stdin" : name;
+		in->runflags = runflags_to_int(varlookup("runflags", NULL));
 
-	int flags = in.runflags;
-	result = NULL;
-
-	flags &= ~eval_inchild;
-	in.get = (flags & run_echoinput) ? getverbose : get;
-	in.prev = input;
-	input = &in;
+	in->runflags &= ~eval_inchild;
+	in->get = (in->runflags & run_echoinput) ? getverbose : get;
+	in->prev = input;
+	input = in;
 
 	ExceptionHandler
 
-		result = eval(cmd, NULL, flags);
+		result = eval(cmd, NULL, in->runflags);
 
 	CatchException (e)
 
@@ -496,8 +471,8 @@ extern List *runfd(int fd, const char *name, List *cmd) {
 
 	EndExceptionHandler
 
-	input = in.prev;
-	(*in.cleanup)(&in);
+	input = in->prev;
+	(*in->cleanup)(in);
 	return result;
 }
 
@@ -505,6 +480,37 @@ extern List *runfd(int fd, const char *name, List *cmd) {
 /*
  * pushing new input sources
  */
+
+/* fdcleanup -- cleanup after running from a file descriptor */
+static void fdcleanup(Input *in) {
+	unregisterfd(&in->fd);
+	if (in->fd != -1)
+		close(in->fd);
+	efree(in->bufbegin);
+}
+
+/* runfd -- run commands from a file descriptor */
+extern List *runfd(int fd, const char *name, List *cmd) {
+	Input in;
+	List *result;
+
+	memzero(&in, sizeof (Input));
+	in.lineno = 1;
+	in.fill = fdfill;
+	in.cleanup = fdcleanup;
+	in.fd = fd;
+	registerfd(&in.fd, TRUE);
+	in.buflen = BUFSIZE;
+	in.bufbegin = in.buf = ealloc(in.buflen);
+	in.bufend = in.bufbegin;
+	in.name = (name == NULL) ? str("fd %d", fd) : name;
+
+	RefAdd(in.name);
+	result = runinput(&in, cmd);
+	RefRemove(in.name);
+
+	return result;
+}
 
 /* stringcleanup -- cleanup after running from a string */
 static void stringcleanup(Input *in) {
@@ -515,6 +521,32 @@ static void stringcleanup(Input *in) {
 static int stringfill(Input *in) {
 	in->fill = eoffill;
 	return EOF;
+}
+
+/* runstring -- run commands from a string */
+extern List *runstring(const char *str, List *cmd) {
+	Input in;
+	List *result;
+	unsigned char *buf;
+
+	assert(str != NULL);
+
+	memzero(&in, sizeof (Input));
+	in.fd = -1;
+	in.lineno = 1;
+	in.name = str;
+	in.fill = stringfill;
+	in.buflen = strlen(str);
+	buf = ealloc(in.buflen + 1);
+	memcpy(buf, str, in.buflen);
+	in.bufbegin = in.buf = buf;
+	in.bufend = in.buf + in.buflen;
+	in.cleanup = stringcleanup;
+
+	RefAdd(in.name);
+	result = runinput(&in, cmd);
+	RefRemove(in.name);
+	return result;
 }
 
 /* parseinput -- turn an input source into a tree */
@@ -549,6 +581,8 @@ extern Tree *parsestring(const char *str) {
 
 	assert(str != NULL);
 
+	/* TODO: abstract out common code with runstring */
+
 	memzero(&in, sizeof (Input));
 	in.fd = -1;
 	in.lineno = 1;
@@ -565,6 +599,11 @@ extern Tree *parsestring(const char *str) {
 	result = parseinput(&in);
 	RefRemove(in.name);
 	return result;
+}
+
+/* isinteractive -- is the innermost input source interactive? */
+extern Boolean isinteractive(void) {
+	return input == NULL ? FALSE : ((input->runflags & run_interactive) != 0);
 }
 
 

@@ -657,7 +657,7 @@ fn %batch-loop {
 	}
 }
 
-fn-. = $&runinput %batch-loop
+fn-. = $&runfile %batch-loop
 
 # source the runtime init script.
 . ./runtime.es

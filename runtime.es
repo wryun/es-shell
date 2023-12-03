@@ -152,13 +152,13 @@ fn-%exit-on-false = $&exitonfalse		# -e
 
 noexport = $noexport fn-%dispatch runflags
 
-# %run-input wraps the '$&runinput' primitive with a default command
+# %run-file wraps the '$&runfile' primitive with a default command
 # (which calls one of the REPL functions defined above).  When called
 # on its own, the function is a worse (but technically passable)
 # version of %dot.
 
-fn %run-input file {
-	$&runinput {
+fn %run-file file {
+	$&runfile {
 		if {~ $runflags interactive} {
 			$fn-%interactive-loop
 		} {
@@ -170,7 +170,7 @@ fn %run-input file {
 
 # %dot is the engine for running outside scripts in the current shell.
 # It manages runflags based on args passed to it, sets $0 and $*, and
-# calls `%run-input`.
+# calls `%run-file`.
 
 fn %dot args {
 	let (
@@ -203,7 +203,7 @@ fn %dot args {
 			0 = $args(1)
 			* = $args(2 ...)
 			runflags = $flags
-		) $fn-%run-input $args(1)
+		) $fn-%run-file $args(1)
 	}
 }
 
@@ -223,6 +223,7 @@ es:main = @ argv {
 		es = es
 		flags = ()
 		cmd = ()
+		runcmd = false
 		keepclosed = false
 		stdin = false
 		allowdumps = false
@@ -264,7 +265,7 @@ es:main = @ argv {
 			}
 			for (f = <={%fsplit '' <={~~ $a -*}}) {
 				match $f (
-					c {(cmd argv) = $argv}
+					c {runcmd = true; (cmd argv) = $argv}
 					e {flags = $flags exitonfalse}
 					i {flags = $flags interactive}
 					v {flags = $flags echoinput}
@@ -281,6 +282,10 @@ es:main = @ argv {
 					* {usage}
 				)
 			}
+		}
+
+		if {$runcmd && ~ $cmd ()} {
+			usage >[1=2]
 		}
 
 		if {!$keepclosed} {
@@ -334,18 +339,18 @@ es:main = @ argv {
 
 		if {~ $cmd () && !$stdin && !~ $#argv 0} {
 			local ((0 *) = $argv)
-				$fn-%run-input $0
+				$fn-%run-file $0
 		} {!~ $cmd ()} {
-			if {!~ $#argv 0} {
-				local ((0 *) = $argv)
-					$fn-%dispatch '{'^$^cmd^'}'
-			} {
-				local ((0 *) = $es)
-					$fn-%dispatch '{'^$^cmd^'}'
-			}
+			local ((0 *) = $es $argv)
+				$&runstring {
+					let (c = <=%parse) {
+						# echo >[1=2] $c
+						$fn-%dispatch $c
+					}
+				} $cmd
 		} {
 			local ((0 *) = $es $argv)
-				$fn-%run-input
+				$fn-%run-file
 		}
 	}
 }

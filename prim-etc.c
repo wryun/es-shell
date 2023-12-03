@@ -71,17 +71,38 @@ PRIM(setrunflags) {
 	return list;
 }
 
-PRIM(runinput) {
-	if (list == NULL)
+PRIM(runfile) {
+	if (list == NULL || (list->next != NULL && list->next->next != NULL))
 		fail("$&runinput", "usage: $&runinput command [file]");
 	Ref(List *, result, NULL);
 	Ref(List *, cmd, mklist(list->term, NULL));
+	Ref(char *, file, "stdin");
 
-	result = runinput((list->next == NULL
-				? NULL
-				: getstr(list->next->term)),
-			cmd);
+	int fd = 0;
 
+	if (list->next != NULL) {
+		file = getstr(list->next->term);
+		fd = eopen(file, oOpen);
+		if (fd == -1)
+			fail("$&runfile", "%s: %s", file, esstrerror(errno));
+	}
+
+	result = runfd(fd, file, cmd);
+
+	RefEnd2(file, cmd);
+	RefReturn(result);
+}
+
+PRIM(runstring) {
+	if (list == NULL || list->next == NULL || list->next->next != NULL)
+		fail("$&runstring", "usage: $&runstring command string");
+	Ref(List *, result, NULL);
+	Ref(List *, cmd, mklist(list->term, NULL));
+	char *string = mprint(getstr(list->next->term));
+
+	result = runstring(string, cmd);
+
+	efree(string);
 	RefEnd(cmd);
 	RefReturn(result);
 }
@@ -272,7 +293,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(version);
 	X(exec);
 	X(setrunflags);
-	X(runinput);
+	X(runfile);
+	X(runstring);
 	X(flatten);
 	X(whatis);
 	X(sethistory);

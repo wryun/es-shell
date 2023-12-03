@@ -290,8 +290,9 @@ extern void resetparser(void);
 extern void setrunflags(int flags);
 extern List *runflags_from_int(int);
 extern int runflags_to_int(List *);
-extern List *runinput(char *name, List *cmd);
+
 extern List *runfd(int fd, const char *name, List *cmd);
+extern List *runstring(const char *str, List *cmd);
 
 /* eval_* flags are also understood as runflags */
 #define	run_interactive		4	/* -i or $0[0] = '-' */
