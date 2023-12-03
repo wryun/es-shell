@@ -19,7 +19,7 @@ extern Tree *getherevar(void) {
 	char *s;
 	size_t len;
 	Buffer *buf = openbuffer(0);
-	while (!dnw[c = GETC()])
+	while ((c = GETC()) != EOF && !dnw[c])
 		buf = bufputc(buf, c);
 	len = buf->len;
 	s = sealcountedbuffer(buf);
@@ -128,7 +128,7 @@ extern Boolean queueheredoc(Tree *t) {
 	assert(t->CDR->kind == nList);
 	eof = t->CDR->CDR;
 	assert(eof->kind == nList);
-	if (eof->CAR->kind != nWord && eof->CAR->kind != nQword) {
+	if (!eof->CAR || (eof->CAR->kind != nWord && eof->CAR->kind != nQword)) {
 		yyerror("here document eof-marker not a single literal word");
 		return FALSE;
 	}

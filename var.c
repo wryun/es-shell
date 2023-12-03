@@ -64,14 +64,14 @@ static size_t VarScan(void *p) {
 
 /* iscounting -- is it a counter number, i.e., an integer > 0 */
 static Boolean iscounting(const char *name) {
-	int c;
-	const char *s = name;
-	while ((c = *s++) != '\0')
-		if (!isdigit(c))
-			return FALSE;
-	if (streq(name, "0"))
+	while (*name == '0')
+		name++;
+	if (*name == '\0')
 		return FALSE;
-	return name[0] != '\0';
+	for (; *name != '\0'; name++)
+		if (!isdigit(*name))
+			return FALSE;
+	return TRUE;
 }
 
 
@@ -321,11 +321,27 @@ static void listinternal(void *arg, char *key, void *value) {
 		addtolist(arg, key, value);
 }
 
+static char *list_prefix;
+
+static void listwithprefix(void *arg, char *key, void *value) {
+	if (strneq(key, list_prefix, strlen(list_prefix)))
+		addtolist(arg, key, value);
+}
+
 /* listvars -- return a list of all the (dynamic) variables */
 extern List *listvars(Boolean internal) {
 	Ref(List *, varlist, NULL);
 	dictforall(vars, internal ? listinternal : listexternal, &varlist);
 	varlist = sortlist(varlist);
+	RefReturn(varlist);
+}
+
+/* varswithprefix -- return a list of all the (dynamic) variables
+ * matching the given prefix */
+extern List *varswithprefix(char *prefix) {
+	Ref(List *, varlist, NULL);
+	list_prefix = prefix;
+	dictforall(vars, listwithprefix, &varlist);
 	RefReturn(varlist);
 }
 

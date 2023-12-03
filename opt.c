@@ -6,8 +6,9 @@ static const char *usage, *invoker;
 static List *args;
 static Term *termarg;
 static int nextchar;
+static Boolean throwonerr;
 
-extern void esoptbegin(List *list, const char *caller, const char *usagemsg) {
+extern void esoptbegin(List *list, const char *caller, const char *usagemsg, Boolean throws) {
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initialized = TRUE;
@@ -22,13 +23,14 @@ extern void esoptbegin(List *list, const char *caller, const char *usagemsg) {
 	args = list;
 	termarg = NULL;
 	nextchar = 0;
+	throwonerr = throws;
 }
 
 extern int esopt(const char *options) {
 	int c;
 	const char *arg, *opt;
 
-	assert(usage != NULL);
+	assert(!throwonerr || usage != NULL);
 	assert(termarg == NULL);
 	if (nextchar == 0) {
 		if (args == NULL)
@@ -54,7 +56,9 @@ extern int esopt(const char *options) {
 		usage = NULL;
 		args = NULL;
 		nextchar = 0;
-		fail(invoker, "illegal option: -%c -- usage: %s", c, msg);
+		if (throwonerr)
+			fail(invoker, "illegal option: -%c -- usage: %s", c, msg);
+		else return '?';
 	}
 
 	if (arg[nextchar] == '\0') {
@@ -65,9 +69,11 @@ extern int esopt(const char *options) {
 	if (opt[1] == ':') {
 		if (args == NULL) {
 			const char *msg = usage;
-			fail(invoker,
-			     "option -%c expects an argument -- usage: %s",
-			     c, msg);
+			if (throwonerr)
+				fail(invoker,
+				     "option -%c expects an argument -- usage: %s",
+				     c, msg);
+			else return ':';
 		}
 		termarg = (nextchar == 0)
 				? args->term

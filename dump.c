@@ -105,10 +105,51 @@ static const char *nodename(NodeKind k) {
 	}
 }
 
+static Boolean nstreq(char *a, char *b) {
+	if (a == NULL && b == NULL)
+		return TRUE;
+	else if (a == NULL || b == NULL)
+		return FALSE;
+	else return streq(a, b);
+}
+
+static Boolean deepequal(Tree *t1, Tree *t2) {
+	if (t1 == NULL && t2 == NULL)
+		return TRUE;
+	else if (t1 == NULL || t2 == NULL)
+		return FALSE;
+	if (t1->kind != t2->kind)
+		return FALSE;
+
+	switch (t1->kind) {
+	case nWord: case nQword: case nPrim:
+		return nstreq(t1->u[0].s, t2->u[0].s);
+	case nCall: case nThunk: case nVar:
+		return deepequal(t1->u[0].p, t2->u[0].p);
+	case nAssign: case nConcat: case nClosure: case nFor:
+	case nLambda: case nLet: case nList: case nLocal:
+	case nVarsub: case nMatch: case nExtract:
+		return deepequal(t1->u[0].p, t2->u[0].p) && deepequal(t1->u[1].p, t2->u[1].p);
+	default:
+		panic("deepequal: bad node kind %d", t1->kind);
+	}
+	return FALSE;
+}
+
+static void treededup(void *arg, char *unused, void *value) {
+	Tree **new = arg;
+	Tree *old = value;
+	if (deepequal(*new, old))
+		*new = old;
+}
+
 static char *dumptree(Tree *tree) {
 	char *name;
 	if (tree == NULL)
 		return "NULL";
+
+	dictforall(cvars, treededup, &tree);
+
 	name = str("&T_%ulx", tree);
 	if (dictget(cvars, name) == NULL) {
 		switch (tree->kind) {
@@ -122,7 +163,7 @@ static char *dumptree(Tree *tree) {
 			print("static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n",
 			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p));
 			break;
-		    case nAssign:  case nConcat: case nClosure: case nFor:
+		    case nAssign: case nConcat: case nClosure: case nFor:
 		    case nLambda: case nLet: case nList:  case nLocal:
 		    case nVarsub: case nMatch: case nExtract:
 			print("static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n",

@@ -197,6 +197,7 @@ extern Vector *mkenv(void);
 extern void setnoexport(List *list);
 extern void addtolist(void *arg, char *key, void *value);
 extern List *listvars(Boolean internal);
+extern List *varswithprefix(char *prefix);
 
 typedef struct Push Push;
 extern Push *pushlist;
@@ -304,7 +305,7 @@ extern Boolean resetterminal;
 
 /* opt.c */
 
-extern void esoptbegin(List *list, const char *caller, const char *usage);
+extern void esoptbegin(List *list, const char *caller, const char *usage, Boolean throws);
 extern int esopt(const char *options);
 extern Term *esoptarg(void);
 extern List *esoptend(void);
@@ -315,6 +316,7 @@ extern List *esoptend(void);
 extern List *prim(char *s, List *list, Binding *binding, int evalflags);
 extern void initprims(void);
 extern void initdumpprims(void);
+extern List *primswithprefix(char *prefix);
 
 
 /* split.c */

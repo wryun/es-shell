@@ -67,8 +67,8 @@ PRIM(catch) {
 			blocksignals();
 			ExceptionHandler
 				result
-				  = eval(mklist(mkstr("$&noreturn"),
-					        mklist(lp->term, frombody)),
+				  = prim("noreturn",
+					 mklist(lp->term, frombody),
 					 NULL,
 					 evalflags);
 				unblocksignals();
