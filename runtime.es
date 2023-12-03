@@ -342,12 +342,7 @@ es:main = @ argv {
 				$fn-%run-file $0
 		} {!~ $cmd ()} {
 			local ((0 *) = $es $argv)
-				$&runstring {
-					let (c = <=%parse) {
-						# echo >[1=2] $c
-						$fn-%dispatch $c
-					}
-				} $cmd
+				$&runstring {$fn-%dispatch <=%parse} $cmd
 		} {
 			local ((0 *) = $es $argv)
 				$fn-%run-file
