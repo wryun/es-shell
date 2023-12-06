@@ -43,7 +43,7 @@ fn run-file file {
 	echo $file
 	local (
 		passed = ();	failed = ();	skipped = ()
-		test = ();	cases = ();	wants = ()
+		fn-test = ();	cases = ();	wants = ()
 
 		fn skip { skipped = $skipped $^* }
 		fn case { cases = $cases {result $*}}
@@ -69,7 +69,7 @@ fn run-file file {
 			echo '   unhandled exception:' $e
 			failed = $failed $^args
 		} {
-			let (got = <={$test $args}) {
+			let (got = <={test $args}) {
 				if @ {for (g = $got; w = $want) if {!~ $g $w} {return 1}} {
 					passed = $passed $^args
 				} {

@@ -1,6 +1,6 @@
 # tests/subscripts.es -- Test that variable subscripting works.
 
-test = eval
+fn-test = eval
 
 # single elements
 case 'let (list = un du troix) result $list(1)'	; want un

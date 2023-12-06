@@ -4,7 +4,7 @@
 # let the test-executors do the parsing in a subshell, which protects the test
 # harness from any potential crashes.
 
-test = get-output
+fn-test = get-output
 
 case 'a=b; echo $a'			; want 'b'
 case 'echo a=b'				; want 'a=b'
