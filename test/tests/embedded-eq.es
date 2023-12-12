@@ -1,33 +1,37 @@
 # tests/embedded-eq.es -- test correct behavior of '=' parsing.
 
-# For parsing-related tests, it's a good idea to wrap each case in quotes and
-# let the test-executors do the parsing in a subshell, which protects the test
-# harness from any potential crashes.
+test 'eq is assignment in just the right places' {
+	assert-output 'a=b; echo $a'			'b'\n
+	assert-output 'echo a=b'			'a=b'\n
+	assert-output 'echo a = b'			'a = b'\n
+	assert-output 'echo a=b; a=b; echo $a'		'a=b'\n'b'\n
+	assert-output 'a =b= c==d= e=f; echo $a'	'b= c==d= e=f'\n
+	assert-output '''a=b'' = c=d; echo $''a=b'''	'c=d'\n
+	assert-output 'a=b = c = d; echo $a'		'b = c = d'\n
+}
 
-fn-test = get-output
+test 'eq is handled correctly in let binders' {
+	assert-output 'let ((a b)=(1=2 2=3 3=4 4=5)) echo -n $b' '2=3 3=4 4=5'
+	assert-output 'let (a=b) echo -n $a'			 'b'
+	assert-output 'let (a=b;c=d) echo -n $a, $c'		 'b, d'
+	assert-output 'let (a=b) c=$a; echo -n $c'		 'b'
+	assert-output 'let (a=b=c=d) echo -n $a'		 'b=c=d'
+	assert-output 'let (''a=b''=c=d) echo -n $''a=b'''	 'c=d'
+}
 
-case 'a=b; echo $a'			; want 'b'
-case 'echo a=b'				; want 'a=b'
-case 'echo a = b'			; want 'a = b'
-case 'echo a=b; a=b; echo $a'		; want 'a=b b'
-case 'a =b= c==d= e=f; echo $a'		; want 'b= c==d= e=f'
-case '''a=b'' = c=d; echo $''a=b'''	; want 'c=d'
-case 'a=b = c = d; echo $a'		; want 'b = c = d'
+test 'eq is handled correctly in with parens in args' {
+	assert-output 'echo -n (a=a a=b)'		'a=a a=b'
+	assert-output 'echo -n (a b) a=b'		'a b a=b'
+	assert-output '(a b)=(c=d d=e); echo -n $b $a'	'd=e c=d'
+}
 
-case 'let ((a b)=(1=2 2=3 3=4 4=5)) echo $b'	; want '2=3 3=4 4=5'
-case 'let (a=b) echo $a'			; want 'b'
-case 'let (a=b;c=d) echo $a, $c'		; want 'b, d'
-case 'let (a=b) c=$a; echo $c'			; want 'b'
-case 'let (a=b=c=d) echo $a'			; want 'b=c=d'
-case 'let (''a=b''=c=d) echo $''a=b'''		; want 'c=d'
+test 'eq is parsed with control flow syntax correctly' {
+	assert-output '{echo a=b & a=c} > /dev/null; echo $a'	'c'\n
+	assert-output 'a=b || a=c; echo $a'			'c'\n
+	assert-output '!a=b c; echo $a'				'b c'\n
+}
 
-case 'echo (a=a a=b)'			; want 'a=a a=b'
-case 'echo (a b) a=b'			; want 'a b a=b'
-case '(a b)=(c=d d=e); echo $b $a'	; want 'd=e c=d'
-
-case 'echo a=b & a=c; echo $a'	; want 'c a=b'
-case 'a=b || a=c; echo $a'	; want 'c'
-case '!a=b c; echo $a'		; want 'b c'
-
-case 'if {~ a a} {a=b; echo $a}'	; want 'b'
-case 'if {~ a=b a=b} {echo yes}'	; want 'yes'
+test 'eq is parsed in if correctly' {
+	assert-output 'if {~ a a} {a=b; echo -n $a}'	'b'
+	assert-output 'if {~ a=b a=b} {echo -n yes}'	'yes'
+}

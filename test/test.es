@@ -1,112 +1,195 @@
-# test.es -- run the es test files
-# Invoke like "path-to-es ./test.es"
+#!/usr/local/bin/es
 
-#
-# Helper functions
-#
+# Test executor.  This adds the special sauce for testing purposes.
+fn test title tests {
+	# Shared state used by the functions below.
+	let (
+		passed = ()
+		failed = ()
+		test-execution-failure = ()
+	)
 
-fn with-tmpfile file rest {
-	local ($file = `mktemp)
-	unwind-protect {
-		if {~ $#rest 1} {
-			$rest
-		} {
-			with-tmpfile $rest
+	# Test logging and reporting functions.
+	# This is the part that gets swapped out in different test execution contexts.
+	# (command-line, CircleCI, etc.)
+	let (
+		fn header {
+			echo -n $title^': '
 		}
-	} {
-		rm -f $$file
-	}
-}
 
-# example test function.
-# if the command runs successfully, returns its stdout.
-# if it fails (returns falsey), returns an error message including its stderr.
-fn get-output cmd {
-	with-tmpfile out err {
-		let (result = <={fork {eval $cmd} > $out >[2] $err}) {
-			if {!~ $result 0} {
-				let (err-msg = `` \n {cat $err})
-					result 'error code '^$^result^': '^$^err-msg
+		fn fail-case test-name cmd msg {
+			if {~ $#failed 0} {echo}
+			echo - $cmd failed $msg
+			failed = $failed $^cmd
+		}
+		fn pass-case test-name cmd got {
+			passed = $passed $^cmd
+		}
+
+		fn report {
+			if {~ $#failed 0 && ~ $test-execution-failure ()} {
+				echo passed!
+			} {~ $test-execution-failure ()} {
+				echo - $#passed cases passed, $#failed failed.
 			} {
-				let (out-msg = `` \n {cat $out})
-					result $^out-msg
+				echo test execution failure: $test-execution-failure
 			}
 		}
-	}
-}
+	)
 
-#
-# Driver functions
-#
-
-fn run-file file {
-	echo $file
+	# `assert-` functions.  These get used directly by the test files and rely on
+	# the functions above to gather and report passes and failures.  These should be agnostic
+	# to the execution context of the test.
 	local (
-		passed = ();	failed = ();	skipped = ()
-		fn-test = ();	cases = ();	wants = ()
 
-		fn skip { skipped = $skipped $^* }
-		fn case { cases = $cases {result $*}}
-		fn want { wants = $wants {result $*}}
-	) {
-
-# Each $file's job is simply to define:
-#  a test:	The procedure to run to perform the test.
-#  N cases:	The test cases specifying arguments for the test.
-#  N wants:	For each test case, the desired result.
-# See tests/example.es for more specifics on how it works.
-
-		. $file
-
-		if {!~ $#cases $#wants} {
-			throw error run-file 'mismatch between number of cases and number of desired results'
-		}
-
-		for (args-thunk = $cases; want-thunk = $wants)
-		let (args = <=$args-thunk; want = <=$want-thunk)
-		catch @ e {
-			echo ' - [31mFAILED[0m:' $args
-			echo '   unhandled exception:' $e
-			failed = $failed $^args
-		} {
-			let (got = <={test $args}) {
-				if @ {for (g = $got; w = $want) if {!~ $g $w} {return 1}} {
-					passed = $passed $^args
+		fn assert cmd message {
+			let (result = ()) {
+				catch @ e {
+					fail-case $title $cmd $e
+					return
 				} {
-					failed = $failed $^args
-					echo ' - [31mFAILED[0m:' $args
-					echo '   got:' $got
-					echo '   want:' $want
+					result = <={$cmd}
+				}
+				if {!result $result} {
+					if {!~ $message ()} {
+						fail-case $title $message
+					} {
+						fail-case $title $cmd
+					}
+				} {
+					pass-case $title $cmd
 				}
 			}
 		}
 
-		echo -n ' -' $#passed cases passed
-		if {!~ $#skipped 0} {echo ' ('^$#skipped 'skipped)'} {echo}
-		result $#failed
-	}
-}
-
-fn run-tests testdir {
-	let (
-		files = $testdir/*.es
-		failed-files = ()
-	) {
-		for (f = $files) {
-			if {!~ <={run-file $f} 0} {
-				failed-files = $failed-files $f
+		fn assert-output cmd want {
+			let (
+				f = `mktemp
+				out = ()
+			)
+			unwind-protect {
+				catch @ e {
+					fail-case $title $cmd $e
+					return
+				} {
+					{eval $cmd} < /dev/null > $f >[2] /dev/null
+				}
+				let (output = `` '' {cat $f})
+				if {!~ $output $want} {
+					fail-case $title $cmd got $output want $want
+				} {
+					pass-case $title $cmd $output
+				}
+			} {
+				rm $f
 			}
-			echo
 		}
-		if {!~ $#files 1} {
-			echo ' ================ '^\n
+
+		fn assert-stderr cmd want {
+			let (
+				f = `mktemp
+				out = ()
+			)
+			unwind-protect {
+				catch @ e {
+					fail-case $title $cmd $e
+					return
+				} {
+					{eval $cmd} < /dev/null >[2] $f > /dev/null
+				}
+				let (output = `` '' {cat $f})
+				if {!~ $output $^want^\n} {
+					fail-case $title $cmd got $^output want $^want
+				} {
+					pass-case $title $cmd $output
+				}
+			} {
+				rm $f
+			}
 		}
-		if {~ $#failed-files 0} {
-			echo 'All tests passed!'
+
+		fn assert-stderr-contains cmd want {
+			let (
+				f = `mktemp
+				out = ()
+			)
+			unwind-protect {
+				catch @ e {
+					fail-case $title $cmd $e
+					return
+				} {
+					{eval $cmd} < /dev/null >[2] $f > /dev/null
+				}
+				let (output = `` '' {cat $f})
+				if {!~ $output *^$want^*} {
+					fail-case $title $cmd got $^output want $^want
+				} {
+					pass-case $title $cmd $output
+				}
+			} {
+				rm $f
+			}
+		}
+
+		fn assert-result cmd want {
+			let (result = ()) {
+				catch @ e {
+					fail-case $title $cmd $e
+					return
+				} {
+					result = <={eval $cmd < /dev/null}
+				}
+				for (g = $result; w = $want) {
+					if {!~ $g $w} {
+						fail-case $title $cmd got $result '(length' $#result')' want $want '(length' $#want')'
+						return 1
+					}
+				}
+				pass-case $title $cmd $result
+			}
+		}
+
+		fn assert-false cmd {
+			let (result = ()) {
+				catch @ e {
+					fail-case $title $cmd $e
+					return
+				} {
+					result = <={eval $cmd < /dev/null}
+				}
+				if {result $result} {
+					fail-case $title $cmd returned true
+				} {
+					pass-case $title $cmd
+				}
+			}
+		}
+
+		fn assert-exception-contains cmd want {
+			catch @ e {
+				if {~ $^e *^$want^*} {
+					pass-case $title $cmd $e
+					return
+				} {
+					fail-case $title $cmd got $e want $^want
+				}
+			} {
+				{eval $cmd} < /dev/null > /dev/null >[2] /dev/null
+			}
+			fail-case $title $cmd got no exception want $^want
+		}
+
+	) {
+		header
+		catch @ e {
+			# TODO: handle this, including an `abort-test` exception type!
+			test-execution-failure = $e
 		} {
-			echo 'Failed test files:' <={%flatten ', ' $failed-files}
+			$tests
 		}
+		report
 	}
 }
 
-run-tests tests
+local (es = $0)
+for (f = $*) . $f
