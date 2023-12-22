@@ -52,6 +52,9 @@ jobs:
             mkdir -p ./test/results
             ./es -s < ./test/circleci.es ./test/run-tests.es ./test/tests/* > ./test/results/results.xml
 
+      - store_artifacts:
+          path: ./test/results/
+
       - store_test_results:
           path: ./test/results/
 
