@@ -41,6 +41,8 @@ jobs:
       - image: cimg/base:stable
 
     steps:
+      - checkout
+
       - attach_workspace:
           at: .
 
