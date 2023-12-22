@@ -32,9 +32,9 @@ jobs:
           command: make trip
 
       - persist_to_workspace:
-        root: .
-        paths:
-          - es
+          root: .
+          paths:
+            - es
 
   test:
     docker:
