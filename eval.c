@@ -414,9 +414,10 @@ restart:
 			EndExceptionHandler
 			break;
 		    case nList: {
-			list = glom(cp->tree, cp->binding, TRUE);
-			list = append(list, list->next);
+			Ref(List *, lp, glom(cp->tree, cp->binding, TRUE));
+			list = append(lp, list->next);
 			goto restart;
+			RefEnd(lp);
 		    }
 		    default:
 			panic("eval: bad closure node kind %d",

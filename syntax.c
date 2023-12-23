@@ -268,7 +268,8 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 /* firstprepend -- insert a command node before its arg nodes after all redirections */
 extern Tree *firstprepend(Tree *first, Tree *args) {
 	Tree *t, **tp;
-	assert(first != NULL);
+	if (first == NULL)
+		return args;
 	for (t = args, tp = &args; t != NULL && t->kind == nRedir; t = *(tp = &t->CDR))
 		;
 	assert(t == NULL || t->kind == nList);
