@@ -635,7 +635,7 @@ fn %interactive-loop {
 		catch @ e type msg {
 			if {~ $e eof} {
 				return $result
-			} {~ $e exit || ~ $e false} {
+			} {~ $e exit} {
 				throw $e $type $msg
 			} {~ $e error} {
 				echo >[1=2] $msg
@@ -644,6 +644,8 @@ fn %interactive-loop {
 				if {!~ $type sigint sigterm sigquit} {
 					echo >[1=2] caught unexpected signal: $type
 				}
+			} {~ $e false} {
+				echo >[1=2] caught false result: $type $msg
 			} {
 				echo >[1=2] uncaught exception: $e $type $msg
 			}
