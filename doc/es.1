@@ -2341,12 +2341,11 @@ shell scripts if the kernel does not.
 Runs the command, and throws the
 .Cr false
 exception if any command
-(except those executing as the tests of conditional statements)
+(except assignments, or those executing as the tests of
+conditional statements)
 returns a non-zero status.
-(This function is used as an argument to
-.Cr %batch-loop
-and
-.Cr %interactive-loop
+(This function is used as part of the definition of
+.Cr %dispatch
 when the shell is invoked with the
 .Cr \-e
 option.)
@@ -2814,8 +2813,8 @@ starts with a dash
 .Rc ( - ).
 .TP
 .Cr \-e
-Exit if any command (except those executing as the tests of
-conditional statements) returns a non-zero status.
+Exit if any command (except those executing as assignments or
+the tests of conditional statements) returns a non-zero status.
 .TP
 .Cr \-v
 Echo all input to standard error.
