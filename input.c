@@ -703,7 +703,7 @@ extern void initinput(void) {
 
 	rl_attempted_completion_function = builtin_completion;
 
-	rl_filename_quote_characters = " \t\n\\`$><=;|&{()}";
+	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_filename_quoting_function = quote;
 	rl_filename_dequoting_function = unquote;
 #endif
