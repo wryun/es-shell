@@ -85,11 +85,15 @@ extern Dirent *readdir(DIR *);
 
 /* stdlib */
 #if __GNUC__
+/* function declaration syntax */
 #define noreturn(F) volatile void F __attribute__((noreturn))
+/* function definition syntax */
 typedef volatile void noreturn;
+#define unused __attribute__((unused))
 #else
 #define noreturn(F) void F
 typedef void noreturn;
+#define unused
 #endif
 
 #if STDC_HEADERS
