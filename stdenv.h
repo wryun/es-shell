@@ -85,16 +85,18 @@ extern Dirent *readdir(DIR *);
 
 /* stdlib */
 #if __GNUC__
+#define noreturn(F) volatile void F __attribute__((noreturn))
 typedef volatile void noreturn;
 #else
+#define noreturn(F) void F
 typedef void noreturn;
 #endif
 
 #if STDC_HEADERS
 # include <stdlib.h>
 #else
-extern noreturn exit(int);
-extern noreturn abort(void);
+extern noreturn(exit(int));
+extern noreturn(abort(void));
 extern long strtol(const char *num, char **end, int base);
 extern void *qsort(
 	void *base, size_t nmemb, size_t size,
