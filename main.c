@@ -4,20 +4,6 @@
 
 extern char **environ;
 
-/* initpath -- set $path based on the configuration default */
-static void initpath(void) {
-	int i;
-	static const char * const path[] = { INITIAL_PATH };
-
-	Ref(List *, list, NULL);
-	for (i = arraysize(path); i-- > 0;) {
-		Term *t = mkstr((char *) path[i]);
-		list = mklist(t, list);
-	}
-	vardef("path", NULL, list);
-	RefEnd(list);
-}
-
 /* initpid -- set $pid for this shell */
 static void initpid(void) {
 	vardef("pid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
@@ -28,20 +14,19 @@ int main(int argc, char **argv) {
 	initgc();
 	initconv();
 
+	initinput();
+	initprims();
+	initvars();
+
+	runinitial();
+
+	initpid();
+	initsignals();
+	hidevariables();
+	importenv(environ, FALSE);
+
 	ExceptionHandler
 		roothandler = &_localhandler;	/* unhygeinic */
-
-		initinput();
-		initprims();
-		initvars();
-
-		runinitial();
-
-		initpath();
-		initpid();
-		initsignals();
-		hidevariables();
-		importenv(environ, FALSE);
 
 		Ref(List *, args, listify(argc, argv));
 
@@ -60,12 +45,6 @@ int main(int argc, char **argv) {
 
 		if (termeq(e->term, "exit"))
 			return exitstatus(e->next);
-		else if (termeq(e->term, "error"))
-			eprint("%L\n",
-			       e->next == NULL ? NULL : e->next->next,
-			       " ");
-		else if (!issilentsignal(e))
-			eprint("uncaught exception: %L\n", e, " ");
 		return 1;
 
 	EndExceptionHandler

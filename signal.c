@@ -211,12 +211,6 @@ extern void setsigdefaults(void) {
  * utility functions
  */
 
-extern Boolean issilentsignal(List *e) {
-	return (termeq(e->term, "signal"))
-		&& e->next != NULL
-		&& termeq(e->next->term, "sigint");
-}
-
 extern List *mksiglist(void) {
 	int sig = NSIG;
 	Sigeffect effects[NSIG];

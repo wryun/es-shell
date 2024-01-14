@@ -216,9 +216,10 @@ fn-. = %dot
 # run loop.
 #
 
+let (
+	usage = <=$&usage
+)
 es:main = @ argv {
-	es:main = ()
-
 	let (
 		es = es
 		flags = ()
@@ -230,21 +231,7 @@ es:main = @ argv {
 		protected = false
 
 		fn usage {
-			echo 'usage: es [-c command] [-silevxnpo] [file [args ...]]'
-			echo '	-c cmd	execute argument'
-			echo '	-s	read commands from standard input; stop option parsing'
-			echo '	-i	interactive shell'
-			echo '	-l	login shell'
-			echo '	-e	exit if any command exits with false status'
-			echo '	-v	print input to standard error'
-			echo '	-x	print commands to standard error before executing'
-			echo '	-n	just parse; don''t execute'
-			echo '	-p	don''t load functions from the environment'
-			echo '	-o	don''t open stdin, stdout, and stderr if they were closed'
-			echo '	-d	don''t ignore SIGQUIT or SIGTERM'
-			echo '	-I	print garbage collector information (if compiled in)'
-			echo '	-G	print verbose garbage collector information (if compiled in)'
-			echo '	-L	print parser results in LISP format (if compiled in)'
+			echo $usage
 			exit 1
 		}
 	) {
@@ -337,15 +324,30 @@ es:main = @ argv {
 			}
 		}
 
-		if {~ $cmd () && !$stdin && !~ $#argv 0} {
-			local ((0 *) = $argv)
-				$fn-%run-file $0
-		} {!~ $cmd ()} {
-			local ((0 *) = $es $argv)
-				$&runstring {$fn-%dispatch <=%parse} $cmd
+		catch @ e type msg {
+			if {~ $e exit} {
+				result $type
+			} {~ $e error} {
+				echo >[1=2] $msg
+				result 1
+			} {~ $e signal && ~ $type sigint} {
+				# sigint: the silent signal
+				result 1
+			} {
+				echo >[1=2] uncaught exception: $e $type $msg
+				result 1
+			}
 		} {
-			local ((0 *) = $es $argv)
-				$fn-%run-file
+			if {~ $cmd () && !$stdin && !~ $#argv 0} {
+				local ((0 *) = $argv)
+					$fn-%run-file $0
+			} {!~ $cmd ()} {
+				local ((0 *) = $es $argv)
+					$&runstring {$fn-%dispatch <=%parse} $cmd
+			} {
+				local ((0 *) = $es $argv)
+					$fn-%run-file
+			}
 		}
 	}
 }

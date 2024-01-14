@@ -637,6 +637,7 @@ home		= /
 ifs		= ' ' \t \n
 prompt		= '; ' ''
 max-eval-depth	= 640
+path		= <=$&defaultpath
 
 #	noexport lists the variables that are not exported.  It is not
 #	exported, because none of the variables that it refers to are
@@ -651,13 +652,7 @@ max-eval-depth	= 640
 
 noexport = noexport pid signals apid bqstatus path home matchexpr
 
-fn %batch-loop {
-	forever {
-		<=$&parse
-	}
-}
-
-fn-. = $&runfile %batch-loop
+fn-. = $&runfile $&batchloop
 
 # source the runtime init script.
 . ./runtime.es
