@@ -523,6 +523,24 @@ static int stringfill(Input *in) {
 	return EOF;
 }
 
+static Input stringinput(const char *str, unsigned char **buf) {
+	Input in;
+
+	memzero(&in, sizeof (Input));
+	in.fd = -1;
+	in.lineno = 1;
+	in.name = str;
+	in.fill = stringfill;
+	in.buflen = strlen(str);
+	*buf = ealloc(in.buflen + 1);
+	memcpy(*buf, str, in.buflen);
+	in.bufbegin = in.buf = *buf;
+	in.bufend = in.buf + in.buflen;
+	in.cleanup = stringcleanup;
+
+	return in;
+}
+
 /* runstring -- run commands from a string */
 extern List *runstring(const char *str, List *cmd) {
 	Input in;
@@ -531,17 +549,7 @@ extern List *runstring(const char *str, List *cmd) {
 
 	assert(str != NULL);
 
-	memzero(&in, sizeof (Input));
-	in.fd = -1;
-	in.lineno = 1;
-	in.name = str;
-	in.fill = stringfill;
-	in.buflen = strlen(str);
-	buf = ealloc(in.buflen + 1);
-	memcpy(buf, str, in.buflen);
-	in.bufbegin = in.buf = buf;
-	in.bufend = in.buf + in.buflen;
-	in.cleanup = stringcleanup;
+	in = stringinput(str, &buf);
 
 	RefAdd(in.name);
 	result = runinput(&in, cmd);
@@ -581,29 +589,12 @@ extern Tree *parsestring(const char *str) {
 
 	assert(str != NULL);
 
-	/* TODO: abstract out common code with runstring */
-
-	memzero(&in, sizeof (Input));
-	in.fd = -1;
-	in.lineno = 1;
-	in.name = str;
-	in.fill = stringfill;
-	in.buflen = strlen(str);
-	buf = ealloc(in.buflen + 1);
-	memcpy(buf, str, in.buflen);
-	in.bufbegin = in.buf = buf;
-	in.bufend = in.buf + in.buflen;
-	in.cleanup = stringcleanup;
+	in = stringinput(str, &buf);
 
 	RefAdd(in.name);
 	result = parseinput(&in);
 	RefRemove(in.name);
 	return result;
-}
-
-/* isinteractive -- is the innermost input source interactive? */
-extern Boolean isinteractive(void) {
-	return input == NULL ? FALSE : ((input->runflags & run_interactive) != 0);
 }
 
 

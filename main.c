@@ -2,8 +2,6 @@
 
 #include "es.h"
 
-extern char **environ;
-
 /* initpid -- set $pid for this shell */
 static void initpid(void) {
 	vardef("pid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
@@ -23,10 +21,10 @@ int main(int argc, char **argv) {
 	initpid();
 	initsignals();
 	hidevariables();
-	importenv(environ, FALSE);
+	importenv(FALSE);
 
 	ExceptionHandler
-		roothandler = &_localhandler;	/* unhygeinic */
+		roothandler = &_localhandler;	/* unhygienic */
 
 		Ref(List *, args, listify(argc, argv));
 
@@ -43,8 +41,6 @@ int main(int argc, char **argv) {
 
 	CatchException (e)
 
-		if (termeq(e->term, "exit"))
-			return exitstatus(e->next);
 		return 1;
 
 	EndExceptionHandler

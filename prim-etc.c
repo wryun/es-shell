@@ -268,10 +268,8 @@ PRIM(setmaxevaldepth) {
 	RefReturn(lp);
 }
 
-extern char **environ;
-
 PRIM(importenvfuncs) {
-	importenv(environ, TRUE);
+	importenv(TRUE);
 	return true;
 }
 

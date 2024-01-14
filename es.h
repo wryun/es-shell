@@ -187,7 +187,7 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes);
 /* var.c */
 
 extern void initvars(void);
-extern void importenv(char **envp, Boolean funcs);
+extern void importenv(Boolean funcs);
 extern void hidevariables(void);
 extern void validatevar(const char *var);
 extern List *varlookup(const char *name, Binding *binding);
@@ -283,7 +283,6 @@ extern char *prompt, *prompt2;
 extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
 extern void sethistory(char *file);
-extern Boolean isinteractive(void);
 extern void initinput(void);
 extern void resetparser(void);
 

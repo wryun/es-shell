@@ -425,11 +425,14 @@ static void importvar(char *name0, char *value) {
 }
 
 
+extern char **environ;
+
 /* importenv -- load variables from the environment */
-extern void importenv(char **envp, Boolean funcs) {
+extern void importenv(Boolean funcs) {
 	char *envstr;
 	size_t bufsize = 1024;
 	char *buf = ealloc(bufsize);
+	char **envp = environ;
 
 	for (; (envstr = *envp) != NULL; envp++) {
 		size_t nlen;
