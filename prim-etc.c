@@ -40,33 +40,20 @@ PRIM(exec) {
 	return eval(list, NULL, evalflags | eval_inchild);
 }
 
-#if GCVERBOSE
+/* If not -DGCVERBOSE or -DGCINFO, these variables are harmlessly useless */
 Boolean gcverbose	= FALSE;
-#endif
-#if GCINFO
 Boolean gcinfo		= FALSE;
-#endif
 
 PRIM(setrunflags) {
-#if GCVERBOSE || GCINFO
-	Boolean gcv = FALSE;
-	Boolean gci = FALSE;
 	Ref(List *, lp, list);
-		for (lp = list; lp != NULL; lp = lp->next) {
+	for (lp = list; lp != NULL; lp = lp->next) {
 		if (termeq(lp->term, "gcverbose"))
-			gcv = TRUE;
+			gcverbose = TRUE;
 		else if (termeq(lp->term, "gcinfo"))
-			gci = TRUE;
+			gcinfo = TRUE;
 	}
 	RefEnd(lp);
 
-#if GCVERBOSE
-	gcverbose = gcv;
-#endif
-#if GCINFO
-	gcinfo = gci;
-#endif
-#endif
 	setrunflags(runflags_to_int(list));
 	return list;
 }

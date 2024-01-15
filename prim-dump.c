@@ -63,6 +63,23 @@ PRIM(usage) {
 	return mklist(mkstr(usage), NULL);
 }
 
+PRIM(conditionalflags) {
+	Ref(List *, list, NULL);
+#if GCINFO
+	list = mklist(mkstr("gcinfo"), list);
+	list = mklist(mkstr("I"), list);
+#endif
+#if GCVERBOSE
+	list = mklist(mkstr("gcverbose"), list);
+	list = mklist(mkstr("G"), list);
+#endif
+#if LISPTREES
+	list = mklist(mkstr("lisptrees"), list);
+	list = mklist(mkstr("L"), list);
+#endif
+	RefReturn(list);
+}
+
 
 /*
  * initialization
@@ -72,5 +89,6 @@ extern Dict *initprims_dump(Dict *primdict) {
 	X(batchloop);
 	X(defaultpath);
 	X(usage);
+	X(conditionalflags);
 	return primdict;
 }

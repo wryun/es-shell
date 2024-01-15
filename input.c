@@ -79,45 +79,28 @@ static void warn(char *s) {
  * runflags
  */
 
-#define NRUNFLAGS 4
+# define NRUNFLAGS 3
 static struct{
 	int mask;
 	char *name;
 } flagarr[NRUNFLAGS] = {
-	{eval_exitonfalse, "exitonfalse"},
 	{run_interactive, "interactive"},
 	{run_echoinput, "echoinput"},
 	{run_lisptrees, "lisptrees"}
 };
 
-extern List *runflags_from_int(int flags) {
-	int len = 0;
-	char *flagstrs[NRUNFLAGS];
-
-	int i;
-	for (i = 0; i < NRUNFLAGS; i++) {
-		if (flags & flagarr[i].mask) {
-			flagstrs[len++] = flagarr[i].name;
-		}
-	}
-
-	return listify(len, flagstrs);
-}
-
 extern int runflags_to_int(List *list) {
 	char *s;
 	int flags = 0;
+	int i = 0;
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next) {
 		s = getstr(lp->term);
-		if (streq(s, "interactive"))
-			flags |= run_interactive;
-		else if (streq(s, "echoinput"))
-			flags |= run_echoinput;
-#if LISPTREES
-		else if (streq(s, "lisptrees"))
-			flags |= run_lisptrees;
-#endif
+		for (i = 0; i < NRUNFLAGS; i++)
+			if (streq(s, flagarr[i].name)) {
+				flags |= flagarr[i].mask;
+				break;
+			}
 	}
 	RefEnd(lp);
 	return flags;

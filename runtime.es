@@ -211,6 +211,19 @@ fn-. = %dot
 
 let (
 	usage = <=$&usage
+	runflag-flagpairs = (
+		(e exitonfalse)
+		(i interactive)
+		(v echoinput)
+		(x printcmds)
+		(n noexec)
+		(l login)
+		# (L lisptrees) (G gcverbose) (I gcinfo)
+		<=$&conditionalflags
+	)
+)
+let (
+	runflag-args = <={let (accum = ()) for ((a _) = $runflag-flagpairs) accum = $accum $a}
 )
 es:main = @ argv {
 	let (
@@ -243,24 +256,23 @@ es:main = @ argv {
 			if {~ $a --} {
 				break
 			}
-			for (f = <={%fsplit '' <={~~ $a -*}}) {
-				match $f (
-					c {runcmd = true; (cmd argv) = $argv}
-					e {flags = $flags exitonfalse}
-					i {flags = $flags interactive}
-					v {flags = $flags echoinput}
-					L {flags = $flags lisptrees}
-					x {flags = $flags printcmds}
-					n {flags = $flags noexec}
-					l {flags = $flags login}
-					G {flags = $flags gcverbose}
-					I {flags = $flags gcinfo}
-					o {keepclosed = true}
-					d {allowdumps = true}
-					p {protected = true}
-					s {stdin = true; break}
-					* {usage}
-				)
+			let (rfa = ()) {
+				for (f = <={%fsplit '' <={~~ $a -*}}) {
+					match $f (
+						c {runcmd = true; (cmd argv) = $argv}
+						o {keepclosed = true}
+						d {allowdumps = true}
+						p {protected = true}
+						s {stdin = true; break}
+						$runflag-args {rfa = $rfa $f}
+						* {usage}
+					)
+				}
+				for ((arg flag) = $runflag-flagpairs) {
+					if {~ $arg $rfa} {
+						flags = $flags $flag
+					}
+				}
 			}
 		}
 
