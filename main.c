@@ -12,19 +12,19 @@ int main(int argc, char **argv) {
 	initgc();
 	initconv();
 
-	initinput();
-	initprims();
-	initvars();
-
-	runinitial();
-
-	initpid();
-	initsignals();
-	hidevariables();
-	importenv(FALSE);
-
 	ExceptionHandler
 		roothandler = &_localhandler;	/* unhygienic */
+
+		initinput();
+		initprims();
+		initvars();
+
+		runinitial();
+
+		initpid();
+		initsignals();
+		hidevariables();
+		importenv(FALSE);
 
 		Ref(List *, args, listify(argc, argv));
 

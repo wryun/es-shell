@@ -10,7 +10,8 @@ PRIM(batchloop) {
 
 		for (;;) {
 			List *cmd = prim("parse", NULL, NULL, 0);
-			result = eval(cmd, NULL, evalflags);
+			if (cmd != NULL)
+				result = eval(cmd, NULL, evalflags);
 			SIGCHK();
 		}
 
