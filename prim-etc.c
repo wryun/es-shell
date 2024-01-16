@@ -85,12 +85,11 @@ PRIM(runstring) {
 		fail("$&runstring", "usage: $&runstring command string");
 	Ref(List *, result, NULL);
 	Ref(List *, cmd, mklist(list->term, NULL));
-	char *string = mprint(getstr(list->next->term));
+	Ref(char *, string, getstr(list->next->term));
 
 	result = runstring(string, cmd);
 
-	efree(string);
-	RefEnd(cmd);
+	RefEnd2(string, cmd);
 	RefReturn(result);
 }
 
@@ -255,8 +254,14 @@ PRIM(setmaxevaldepth) {
 	RefReturn(lp);
 }
 
+static Boolean didonce = FALSE;
 PRIM(importenvfuncs) {
+	if (didonce)
+		return false;
+
 	importenv(TRUE);
+	didonce = TRUE;
+
 	return true;
 }
 

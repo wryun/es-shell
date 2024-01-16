@@ -1745,23 +1745,39 @@ These words are
 .TP
 .Cr exitonfalse
 Exit if any command returns a non-zero status.
-Corresponds with the -e option.
+Corresponds with the
+.Cr \-e
+option.
 .TP
 .Cr interactive
 Run as an interactive shell.
-Corresponds with the -i option.
+Corresponds with the
+.Cr \-i
+option.
 .TP
 .Cr noexec
 Turn off execution of commands.
-Corresponds with the -n option.
+Corresponds with the
+.Cr \-n
+option.
 .TP
 .Cr echoinput
 Echo input to standard error.
-Corresponds with the -v option.
+Corresponds with the
+.Cr \-v
+option.
 .TP
 .Cr printcmds
 Print commands to standard error before executing them.
-Corresponds with the -x option.
+Corresponds with the
+.Cr \-x
+option.
+.TP
+.Cr login
+Run as a login shell.
+Mainly this controls whether
+.Cr .esrc
+is run at startup.
 .IE
 .PP
 The values of
@@ -2684,8 +2700,7 @@ close	home	run
 count	newfd	seq
 dup	openfile	split
 flatten	parse	var
-fsplit	pipe
-whatis	isatty
+fsplit	pipe	whatis
 .ft R
 .De
 .PP
@@ -2696,7 +2711,7 @@ prefixes and internal hyphens:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-exitonfalse	runinput
+exitonfalse	runfile	runstring
 .ft R
 .De
 .PP
@@ -2770,7 +2785,12 @@ there should be no reason for a user to issue this command.
 Imports functions and settor functions from the environment.
 This is used during
 .I es
-startup and should really never be used after that.
+startup.
+It is hardcoded to have no effect (and return false) if it has
+already been called.
+.TP
+.Cr "$&isatty"
+Tests whether the given fd is a TTY or not.
 .TP
 .Cr "$&noreturn \fIlambda args ...\fP"
 Call the
