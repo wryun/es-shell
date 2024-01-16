@@ -60,7 +60,7 @@ PRIM(setrunflags) {
 
 PRIM(runfile) {
 	if (list == NULL || (list->next != NULL && list->next->next != NULL))
-		fail("$&runinput", "usage: $&runinput command [file]");
+		fail("$&runfile", "usage: $&runfile command [file]");
 	Ref(List *, result, NULL);
 	Ref(List *, cmd, mklist(list->term, NULL));
 	Ref(char *, file, "stdin");

@@ -2612,15 +2612,24 @@ This builtin can be used to set
 (by convention, the name of the program)
 to something other than file name.
 .TP
-.Cr "%run-input \fI[file]\fP"
+.Cr "%run-file \fI[file]\fP"
 Runs either
 .Cr %interactive-loop
 or
 .Cr %batch-loop
-using
+reading the
 .I file
-as input.
+for input.
 stdin is used as input if no file is given.
+.TP
+.Cr "%run-string \fIstring\fP"
+Runs either
+.Cr %interactive-loop
+or
+.Cr %batch-loop
+using the
+.I string
+directly as input.
 .TP
 .Cr "%split \fIseparator \fR[\fPargs ...\fR]"
 Splits its arguments into separate strings at every occurrence
