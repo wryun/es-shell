@@ -9,7 +9,7 @@
 # initializes runflags (described in detail below), runs .esrc (if login),
 # and hands off execution to `%run-file` or `%run-string`.
 #
-# In several of the following functions, we call '$fn-<foo>' instead
+# In several of the functions in this file, we call '$fn-<foo>' instead
 # of the usual '<foo>'.  This is to prevent these infrastructural
 # functions from mangling the expected value of '$0'.
 #
@@ -141,9 +141,10 @@ es:main = @ argv {
 			}
 		}
 
+		# This is the main "root" exception handler for the shell.
 		catch @ e type msg {
 			if {~ $e exit} {
-				return $type
+				throw $e $type $msg
 			} {~ $e error} {
 				echo >[1=2] $msg
 			} {~ $e signal && ~ $type sigint} {
@@ -251,6 +252,8 @@ fn-%run-string = $&runstring {$fn-%dispatch <=%parse}
 #  - lisptrees
 #  - gcinfo
 #  - gcverbose
+
+fn-%is-interactive = {~ $runflags interactive}
 
 set-runflags = @ new {
 	let (nf = ()) {

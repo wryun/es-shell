@@ -348,7 +348,7 @@ restart:
 
 PRIM(backquote) {
 	int pid, p[2], status;
-	
+
 	caller = "$&backquote";
 	if (list == NULL)
 		fail(caller, "usage: backquote separator command [args ...]");

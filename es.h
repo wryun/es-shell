@@ -498,7 +498,7 @@ extern List *raised(List *e);
 		_localhandler.up = tophandler; \
 		tophandler = &_localhandler; \
 		if (!setjmp(_localhandler.label)) {
-	
+
 #define CatchException(e) \
 			pophandler(&_localhandler); \
 		} else { \
