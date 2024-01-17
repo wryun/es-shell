@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
 	Ref(List *, args, listify(argc, argv));
 
-	Ref(List *, esmain, varlookup("es:main", NULL));
+	Ref(List *, esmain, varlookup("fn-%main", NULL));
 	if (esmain == NULL) {
 		eprint("es:main not set\n");
 		return 1;

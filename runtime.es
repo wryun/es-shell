@@ -16,7 +16,8 @@
 
 # A little tricky, but these primitives are only available at dump time, so
 # lexically binding their output here lets us cache the results of conditional
-# compilation for use at shell startup.
+# compilation for use at shell startup.  Note that build-time lexical bindings
+# like these MUST NOT be reassigned to GC'd values!  Treat them as read-only!
 let (
 	usage = <=$&usage
 	runflag-flagpairs = (
@@ -33,8 +34,8 @@ let (
 let (
 	runflag-args = <={let (accum = ()) for ((a _) = $runflag-flagpairs) accum = $accum $a}
 )
-es:main = @ argv {
-	es:main = ()
+fn %main argv {
+	fn-%main = ()
 
 	let (
 		es = es
