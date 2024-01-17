@@ -66,18 +66,20 @@ PRIM(usage) {
 
 PRIM(conditionalflags) {
 	Ref(List *, list, NULL);
+	Ref(Term *, t, NULL);
 #if GCINFO
-	list = mklist(mkstr("gcinfo"), list);
-	list = mklist(mkstr("I"), list);
+	t = mkstr("gcinfo");	list = mklist(t, list);
+	t = mkstr("I");		list = mklist(t, list);
 #endif
 #if GCVERBOSE
-	list = mklist(mkstr("gcverbose"), list);
-	list = mklist(mkstr("G"), list);
+	t = mkstr("gcverbose");	list = mklist(t, list);
+	t = mkstr("G");		list = mklist(t, list);
 #endif
 #if LISPTREES
-	list = mklist(mkstr("lisptrees"), list);
-	list = mklist(mkstr("L"), list);
+	t = mkstr("lisptrees");	list = mklist(t, list);
+	t = mkstr("L");		list = mklist(t, list);
 #endif
+	RefEnd(t);
 	RefReturn(list);
 }
 
