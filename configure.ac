@@ -138,7 +138,7 @@ AC_CACHE_CHECK(for files to extract signal information from,
 es_cv_sigfiles,
 AC_CMDSTDOUT_CPP(es_cv_sigfiles,
 [changequote(,)
-egrep '^#[ 	]+1[	 ]+' | sed 's/.*"\(.*\)".*/\1/' |sort -u |  
+grep -E '^#[ 	]+1[	 ]+' | sed 's/.*"\(.*\)".*/\1/' |sort -u |  
 grep '^/' |tr '\012' ' ' 
 changequote([,])],
 [#include <signal.h>], /usr/include/signal.h))
