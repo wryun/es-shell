@@ -34,6 +34,7 @@ dnl saved_CFLAGS="$CFLAGS"
 
 dnl Checks for programs.
 AC_PROG_CC
+AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
 AC_PROG_YACC
