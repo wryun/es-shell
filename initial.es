@@ -63,7 +63,6 @@
 #	These builtin functions are straightforward calls to primitives.
 #	See the manual page for details on what they do.
 
-fn-access	= $&access
 fn-break	= $&break
 fn-catch	= $&catch
 fn-echo		= $&echo
@@ -218,10 +217,64 @@ fn cd dir {
 	}
 }
 
+#	The %getopt function is likely a mistake to include in the shell,
+#	but multiple built-ins in es require some option-parsing behavior
+#	and having a "librarified" version ensures some degree of consistency.
+#
+#	This version of %getopt is designed to take advantage of the features of
+#	es.  Its first argument, the "optfunc", is a lambda expression which will
+#	be repeatedly called to do the user's specific work.
+#
+#	The remainder of the arguments to %getopt are the arguments to be parsed.
+#	%getopt will iterate through these until it finds one which doesn't match
+#	-*, or until a break-getopt exception is thrown.  It will call optfunc
+#	once for each option, passing the full option argument and the specific
+#	option.  The full option argument is useful for things like testing for
+#	`--`.  When %getopt finishes, either due to an exception or a non-option
+#	argument, it will return the remainder of the arguments it was given.
+#
+#	%getopt dynamically binds the function `optarg`, which when called, will
+#	remove the next argument from its iteration and return it to the caller.
+#
+#	%getopt is $&noreturn and it calls its optfunc as $&noreturn, in order to
+#	allow the calling context to call return without any dynamic-behavior
+#	surprises.
+
+fn-%getopt = $&noreturn @ optfunc args {
+	catch @ e rest {
+		if {~ $e break-getopt} {
+			result $args
+		} {
+			throw $e $rest
+		}
+	} {
+		local (fn-optarg = {
+			let (result = $args(1)) {
+				args = $args(2 ...)
+				result $result
+			}
+		})
+		while {~ $args(1) -*} {
+			catch @ e rest {
+				if {!~ $e continue-getopt} {
+					throw $e $rest
+				}
+			} {
+				let (arg = $args(1)) {
+					args = $args(2 ...)
+					for (c = <={%fsplit '' <={~~ $arg -*}}) {
+						$&noreturn $optfunc $arg $c
+					}
+				}
+			}
+		}
+		result $args
+	}
+}
+
+
 #	The vars function is provided for cultural compatibility with
-#	rc's whatis when used without arguments.  The option parsing
-#	is very primitive;  perhaps es should provide a getopt-like
-#	builtin.
+#	rc's whatis when used without arguments.
 #
 #	The options to vars can be partitioned into two categories:
 #	those which pick variables based on their source (-e for
@@ -236,19 +289,8 @@ fn cd dir {
 #	unless it is on the noexport list.
 
 fn vars {
-	# choose default options
-	if {~ $* -a} {
-		* = -v -f -s -e -p -i
-	} {
-		if {!~ $* -[vfs]}	{ * = $* -v }
-		if {!~ $* -[epi]}	{ * = $* -e }
-	}
-	# check args
-	for (i = $*)
-		if {!~ $i -[vfsepi]} {
-			throw error vars illegal option: $i -- usage: vars '-[vfsepia]'
-		}
 	let (
+		all	= false
 		vars	= false
 		fns	= false
 		sets	= false
@@ -256,35 +298,96 @@ fn vars {
 		priv	= false
 		intern	= false
 	) {
-		for (i = $*) if (
-			{~ $i -v}	{vars	= true}
-			{~ $i -f}	{fns	= true}
-			{~ $i -s}	{sets	= true}
-			{~ $i -e}	{export	= true}
-			{~ $i -p}	{priv	= true}
-			{~ $i -i}	{intern = true}
-			{throw error vars vars: bad option: $i}
-		)
+		if {!~ <={%getopt @ arg c {
+			match $c (
+				a	{all	= true}
+				v 	{vars	= true}
+				f	{fns	= true}
+				s	{sets	= true}
+				e	{export	= true}
+				p	{priv	= true}
+				i	{intern	= true}
+				*	{throw error vars vars: bad option: -$c -- usage: vars '-[vfsepia]'}
+			)
+		} $*} ()} {
+			throw error vars vars: takes no positional arguments
+		}
+		if {!$vars && !$fns && !$sets} {
+			vars = true
+		}
+		if {!$export && !$priv && !$intern} {
+			export = true
+		}
 		let (
 			dovar = @ var {
 				# print functions and/or settor vars
-				if {if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
+				if {$all || if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
 					echo <={%var $var}
 				}
 			}
 		) {
-			if {$export || $priv} {
+			if {$all || $export || $priv} {
 				for (var = <= $&vars)
 					# if not exported but in priv
-					if {if {~ $var $noexport} $priv $export} {
+					if {$all || if {~ $var $noexport} $priv $export} {
 						$dovar $var
 					}
 			}
-			if {$intern} {
+			if {$all || $intern} {
 				for (var = <= $&internals)
 					$dovar $var
 			}
 		}
+	}
+}
+
+
+#	The access function provides a more capable and convenient wrapper
+#	around the $&access primitive: it can test multiple files at once,
+#	perform path-like searching (in fact, it is used for path searching),
+#	and react more thoroughly to successes and failures than $&access can.
+
+fn access {
+	let (
+		perm = ''
+		type = a
+
+		suffix = ()
+		first = false
+		exception = false
+
+		result = ()
+	) {
+		* = <={%getopt @ arg c {
+			match $c (
+				n {suffix = <=optarg}
+				1 {first = true}
+				e {exception = true}
+				(r w x) {perm = $perm^$c}
+				(f d c b l s p) {type = $c}
+				* {usage}
+			)
+		} $*}
+
+		let (r = ()) {
+			for (file = $*) {
+				if {!~ $suffix ()} {
+					if {~ $file */} {
+						file = $file$suffix
+					} {
+						file = $file/$suffix
+					}
+				}
+				if {r = <={$&access $perm $type $file} && $first} {
+					return $file
+				}
+				result = $result $r
+			}
+			if {$first && $exception} {
+				throw error access <={%flatten ' ' $suffix^':' $r}
+			}
+		}
+		result $result
 	}
 }
 

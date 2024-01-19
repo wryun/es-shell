@@ -2394,6 +2394,17 @@ into one string,
 separated by the string
 .IR separator .
 .TP
+.Cr "%getopt \fIoptfunc args ...\fP"
+This performs common
+.Rc getopt
+behavior, iterating through
+.I args
+and passing the args and the individual options they contain to
+.IR optfunc .
+All built-in
+.I es
+option parsing works via this function.
+.TP
 .Cr "%here \fIfd word ... cmd\fP"
 Runs the command with the
 .IR word s
@@ -2675,11 +2686,10 @@ builtin functions with the same names:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-access	forever	throw
-catch	fork	umask
-echo	if	wait
-exec	newpgrp
-exit	result
+forever	throw	catch
+fork	umask	echo
+if	wait	exec
+newpgrp	exit	result
 .ft R
 .De
 .PP
@@ -2695,6 +2705,11 @@ and
 .Cr internals
 primitives are used by the implementation of the
 .Cr vars
+builtin.
+The
+.Cr access
+primitive is used by the implementation of the
+.Cr access
 builtin.
 .PP
 The following primitives implement the hook functions

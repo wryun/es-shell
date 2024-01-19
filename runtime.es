@@ -59,30 +59,22 @@ fn %main argv {
 			flags = $flags login
 		}
 
-		for (a = $argv) {
-			if {!~ $a -*} {
-				break
-			}
-			argv = $argv(2 ...)
-			if {~ $a --} {
-				break
-			}
-			let (rfarg = ()) {
-				for (f = <={%fsplit '' <={~~ $a -*}}) {
-					match $f (
-						c {runcmd = true; (cmd argv) = $argv}
-						o {keepclosed = true}
-						d {allowdumps = true}
-						p {protected = true}
-						s {stdin = true; break}
-						$runflag-args {rfarg = $rfarg $f}
-						* {usage}
-					)
-				}
-				for ((arg flag) = $runflag-flagpairs) {
-					if {~ $arg $rfarg} {
-						flags = $flags $flag
-					}
+		let (rfarg = ()) {
+			argv = <={%getopt @ arg c {
+				if {~ $arg --} {throw break-getopt}
+				match $c (
+					c {runcmd = true; cmd = <=optarg}
+					o {keepclosed = true}
+					d {allowdumps = true}
+					p {protected = true}
+					s {stdin = true; throw break-getopt}
+					$runflag-args {rfarg = $rfarg $f}
+					* {usage}
+				)
+			} $argv}
+			for ((arg flag) = $runflag-flagpairs) {
+				if {~ $arg $rfarg} {
+					flags = $flags $flag
 				}
 			}
 		}
@@ -181,25 +173,17 @@ fn %dot args {
 		}
 		flags = ()
 	) {
-		for (a = $args) {
-			if {!~ $a -*} {
-				break
-			}
-			args = $args(2 ...)
-			if {~ $a --} {
-				break
-			}
-			for (f = <={%fsplit '' <={~~ $a -*}}) {
-				match $f (
-					e {flags = $flags exitonfalse}
-					i {flags = $flags interactive}
-					n {flags = $flags noexec}
-					v {flags = $flags echoinput}
-					x {flags = $flags printcmds}
-					* {usage}
-				)
-			}
-		}
+		args = <={%getopt @ arg c {
+			if {~ $arg --} {throw break-getopt}
+			match $c (
+				e {flags = $flags exitonfalse}
+				i {flasg = $flags interactive}
+				n {flags = $flags noexec}
+				v {flags = $flags echoinput}
+				x {flags = $flags printcmds}
+				* {usage}
+			)
+		} $args}
 		if {~ $#args 0} {usage}
 		local (
 			0 = $args(1)
