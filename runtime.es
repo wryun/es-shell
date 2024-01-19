@@ -5,7 +5,7 @@
 #
 
 #
-# es:main is the entry point to the shell.  It parses the binary's argv,
+# %main is the entry point to the shell.  It parses the binary's argv,
 # initializes runflags (described in detail below), runs .esrc (if login),
 # and hands off execution to `%run-file` or `%run-string`.
 #
@@ -277,7 +277,7 @@ noexport = $noexport fn-%dispatch runflags
 #	to call the parser for reading commands, hand those commands to an
 #	appropriate dispatch function, and handle any exceptions that may be
 #	raised.  The REPLs are invoked by the %run-file function, which is
-#	itself typically called by either es:main or %dot.
+#	itself typically called by either %main or %dot.
 #
 #	%interactive-loop is invoked if the -i flag is used or if the shell
 #	determines that its input is interactive; otherwise, %batch-loop is

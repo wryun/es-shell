@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 
 	Ref(List *, esmain, varlookup("fn-%main", NULL));
 	if (esmain == NULL) {
-		eprint("es:main not set\n");
+		eprint("%main not set\n");
 		return 1;
 	}
 
