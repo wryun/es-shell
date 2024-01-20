@@ -68,10 +68,11 @@ fn %main argv {
 					d {allowdumps = true}
 					p {protected = true}
 					s {stdin = true; throw break-getopt}
-					$runflag-args {rfarg = $rfarg $f}
+					$runflag-args {rfarg = $rfarg $c}
 					* {usage}
 				)
 			} $argv}
+
 			for ((arg flag) = $runflag-flagpairs) {
 				if {~ $arg $rfarg} {
 					flags = $flags $flag
@@ -177,7 +178,7 @@ fn %dot args {
 			if {~ $arg --} {throw break-getopt}
 			match $c (
 				e {flags = $flags exitonfalse}
-				i {flasg = $flags interactive}
+				i {flags = $flags interactive}
 				n {flags = $flags noexec}
 				v {flags = $flags echoinput}
 				x {flags = $flags printcmds}
