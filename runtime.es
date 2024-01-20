@@ -119,7 +119,7 @@ fn %main argv {
 			$&importenvfuncs
 		}
 
-		if {~ $runflags login} {
+		if {~ $runflags login && access -r ~/.esrc} {
 			catch @ e type msg {
 				if {~ $e exit} {
 					throw $e $type $msg
