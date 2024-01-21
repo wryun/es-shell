@@ -150,7 +150,6 @@ extern Binding *reversebindings(Binding *binding);
 /* eval.c */
 
 extern Binding *bindargs(Tree *params, List *args, Binding *binding);
-extern List *forkexec(char *file, List *list, Boolean inchild);
 extern List *walk(Tree *tree, Binding *binding, int flags);
 extern List *eval(List *list, Binding *binding, int flags);
 extern List *eval1(Term *term, int flags);
