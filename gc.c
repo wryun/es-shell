@@ -42,7 +42,7 @@ static Space *new, *old;
 #if GCPROTECT
 static Space *spaces;
 #endif
-static Root *globalrootlist;
+static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
 
 
@@ -300,6 +300,27 @@ extern void globalroot(void *addr) {
 	globalrootlist = root;
 }
 
+/* exceptionroot -- add an exception to the list of rooted exceptions */
+extern void exceptionroot(List **e) {
+	Root *root;
+#if ASSERTIONS
+	for (root = exceptionrootlist; root != NULL; root = root->next)
+		assert(root->p != (void **)e);
+#endif
+	root = ealloc(sizeof (Root));
+	root->p = (void **)e;
+	root->next = exceptionrootlist;
+	exceptionrootlist = root;
+}
+
+/* exceptionunroot -- remove an exception from the list of rooted exceptions */
+extern void exceptionunroot(void) {
+	assert(exceptionrootlist != NULL);
+	Root *root = exceptionrootlist;
+	exceptionrootlist = root->next;
+	efree(root);
+}
+
 /* not portable to word addressed machines */
 #define	TAG(p)		(((Tag **) p)[-1])
 #define	FORWARDED(tagp)	(((size_t) tagp) & 1)
@@ -443,6 +464,8 @@ extern void gc(void) {
 		scanroots(rootlist);
 		VERBOSE(("GC scanning global root list\n"));
 		scanroots(globalrootlist);
+		VERBOSE(("GC scanning exception root list\n"));
+		scanroots(exceptionrootlist);
 		VERBOSE(("GC scanning new space\n"));
 		scanspace();
 		VERBOSE(("GC collection done\n\n"));

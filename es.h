@@ -444,6 +444,9 @@ extern Root *rootlist;
 
 extern void globalroot(void *addr);
 
+extern void exceptionroot(List **e);
+extern void exceptionunroot(void);
+
 /* struct Push -- varpush() placeholder */
 
 struct Push {
