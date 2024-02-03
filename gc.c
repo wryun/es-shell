@@ -301,13 +301,12 @@ extern void globalroot(void *addr) {
 }
 
 /* exceptionroot -- add an exception to the list of rooted exceptions */
-extern void exceptionroot(List **e) {
-	Root *root;
+extern void exceptionroot(Root *root, List **e) {
+	Root *r;
 #if ASSERTIONS
-	for (root = exceptionrootlist; root != NULL; root = root->next)
-		assert(root->p != (void **)e);
+	for (r = exceptionrootlist; r != NULL; r = r->next)
+		assert(r->p != (void **)e);
 #endif
-	root = ealloc(sizeof (Root));
 	root->p = (void **)e;
 	root->next = exceptionrootlist;
 	exceptionrootlist = root;
@@ -316,9 +315,7 @@ extern void exceptionroot(List **e) {
 /* exceptionunroot -- remove an exception from the list of rooted exceptions */
 extern void exceptionunroot(void) {
 	assert(exceptionrootlist != NULL);
-	Root *root = exceptionrootlist;
-	exceptionrootlist = root->next;
-	efree(root);
+	exceptionrootlist = exceptionrootlist->next;
 }
 
 /* not portable to word addressed machines */

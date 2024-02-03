@@ -25,13 +25,16 @@ extern noreturn throw(List *e) {
 	assert(handler != NULL);
 	tophandler = handler->up;
 
-	exceptionroot(&e);
-	while (pushlist != handler->pushlist) {
-		rootlist = &pushlist->defnroot;
-		varpop(pushlist);
+	{
+		Root excroot;
+		exceptionroot(&excroot, &e);
+		while (pushlist != handler->pushlist) {
+			rootlist = &pushlist->defnroot;
+			varpop(pushlist);
+		}
+		exceptionunroot();
 	}
 	evaldepth = handler->evaldepth;
-	exceptionunroot();
 
 #if ASSERTIONS
 	for (; rootlist != handler->rootlist; rootlist = rootlist->next)
