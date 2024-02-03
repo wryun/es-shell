@@ -234,14 +234,25 @@ extern void varpush(Push *push, char *name, List *defn) {
 
 extern void varpop(Push *push) {
 	Var *var;
-	
+	List *except = NULL;
+
 	assert(pushlist == push);
 	assert(rootlist == &push->defnroot);
 	assert(rootlist->next == &push->nameroot);
 
 	if (isexported(push->name))
 		isdirty = TRUE;
-	push->defn = callsettor(push->name, push->defn);
+
+	ExceptionHandler
+
+		push->defn = callsettor(push->name, push->defn);
+
+	CatchException (e)
+
+		except = e;
+
+	EndExceptionHandler;
+
 	var = dictget(vars, push->name);
 
 	if (var != NULL)
@@ -260,6 +271,9 @@ extern void varpop(Push *push) {
 
 	pushlist = pushlist->next;
 	rootlist = rootlist->next->next;
+
+	if (except)
+		throw(except);
 }
 
 static void mkenv0(void *dummy, char *key, void *value) {
