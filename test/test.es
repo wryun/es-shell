@@ -31,22 +31,25 @@ let (
 
 	fn fail-case test-name cmd msg {
 		cases = $cases $^cmd
-		failed-cases = $cases $^cmd
+		failed-cases = $failed-cases $^cmd
 		failure-msgs = $failure-msgs $^msg
 	}
 
 	fn pass-case test-name cmd {
 		cases = $cases $^cmd
-		passed-cases = $cases $^cmd
+		passed-cases = $passed-cases $^cmd
 	}
 
 	let (fn-xml-escape = @ {
-		for (string = $*) {
-			string = <={%flatten '&amp;' <={%fsplit '&' $string}}
-			string = <={%flatten '&quot;' <={%fsplit " $string}}
-			string = <={%flatten '&apos;' <={%fsplit '''' $string}}
-			string = <={%flatten '&lt;' <={%fsplit '<' $string}}
-			string = <={%flatten '&gt;' <={%fsplit '>' $string}}
+		let (result = ()) {
+			for (string = $*) {
+				string = <={%flatten '&amp;' <={%fsplit '&' $string}}
+				string = <={%flatten '&quot;' <={%fsplit " $string}}
+				string = <={%flatten '&apos;' <={%fsplit '''' $string}}
+				string = <={%flatten '&lt;' <={%fsplit '<' $string}}
+				result = $result <={%flatten '&gt;' <={%fsplit '>' $string}}
+			}
+			result $result
 		}
 	})
 	fn report {
@@ -61,7 +64,7 @@ let (
 				echo -n <={%flatten '' '        <testcase name="' <={xml-escape $case} '"'}
 				if {~ $case $failed-cases} {
 					echo '>'
-					for (fcase = $failed-cases; msg = $failed-msgs)
+					for (fcase = $failed-cases; msg = $failure-msgs)
 					if {~ $case $fcase} {
 						echo <={%flatten '' '            <failure message="' <={xml-escape $msg} \
 							'" type="WARNING">'}
@@ -85,10 +88,10 @@ let (
 			}
 			if {!~ $test-execution-failure ()} {
 				echo test execution failure: $test-execution-failure
-			} {~ $#failed 0} {
+			} {~ $#failed-cases 0} {
 				echo passed!
 			} {
-				echo - $#passed cases passed, $#failed failed.
+				echo - $#passed-cases cases passed, $#failed-cases failed.
 			}
 		}
 	}
@@ -107,7 +110,7 @@ fn test title testbody {
 				}
 				if {!result $result} {
 					if {!~ $message ()} {
-						fail-case $title $message
+						fail-case $title $^message
 					} {
 						fail-case $title $cmd
 					}
