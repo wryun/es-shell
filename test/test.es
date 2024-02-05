@@ -94,39 +94,49 @@ let (
 				echo - $#passed-cases cases passed, $#failed-cases failed.
 			}
 		}
+		result $#failed-cases
 	}
 }
 
-fn test title testbody {
-	# The main `assert` function.
-	local (
-		fn assert cmd message {
-			let (result = ()) {
-				catch @ e {
-					fail-case $title $cmd $e
-					return
-				} {
-					result = <={$cmd}
-				}
-				if {!result $result} {
-					if {!~ $message ()} {
-						fail-case $title $^message
+let (status = ()) {
+	fn test title testbody {
+		# The main `assert` function.
+		local (
+			fn assert cmd message {
+				let (result = ()) {
+					catch @ e {
+						fail-case $title $cmd $e
+						return
 					} {
-						fail-case $title $cmd
+						result = <={$cmd}
 					}
-				} {
-					pass-case $title $cmd
+					if {!result $result} {
+						if {!~ $message ()} {
+							fail-case $title $^message
+						} {
+							fail-case $title $cmd
+						}
+					} {
+						pass-case $title $cmd
+					}
 				}
 			}
+		) {
+			new-test $title
+			catch @ e {
+				test-execution-failure = $e
+			} {
+				$testbody
+			}
+			status = $status <=report
 		}
-	) {
-		new-test $title
-		catch @ e {
-			test-execution-failure = $e
-		} {
-			$testbody
+	}
+
+	fn report-testfile {
+		let (s = $status) {
+			status = ()
+			result $s
 		}
-		report
 	}
 }
 
@@ -143,9 +153,15 @@ if $junit {
 	echo '<testsuites>'
 }
 
-for (testfile = $*)
-	. $testfile
+let (status = ()) {
+	for (testfile = $*) {
+		. $testfile
+		status = $status <=report-testfile
+	}
 
-if $junit {
-	echo '</testsuites>'
+	if $junit {
+		echo '</testsuites>'
+	}
+
+	result $status
 }
