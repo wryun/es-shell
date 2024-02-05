@@ -62,7 +62,6 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  prim-ctl.o prim-etc.o prim-io.o prim-sys.o prim.o print.o proc.o \
 	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o
-TESTS	= $(testdir)/tests/example.es $(testdir)/tests/trip.es
 OTHER	= Makefile parse.y mksignal
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
 
@@ -91,10 +90,7 @@ install : es
 	$(INSTALL) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
 
 test	: es $(testdir)/test.es
-	./es -s < $(testdir)/test.es $(TESTS)
-
-test-circleci	: es $(testdir)/test.es
-	./es -s < $(testdir)/test.es --junit $(TESTS)
+	$(srcdir)/es -s < $(testdir)/test.es $(testdir)/tests/*
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
