@@ -12,7 +12,7 @@
 
 test 'matches match' {
 	# Usage: assert CMD NAME
-	assert {~ x (x y z)}
+	assert {~ w (x y z)}
 
 	# It can be used within more complicated code as well.
 	let (list = `{echo a b c d})
