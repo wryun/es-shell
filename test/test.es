@@ -1,37 +1,148 @@
 #!/usr/local/bin/es
 
-# Shared state used by the functions below.
+# test.es -- Entry point for es tests.
+
+# Invoke like:
+# ; /path/to/es -s < test.es (--junit) (tests/test1.es tests/test2.es ...)
+#
+# --junit makes test.es report test results in junit xml compatible with circleci.
+
+# Test files require:
+#  - fn-test = @ name block { ... }
+#     - which defines fn-assert = @ command name { ... }
+#  - the variable $es which specifies where the es binary under test is
+
 let (
-	passed = ()
-	failed = ()
+	name = ()
+	cases = ()
+	passed-cases = ()
+	failed-cases = ()
+	failure-msgs = ()
 	test-execution-failure = ()
 ) {
-
-# Test logging and reporting functions.
-# This is the part that gets swapped out in different test execution contexts.
-# (command-line, CircleCI, etc.)
-	fn header title {
-		echo -n $title^': '
+	fn new-test title {
+		name = $title
+		cases = ()
+		passed-cases = ()
+		failed-cases = ()
+		failure-msgs = ()
+		test-execution-failure = ()
 	}
 
 	fn fail-case test-name cmd msg {
-		if {~ $#failed 0} {echo}
-		echo - $cmd failed $msg
-		failed = $failed $^cmd
-	}
-	fn pass-case test-name cmd got {
-		passed = $passed $^cmd
+		cases = $cases $^cmd
+		failed-cases = $cases $^cmd
+		failure-msgs = $failure-msgs $^msg
 	}
 
+	fn pass-case test-name cmd {
+		cases = $cases $^cmd
+		passed-cases = $cases $^cmd
+	}
+
+	let (fn-xml-escape = @ {
+		for (string = $*) {
+			string = <={%flatten '&amp;' <={%fsplit '&' $string}}
+			string = <={%flatten '&quot;' <={%fsplit " $string}}
+			string = <={%flatten '&apos;' <={%fsplit '''' $string}}
+			string = <={%flatten '&lt;' <={%fsplit '<' $string}}
+			string = <={%flatten '&gt;' <={%fsplit '>' $string}}
+		}
+	})
 	fn report {
-		if {~ $#failed 0 && ~ $test-execution-failure ()} {
-			echo passed!
-		} {~ $test-execution-failure ()} {
-			echo - $#passed cases passed, $#failed failed.
+		if $junit {
+			echo <={%flatten '' \
+				'    <testsuite errors="0" failures="' $#failed-cases \
+					'" name="' <={xml-escape $name} \
+					'" tests="' $#cases \
+					'">'}
+
+			for (case = $cases) {
+				echo -n <={%flatten '' '        <testcase name="' <={xml-escape $case} '"'}
+				if {~ $case $failed-cases} {
+					echo '>'
+					for (fcase = $failed-cases; msg = $failed-msgs)
+					if {~ $case $fcase} {
+						echo <={%flatten '' '            <failure message="' <={xml-escape $msg} \
+							'" type="WARNING">'}
+						echo <={xml-escape $msg}
+						echo '            </failure>'
+						echo '        </testcase>'
+					}
+				} {
+					echo '/>'
+				}
+			}
+
+			echo '    </testsuite>'
 		} {
-			echo test execution failure: $test-execution-failure
+			if {~ $failed-cases ()} {
+				echo -n $^name^': '
+			} {
+				echo $name
+				for (case = $failed-cases; msg = $failure-msgs)
+					echo - $case failed $msg
+			}
+			if {!~ $test-execution-failure ()} {
+				echo test execution failure: $test-execution-failure
+			} {~ $#failed 0} {
+				echo passed!
+			} {
+				echo - $#passed cases passed, $#failed failed.
+			}
 		}
 	}
+}
 
-	. $1 $0 $*(2 ...)
+fn test title testbody {
+	# The main `assert` function.
+	local (
+		fn assert cmd message {
+			let (result = ()) {
+				catch @ e {
+					fail-case $title $cmd $e
+					return
+				} {
+					result = <={$cmd}
+				}
+				if {!result $result} {
+					if {!~ $message ()} {
+						fail-case $title $message
+					} {
+						fail-case $title $cmd
+					}
+				} {
+					pass-case $title $cmd
+				}
+			}
+		}
+	) {
+		new-test $title
+		catch @ e {
+			test-execution-failure = $e
+		} {
+			$testbody
+		}
+		report
+	}
+}
+
+es = $0
+junit = false
+
+if {~ $1 --junit} {
+	junit = true
+	* = $*(2 ...)
+}
+
+if $junit {
+	echo '<?xml version="1.0"?>'
+	echo '<testsuites>'
+}
+
+for (testfile = $*)
+	. $testfile
+
+if $junit {
+	echo '</testsuites>'
 }

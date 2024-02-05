@@ -32,6 +32,7 @@ exec_prefix	= @exec_prefix@
 mandir	= @mandir@
 bindir	= @bindir@
 srcdir  = @srcdir@
+testdir	= @srcdir@/test
 
 
 SHELL	= /bin/sh
@@ -61,6 +62,7 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  prim-ctl.o prim-etc.o prim-io.o prim-sys.o prim.o print.o proc.o \
 	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o
+TESTS	= $(testdir)/tests/example.es $(testdir)/tests/trip.es
 OTHER	= Makefile parse.y mksignal
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
 
@@ -88,10 +90,11 @@ install : es
 	$(MKDIR_P) $(DESTDIR)$(mandir)/man1
 	$(INSTALL) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
 
-test	: trip
+test	: es $(testdir)/test.es
+	./es -s < $(testdir)/test.es $(TESTS)
 
-trip	: es $(srcdir)/trip.es
-	./es < $(srcdir)/trip.es
+test-circleci	: es $(testdir)/test.es
+	./es -s < $(testdir)/test.es --junit $(TESTS)
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}

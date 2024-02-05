@@ -27,10 +27,6 @@ jobs:
           name: Build
           command: make 'ADDCFLAGS=-DGCDEBUG=1 -DREF_ASSERTIONS=1'
 
-      - run:
-          name: Trip
-          command: make trip
-
       - persist_to_workspace:
           root: .
           paths:
@@ -50,7 +46,7 @@ jobs:
           name: Test
           command: |
             mkdir -p ./test/results
-            ./es -s < ./test/circleci.es ./test/run-tests.es ./test/tests/* > ./test/results/results.xml
+            ./es -s < ./test/test.es --junit ./test/tests/* > ./test/results/results.xml
 
       - store_artifacts:
           path: ./test/results/
