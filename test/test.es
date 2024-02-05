@@ -1,17 +1,16 @@
 #!/usr/local/bin/es
 
-# test.es -- Entry point for es tests.
+# test.es -- The entry point for es tests.
 
 # Invoke like:
 # ; /path/to/es -s < test.es (--junit) (tests/test1.es tests/test2.es ...)
 #
-# --junit makes test.es report test results in junit xml compatible with circleci.
+# --junit makes test.es report test results in junit xml compatible with
+# circleci.  Don't use it if you're planning on using human eyes to parse the
+# results.
 
-# Test files require:
-#  - fn-test = @ name block { ... }
-#     - which defines fn-assert = @ command name { ... }
-#  - the variable $es which specifies where the es binary under test is
-
+# Test state tracking variables.  Once the test finishes running, the `report`
+# function uses these to print the results of the test.
 let (
 	name = ()
 	cases = ()
@@ -19,7 +18,25 @@ let (
 	failed-cases = ()
 	failure-msgs = ()
 	test-execution-failure = ()
-) {
+)
+# xml-escape is necessary to smush arbitrary text coming from es into junit XML.
+let (
+	fn xml-escape {
+		let (result = ()) {
+			for (string = $*) {
+				string = <={%flatten '&amp;' <={%fsplit '&' $string}}
+				string = <={%flatten '&quot;' <={%fsplit " $string}}
+				string = <={%flatten '&apos;' <={%fsplit '''' $string}}
+				string = <={%flatten '&lt;' <={%fsplit '<' $string}}
+				result = $result <={%flatten '&gt;' <={%fsplit '>' $string}}
+			}
+			result $result
+		}
+	}
+)
+# These functions manage the test state variables.  report prints out the
+# results of the test, and returns false if any cases failed.
+let (
 	fn new-test title {
 		name = $title
 		cases = ()
@@ -40,18 +57,6 @@ let (
 		passed-cases = $passed-cases $^cmd
 	}
 
-	let (fn-xml-escape = @ {
-		let (result = ()) {
-			for (string = $*) {
-				string = <={%flatten '&amp;' <={%fsplit '&' $string}}
-				string = <={%flatten '&quot;' <={%fsplit " $string}}
-				string = <={%flatten '&apos;' <={%fsplit '''' $string}}
-				string = <={%flatten '&lt;' <={%fsplit '<' $string}}
-				result = $result <={%flatten '&gt;' <={%fsplit '>' $string}}
-			}
-			result $result
-		}
-	})
 	fn report {
 		if $junit {
 			echo <={%flatten '' \
@@ -96,11 +101,13 @@ let (
 		}
 		result $#failed-cases
 	}
-}
-
+)
+# test is the function which can be called in the test files to actually run
+# tests.  It locally defines an assert function, which is invoked within the
+# test body to make up each test case.  after the test body is done executing,
+# test will call report to print the results of the test.
 let (status = ()) {
 	fn test title testbody {
-		# The main `assert` function.
 		local (
 			fn assert cmd message {
 				let (result = ()) {
@@ -140,6 +147,8 @@ let (status = ()) {
 	}
 }
 
+# $es contains the path to es which the tests can use to refer to "the es binary
+# under test".
 es = $0
 junit = false
 
@@ -153,6 +162,9 @@ if $junit {
 	echo '<testsuites>'
 }
 
+# The status variable tracks the successes/failures of all the test files being
+# invoked so that test.es can correctly exit true or false based on whether all
+# the tests passed.
 let (status = ()) {
 	for (testfile = $*) {
 		. $testfile

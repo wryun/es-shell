@@ -3,8 +3,8 @@
 #
 # The basic structure of a test: `test NAME BLOCK`
 #
-# The block should (if you want the test to actually be useful) contain one or
-# more `assert` commands.
+# The test block should (if you want the test to actually be useful) contain one
+# or more `assert` commands.
 #
 # Note that if an exception is thrown and not handled in the test block, the
 # entire test will automatically be considered failed.
@@ -18,8 +18,7 @@ test 'matches match' {
 	let (list = `{echo a b c d})
 		assert {~ $list(2) b}
 
-	# Because of these two things, assert can be passed a name, which is useful
-	# for diagnostics.
+	# An assert can be passed a name, which can be useful for diagnostics.
 	assert {~ $undefined-variable ()} 'undefined variable produces an empty list'
 }
 
