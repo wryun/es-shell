@@ -234,7 +234,7 @@ extern void varpush(Push *push, char *name, List *defn) {
 
 extern void varpop(Push *push) {
 	Var *var;
-	
+
 	assert(pushlist == push);
 	assert(rootlist == &push->defnroot);
 	assert(rootlist->next == &push->nameroot);
