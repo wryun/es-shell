@@ -40,41 +40,56 @@ PRIM(exec) {
 	return eval(list, NULL, evalflags | eval_inchild);
 }
 
-PRIM(dot) {
-	int c, fd;
-	Push zero, star;
-	volatile int runflags = (evalflags & eval_inchild);
-	const char * const usage = ". [-einvx] file [arg ...]";
+/* If not -DGCVERBOSE or -DGCINFO, these variables are harmlessly useless */
+Boolean gcverbose	= FALSE;
+Boolean gcinfo		= FALSE;
 
-	esoptbegin(list, "$&dot", usage, TRUE);
-	while ((c = esopt("einvx")) != EOF)
-		switch (c) {
-		case 'e':	runflags |= eval_exitonfalse;	break;
-		case 'i':	runflags |= run_interactive;	break;
-		case 'n':	runflags |= run_noexec;		break;
-		case 'v':	runflags |= run_echoinput;	break;
-		case 'x':	runflags |= run_printcmds;	break;
-		}
+PRIM(setrunflags) {
+	Ref(List *, lp, list);
+	for (lp = list; lp != NULL; lp = lp->next) {
+		if (termeq(lp->term, "gcverbose"))
+			gcverbose = TRUE;
+		else if (termeq(lp->term, "gcinfo"))
+			gcinfo = TRUE;
+	}
+	RefEnd(lp);
 
+	setrunflags(runflags_to_int(list));
+	return list;
+}
+
+PRIM(runfile) {
+	if (list == NULL || (list->next != NULL && list->next->next != NULL))
+		fail("$&runfile", "usage: $&runfile command [file]");
 	Ref(List *, result, NULL);
-	Ref(List *, lp, esoptend());
-	if (lp == NULL)
-		fail("$&dot", "usage: %s", usage);
+	Ref(List *, cmd, mklist(list->term, NULL));
+	Ref(char *, file, "stdin");
 
-	Ref(char *, file, getstr(lp->term));
-	lp = lp->next;
-	fd = eopen(file, oOpen);
-	if (fd == -1)
-		fail("$&dot", "%s: %s", file, esstrerror(errno));
+	int fd = 0;
 
-	varpush(&star, "*", lp);
-	varpush(&zero, "0", mklist(mkstr(file), NULL));
+	if (list->next != NULL) {
+		file = getstr(list->next->term);
+		fd = eopen(file, oOpen);
+		if (fd == -1)
+			fail("$&runfile", "%s: %s", file, esstrerror(errno));
+	}
 
-	result = runfd(fd, file, runflags);
+	result = runfd(fd, file, cmd);
 
-	varpop(&zero);
-	varpop(&star);
-	RefEnd2(file, lp);
+	RefEnd2(file, cmd);
+	RefReturn(result);
+}
+
+PRIM(runstring) {
+	if (list == NULL || list->next == NULL || list->next->next != NULL)
+		fail("$&runstring", "usage: $&runstring command string");
+	Ref(List *, result, NULL);
+	Ref(List *, cmd, mklist(list->term, NULL));
+	Ref(char *, string, getstr(list->next->term));
+
+	result = runstring(string, cmd);
+
+	RefEnd2(string, cmd);
 	RefReturn(result);
 }
 
@@ -183,42 +198,6 @@ PRIM(exitonfalse) {
 	return eval(list, NULL, evalflags | eval_exitonfalse);
 }
 
-PRIM(batchloop) {
-	Ref(List *, result, true);
-	Ref(List *, dispatch, NULL);
-
-	SIGCHK();
-
-	ExceptionHandler
-
-		for (;;) {
-			List *parser, *cmd;
-			parser = varlookup("fn-%parse", NULL);
-			cmd = (parser == NULL)
-					? prim("parse", NULL, NULL, 0)
-					: eval(parser, NULL, 0);
-			SIGCHK();
-			dispatch = varlookup("fn-%dispatch", NULL);
-			if (cmd != NULL) {
-				if (dispatch != NULL)
-					cmd = append(dispatch, cmd);
-				result = eval(cmd, NULL, evalflags);
-				SIGCHK();
-			}
-		}
-
-	CatchException (e)
-
-		if (!termeq(e->term, "eof"))
-			throw(e);
-		RefEnd(dispatch);
-		if (result == true)
-			result = true;
-		RefReturn(result);
-
-	EndExceptionHandler
-}
-
 PRIM(collect) {
 	gc();
 	return true;
@@ -240,10 +219,6 @@ PRIM(vars) {
 
 PRIM(internals) {
 	return listvars(TRUE);
-}
-
-PRIM(isinteractive) {
-	return isinteractive() ? true : false;
 }
 
 PRIM(noreturn) {
@@ -279,6 +254,17 @@ PRIM(setmaxevaldepth) {
 	RefReturn(lp);
 }
 
+static Boolean didonce = FALSE;
+PRIM(importenvfuncs) {
+	if (didonce)
+		return false;
+
+	importenv(TRUE);
+	didonce = TRUE;
+
+	return true;
+}
+
 #if READLINE
 PRIM(resetterminal) {
 	resetterminal = TRUE;
@@ -296,7 +282,9 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(count);
 	X(version);
 	X(exec);
-	X(dot);
+	X(setrunflags);
+	X(runfile);
+	X(runstring);
 	X(flatten);
 	X(whatis);
 	X(sethistory);
@@ -304,17 +292,16 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(fsplit);
 	X(var);
 	X(parse);
-	X(batchloop);
 	X(collect);
 	X(home);
 	X(setnoexport);
 	X(vars);
 	X(internals);
 	X(result);
-	X(isinteractive);
 	X(exitonfalse);
 	X(noreturn);
 	X(setmaxevaldepth);
+	X(importenvfuncs);
 #if READLINE
 	X(resetterminal);
 #endif

@@ -439,11 +439,14 @@ static void importvar(char *name0, char *value) {
 }
 
 
-/* initenv -- load variables from the environment */
-extern void initenv(char **envp, Boolean protected) {
+extern char **environ;
+
+/* importenv -- load variables from the environment */
+extern void importenv(Boolean funcs) {
 	char *envstr;
 	size_t bufsize = 1024;
 	char *buf = ealloc(bufsize);
+	char **envp = environ;
 
 	for (; (envstr = *envp) != NULL; envp++) {
 		size_t nlen;
@@ -465,8 +468,7 @@ extern void initenv(char **envp, Boolean protected) {
 		memcpy(buf, envstr, nlen);
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
-		if (!protected
-		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
+		if (funcs == (hasprefix(name, "fn-") || hasprefix(name, "set-")))
 			importvar(name, eq);
 	}
 
