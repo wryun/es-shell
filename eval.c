@@ -81,7 +81,7 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 
 /* letbindings -- create a new Binding containing let-bound variables */
 static Binding *letbindings(Tree *defn0, Binding *outer0,
-			    Binding *context0, int evalflags) {
+			    Binding *context0, int unused evalflags) {
 	Ref(Binding *, binding, outer0);
 	Ref(Binding *, context, context0);
 	Ref(Tree *, defn, defn0);
@@ -416,8 +416,8 @@ restart:
 		    case nList: {
 			Ref(List *, lp, glom(cp->tree, cp->binding, TRUE));
 			list = append(lp, list->next);
-			goto restart;
 			RefEnd(lp);
+			goto restart;
 		    }
 		    default:
 			panic("eval: bad closure node kind %d",

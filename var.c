@@ -276,7 +276,7 @@ extern void varpop(Push *push) {
 		throw(except);
 }
 
-static void mkenv0(void *dummy, char *key, void *value) {
+static void mkenv0(void unused *dummy, char *key, void *value) {
 	Var *var = value;
 	assert(gcisblocked());
 	if (
@@ -319,7 +319,7 @@ extern Vector *mkenv(void) {
 }
 
 /* addtolist -- dictforall procedure to create a list */
-extern void addtolist(void *arg, char *key, void *value) {
+extern void addtolist(void *arg, char *key, void unused *value) {
 	List **listp = arg;
 	Term *term = mkstr(key);
 	*listp = mklist(term, *listp);
@@ -360,7 +360,7 @@ extern List *varswithprefix(char *prefix) {
 }
 
 /* hide -- worker function for dictforall to hide initial state */
-static void hide(void *dummy, char *key, void *value) {
+static void hide(void unused *dummy, char unused *key, void *value) {
 	((Var *) value)->flags |= var_isinternal;
 }
 
