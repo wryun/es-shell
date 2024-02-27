@@ -640,13 +640,12 @@ fn %interactive-loop {
 			} {~ $e error} {
 				echo >[1=2] $msg
 				$fn-%dispatch false
-			} {~ $e false} {
-				echo >[1=2] caught false result: $type $msg
-				throw $e $type $msg
 			} {~ $e signal} {
 				if {!~ $type sigint sigterm sigquit} {
 					echo >[1=2] caught unexpected signal: $type
 				}
+			} {~ $e false} {
+				echo >[1=2] caught false result: $type $msg
 			} {
 				echo >[1=2] uncaught exception: $e $type $msg
 			}
