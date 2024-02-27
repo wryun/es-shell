@@ -78,7 +78,6 @@ extern void print_prompt2(void) {
 
 /* scanerror -- called for lexical errors */
 static void scanerror(char c, char *s) {
-	/* TODO: check previous character? rc's last hack? */
 	while (c != '\n' && c != EOF)
 		c = GETC();
 	goterror = TRUE;
