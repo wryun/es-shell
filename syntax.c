@@ -69,6 +69,39 @@ static Boolean firstis(Tree *t, const char *s) {
 	return streq(t->u[0].s, s);
 }
 
+/* isredir -- check if the tree is a redirection */
+static Boolean isredir(Tree *t) {
+	char *s;
+
+	if (t == NULL || t->kind != nList)
+		return FALSE;
+	t = t->CAR;
+	if (t == NULL || t->kind != nWord)
+		return FALSE;
+
+	s = t->u[0].s;
+	assert(s != NULL);
+
+	if (*s++ != '%') return FALSE;
+
+	if (streq(s, "create")) return TRUE;
+	if (streq(s, "append")) return TRUE;
+	if (streq(s, "here")) return TRUE;
+
+	if (!strneq(s, "open", 4)) return FALSE;
+	s += 4;
+
+	if (*s == '\0' || streq(s, "file")) return TRUE;
+
+	if (*s++ != '-') return FALSE;
+
+	if (streq(s, "write")) return TRUE;
+	if (streq(s, "append")) return TRUE;
+	if (streq(s, "create")) return TRUE;
+
+	return FALSE;
+}
+
 /* prefix -- prefix a tree with a given word */
 extern Tree *prefix(char *s, Tree *t) {
 	return treecons(mk(nWord, s), t);
@@ -138,6 +171,62 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
 		  return t2;
 	}
 	return prefix("%pipe", treecons(t1, tail));
+}
+
+/* injectpassvar -- put `$-` into the appropriate place in a command */
+static Tree *injectpassvar(Tree *tree) {
+	Tree *nv = mk(nVar, mk(nWord, "-"));
+	switch (tree->kind) {
+	case nLet: case nLocal: case nClosure: case nAssign: case nFor:
+		/* FIXME: should all these be allowed??? */
+		tree->CDR = treeconsend2(tree->CDR, nv);
+		break;
+	default: {
+		Tree *body = tree;
+		while (isredir(body)) {
+			int i;
+			for (i = 0; i < 5; i++) {
+				assert(body != NULL && (body->kind == nList || body->kind == nThunk));
+				body = body->u[i < 3].p;
+			}
+		}
+		if (body == NULL)
+			/* redirection with empty body */
+			yyerror("bad redirect in %pass statement");
+		else if (body->kind == nThunk)
+			body = treecons(body, treecons(nv, NULL));
+		else if (body->kind == nMatch || body->kind == nExtract)
+			body->u[1].p = nv;
+		else
+			body = treeconsend2(body, nv);
+	}}
+	return tree;
+}
+
+/* mkpass -- assemble a pass statement from the commands that make it up */
+extern Tree *mkpass(Tree *t1, Tree *t2) {
+	Tree *tail = NULL;
+	Boolean passtail = firstis(t2, "%pass");
+
+	if (passtail) {
+		tail = t2->CDR;
+	} else if (t2 != NULL) {
+		t2 = injectpassvar(t2);
+		if (t2->CAR->kind == nThunk && t2->CDR == NULL) {
+			tail = t2;
+		} else {
+			tail = treecons(thunkify(t2), NULL);
+		}
+	}
+	if (firstis(t1, "%pass"))
+		return treeappend(t1, tail);
+
+	t1 = thunkify(t1);
+	if (passtail) {
+		t2->CDR = treecons(t1, tail);
+		return t2;
+	}
+	return prefix("%pass", treecons(t1, tail));
 }
 
 /*
