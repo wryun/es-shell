@@ -624,17 +624,17 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	to print ``break outside of loop'' errors.
 #
 #	The parsed code is executed only if it is non-empty, because otherwise
-#	result gets set to zero when it should not be.
+#	status gets set to zero when it should not be.
 
 fn-%parse	= $&parse
 fn-%batch-loop	= $&batchloop
 fn-%is-interactive = $&isinteractive
 
 fn %interactive-loop {
-	let (result = <=true) {
+	local (status = <=true) {
 		catch @ e type msg {
 			if {~ $e eof} {
-				return $result
+				return $status
 			} {~ $e exit} {
 				throw $e $type $msg
 			} {~ $e error} {
@@ -655,7 +655,7 @@ fn %interactive-loop {
 				}
 				let (code = <={%parse $prompt}) {
 					if {!~ $#code 0} {
-						result = <={$fn-%dispatch $code}
+						status = <={$fn-%dispatch $code}
 					}
 				}
 			}
@@ -739,12 +739,12 @@ max-eval-depth	= 640
 #	is for the parent process.  pid is not exported so that even if it
 #	is set explicitly, the one for a child shell will be correct.
 #	Signals are not exported, but are inherited, so $signals will be
-#	initialized properly in child shells.  bqstatus is not exported
-#	because it's almost certainly unrelated to what a child process
-#	is does.  fn-%dispatch is really only important to the current
-#	interpreter loop.
+#	initialized properly in child shells.  status and bqstatus are not
+#	exported because it's almost certainly unrelated to what a child process
+#	does.  fn-%dispatch is really only important to the current interpreter
+#	loop.
 
-noexport = noexport pid signals apid bqstatus fn-%dispatch path home matchexpr
+noexport = noexport pid signals apid status bqstatus fn-%dispatch path home matchexpr
 
 
 #
