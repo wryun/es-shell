@@ -2470,7 +2470,8 @@ Reads input from the current input source, printing
 before reading anything and
 .I prompt2
 before reading continued lines.
-Returns a code fragment suitable for execution.
+Returns a code fragment suitable for execution as the first value and the input
+string which generated the code fragment as the second.
 Raises the exception
 .Cr eof
 on end of input.
@@ -2690,7 +2691,7 @@ The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-sethistory	setnoexport	setsignals
+setnoexport	setsignals
 .ft R
 .De
 .PP
@@ -2706,24 +2707,32 @@ limit	limit
 readfrom	%readfrom
 time	time
 writeto	%writeto
+writehistory	%write-history
 .ft R
 .De
 .PP
-The primitive
+The primitives
 .Cr resetterminal
-is if
+and
+.Cr sethistory
+are if
 .I es
 is compiled with support for the
 .I readline
 or
 .I editline
 libraries.
-It is used in the implementation of settor functions of the
+The former is used in the implementation of settor functions of the
 .Cr TERM
 and
 .Cr TERMCAP
 variables to notify the line editing packages that the terminal
 configuration has changed.
+The latter is used for the
+.Cr set-history
+settor variable when
+.I readline
+support is compiled in.
 .PP
 Several primitives are not directly associated with other function.
 They are:
