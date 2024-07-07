@@ -419,6 +419,9 @@ restart:
 			goto restart;
 			RefEnd(lp);
 		    }
+		    case nConcat:
+			assert(cp->tree->u[0].p->kind == nPrim);
+			fail("es:eval", "invalid primitive: %E", list->term);
 		    default:
 			panic("eval: bad closure node kind %d",
 			      cp->tree->kind);
