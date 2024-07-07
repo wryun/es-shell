@@ -4,6 +4,7 @@
 #include "gc.h"
 #include "var.h"
 #include "term.h"
+#include "input.h"
 
 #if PROTECT_ENV
 #define	ENV_FORMAT	"%F=%W"

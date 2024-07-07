@@ -276,7 +276,7 @@ stdgetenv(name)
 }
 
 char *
-getenv(char *name)
+getenv(const char *name)
 {
 	return realgetenv(name);
 }
