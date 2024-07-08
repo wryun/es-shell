@@ -2514,6 +2514,15 @@ to the name of a file which contains the output of running
 the command
 .IR input .
 .TP
+.Cr "%run \fIprogram argv0 args ...\fP"
+Run the named program, which is not searched for in
+.Cr $path ,
+with the argument vector set to the remaining arguments.
+This builtin can be used to set
+.Cr argv[0]
+(by convention, the name of the program)
+to something other than file name.
+.TP
 .Cr "%seq \fIcmd ...\fP"
 Runs the commands, in order.
 .TP
@@ -2561,15 +2570,6 @@ rather than
 .TP
 .Cr "%newfd"
 Returns a file descriptor that the shell thinks is not currently in use.
-.TP
-.Cr "%run \fIprogram argv0 args ...\fP"
-Run the named program, which is not searched for in
-.Cr $path ,
-with the argument vector set to the remaining arguments.
-This builtin can be used to set
-.Cr argv[0]
-(by convention, the name of the program)
-to something other than file name.
 .TP
 .Cr "%split \fIseparator \fR[\fPargs ...\fR]"
 Splits its arguments into separate strings at every occurrence
