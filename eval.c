@@ -314,19 +314,18 @@ extern List *pathsearch(Term *term) {
 	return eval(append(search, list), NULL, 0);
 }
 
-static List *mkrunhook(char *bin, List *list0) {
+static List *mkrunhook(char *bin0, List *list0) {
 	Ref(List *, list, list0);
+	Ref(char *, bin, bin0);
 	Ref(Term *, t, mkstr(bin));
 	list = mklist(t, list);
 
 	Ref(List *, run, varlookup("fn-%run", NULL));
-	if (run == NULL) {
-		t = mkterm(NULL, mkclosure(mk(nPrim, "run"), NULL));
-		list = mklist(t, list);
-	} else
-		list = append(run, list);
+	if (run == NULL)
+		fail("es:eval", "%s: fn %%run undefined", bin);
+	list = append(run, list);
 
-	RefEnd2(run, t);
+	RefEnd3(run, t, bin);
 	RefReturn(list);
 }
 
