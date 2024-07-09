@@ -32,6 +32,7 @@ exec_prefix	= @exec_prefix@
 mandir	= @mandir@
 bindir	= @bindir@
 srcdir  = @srcdir@
+testdir	= @srcdir@/test
 
 
 SHELL	= /bin/sh
@@ -88,10 +89,8 @@ install : es
 	$(MKDIR_P) $(DESTDIR)$(mandir)/man1
 	$(INSTALL) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
 
-test	: trip
-
-trip	: es $(srcdir)/trip.es
-	./es < $(srcdir)/trip.es
+test	: es $(testdir)/test.es
+	$(srcdir)/es -s < $(testdir)/test.es $(testdir)/tests/*
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
