@@ -416,8 +416,8 @@ restart:
 		    case nList: {
 			Ref(List *, lp, glom(cp->tree, cp->binding, TRUE));
 			list = append(lp, list->next);
-			goto restart;
 			RefEnd(lp);
+			goto restart;
 		    }
 		    default:
 			panic("eval: bad closure node kind %d",
