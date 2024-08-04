@@ -207,7 +207,7 @@ extern void varpop(Push *);
 
 /* status.c */
 
-extern List *true, *false;
+extern List *ltrue, *lfalse;
 extern Boolean istrue(List *status);
 extern int exitstatus(List *status);
 extern char *mkstatus(int status);

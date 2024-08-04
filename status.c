@@ -10,8 +10,8 @@ static const List
 	truelist	= { (Term *) &trueterm, NULL },
 	falselist	= { (Term *) &falseterm, NULL };
 List
-	*true		= (List *) &truelist,
-	*false		= (List *) &falselist;
+	*ltrue		= (List *) &truelist,
+	*lfalse		= (List *) &falselist;
 
 /* istrue -- is this status list true? */
 extern Boolean istrue(List *status) {

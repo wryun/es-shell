@@ -163,7 +163,7 @@ static List *forloop(Tree *defn0, Tree *body0,
 		     Binding *binding, int evalflags) {
 	static List MULTIPLE = { NULL, NULL };
 
-	Ref(List *, result, true);
+	Ref(List *, result, ltrue);
 	Ref(Binding *, outer, binding);
 	Ref(Binding *, looping, NULL);
 	Ref(Tree *, body, body0);
@@ -245,7 +245,7 @@ static List *matchpattern(Tree *subjectform0, Tree *patternform0,
 	pattern = glom2(patternform, bp, &quote);
 	result = listmatch(subject, pattern, quote);
 	RefEnd4(quote, subject, patternform, bp);
-	return result ? true : false;
+	return result ? ltrue : lfalse;
 }
 
 /* extractpattern -- Like matchpattern, but returns matches */
@@ -272,7 +272,7 @@ extern List *walk(Tree *tree0, Binding *binding0, int flags) {
 
 top:
 	if (tree == NULL)
-		return true;
+		return ltrue;
 
 	switch (tree->kind) {
 
@@ -371,7 +371,7 @@ restart:
 	if (list == NULL) {
 		RefPop3(funcname, binding, list);
 		--evaldepth;
-		return true;
+		return ltrue;
 	}
 	assert(list->term != NULL);
 

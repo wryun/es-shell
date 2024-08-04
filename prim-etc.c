@@ -19,7 +19,7 @@ PRIM(echo) {
 			list = list->next;
 	}
 	print("%L%s", list, " ", eol);
-	return true;
+	return ltrue;
 }
 
 PRIM(count) {
@@ -184,7 +184,7 @@ PRIM(exitonfalse) {
 }
 
 PRIM(batchloop) {
-	Ref(List *, result, true);
+	Ref(List *, result, ltrue);
 	Ref(List *, dispatch, NULL);
 
 	SIGCHK();
@@ -212,8 +212,8 @@ PRIM(batchloop) {
 		if (!termeq(e->term, "eof"))
 			throw(e);
 		RefEnd(dispatch);
-		if (result == true)
-			result = true;
+		if (result == ltrue)
+			result = ltrue;
 		RefReturn(result);
 
 	EndExceptionHandler
@@ -221,7 +221,7 @@ PRIM(batchloop) {
 
 PRIM(collect) {
 	gc();
-	return true;
+	return ltrue;
 }
 
 PRIM(home) {
@@ -243,7 +243,7 @@ PRIM(internals) {
 }
 
 PRIM(isinteractive) {
-	return isinteractive() ? true : false;
+	return isinteractive() ? ltrue : lfalse;
 }
 
 PRIM(noreturn) {
@@ -282,7 +282,7 @@ PRIM(setmaxevaldepth) {
 #if READLINE
 PRIM(resetterminal) {
 	resetterminal = TRUE;
-	return true;
+	return ltrue;
 }
 #endif
 
