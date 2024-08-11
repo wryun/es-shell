@@ -618,7 +618,7 @@ static List *(*wordslistgen)(char *);
 static char *list_completion_function(const char *text, int state) {
 	static char **matches = NULL;
 	static int matches_idx, matches_len;
-	int rlen;
+	int i, rlen;
 	char *result;
 
 	const int pfx_len = strlen(complprefix);
@@ -637,7 +637,7 @@ static char *list_completion_function(const char *text, int state) {
 
 	rlen = strlen(matches[matches_idx]);
 	result = ealloc(rlen + pfx_len + 1);
-	for (int i = 0; i < pfx_len; i++)
+	for (i = 0; i < pfx_len; i++)
 		result[i] = complprefix[i];
 	strcpy(&result[pfx_len], matches[matches_idx]);
 	result[rlen + pfx_len] = '\0';
