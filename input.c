@@ -255,8 +255,7 @@ static char *esgetenv(const char *name) {
 }
 
 static char *
-stdgetenv(name)
-	register const char *name;
+stdgetenv(register const char *name)
 {
 	extern char **environ;
 	register int len;
@@ -276,7 +275,7 @@ stdgetenv(name)
 }
 
 char *
-getenv(char *name)
+getenv(const char *name)
 {
 	return realgetenv(name);
 }
