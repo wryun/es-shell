@@ -285,7 +285,9 @@ extern Tree *parsestring(const char *str);
 extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 #if ABUSED_GETENV
+#if READLINE
 extern void initgetenv(void);
+#endif
 #endif
 extern void initinput(void);
 extern void resetparser(void);
