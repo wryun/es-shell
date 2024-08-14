@@ -284,6 +284,11 @@ extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
 extern void sethistory(char *file);
 extern Boolean isinteractive(void);
+#if ABUSED_GETENV
+#if READLINE
+extern void initgetenv(void);
+#endif
+#endif
 extern void initinput(void);
 extern void resetparser(void);
 
@@ -375,7 +380,7 @@ extern void gc(void);				/* provoke a collection, if enabled */
 extern void gcreserve(size_t nbytes);		/* provoke a collection, if enabled and not enough space */
 extern void gcenable(void);			/* enable collections */
 extern void gcdisable(void);			/* disable collections */
-extern Boolean gcisblocked();			/* is collection disabled? */
+extern Boolean gcisblocked(void);		/* is collection disabled? */
 
 
 /*
