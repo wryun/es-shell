@@ -255,7 +255,7 @@ static char *esgetenv(const char *name) {
 }
 
 static char *
-stdgetenv(register const char *name)
+stdgetenv(const char *name)
 {
 	extern char **environ;
 	register int len;
