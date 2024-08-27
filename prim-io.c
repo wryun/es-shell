@@ -198,12 +198,17 @@ PRIM(here) {
 PRIM(pipe) {
 	int n, infd, inpipe;
 	static int *pids = NULL, pidmax = 0;
+	Boolean local = FALSE;
 
 	caller = "$&pipe";
+	if (streq(getstr(list->term), "-l")) {
+		local = TRUE;
+		list = list->next;
+	}
 	n = length(list);
 	if ((n % 3) != 1)
-		fail("$&pipe", "usage: pipe cmd [ outfd infd cmd ] ...");
-	n = (n - 1) / 3;
+		fail("$&pipe", "usage: pipe [-l] cmd [ outfd infd cmd ] ...");
+	n = (local) ? ((n - 1) / 3) : ((n + 2) / 3);
 	if (n > pidmax) {
 		pids = erealloc(pids, n * sizeof *pids);
 		pidmax = n;
@@ -212,25 +217,29 @@ PRIM(pipe) {
 
 	infd = inpipe = -1;
 
-	for (; list->next != NULL; list = list->next) {
-		int p[2];
-		int pid = pipefork(p, &inpipe);
+	for (; (!local || list->next != NULL); list = list->next) {
+		int p[2], pid;
+
+		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork(p, &inpipe);
 
 		if (pid == 0) {		/* child */
-			int fd;
 			if (inpipe != -1) {
 				assert(infd != -1);
 				releasefd(infd);
 				mvfd(inpipe, infd);
 			}
-			fd = getnumber(getstr(list->next->term));
-			releasefd(fd);
-			mvfd(p[1], fd);
-			close(p[0]);
+			if (list->next != NULL) {
+				int fd = getnumber(getstr(list->next->term));
+				releasefd(fd);
+				mvfd(p[1], fd);
+				close(p[0]);
+			}
 			exit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
 		}
 		pids[n++] = pid;
 		close(inpipe);
+		if (list->next == NULL)
+			break;
 		list = list->next->next;
 		infd = getnumber(getstr(list->term));
 		inpipe = p[0];
@@ -239,7 +248,8 @@ PRIM(pipe) {
 
 	Ref(List *, result, NULL);
 	Ref(List *, lastres, NULL);
-	lastres = redireval(infd, inpipe, list, evalflags);
+	if (local)
+		lastres = redireval(infd, inpipe, list, evalflags);
 
 	do {
 		Term *t;
@@ -249,7 +259,8 @@ PRIM(pipe) {
 		result = mklist(t, result);
 	} while (0 < n);
 
-	result = append(result, lastres);
+	if (local)
+		result = append(result, lastres);
 
 	if (evalflags & eval_inchild)
 		exit(exitstatus(result));

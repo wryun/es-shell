@@ -1104,6 +1104,12 @@ use:
 .PP
 The exit status of a pipeline is considered true if and only if every
 command in the pipeline exits true.
+The final command in a pipeline is evaluated in a subshell by default,
+but this may be changed with the use of the
+.Rc -l
+flag on the
+.Cr $&pipe
+primitive.
 .SS "Input/Output Substitution"
 Some commands, like
 .IR cmp (1)
