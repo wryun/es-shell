@@ -36,17 +36,24 @@ extern void startsplit(const char *sep, Boolean coalescef) {
 	}
 }
 
-extern void splitstring(char *in, size_t len, Boolean endword) {
+extern char *stepsplit(char *in, size_t len, Boolean endword) {
 	Buffer *buf = buffer;
 	unsigned char *s = (unsigned char *) in, *inend = s + len;
 
 	if (splitchars) {
+		Boolean end;
+		Term *term;
+
+		if (*s == '\0') return NULL;
 		assert(buf == NULL);
-		while (s < inend) {
-			Term *term = mkstr(gcndup((char *) s++, 1));
-			value = mklist(term, value);
-		}
-		return;
+
+		end = *(s + 1) == '\0';
+
+		term = mkstr(gcndup((char *) s, 1));
+		value = mklist(term, value);
+
+		if (end) return NULL;
+		return (char *) ++s;
 	}
 
 	if (!coalesce && buf == NULL)
@@ -58,7 +65,8 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 			if (isifs[c]) {
 				Term *term = mkstr(sealcountedbuffer(buf));
 				value = mklist(term, value);
-				buf = coalesce ? NULL : openbuffer(0);
+				buffer = buf = coalesce ? NULL : openbuffer(0);
+				return (char *) s;
 			} else
 				buf = bufputc(buf, c);
 		else if (!isifs[c])
@@ -71,6 +79,16 @@ extern void splitstring(char *in, size_t len, Boolean endword) {
 		buf = NULL;
 	}
 	buffer = buf;
+	return NULL;
+}
+
+extern void splitstring(char *in, size_t len, Boolean endword) {
+	size_t remainder;
+	char *s = in;
+	do {
+		remainder = len - (s - in);
+		s = stepsplit(s, remainder, endword);
+	} while (s != NULL);
 }
 
 extern List *endsplit(void) {
@@ -90,8 +108,13 @@ extern List *fsplit(const char *sep, List *list, Boolean coalesce) {
 	Ref(List *, lp, list);
 	startsplit(sep, coalesce);
 	for (; lp != NULL; lp = lp->next) {
-		char *s = getstr(lp->term);
-		splitstring(s, strlen(s), TRUE);
+		char *bs = getstr(lp->term), *s = bs;
+		do {
+			char *ns = getstr(lp->term);
+			s = ns + (s - bs);
+			bs = ns;
+			s = stepsplit(s, strlen(s), TRUE);
+		} while (s != NULL);
 	}
 	RefEnd(lp);
 	return endsplit();

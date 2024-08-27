@@ -414,8 +414,9 @@ restart:
 			EndExceptionHandler
 			break;
 		    case nList: {
-			list = glom(cp->tree, cp->binding, TRUE);
-			list = append(list, list->next);
+			Ref(List *, lp, glom(cp->tree, cp->binding, TRUE));
+			list = append(lp, list->next);
+			RefEnd(lp);
 			goto restart;
 		    }
 		    default:

@@ -255,8 +255,7 @@ static char *esgetenv(const char *name) {
 }
 
 static char *
-stdgetenv(name)
-	register const char *name;
+stdgetenv(const char *name)
 {
 	extern char **environ;
 	register int len;
@@ -276,7 +275,7 @@ stdgetenv(name)
 }
 
 char *
-getenv(char *name)
+getenv(const char *name)
 {
 	return realgetenv(name);
 }
@@ -618,7 +617,7 @@ static List *(*wordslistgen)(char *);
 static char *list_completion_function(const char *text, int state) {
 	static char **matches = NULL;
 	static int matches_idx, matches_len;
-	int rlen;
+	int i, rlen;
 	char *result;
 
 	const int pfx_len = strlen(complprefix);
@@ -637,7 +636,7 @@ static char *list_completion_function(const char *text, int state) {
 
 	rlen = strlen(matches[matches_idx]);
 	result = ealloc(rlen + pfx_len + 1);
-	for (int i = 0; i < pfx_len; i++)
+	for (i = 0; i < pfx_len; i++)
 		result[i] = complprefix[i];
 	strcpy(&result[pfx_len], matches[matches_idx]);
 	result[rlen + pfx_len] = '\0';
@@ -703,7 +702,7 @@ extern void initinput(void) {
 
 	rl_attempted_completion_function = builtin_completion;
 
-	rl_filename_quote_characters = " \t\n\\`$><=;|&{()}";
+	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_filename_quoting_function = quote;
 	rl_filename_dequoting_function = unquote;
 #endif

@@ -234,6 +234,9 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 
 /* mkmatch -- rewrite match as appropriate if with ~ commands */
 extern Tree *mkmatch(Tree *subj, Tree *cases) {
+	const char *varname = "matchexpr";
+	Tree *matches = NULL;
+	Tree *sass, *svar;
 	/*
 	 * Empty match -- with no patterns to match the subject,
 	 * it's like saying {if}, which simply returns true.
@@ -246,16 +249,15 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 	 * repeatedly by assigning it to a temporary variable and using that
 	 * variable as the first argument to '~' .
 	 */
-	const char *varname = "matchexpr";
-	Tree *sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
-	Tree *svar = mk(nVar, mk(nWord, varname));
-	Tree *matches = NULL;
+	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
+	svar = mk(nVar, mk(nWord, varname));
 	for (; cases != NULL; cases = cases->CDR) {
+		Tree *match;
 		Tree *pattlist = cases->CAR->CAR;
 		Tree *cmd = cases->CAR->CDR;
 		if (pattlist != NULL && pattlist->kind != nList)
 			pattlist = treecons(pattlist, NULL);
-		Tree *match = treecons(
+		match = treecons(
 			thunkify(mk(nMatch, svar, pattlist)),
 			treecons(cmd, NULL)
 		);
@@ -268,7 +270,8 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 /* firstprepend -- insert a command node before its arg nodes after all redirections */
 extern Tree *firstprepend(Tree *first, Tree *args) {
 	Tree *t, **tp;
-	assert(first != NULL);
+	if (first == NULL)
+		return args;
 	for (t = args, tp = &args; t != NULL && t->kind == nRedir; t = *(tp = &t->CDR))
 		;
 	assert(t == NULL || t->kind == nList);
