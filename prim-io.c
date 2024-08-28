@@ -201,7 +201,7 @@ PRIM(pipe) {
 	Boolean local = FALSE;
 
 	caller = "$&pipe";
-	if (streq(getstr(list->term), "-l")) {
+	if (list != NULL && streq(getstr(list->term), "-l")) {
 		local = TRUE;
 		list = list->next;
 	}
@@ -248,16 +248,20 @@ PRIM(pipe) {
 
 	Ref(List *, result, NULL);
 	Ref(List *, lastres, NULL);
-	if (local)
-		lastres = redireval(infd, inpipe, list, evalflags);
+	if (local) {
+		if (n > 0)
+			lastres = redireval(infd, inpipe, list, evalflags);
+		else
+			lastres = eval(list, NULL, evalflags);
+	}
 
-	do {
+	for (; n > 0; n--) {
 		Term *t;
-		int status = ewaitfor(pids[--n]);
+		int status = ewaitfor(pids[n-1]);
 		printstatus(0, status);
 		t = mkstr(mkstatus(status));
 		result = mklist(t, result);
-	} while (0 < n);
+	}
 
 	if (local)
 		result = append(result, lastres);
