@@ -298,12 +298,9 @@ static int fdfill(Input *in) {
 
 #if READLINE
 	if (in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = NULL;
-		do {
-			rlinebuf = callreadline(prompt);
-		} while (rlinebuf == NULL && errno == EINTR);
-
+		char *rlinebuf = callreadline(prompt);
 		if (rlinebuf == NULL)
+
 			nread = 0;
 		else {
 			if (*rlinebuf != '\0')
