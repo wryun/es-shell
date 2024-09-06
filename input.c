@@ -211,11 +211,13 @@ static char *callreadline(char *prompt) {
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		r = interrupted ? NULL : readline(prompt);
-	} else
+		if (interrupted)
+			errno = EINTR;
+	} else {
 		r = NULL;
-	slow = FALSE;
-	if (r == NULL)
 		errno = EINTR;
+	}
+	slow = FALSE;
 	SIGCHK();
 	return r;
 }
@@ -298,9 +300,12 @@ static int fdfill(Input *in) {
 
 #if READLINE
 	if (in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = callreadline(prompt);
-		if (rlinebuf == NULL)
+		char *rlinebuf = NULL;
+		do {
+			rlinebuf = callreadline(prompt);
+		} while (rlinebuf == NULL && errno == EINTR);
 
+		if (rlinebuf == NULL)
 			nread = 0;
 		else {
 			if (*rlinebuf != '\0')
