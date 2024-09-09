@@ -68,7 +68,7 @@ const char dnw[] = {
 /* print_prompt2 -- called before all continuation lines */
 extern void print_prompt2(void) {
 	input->lineno++;
-#if READLINE
+#if HAVE_READLINE
 	prompt = prompt2;
 #else
 	if ((input->runflags & run_interactive) && prompt2 != NULL)
