@@ -24,7 +24,7 @@ but all of the relevant information is mirrored in the repository and/or
 the website:
 
     http://www.github.com/wryun/es-shell
-    http://wryun.github.com/es-shell
+    http://wryun.github.io/es-shell
 
 including the change history and the old mailing list archives.
 
