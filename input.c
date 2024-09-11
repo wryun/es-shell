@@ -645,7 +645,7 @@ static char *list_completion_function(const char *text, int state) {
 	return result;
 }
 
-char **builtin_completion(const char *text, int start, int end) {
+char **builtin_completion(const char *text, int unused start, int unused end) {
 	char **matches = NULL;
 
 	if (*text == '$') {

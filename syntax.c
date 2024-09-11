@@ -145,7 +145,7 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
  *	tree and then rewriting the tree to include the appropriate commands
  */
 
-static Tree placeholder = { nRedir };
+static Tree placeholder = { nRedir, {{NULL}} };
 
 extern Tree *redirect(Tree *t) {
 	Tree *r, *p;
@@ -235,8 +235,7 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 /* mkmatch -- rewrite match as appropriate if with ~ commands */
 extern Tree *mkmatch(Tree *subj, Tree *cases) {
 	const char *varname = "matchexpr";
-	Tree *matches = NULL;
-	Tree *sass, *svar;
+	Tree *sass, *svar, *matches;
 	/*
 	 * Empty match -- with no patterns to match the subject,
 	 * it's like saying {if}, which simply returns true.
@@ -251,6 +250,7 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 	 */
 	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
 	svar = mk(nVar, mk(nWord, varname));
+	matches = NULL;
 	for (; cases != NULL; cases = cases->CDR) {
 		Tree *match;
 		Tree *pattlist = cases->CAR->CAR;
