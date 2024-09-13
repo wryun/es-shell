@@ -27,6 +27,7 @@ Input *input;
 char *prompt, *prompt2;
 
 Boolean disablehistory = FALSE;
+Boolean ignoreeof = FALSE;
 Boolean resetterminal = FALSE;
 static char *history;
 static int historyfd = -1;
@@ -328,10 +329,12 @@ static int fdfill(Input *in) {
 	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
-		close(in->fd);
-		in->fd = -1;
-		in->fill = eoffill;
-		in->runflags &= ~run_interactive;
+		if (nread == 0 && !ignoreeof) {
+			close(in->fd);
+			in->fd = -1;
+			in->fill = eoffill;
+			in->runflags &= ~run_interactive;
+		}
 		if (nread == -1)
 			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
 		return EOF;
