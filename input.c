@@ -329,7 +329,7 @@ static int fdfill(Input *in) {
 	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
-		if (nread == 0 && !ignoreeof) {
+		if (!ignoreeof) {
 			close(in->fd);
 			in->fd = -1;
 			in->fill = eoffill;
