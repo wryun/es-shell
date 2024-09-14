@@ -247,7 +247,7 @@ extern void initconv(void);
 extern int print(const char *fmt VARARGS);
 extern int eprint(const char *fmt VARARGS);
 extern int fprint(int fd, const char *fmt VARARGS);
-extern noreturn panic(const char *fmt VARARGS);
+extern noreturn(panic(const char *fmt VARARGS));
 
 
 /* str.c */
@@ -284,6 +284,11 @@ extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
 extern void sethistory(char *file);
 extern Boolean isinteractive(void);
+#if ABUSED_GETENV
+#if READLINE
+extern void initgetenv(void);
+#endif
+#endif
 extern void initinput(void);
 extern void resetparser(void);
 
@@ -375,7 +380,7 @@ extern void gc(void);				/* provoke a collection, if enabled */
 extern void gcreserve(size_t nbytes);		/* provoke a collection, if enabled and not enough space */
 extern void gcenable(void);			/* enable collections */
 extern void gcdisable(void);			/* disable collections */
-extern Boolean gcisblocked();			/* is collection disabled? */
+extern Boolean gcisblocked(void);		/* is collection disabled? */
 
 
 /*
@@ -444,6 +449,9 @@ extern Root *rootlist;
 
 extern void globalroot(void *addr);
 
+extern void exceptionroot(Root *, List **exceptionp);
+extern void exceptionunroot(void);
+
 /* struct Push -- varpush() placeholder */
 
 struct Push {
@@ -478,8 +486,8 @@ struct Handler {
 extern Handler *tophandler, *roothandler;
 extern List *exception;
 extern void pophandler(Handler *handler);
-extern noreturn throw(List *exc);
-extern noreturn fail(const char *from, const char *name VARARGS);
+extern noreturn(throw(List *exc));
+extern noreturn(fail(const char *from, const char *name VARARGS));
 extern void newchildcatcher(void);
 
 #if DEBUG_EXCEPTIONS

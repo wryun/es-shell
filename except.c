@@ -24,10 +24,15 @@ extern noreturn throw(List *e) {
 	assert(e != NULL);
 	assert(handler != NULL);
 	tophandler = handler->up;
-	
-	while (pushlist != handler->pushlist) {
-		rootlist = &pushlist->defnroot;
-		varpop(pushlist);
+
+	{
+		Root excroot;
+		exceptionroot(&excroot, &e);
+		while (pushlist != handler->pushlist) {
+			rootlist = &pushlist->defnroot;
+			varpop(pushlist);
+		}
+		exceptionunroot();
 	}
 	evaldepth = handler->evaldepth;
 

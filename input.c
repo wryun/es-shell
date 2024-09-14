@@ -27,6 +27,7 @@ Input *input;
 char *prompt, *prompt2;
 
 Boolean disablehistory = FALSE;
+Boolean ignoreeof = FALSE;
 Boolean resetterminal = FALSE;
 static char *history;
 static int historyfd = -1;
@@ -211,11 +212,13 @@ static char *callreadline(char *prompt) {
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		r = interrupted ? NULL : readline(prompt);
-	} else
+		if (interrupted)
+			errno = EINTR;
+	} else {
 		r = NULL;
-	slow = FALSE;
-	if (r == NULL)
 		errno = EINTR;
+	}
+	slow = FALSE;
 	SIGCHK();
 	return r;
 }
@@ -255,8 +258,7 @@ static char *esgetenv(const char *name) {
 }
 
 static char *
-stdgetenv(name)
-	register const char *name;
+stdgetenv(const char *name)
 {
 	extern char **environ;
 	register int len;
@@ -276,7 +278,7 @@ stdgetenv(name)
 }
 
 char *
-getenv(char *name)
+getenv(const char *name)
 {
 	return realgetenv(name);
 }
@@ -299,9 +301,12 @@ static int fdfill(Input *in) {
 
 #if READLINE
 	if (in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = callreadline(prompt);
-		if (rlinebuf == NULL)
+		char *rlinebuf = NULL;
+		do {
+			rlinebuf = callreadline(prompt);
+		} while (rlinebuf == NULL && errno == EINTR);
 
+		if (rlinebuf == NULL)
 			nread = 0;
 		else {
 			if (*rlinebuf != '\0')
@@ -324,10 +329,12 @@ static int fdfill(Input *in) {
 	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
-		close(in->fd);
-		in->fd = -1;
-		in->fill = eoffill;
-		in->runflags &= ~run_interactive;
+		if (!ignoreeof) {
+			close(in->fd);
+			in->fd = -1;
+			in->fill = eoffill;
+			in->runflags &= ~run_interactive;
+		}
 		if (nread == -1)
 			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
 		return EOF;
@@ -414,8 +421,10 @@ extern List *runinput(Input *in, int runflags) {
 	          = varlookup(dispatcher[((flags & run_printcmds) ? 1 : 0)
 					 + ((flags & run_noexec) ? 2 : 0)],
 			      NULL);
-		if (flags & eval_exitonfalse)
+		if (flags & eval_exitonfalse) {
 			dispatch = mklist(mkstr("%exit-on-false"), dispatch);
+			flags &= ~eval_exitonfalse;
+		}
 		varpush(&push, "fn-%dispatch", dispatch);
 
 		repl = varlookup((flags & run_interactive)
@@ -618,7 +627,7 @@ static List *(*wordslistgen)(char *);
 static char *list_completion_function(const char *text, int state) {
 	static char **matches = NULL;
 	static int matches_idx, matches_len;
-	int rlen;
+	int i, rlen;
 	char *result;
 
 	const int pfx_len = strlen(complprefix);
@@ -637,7 +646,7 @@ static char *list_completion_function(const char *text, int state) {
 
 	rlen = strlen(matches[matches_idx]);
 	result = ealloc(rlen + pfx_len + 1);
-	for (int i = 0; i < pfx_len; i++)
+	for (i = 0; i < pfx_len; i++)
 		result[i] = complprefix[i];
 	strcpy(&result[pfx_len], matches[matches_idx]);
 	result[rlen + pfx_len] = '\0';
@@ -646,7 +655,7 @@ static char *list_completion_function(const char *text, int state) {
 	return result;
 }
 
-char **builtin_completion(const char *text, int start, int end) {
+char **builtin_completion(const char *text, int unused start, int unused end) {
 	char **matches = NULL;
 
 	if (*text == '$') {
@@ -703,7 +712,7 @@ extern void initinput(void) {
 
 	rl_attempted_completion_function = builtin_completion;
 
-	rl_filename_quote_characters = " \t\n\\`$><=;|&{()}";
+	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_filename_quoting_function = quote;
 	rl_filename_dequoting_function = unquote;
 #endif
