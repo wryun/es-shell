@@ -419,6 +419,15 @@ restart:
 			RefEnd(lp);
 			goto restart;
 		    }
+		    case nConcat: {
+			Ref(Tree *, t, cp->tree);
+			while (t->kind == nConcat)
+				t = t->u[0].p;
+			if (t->kind == nPrim)
+				fail("es:eval", "invalid primitive name: %T", cp->tree);
+			RefEnd(t);
+			/* fallthrough */
+		    }
 		    default:
 			panic("eval: bad closure node kind %d",
 			      cp->tree->kind);
