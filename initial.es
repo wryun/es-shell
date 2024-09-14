@@ -639,7 +639,6 @@ fn %interactive-loop {
 				throw $e $type $msg
 			} {~ $e error} {
 				echo >[1=2] $msg
-				$fn-%dispatch false
 			} {~ $e signal} {
 				if {!~ $type sigint sigterm sigquit} {
 					echo >[1=2] caught unexpected signal: $type
