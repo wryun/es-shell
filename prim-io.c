@@ -405,8 +405,29 @@ PRIM(read) {
 		freebuffer(buffer);
 	buffer = openbuffer(0);
 
-	while ((c = read1(fd)) != EOF && c != '\n')
-		buffer = bufputc(buffer, c);
+#if HAVE_LSEEK
+	if (lseek(fd, 0, SEEK_CUR) < 0) {
+#endif
+		while ((c = read1(fd)) != EOF && c != '\n')
+			buffer = bufputc(buffer, c);
+#if HAVE_LSEEK
+	} else {
+		int n;
+		char *p;
+		char s[BUFSIZE];
+		c = EOF;
+		while ((n = eread(fd, s, BUFSIZE)) > 0) {
+			c = 0;
+			if ((p = strchr(s, '\n')) == NULL)
+				buffer = bufncat(buffer, s, n);
+			else {
+				buffer = bufncat(buffer, s, (p - s));
+				lseek(fd, 1 + ((p - s) - n), SEEK_CUR);
+				break;
+			}
+		}
+	}
+#endif
 
 	if (c == EOF && buffer->current == 0) {
 		freebuffer(buffer);
