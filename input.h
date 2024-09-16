@@ -27,6 +27,7 @@ struct Input {
 
 extern Input *input;
 extern void unget(Input *in, int c);
+extern Boolean ignoreeof;
 extern void yyerror(char *s);
 
 

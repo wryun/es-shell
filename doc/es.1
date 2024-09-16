@@ -160,7 +160,7 @@
 .\" the recursion.
 .\"-------
 .if !"\\$4"" .Xf \\$2 \\$1 "\\$3\\f\\$1\\$4\\*(Xi" "\\$5" "\\$6" "\\$7" "\\$8" "\\$9"
-.if "\\$4"" \\$3\fR\s10
+.if "\\$4"" \\$3\fR\s(10
 ..
 .\"-------
 .\" IS, IE -- sublist begin and end
@@ -179,7 +179,7 @@
 .nr )P +.5v
 .sp .4v \}
 ..
-.TH ES 1 "5 March 1992"
+.TH ES 1 "29 August 2024"
 .SH NAME
 es \- extensible shell
 .SH SYNOPSIS
@@ -318,7 +318,7 @@ The number sign
 begins a comment in
 .IR es .
 All characters up to but not including the next newline are ignored.
-.SS "Line continuation"
+.SS "Line Continuation"
 A long logical line may be continued over several physical lines by
 terminating each line (except the last) with a backslash
 .Rc ( \e ).
@@ -632,12 +632,12 @@ For example, to append a single period at the end of
 .Cr $path ,
 use:
 .Ds
-.Cr "echo $^path."
+.Cr "echo $^path"
 .De
 .PP
 To flatten the output of a command, use
 .Ds
-.Ci `\^{cmd args}
+.Ci \`^{ "cmd args" }
 .De
 .PP
 See the section entitled
@@ -792,38 +792,54 @@ For example:
 .De
 .PP
 is true.
-.SS "Matching multiple patterns"
-While pattern matching using the tilde
-.Cr ( ~ )
-operator is powerful, it can feel limiting when you need to perform one of
-several possible actions depending on which patterns match the same subject
-every time.
-For this situation,
-.I es
-has a
+.SS "Matching Multiple Patterns"
+.I Es
+provides a
 .Cr match
-command that can simplify things:
+command for cases where repeated pattern matching with the tilde
+.Rc ( ~ )
+operator is inconvenient.
+.PP
+This invocation compares the
+.I subject
+against the given patterns and executes the first action corresponding
+with a matched pattern, or throws an
+.Cr error
+exception if no matches for the
+.I subject
+exist:
+.ta 2.5i
 .Ds
 .Cr "match \fIsubject\fP ("
-.Cr "  \fIpattern1\fP            {action1}"
-.Cr "  (\fIpattern2 pattern3\fP) {action2}"
-.Cr "  (\fIpattern4 pattern5 pattern6\fP) {"
-.Cr "    action3"
-.Cr "  }"
-.Cr "  ..."
-.Cr "  * {"
-.Cr "    throw error example no matching patterns"
-.Cr "  }"
+.Cr "    \fIpattern1\fP	{\fIaction1\fP}"
+.Cr "    (\fIpattern2 pattern3\fP)	{\fIaction2\fP}"
+.Cr "    * {"
+.Cr "        throw error example no matching patterns"
+.Cr "    }"
 .Cr ")"
 .De
 .PP
-The behavior is the same as an
+The body of a
+.Cr match
+must be wrapped in parentheses.
+Each
+.I pattern
+must be on the same line as its corresponding
+.IR action ,
+and separate
+.IR pattern - action
+pairs must be separated by newlines or semicolons.
+.PP
+The matching behavior is equivalent to an
 .Cr if
 command with multiple
 .Cr ~
-commands and command blocks as arguments, and each list of patterns is
-evaluated in the order presented.
-For example, the match command and the if command below are equivalent:
+comparisons.
+For example, the
+.Cr match
+command and the
+.Cr if
+command below are equivalent:
 .Ds
 .Cr "               bc = bang crack"
 .Cr "               bp = biff plop"
@@ -837,6 +853,13 @@ For example, the match command and the if command below are equivalent:
 .Cr "  }                     }"
 .Cr ")"
 .De
+.PP
+The value of the
+.I subject
+being matched is dynamically bound to the variable
+.Cr $matchexpr
+within the body of the
+.Cr match .
 .SS "Pattern Extraction"
 The double-tilde
 .Rc ( ~~ )
@@ -875,7 +898,8 @@ substitution:
 .De
 .PP
 returns a list formed from the standard output of the command in braces.
-Its return value is stored in the variable $bqstatus.
+Its return value is stored in the variable
+.Cr $bqstatus .
 .PP
 The characters in the variable
 .Cr $ifs
@@ -983,21 +1007,21 @@ the first command has a ``false'' return value.
 .De
 .PP
 inverts the truth value of the exit status of a command.
-.SS "Input and output"
+.SS "Input and Output"
 The standard output of a command may be redirected to a file with
 .Ds
-.Cr "command > file"
+.Ic command " > " file
 .De
 .PP
 and the standard input may be taken from a file with
 .Ds
-.Cr "command < file"
+.Ic command " < " file
 .De
 .PP
 File descriptors other than 0 and 1 may be specified also.
 For example, to redirect standard error to a file, use:
 .Ds
-.Cr "command >[2] file"
+.Ic command " >[2] " file
 .De
 .PP
 In order to duplicate a file descriptor, use
@@ -1005,7 +1029,7 @@ In order to duplicate a file descriptor, use
 Thus to redirect both standard output and standard error
 to the same file, use
 .Ds
-.Cr "command > file >[2=1]"
+.Ic command " > " file " >[2=1]"
 .De
 .PP
 To close a file descriptor that may be open, use
@@ -1013,13 +1037,13 @@ To close a file descriptor that may be open, use
 For example, to
 close file descriptor 7:
 .Ds
-.Cr "command >[7=]"
+.Ic command " >[7=]"
 .De
 .PP
 In order to place the output of a command at the end of an already
 existing file, use:
 .Ds
-.Cr "command >> file"
+.Ic command " >> " file
 .De
 .PP
 If the file does not exist, then it is created.
@@ -1042,7 +1066,7 @@ these operators use file descriptor 1 by default.
 .IR sh (1)
 with the use of
 .Ds
-.Cr "command << 'eof-marker'"
+.Ic command " << '" eof-marker "'"
 .De
 .PP
 If the end-of-file marker is quoted,
@@ -1099,7 +1123,7 @@ As an example, to pipe the standard error of a command to
 .IR wc (1),
 use:
 .Ds
-.Cr "command |[2] wc"
+.Ic command " |[2] wc"
 .De
 .PP
 The exit status of a pipeline is considered true if and only if every
@@ -1118,7 +1142,7 @@ can read the output of two commands at once.
 .I Es
 does it like this:
 .Ds
-.Cr "cmp <{command1} <{command2}"
+.Ci "cmp <{" command1 "} <{" command2 "}"
 .De
 .PP
 compares the output of the two commands.
@@ -1370,7 +1394,7 @@ default prompt.)
 Lexically bound variables are not exported into the environment,
 and never cause the invocation of settor functions.
 Function (lambda) parameters are lexically bound to their values.
-.SS "For loops"
+.SS "For Loops"
 The command
 .Ds
 .Cr "for (\fIvar\fP = \fIlist\fP) \fIcommand\fP"
@@ -1605,13 +1629,6 @@ The initial value of
 .Cr ifs
 is space-tab-newline.
 .TP
-.Cr matchexpr
-The result of the expression being matched in a
-.Cr match
-command.  Outside of a
-.Cr match
-command, this variable is normally unset.
-.TP
 .Cr noexport
 A list of variables which
 .I es
@@ -1813,7 +1830,7 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 $#\fIvar\fP	<={%count $\fIvar\fP}
 $^\fIvar\fP	<={%flatten ' ' $\fIvar\fP}
 \`{\fIcmd args\fP}	<={%backquote <={%flatten '' $ifs} {\fIcmd args\fP}}
-\`\`\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
+\`\` \fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
 .ft R
 .De
 .SH BUILTINS

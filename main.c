@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 	volatile Boolean cmd_stdin = FALSE;		/* -s */
 	volatile Boolean loginshell = FALSE;	/* -l or $0[0] == '-' */
 	Boolean keepclosed = FALSE;		/* -o */
-	const char *volatile cmd = NULL;	/* -c */
+	Ref(const char *volatile, cmd, NULL);	/* -c */
 
 	initgc();
 	initconv();
@@ -223,5 +223,5 @@ getopt_done:
 		return 1;
 
 	EndExceptionHandler
-	RefEnd2(argp, args);
+	RefEnd3(argp, args, cmd);
 }
