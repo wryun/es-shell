@@ -8,7 +8,7 @@ AC_DEFUN([_ES_CHECK_READLINE], [
   AS_VAR_COPY([saved_LIBS], [LIBS])
   AS_IF([test -n "$1"], [
     AS_VAR_SET([es_cv_readline_cflags], ["$1"])
-    AS_VAR_APPEND([CFLAGS], [" $es_cv_readline_cflags"])
+    AS_VAR_APPEND([CFLAGS], [" $1"])
   ])
   AC_LANG_CONFTEST([AC_LANG_PROGRAM([[
 #include <stdio.h>
@@ -99,10 +99,6 @@ AC_DEFUN([ES_WITH_READLINE], [
   AC_ARG_VAR([READLINE_CFLAGS], [C compiler flags for readline])
   AC_ARG_VAR([READLINE_LIBS], [linker flags for readline])
 
-  AS_IF([AS_VAR_TEST_SET([READLINE_CFLAGS])], [
-    AS_VAR_COPY([es_cv_readline_cflags], [READLINE_CFLAGS])
-  ])
-
   m4_pushdef([ES_REQUIRED_ERROR],
              [AC_MSG_FAILURE([readline support requested but unavailable])])dnl
   m4_pushdef([ES_DEFAULT_ACTIONS_IF_REQUIRED],
@@ -114,10 +110,10 @@ AC_DEFUN([ES_WITH_READLINE], [
 
   AS_CASE(["$with_readline"],
           [no],         [],
-          [auto|check], [ES_CHECK_READLINE([$es_cv_readline_cflags],
+          [auto|check], [ES_CHECK_READLINE([${READLINE_CFLAGS-}],
                                            [${READLINE_LIBS-}],
                                            [$1], [$2])],
-          [yes],        [ES_CHECK_READLINE([$es_cv_readline_cflags],
+          [yes],        [ES_CHECK_READLINE([${READLINE_CFLAGS-}],
                                            [${READLINE_LIBS-}],
                                            ES_DEFAULT_ACTIONS_IF_REQUIRED)],
           [AC_MSG_ERROR([--with-readline: valid values are "yes", "no", "check" -- got "$with_readline"])])
