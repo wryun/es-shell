@@ -149,9 +149,9 @@ PRIM(var) {
 }
 
 PRIM(parse) {
-	List *result = NULL;
-	Tree *tree;
+	Tree *tree = NULL;
 
+	Ref(List *, result, NULL);
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
@@ -192,7 +192,7 @@ PRIM(parse) {
 	gcenable();
 
 	RefEnd2(prompt2, prompt1);
-	return result;
+	RefReturn(result);
 }
 
 PRIM(exitonfalse) {
