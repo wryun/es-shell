@@ -94,9 +94,7 @@ extern void unget(Input *in, int c) {
 	if (in->ungot > 0) {
 		assert(in->ungot < MAXUNGET);
 		in->unget[in->ungot++] = c;
-	} else if (in->bufbegin < in->buf && in->buf[-1] == c && (input->runflags & run_echoinput) == 0)
-		--in->buf;
-	else {
+	} else {
 		assert(in->rfill == NULL);
 		in->rfill = in->fill;
 		in->fill = ungetfill;
@@ -117,8 +115,11 @@ extern void unget(Input *in, int c) {
 /* get -- get a character, filter out nulls */
 static int get(Input *in) {
 	int c;
+	Boolean uf = (in->fill == ungetfill);
 	while ((c = (in->buf < in->bufend ? *in->buf++ : (*in->fill)(in))) == '\0')
 		warn("null character ignored");
+	if (!uf && c != EOF)
+		addhistbuffer((char)c);
 	return c;
 }
 
@@ -281,9 +282,6 @@ static int fdfill(Input *in) {
 		return EOF;
 	}
 
-	if (in->runflags & run_interactive)
-		addhistbuf((char *) in->bufbegin, nread);
-
 	in->buf = in->bufbegin;
 	in->bufend = &in->buf[nread];
 	return *in->buf++;
@@ -298,7 +296,6 @@ static int fdfill(Input *in) {
 extern Tree *parse(char *pr1, char *pr2) {
 	int result;
 	assert(error == NULL);
-        assert(!pendinghistory());
 
 	inityy();
 	emptyherequeue();
@@ -320,21 +317,11 @@ extern Tree *parse(char *pr1, char *pr2) {
 	gcenable();
 
 	if (result || error != NULL) {
-		char *e, *h;
+		char *e;
 		assert(error != NULL);
 		e = error;
 		error = NULL;
-		gcdisable();
-		h = dumphistbuf();
-		Ref(List *, ex, mklist(mkstr("error"),
-				       mklist(mkstr("$&parse"),
-					      mklist(mkstr(e),
-						     (h == NULL
-						      ? NULL
-						      : mklist(mkstr(h), NULL))))));
-		gcenable();
-		throw(ex);
-		RefEnd(ex);
+		fail("$&parse", "%s", e);
 	}
 
 #if LISPTREES
@@ -346,7 +333,6 @@ extern Tree *parse(char *pr1, char *pr2) {
 
 /* resetparser -- clear parser errors in the signal handler */
 extern void resetparser(void) {
-	discardhistbuf();
 	error = NULL;
 }
 
@@ -488,7 +474,6 @@ extern Tree *parseinput(Input *in) {
 
 	ExceptionHandler
 		result = parse(NULL, NULL);
-		discardhistbuf();
 		if (get(in) != EOF)
 			fail("$&parse", "more than one value in term");
 	CatchException (e)

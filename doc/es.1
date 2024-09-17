@@ -2487,8 +2487,7 @@ Reads input from the current input source, printing
 before reading anything and
 .I prompt2
 before reading continued lines.
-Returns a code fragment suitable for execution as the first value and the input
-string which generated the code fragment as the second.
+Returns a code fragment suitable for execution.
 Raises the exception
 .Cr eof
 on end of input.
@@ -2672,8 +2671,8 @@ apids	here	read
 close	home	run
 count	newfd	seq
 dup	openfile	split
-flatten	parse	var
-fsplit	pipe	whatis
+flatten	var	fsplit
+pipe	whatis
 .ft R
 .De
 .PP
@@ -2689,12 +2688,25 @@ batchloop	exitonfalse	isinteractive
 .De
 .PP
 The
+.Cr parse
+primitive is used to implement the
+.Cr %parse
+hook function, but it returns the input which it used to parse the
+command as the first value of its result.  It also includes the input as
+the first element of the
+.I message
+of any
+.Cr error
+exceptions it throws.
+.PP
+The
 .Cr background
 primitive is used to implement the
 .Cr %background
 hook function, but does not print the process ID of the
 background process or set
 .Cr $apid .
+.PP
 The
 .Cr backquote
 primitive is used to implement the
@@ -2724,14 +2736,14 @@ limit	limit
 readfrom	%readfrom
 time	time
 writeto	%writeto
-writehistory	%write-history
 .ft R
 .De
 .PP
 The primitives
-.Cr resetterminal
+.Cr resetterminal ,
+.Cr sethistory ,
 and
-.Cr sethistory
+.Cr writehistory
 are if
 .I es
 is compiled with support for the
@@ -2739,17 +2751,27 @@ is compiled with support for the
 or
 .I editline
 libraries.
-The former is used in the implementation of settor functions of the
+.Cr resetterminal
+is used in the implementation of settor functions of the
 .Cr TERM
 and
 .Cr TERMCAP
 variables to notify the line editing packages that the terminal
 configuration has changed.
-The latter is used for the
+.Cr sethistory
+is used in the
 .Cr set-history
-settor variable when
-.I readline
-support is compiled in.
+settor function to signal to line editing packages which history file is
+being used.
+.Cr writehistory
+is used in the
+.Cr %write-history
+function to log a new line to the line editing packages' internal
+command log, and write to the
+.Cr history
+file if that variable is set via the
+.Cr sethistory
+primitive.
 .PP
 Several primitives are not directly associated with other function.
 They are:

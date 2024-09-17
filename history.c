@@ -41,23 +41,22 @@ static char history_comment_char = '#';
  * histbuffer -- build the history line during input and dump it as a gc-string
  */
 
-extern Boolean pendinghistory() {
-	return histbuffer != NULL;
+
+extern void newhistbuffer() {
+	assert(histbuffer == NULL);
+	histbuffer = openbuffer(BUFSIZE);
 }
 
-extern void addhistbuf(char *line, size_t len) {
-	if (line == NULL || len == 0)
+extern void addhistbuffer(char c) {
+	if (histbuffer == NULL)
 		return;
-	if (histbuffer == NULL)
-		histbuffer = openbuffer(BUFSIZE);
-	histbuffer = bufncat(histbuffer, line, len);
+	histbuffer = bufputc(histbuffer, c);
 }
 
-extern char *dumphistbuf() {
-	char *s, *p;
+extern char *dumphistbuffer() {
+	char *s;
         size_t len;
-	if (histbuffer == NULL)
-		return NULL;
+	assert(histbuffer != NULL);
 
 	s = sealcountedbuffer(histbuffer);
 	histbuffer = NULL;
@@ -65,24 +64,7 @@ extern char *dumphistbuf() {
 	len = strlen(s);
 	if (len > 0 && s[len - 1] == '\n')
 		s[len - 1] = '\0';
-
-	for (p = s; *p != '\0'; p++)
-		switch(*p) {
-		case '#': case '\n':	goto retnull;
-		case ' ': case '\t':	break;
-		default:		goto retreal;
-		}
-retnull:
-	return NULL;
-retreal:
 	return s;
-}
-
-extern void discardhistbuf() {
-	if (histbuffer == NULL)
-		return;
-	freebuffer(histbuffer);
-	histbuffer = NULL;
 }
 
 

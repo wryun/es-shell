@@ -151,27 +151,47 @@ PRIM(var) {
 PRIM(parse) {
 	List *result = NULL;
 	Tree *tree;
-	char *h;
+
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
-	Ref(List *, hist, NULL);
 	Ref(List *, lp, list);
 	if (lp != NULL) {
 		prompt1 = getstr(lp->term);
 		if ((lp = lp->next) != NULL)
 			prompt2 = getstr(lp->term);
 	}
+	newhistbuffer();
 	RefEnd(lp);
-	tree = parse(prompt1, prompt2);
 
-	if ((h = dumphistbuf()) != NULL) {
-		hist = mklist(mkterm(h, NULL), NULL);
-	}
+	ExceptionHandler
 
+		tree = parse(prompt1, prompt2);
+
+	CatchException (e)
+
+		char *h = dumphistbuffer();
+
+		if (termeq(e->term, "error")) {
+			gcdisable();
+			e = mklist(e->term,
+				mklist(e->next->term,
+					mklist(mkstr(h),
+						e->next->next)));
+			gcenable();
+		}
+
+		throw(e);
+
+	EndExceptionHandler
+
+	gcdisable();
 	if (tree != NULL)
-		result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), hist);
+		result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
 
-	RefEnd3(hist, prompt2, prompt1);
+	result = mklist(mkstr(dumphistbuffer()), result);
+	gcenable();
+
+	RefEnd2(prompt2, prompt1);
 	return result;
 }
 
@@ -190,9 +210,23 @@ PRIM(batchloop) {
 		for (;;) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
-			cmd = (parser == NULL)
-					? prim("parse", NULL, NULL, 0)
-					: eval(parser, NULL, 0);
+			if (parser == NULL) {
+				ExceptionHandler
+					cmd = prim("parse", NULL, NULL, 0);
+					cmd = cmd->next;
+				CatchException(e)
+					if (termeq(e->term, "error")) {
+						gcdisable();
+						e = mklist(e->term,
+								mklist(e->next->term,
+									e->next->next->next));
+						gcenable();
+					}
+					throw(e);
+				EndExceptionHandler
+
+			} else
+				cmd = eval(parser, NULL, 0);
 			SIGCHK();
 			dispatch = varlookup("fn-%dispatch", NULL);
 			if (cmd != NULL) {
