@@ -147,6 +147,8 @@ let (status = ()) {
 	}
 }
 
+noexport = $noexport fn-assert fn-test fn-report-testfile
+
 # $es contains the path to es which the tests can use to refer to "the es binary
 # under test".
 es = $0

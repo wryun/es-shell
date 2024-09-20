@@ -3,7 +3,7 @@
 # This is migrated from trip.es, but the match section is big enough that it
 # deserves its own file.
 
-test 'test 1' {
+test 'match/if equivalence' {
 	for (subjstr = ( '()' 'foo' )) {
 		subj = <={eval result $subjstr}
 		for (
