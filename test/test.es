@@ -111,20 +111,21 @@ let (status = ()) {
 		local (
 			fn assert cmd message {
 				let (result = ()) {
+					if {~ $message ()} {
+						message = $^cmd
+					} {
+						message = $^message
+					}
 					catch @ e {
-						fail-case $title $cmd $e
+						fail-case $title $message $e
 						return
 					} {
 						result = <={$cmd}
 					}
-					if {!result $result} {
-						if {!~ $message ()} {
-							fail-case $title $^message
-						} {
-							fail-case $title $cmd
-						}
+					if {result $result} {
+						pass-case $title $message
 					} {
-						pass-case $title $cmd
+						fail-case $title $message
 					}
 				}
 			}
