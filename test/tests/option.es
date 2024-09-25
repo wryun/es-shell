@@ -35,7 +35,11 @@ EOF
 		rm -f $temp
 	}
 
-	# TODO: test #119
+	let (output = ()) {
+		local (fn %batch-loop {false; $&batchloop $*})
+			output = `` \n {$es -ec 'echo okay'}
+		assert {~ $output 'okay'} es -e does not stop execution outside of %dispatch
+	}
 }
 
 test 'es -p' {
