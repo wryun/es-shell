@@ -285,7 +285,7 @@ extern Tree *parsestring(const char *str);
 extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 #if ABUSED_GETENV
-#if READLINE
+#if HAVE_READLINE
 extern void initgetenv(void);
 #endif
 #endif
@@ -302,7 +302,7 @@ extern List *runstring(const char *str, const char *name, int flags);
 #define	run_printcmds		32	/* -x */
 #define	run_lisptrees		64	/* -L and defined(LISPTREES) */
 
-#if READLINE
+#if HAVE_READLINE
 extern Boolean resetterminal;
 #endif
 

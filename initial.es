@@ -712,8 +712,8 @@ set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
 #	If the primitive $&resetterminal is defined (meaning that readline
-#	or editline is being used), setting the variables $TERM or $TERMCAP
-#	should notify the line editor library.
+#	is being used), setting the variables $TERM or $TERMCAP should
+#	notify the line editor library.
 
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }

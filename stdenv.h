@@ -108,7 +108,7 @@ extern void *qsort(
 );
 #endif /* !STDC_HEADERS */
 
-#if READLINE
+#if HAVE_READLINE
 # include <stdio.h>
 #endif
 
