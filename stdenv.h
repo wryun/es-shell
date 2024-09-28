@@ -6,17 +6,6 @@
 #endif
 
 /*
- * type qualifiers
- */
-
-#if !USE_VOLATILE
-# ifndef volatile
-#  define volatile
-# endif
-#endif
-
-
-/*
  * protect the rest of es source from the dance of the includes
  */
 
