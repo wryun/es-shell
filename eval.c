@@ -426,8 +426,8 @@ restart:
 			if (t->kind == nPrim)
 				fail("es:eval", "invalid primitive name: %T", cp->tree);
 			RefEnd(t);
-			/* fallthrough */
 		    }
+		    FALLTHROUGH;
 		    default:
 			panic("eval: bad closure node kind %d",
 			      cp->tree->kind);

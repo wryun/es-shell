@@ -89,6 +89,14 @@ extern Dirent *readdir(DIR *);
 #endif
 #endif
 
+#ifndef FALLTHROUGH
+#if __GNUC__
+#define FALLTHROUGH __attribute__((__fallthrough__))
+#else
+#define FALLTHROUGH (void)0
+#endif
+#endif
+
 #if STDC_HEADERS
 # include <stdlib.h>
 #else
