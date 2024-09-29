@@ -73,12 +73,20 @@ extern Dirent *readdir(DIR *);
 #endif
 
 /* stdlib */
+#ifndef Noreturn
 #if __GNUC__
 #define Noreturn __attribute__((__noreturn__)) void
-#define unused __attribute__((__unused__))
 #else
 #define Noreturn void
+#endif
+#endif
+
+#ifndef unused
+#if __GNUC__
+#define unused __attribute__((__unused__))
+#else
 #define unused
+#endif
 #endif
 
 #if STDC_HEADERS
