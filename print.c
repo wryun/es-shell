@@ -338,7 +338,7 @@ extern int eprint VARARGS1(const char *, fmt) {
 	return format.flushed;
 }
 
-extern noreturn panic VARARGS1(const char *, fmt) {
+extern Noreturn panic VARARGS1(const char *, fmt) {
 	Format format;
 	gcdisable();
 	VA_START(format.args, fmt);

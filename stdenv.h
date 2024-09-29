@@ -74,22 +74,18 @@ extern Dirent *readdir(DIR *);
 
 /* stdlib */
 #if __GNUC__
-/* function declaration syntax */
-#define noreturn(F) volatile void F __attribute__((noreturn))
-/* function definition syntax */
-typedef volatile void noreturn;
-#define unused __attribute__((unused))
+#define Noreturn __attribute__((__noreturn__)) void
+#define unused __attribute__((__unused__))
 #else
-#define noreturn(F) void F
-typedef void noreturn;
+#define Noreturn void
 #define unused
 #endif
 
 #if STDC_HEADERS
 # include <stdlib.h>
 #else
-extern noreturn(exit(int));
-extern noreturn(abort(void));
+extern Noreturn exit(int);
+extern Noreturn abort(void);
 extern long strtol(const char *num, char **end, int base);
 extern void *qsort(
 	void *base, size_t nmemb, size_t size,

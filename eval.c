@@ -4,7 +4,7 @@
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
 
-static noreturn failexec(char *file, List *args) {
+static Noreturn failexec(char *file, List *args) {
 	List *fn;
 	assert(gcisblocked());
 	fn = varlookup("fn-%exec-failure", NULL);
