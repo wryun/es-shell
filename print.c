@@ -281,7 +281,7 @@ extern int fmtprint VARARGS2(Format *, format, const char *, fmt) {
 	return n + format->flushed;
 }
 
-static void fprint_flush(Format *format, size_t unused more) {
+static void fprint_flush(Format *format, size_t UNUSED more) {
 	size_t n = format->buf - format->bufbegin;
 	char *buf = format->bufbegin;
 
@@ -338,7 +338,7 @@ extern int eprint VARARGS1(const char *, fmt) {
 	return format.flushed;
 }
 
-extern noreturn panic VARARGS1(const char *, fmt) {
+extern Noreturn panic VARARGS1(const char *, fmt) {
 	Format format;
 	gcdisable();
 	VA_START(format.args, fmt);

@@ -212,7 +212,7 @@ static List *extractsinglematch(const char *subject, const char *pattern,
 				}
 				i += j;
 			    }
-			    /* FALLTHROUGH */
+			    FALLTHROUGH;
 			    case '?':
 				result = mklist(mkstr(str("%c", *s)), result);
 				break;

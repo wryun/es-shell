@@ -123,7 +123,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 				eprint("$&setsignals: special handler not defined for %s\n", signame(sig));
 				return old;
 			}
-			/* fallthrough */
+			FALLTHROUGH;
 		case sig_catch:
 		case sig_noop:
 			if (setsignal(sig, catcher) == SIG_ERR) {
@@ -301,7 +301,6 @@ extern void sigchk(void) {
 		while (gcisblocked())
 			gcenable();
 		throw(e);
-		NOTREACHED;
 	case sig_special:
 		assert(sig == SIGINT);
 		/* this is the newline you see when you hit ^C while typing a command */
@@ -311,8 +310,6 @@ extern void sigchk(void) {
 		while (gcisblocked())
 			gcenable();
 		throw(e);
-		NOTREACHED;
-		break;
 	case sig_noop:
 		break;
 	default:
