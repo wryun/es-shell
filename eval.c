@@ -81,7 +81,7 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 
 /* letbindings -- create a new Binding containing let-bound variables */
 static Binding *letbindings(Tree *defn0, Binding *outer0,
-			    Binding *context0, int unused evalflags) {
+			    Binding *context0, int UNUSED evalflags) {
 	Ref(Binding *, binding, outer0);
 	Ref(Binding *, context, context0);
 	Ref(Tree *, defn, defn0);

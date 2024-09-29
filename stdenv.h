@@ -81,11 +81,11 @@ extern Dirent *readdir(DIR *);
 #endif
 #endif
 
-#ifndef unused
+#ifndef UNUSED
 #if __GNUC__
-#define unused __attribute__((__unused__))
+#define UNUSED __attribute__((__unused__))
 #else
-#define unused
+#define UNUSED
 #endif
 #endif
 
