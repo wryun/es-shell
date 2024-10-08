@@ -1790,7 +1790,6 @@ when invoked in this way, the shell prints the internal form of its commands
 rather than executing them.
 .ta 2.3i
 .SS "Control Flow"
-\&
 .Ds
 .ft \*(Cf
 ! \fIcmd\fP	%not {\fIcmd\fP}
@@ -1802,7 +1801,6 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Input/Output Commands"
-\&
 .Ds
 .ft \*(Cf
 \fIcmd\fP < \fIfile\fP	%open 0 \fIfile\fP {\fIcmd\fP}
@@ -1824,7 +1822,6 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Expressions"
-\&
 .Ds
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
@@ -2848,6 +2845,97 @@ Don't trap
 or
 .Cr SIGTERM .
 This is used for debugging.
+.SH EXTENSION SCRIPTS
+.I Es
+is distributed with a directory of extension scripts, which implement a number
+of features commonly desired by users but not built into the shell.
+These scripts are typically installed into the
+.Cr $share/es
+directory, where
+.Cr $share
+is a directory like
+.Cr /usr/share " or " /usr/local/share
+which corresponds with the
+.Cr bin
+directory into which the
+.I es
+binary is installed.
+.PP
+These scripts generally work by spoofing hook functions within
+.I es
+and can be read as a demonstration of how these spoofs work.
+They are intended to be invoked as
+.Ds
+.Ci ". " /path/to/script.es
+.De
+.PP
+in
+.Cr $home/.esrc ,
+though they can also be invoked at the interactive command line or even in
+scripts (though they may not be particularly useful when invoked in those
+cases).
+.PP
+Features currently distributed via extension scripts include:
+.TP
+.Cr autoload.es
+adds behavior to
+.I es
+to search a directory of scripts for a file which defines a function which
+would otherwise be undefined.
+This corresponds somewhat with the function-autoloading feature of shells
+like
+.IR ksh (1)
+and 
+.IR zsh (1).
+.TP
+.Cr cdpath.es
+implements
+.IR rc (1)-style
+.Cr $cdpath
+searching to the
+.Cr cd
+builtin.
+.TP
+.Cr interactive-init.es
+adds a hook for a function
+.Cr %interactive-init
+to be called at the beginning of
+.Cr %interactive-loop .
+By invoking
+.Ci ". " /path/to/ interactive-init.es
+and defining
+.Ds
+.Ci "fn %interactive-loop {"
+.Ci "  . " startup-script.es
+.Cr "}"
+.De
+in their
+.Cr .esrc ,
+users can have a
+.Cr .bashrc -like
+interactive startup script.
+.TP
+.Cr path-cache.es
+adds behavior to
+.Cr %pathsearch
+to ``cache'' the location of external commands by automatically defining
+.Ds
+.Ci fn- command " = " /path/to/command
+.De
+when paths are found.
+This is helpful to performance when path searching is slow, and corresponds
+with the ``hashing'' behavior in some other shells.
+.TP
+.Cr status.es
+This adds a variable
+.Cr $status
+which contains the return value of commands run at the interactive command
+line, like
+.IR rc (1)
+has.
+.PP
+Users interested in these features should peruse the scripts themselves for
+more precise information on their use.
 .SH FILES
 .Cr $home/.esrc ,
 .Cr /dev/null
