@@ -38,9 +38,6 @@ fn %cdpathsearch name { access -n $name -1e -d $cdpath }
 # separated word as is common in UNIX, while the lowercase cdpath contains an
 # es list.  CDPATH is exported while cdpath is not.
 
-# TODO: Test: Does this "variable pairing" setup actually work when noexport is
-# itself noexport?
-
 set-cdpath = @ {local (set-CDPATH = ) CDPATH = <={%flatten : $*}; result $*}
 set-CDPATH = @ {local (set-cdpath = ) cdpath = <={%fsplit  : $*}; result $*}
 
