@@ -314,21 +314,6 @@ extern List *pathsearch(Term *term) {
 	return eval(append(search, list), NULL, 0);
 }
 
-static List *mkrunhook(char *bin0, List *list0) {
-	Ref(List *, list, list0);
-	Ref(char *, bin, bin0);
-	Ref(Term *, t, mkstr(bin));
-	list = mklist(t, list);
-
-	Ref(List *, run, varlookup("fn-%run", NULL));
-	if (run == NULL)
-		fail("es:eval", "%s: fn %%run undefined", bin);
-	list = append(run, list);
-
-	RefEnd3(run, t, bin);
-	RefReturn(list);
-}
-
 /* eval -- evaluate a list, producing a list */
 extern List *eval(List *list0, Binding *binding0, int flags) {
 	Closure *volatile cp;
@@ -423,7 +408,9 @@ restart:
 		char *error = checkexecutable(name);
 		if (error != NULL)
 			fail("$&whatis", "%s: %s", name, error);
-		list = mkrunhook(name, list);
+		gcdisable();
+		list = mklist(mkstr("%run"), mklist(mkstr(name), list));
+		gcenable();
 		RefPop(name);
 		goto restart;
 	}
@@ -433,7 +420,9 @@ restart:
 	if (fn != NULL && fn->next == NULL
 	    && (cp = getclosure(fn->term)) == NULL) {
 		char *name = getstr(fn->term);
-		list = mkrunhook(name, list);
+		gcdisable();
+		list = mklist(mkstr("%run"), mklist(mkstr(name), list));
+		gcenable();
 		goto restart;
 	}
 
