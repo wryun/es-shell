@@ -2671,8 +2671,8 @@ apids	here	read
 close	home	run
 count	newfd	seq
 dup	openfile	split
-flatten	parse	var
-fsplit	pipe	whatis
+flatten	var	fsplit
+pipe	whatis
 .ft R
 .De
 .PP
@@ -2688,12 +2688,25 @@ batchloop	exitonfalse	isinteractive
 .De
 .PP
 The
+.Cr parse
+primitive is used to implement the
+.Cr %parse
+hook function, but it returns the input which it used to parse the
+command as the first value of its result.  It also includes the input as
+the first element of the
+.I message
+of any
+.Cr error
+exceptions it throws.
+.PP
+The
 .Cr background
 primitive is used to implement the
 .Cr %background
 hook function, but does not print the process ID of the
 background process or set
 .Cr $apid .
+.PP
 The
 .Cr backquote
 primitive is used to implement the
@@ -2707,7 +2720,7 @@ The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-sethistory	setnoexport	setsignals
+setnoexport	setsignals
 .ft R
 .De
 .PP
@@ -2726,21 +2739,39 @@ writeto	%writeto
 .ft R
 .De
 .PP
-The primitive
-.Cr resetterminal
-is if
+The primitives
+.Cr resetterminal ,
+.Cr sethistory ,
+and
+.Cr writehistory
+are if
 .I es
 is compiled with support for the
 .I readline
 or
 .I editline
 libraries.
-It is used in the implementation of settor functions of the
+.Cr resetterminal
+is used in the implementation of settor functions of the
 .Cr TERM
 and
 .Cr TERMCAP
 variables to notify the line editing packages that the terminal
 configuration has changed.
+.Cr sethistory
+is used in the
+.Cr set-history
+settor function to signal to line editing packages which history file is
+being used.
+.Cr writehistory
+is used in the
+.Cr %write-history
+function to log a new line to the line editing packages' internal
+command log, and write to the
+.Cr history
+file if that variable is set via the
+.Cr sethistory
+primitive.
 .PP
 Several primitives are not directly associated with other function.
 They are:

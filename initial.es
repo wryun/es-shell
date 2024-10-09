@@ -599,12 +599,11 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	%batch-loop is used.
 #
 #	The function %parse can be used to call the parser, which returns
-#	an es command.  %parse takes two arguments, which are used as the
-#	main and secondary prompts, respectively.  %parse typically returns
-#	one line of input, but es allows commands (notably those with braces
-#	or backslash continuations) to continue across multiple lines; in
-#	that case, the complete command and not just one physical line is
-#	returned.
+#	an es command.  %parse takes two arguments, which are used as the main
+#	and secondary prompts, respectively.  %parse typically returns one line
+#	of input, but es allows commands (notably those with braces or backslash
+#	continuations) to continue across multiple lines; in that case, the
+#	complete command and not just one physical line is returned.
 #
 #	By convention, the REPL must pass commands to the fn %dispatch,
 #	which has the actual responsibility for executing the command.
@@ -626,9 +625,62 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%parse	= $&parse
-fn-%batch-loop	= $&batchloop
-fn-%is-interactive = $&isinteractive
+fn-%is-interactive	= $&isinteractive
+fn-%batch-loop		= $&batchloop
+
+
+#	The first element of the $&parse primitive's return value is the input
+#	that it read in order to produce its parsed command.  In addition, any
+#	error exceptions coming from $&parse include the input such that instead
+#	of the typical set of
+#
+#		e type msg
+#
+#	terms, those exceptions contain
+#
+#		e type input msg
+#
+#	Both of these are "consumed" by %parse, which only returns the parsed
+#	command and only throws the `e type msg' terms.
+
+fn %parse {
+	catch @ e type msg {
+		if {~ $e error} {
+			if {%is-interactive && !~ $#fn-%write-history 0} {
+				%write-history $msg(1)
+			}
+			msg = $msg(2 ...)
+		}
+		throw $e $type $msg
+	} {
+		let ((line code) = <={$&parse $*}) {
+			if {%is-interactive && !~ $#fn-%write-history 0} {
+				%write-history $line
+			}
+			result $code
+		}
+	}
+}
+
+if {~ <=$&primitives writehistory} {
+	fn %write-history input {
+		if {!~ $input ''} {
+			$&writehistory $input
+		}
+	}
+} {
+	fn %write-history input {
+		if {!~ $history ()} {
+			if {access -w $history} {
+				if {!~ $input () && !~ $input ''} {
+					echo $input >> $history
+				}
+			} {
+				history = ()
+			}
+		}
+	}
+}
 
 fn %interactive-loop {
 	let (result = <=true) {
@@ -706,14 +758,17 @@ set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
-#	If the primitive $&resetterminal is defined (meaning that readline
-#	or editline is being used), setting the variables $TERM or $TERMCAP
-#	should notify the line editor library.
+#	If the primitives $&sethistory or $&resetterminal are defined (meaning
+#	that readline or editline is being used), setting the variables $TERM,
+#	$TERMCAP, or $history should notify the line editor library.
+
+if {~ <=$&primitives sethistory} {
+	set-history = $&sethistory
+}
 
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }

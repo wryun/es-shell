@@ -26,18 +26,11 @@
 Input *input;
 char *prompt, *prompt2;
 
-Boolean disablehistory = FALSE;
 Boolean ignoreeof = FALSE;
 Boolean resetterminal = FALSE;
-static char *history;
-static int historyfd = -1;
 
 #if READLINE
 #include <readline/readline.h>
-extern void add_history(char *);
-extern int read_history(char *);
-extern void stifle_history(int);
-
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
 static char *esgetenv(const char *);
@@ -77,55 +70,6 @@ static void warn(char *s) {
 
 
 /*
- * history
- */
-
-/* loghistory -- write the last command out to a file */
-static void loghistory(const char *cmd, size_t len) {
-	const char *s, *end;
-	if (history == NULL || disablehistory)
-		return;
-	if (historyfd == -1) {
-		historyfd = eopen(history, oAppend);
-		if (historyfd == -1) {
-			eprint("history(%s): %s\n", history, esstrerror(errno));
-			vardef("history", NULL, NULL);
-			return;
-		}
-	}
-	/* skip empty lines and comments in history */
-	for (s = cmd, end = s + len; s < end; s++)
-		switch (*s) {
-		case '#': case '\n':	return;
-		case ' ': case '\t':	break;
-		default:		goto writeit;
-		}
-	writeit:
-		;
-	/*
-	 * Small unix hack: since read() reads only up to a newline
-	 * from a terminal, then presumably this write() will write at
-	 * most only one input line at a time.
-	 */
-	ewrite(historyfd, cmd, len);
-}
-
-/* sethistory -- change the file for the history log */
-extern void sethistory(char *file) {
-	if (historyfd != -1) {
-		close(historyfd);
-		historyfd = -1;
-	}
-#if READLINE
-	/* Attempt to populate readline history with new history file. */
-	stifle_history(50000); /* Keep memory usage within sane-ish bounds. */
-	read_history(file);
-#endif
-	history = file;
-}
-
-
-/*
  * unget -- character pushback
  */
 
@@ -150,9 +94,7 @@ extern void unget(Input *in, int c) {
 	if (in->ungot > 0) {
 		assert(in->ungot < MAXUNGET);
 		in->unget[in->ungot++] = c;
-	} else if (in->bufbegin < in->buf && in->buf[-1] == c && (input->runflags & run_echoinput) == 0)
-		--in->buf;
-	else {
+	} else {
 		assert(in->rfill == NULL);
 		in->rfill = in->fill;
 		in->fill = ungetfill;
@@ -173,8 +115,11 @@ extern void unget(Input *in, int c) {
 /* get -- get a character, filter out nulls */
 static int get(Input *in) {
 	int c;
+	Boolean uf = (in->fill == ungetfill);
 	while ((c = (in->buf < in->bufend ? *in->buf++ : (*in->fill)(in))) == '\0')
 		warn("null character ignored");
+	if (!uf && c != EOF)
+		addhistbuffer((char)c);
 	return c;
 }
 
@@ -305,12 +250,9 @@ static int fdfill(Input *in) {
 		do {
 			rlinebuf = callreadline(prompt);
 		} while (rlinebuf == NULL && errno == EINTR);
-
 		if (rlinebuf == NULL)
 			nread = 0;
 		else {
-			if (*rlinebuf != '\0')
-				add_history(rlinebuf);
 			nread = strlen(rlinebuf) + 1;
 			if (in->buflen < (unsigned int)nread) {
 				while (in->buflen < (unsigned int)nread)
@@ -339,9 +281,6 @@ static int fdfill(Input *in) {
 			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
 		return EOF;
 	}
-
-	if (in->runflags & run_interactive)
-		loghistory((char *) in->bufbegin, nread);
 
 	in->buf = in->bufbegin;
 	in->bufend = &in->buf[nread];
@@ -384,6 +323,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 		error = NULL;
 		fail("$&parse", "%s", e);
 	}
+
 #if LISPTREES
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", parsetree);
@@ -690,13 +630,9 @@ extern void initinput(void) {
 	input = NULL;
 
 	/* declare the global roots */
-	globalroot(&history);		/* history file */
 	globalroot(&error);		/* parse errors */
 	globalroot(&prompt);		/* main prompt */
 	globalroot(&prompt2);		/* secondary prompt */
-
-	/* mark the historyfd as a file descriptor to hold back from forked children */
-	registerfd(&historyfd, TRUE);
 
 	/* call the parser's initialization */
 	initparse();

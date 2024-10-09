@@ -282,7 +282,6 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 extern char *prompt, *prompt2;
 extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
-extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 #if ABUSED_GETENV
 #if READLINE
@@ -305,6 +304,19 @@ extern List *runstring(const char *str, const char *name, int flags);
 #if READLINE
 extern Boolean resetterminal;
 #endif
+
+
+/* history.c */
+#if READLINE
+extern void inithistory(void);
+
+extern void sethistory(char *file);
+extern void loghistory(char *cmd);
+#endif
+
+extern void newhistbuffer(void);
+extern void addhistbuffer(char c);
+extern char *dumphistbuffer(void);
 
 
 /* opt.c */

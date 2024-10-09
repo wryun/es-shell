@@ -148,19 +148,10 @@ PRIM(var) {
 	return list;
 }
 
-PRIM(sethistory) {
-	if (list == NULL) {
-		sethistory(NULL);
-		return NULL;
-	}
-	Ref(List *, lp, list);
-	sethistory(getstr(lp->term));
-	RefReturn(lp);
-}
-
 PRIM(parse) {
-	List *result;
-	Tree *tree;
+	Tree *tree = NULL;
+
+	Ref(List *, result, NULL);
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
@@ -169,14 +160,39 @@ PRIM(parse) {
 		if ((lp = lp->next) != NULL)
 			prompt2 = getstr(lp->term);
 	}
+	newhistbuffer();
 	RefEnd(lp);
-	tree = parse(prompt1, prompt2);
-	result = (tree == NULL)
-		   ? NULL
-		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
-			    NULL);
+
+	ExceptionHandler
+
+		tree = parse(prompt1, prompt2);
+
+	CatchException (e)
+
+		char *h = dumphistbuffer();
+
+		if (termeq(e->term, "error")) {
+			gcdisable();
+			e = mklist(e->term,
+				mklist(e->next->term,
+					mklist(mkstr(h),
+						e->next->next)));
+			gcenable();
+		}
+
+		throw(e);
+
+	EndExceptionHandler
+
+	gcdisable();
+	if (tree != NULL)
+		result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
+
+	result = mklist(mkstr(dumphistbuffer()), result);
+	gcenable();
+
 	RefEnd2(prompt2, prompt1);
-	return result;
+	RefReturn(result);
 }
 
 PRIM(exitonfalse) {
@@ -194,9 +210,23 @@ PRIM(batchloop) {
 		for (;;) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
-			cmd = (parser == NULL)
-					? prim("parse", NULL, NULL, 0)
-					: eval(parser, NULL, 0);
+			if (parser == NULL) {
+				ExceptionHandler
+					cmd = prim("parse", NULL, NULL, 0);
+					cmd = cmd->next;
+				CatchException(e)
+					if (termeq(e->term, "error")) {
+						gcdisable();
+						e = mklist(e->term,
+								mklist(e->next->term,
+									e->next->next->next));
+						gcenable();
+					}
+					throw(e);
+				EndExceptionHandler
+
+			} else
+				cmd = eval(parser, NULL, 0);
 			SIGCHK();
 			dispatch = varlookup("fn-%dispatch", NULL);
 			if (cmd != NULL) {
@@ -280,6 +310,23 @@ PRIM(setmaxevaldepth) {
 }
 
 #if READLINE
+PRIM(sethistory) {
+	if (list == NULL) {
+		sethistory(NULL);
+		return NULL;
+	}
+	Ref(List *, lp, list);
+	sethistory(getstr(lp->term));
+	RefReturn(lp);
+}
+
+PRIM(writehistory) {
+	if (list == NULL || list->next != NULL)
+		fail("$&writehistory", "usage: $&writehistory command");
+	loghistory(getstr(list->term));
+	return NULL;
+}
+
 PRIM(resetterminal) {
 	resetterminal = TRUE;
 	return true;
@@ -299,7 +346,6 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(dot);
 	X(flatten);
 	X(whatis);
-	X(sethistory);
 	X(split);
 	X(fsplit);
 	X(var);
@@ -316,6 +362,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(noreturn);
 	X(setmaxevaldepth);
 #if READLINE
+	X(sethistory);
+	X(writehistory);
 	X(resetterminal);
 #endif
 	return primdict;
