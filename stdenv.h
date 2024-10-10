@@ -300,17 +300,32 @@ extern int getgroups(int, int *);
 
 /*
  * macros for picking apart statuses
- *	we should be able to use the W* forms from <sys/wait.h> but on
- *	some machines they take a union wait (what a bad idea!) and on
- *	others an integer.  we just renamed the first letter to s and
- *	let things be.  on some systems these could just be defined in
- *	terms of the W* forms.
+ *	in general systems should have these macros defined, so this
+ *	should all be a bunch of no-ops.  the only interesting case is
+ *	WCOREDUMP, which was only very recently standardized and is
+ *	still spelled by some systems as WIFCORED.
  */
 
-#define	SIFSIGNALED(status)	(((status) & 0xff) != 0)
-#define	STERMSIG(status)	((status) & 0x7f)
-#define	SCOREDUMP(status)	((status) & 0x80)
-#define	SIFEXITED(status)	(!SIFSIGNALED(status))
-#define	SEXITSTATUS(status)	(((status) >> 8) & 0xff)
+#ifndef 	WIFSIGNALED
+# define	WIFSIGNALED(status)	(((status) & 0xff) != 0)
+#endif
 
+#ifndef 	WTERMSIG
+# define	WTERMSIG(status)	((status) & 0x7f)
+#endif
 
+#ifndef 	WCOREDUMP
+# ifdef 	WIFCORED
+#  define	WCOREDUMP(status)	(WIFCORED(status))
+# else
+#  define	WCOREDUMP(status)	((status) & 0x80)
+# endif
+#endif
+
+#ifndef 	WIFEXITED
+# define	WIFEXITED(status)	(!SIFSIGNALED(status))
+#endif
+
+#ifndef 	WEXITSTATUS
+# define	WEXITSTATUS(status)	(((status) >> 8) & 0xff)
+#endif
