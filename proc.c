@@ -2,42 +2,25 @@
 
 #include "es.h"
 
-/* TODO: the rusage code for the time builtin really needs to be cleaned up */
-
-#if HAVE_WAIT3
 #include <sys/time.h>
 #include <sys/resource.h>
-#endif
 
 Boolean hasforked = FALSE;
 
 typedef struct Proc Proc;
 struct Proc {
 	int pid;
-	int status;
-	Boolean alive, background;
+	Boolean background;
 	Proc *next, *prev;
-#if HAVE_WAIT3
-	struct rusage rusage;
-#endif
 };
 
 static Proc *proclist = NULL;
 
 /* mkproc -- create a Proc structure */
 extern Proc *mkproc(int pid, Boolean background) {
-	Proc *proc;
-	for (proc = proclist; proc != NULL; proc = proc->next)
-		if (proc->pid == pid) {		/* are we recycling pids? */
-			assert(!proc->alive);	/* if false, violates unix semantics */
-			break;
-		}
-	if (proc == NULL) {
-		proc = ealloc(sizeof (Proc));
-		proc->next = proclist;
-	}
+	Proc *proc = ealloc(sizeof (Proc));
+	proc->next = proclist;
 	proc->pid = pid;
-	proc->alive = TRUE;
 	proc->background = background;
 	proc->prev = NULL;
 	return proc;
@@ -69,22 +52,16 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
-#if HAVE_WAIT3
-static struct rusage wait_rusage;
-#endif
-
-/* dowait -- a wait wrapper that interfaces with signals */
-static int dowait(int *statusp) {
+/* dowait -- a waitpid wrapper that gets rusage and interfaces with signals */
+static int dowait(int pid, int *statusp, struct rusage *rusage) {
 	int n;
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		n = interrupted ? -2 :
-#if HAVE_WAIT3
-			wait3((void *) statusp, 0, &wait_rusage);
-#else
-			wait((void *) statusp);
-#endif
+			waitpid(pid, statusp, 0);
+		if (rusage != NULL && getrusage(RUSAGE_CHILDREN, rusage) == -1)
+			fail("es:ewait", "getrusage: %s", esstrerror(errno));
 	} else
 		n = -2;
 	slow = FALSE;
@@ -95,80 +72,39 @@ static int dowait(int *statusp) {
 	return n;
 }
 
-/* reap -- mark a process as dead and attach its exit status */
-static void reap(int pid, int status) {
+/* reap -- mark a process as dead and return it */
+static Proc *reap(int pid) {
 	Proc *proc;
 	for (proc = proclist; proc != NULL; proc = proc->next)
-		if (proc->pid == pid) {
-			assert(proc->alive);
-			proc->alive = FALSE;
-			proc->status = status;
-#if HAVE_WAIT3
-			proc->rusage = wait_rusage;
-#endif
-			return;
-		}
+		if (proc->pid == pid)
+			break;
+	assert(proc != NULL);
+	if (proc->next != NULL)
+		proc->next->prev = proc->prev;
+	if (proc->prev != NULL)
+		proc->prev->next = proc->next;
+	else
+		proclist = proc->next;
+	return proc;
 }
 
 /* ewait -- wait for a specific process to die, or any process if pid == 0 */
-extern int ewait(int pid, Boolean interruptible, void *rusage) {
+extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
+	int deadpid, status;
 	Proc *proc;
-top:
-	for (proc = proclist; proc != NULL; proc = proc->next)
-		if (proc->pid == pid || (pid == 0 && !proc->alive)) {
-			int status;
-			if (proc->alive) {
-				int deadpid;
-				int seen_eintr = FALSE;
-				while ((deadpid = dowait(&proc->status)) != pid)
-					if (deadpid != -1)
-						reap(deadpid, proc->status);
-					else if (errno == EINTR) {
-						if (interruptible)
-							SIGCHK();
-						seen_eintr = TRUE;
-					} else if (errno == ECHILD && seen_eintr)
-						/* TODO: not clear on why this is necessary
-						 * (child procs _sometimes_ disappear after SIGINT) */
-						break;
-					else
-						fail("es:ewait", "wait: %s", esstrerror(errno));
-				proc->alive = FALSE;
-#if HAVE_WAIT3
-				proc->rusage = wait_rusage;
-#endif
-			}
-			if (proc->next != NULL)
-				proc->next->prev = proc->prev;
-			if (proc->prev != NULL)
-				proc->prev->next = proc->next;
-			else
-				proclist = proc->next;
-			status = proc->status;
-			if (proc->background)
-				printstatus(proc->pid, status);
-			efree(proc);
-#if HAVE_WAIT3
-			if (rusage != NULL)
-				memcpy(rusage, &proc->rusage, sizeof (struct rusage));
-#else
-			assert(rusage == NULL);
-#endif
-			return status;
-		}
-	if (pid == 0) {
-		int status;
-		while ((pid = dowait(&status)) == -1) {
-			if (errno != EINTR)
-				fail("es:ewait", "wait: %s", esstrerror(errno));
-			if (interruptible)
-				SIGCHK();
-		}
-		reap(pid, status);
-		goto top;
+	while ((deadpid = dowait(pidarg, &status, rusage)) == -1) {
+		if (errno == ECHILD && pidarg > 0)
+			fail("es:ewait", "wait: %d is not a child of this shell", pidarg);
+		else if (errno != EINTR)
+			fail("es:ewait", "wait: %s", esstrerror(errno));
+		if (interruptible)
+			SIGCHK();
 	}
-	fail("es:ewait", "wait: %d is not a child of this shell", pid);
-	NOTREACHED;
+	proc = reap(deadpid);
+	if (proc->background)
+		printstatus(proc->pid, status);
+	efree(proc);
+	return status;
 }
 
 #include "prim.h"
@@ -177,7 +113,7 @@ PRIM(apids) {
 	Proc *p;
 	Ref(List *, lp, NULL);
 	for (p = proclist; p != NULL; p = p->next)
-		if (p->background && p->alive) {
+		if (p->background) {
 			Term *t = mkstr(str("%d", p->pid));
 			lp = mklist(t, lp);
 		}
@@ -188,7 +124,7 @@ PRIM(apids) {
 PRIM(wait) {
 	int pid;
 	if (list == NULL)
-		pid = 0;
+		pid = -1;
 	else if (list->next == NULL) {
 		pid = atoi(getstr(list->term));
 		if (pid <= 0) {

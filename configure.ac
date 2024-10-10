@@ -93,7 +93,6 @@ AC_TYPE_GETGROUPS
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MMAP
 
-AC_FUNC_WAIT3
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
 sysconf sigsetjmp)
 
