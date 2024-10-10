@@ -27,7 +27,7 @@ PRIM(newpgrp) {
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
 	pid = getpid();
-	setpgrp(pid, pid);
+	setpgid(0, 0);
 #ifdef TIOCSPGRP
 	{
 		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
@@ -47,7 +47,7 @@ PRIM(background) {
 	if (pid == 0) {
 #if JOB_PROTECT
 		/* job control safe version: put it in a new pgroup. */
-		setpgrp(0, getpid());
+		setpgid(0, 0);
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
 		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
