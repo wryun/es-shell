@@ -24,12 +24,6 @@ AC_ARG_WITH(readline,
 
 AC_CANONICAL_HOST
 
-case "$host" in
-	*sun5* | *solaris2*)
-		AC_DEFINE(SOLARIS, [], [Are we Solaris?])
-	;;
-esac
-
 dnl saved_CFLAGS="$CFLAGS"
 
 dnl Checks for programs.

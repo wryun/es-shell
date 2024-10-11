@@ -153,13 +153,8 @@ extern void *qsort(
 #define	memzero(dest, count)	memset(dest, 0, count)
 #define	atoi(s)			strtol(s, NULL, 0)
 
-#if SOLARIS
-#define	STMT(stmt)		if (1) { stmt; } else
-#define	NOP			if (1) ; else
-#else
 #define	STMT(stmt)		do { stmt; } while (0)
 #define	NOP			do {} while (0)
-#endif
 
 #if REISER_CPP
 #define CONCAT(a,b)	a/**/b
