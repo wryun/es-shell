@@ -7,13 +7,13 @@ test 'exit status' {
 	}
 
 	let (pid = <={$&background {sleep 1}}) {
-		kill -term $pid
+		kill -TERM $pid
 		let (status = <={wait $pid >[2] /dev/null})
 			assert {~ $status sigterm}
 	}
 
 	let (pid = <={$&background {sleep 1}}) {
-		kill -quit $pid
+		kill -QUIT $pid
 		# TODO: clean up core file?
 		let (status = <={wait $pid >[2] /dev/null})
 			assert {~ $status sigquit+core}
@@ -26,15 +26,15 @@ test 'wait is precise' {
 		assert {~ <=%apids $pid} 'apids is stable'
 		fork {}
 		assert {~ <=%apids $pid} 'waiting is precise'
-		assert {~ <=wait 99} 'exit status is available'
+		assert {~ <={wait $pid} 99} 'exit status is available'
 	}
 }
 
 test 'setpgid' {
 	let (pid = <={$&background {sleep 1}}) {
-		assert {ps | grep $pid > /dev/null} 'background process appears in ps'
+		assert {ps -o pid | grep $pid > /dev/null} 'background process appears in ps'
 		kill $pid
 		wait $pid >[2] /dev/null
-		assert {!{ps | grep $pid}}
+		assert {!{ps -o pid | grep $pid}}
 	}
 }
