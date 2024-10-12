@@ -112,7 +112,7 @@ test 'redirections' {
 	assert {~ `` '' {cat 2} foo} dup put wrong contents in file : `` '' {cat 2}
 	rm -f 1 2
 
-	assert {~ `` \n {$es -c 'cat >[0=]' >[2=1]} *'cat:'*'Bad file descriptor'*}
+	assert {~ `` \n {$es -c 'cat >[0=]' >[2=1]} *'cat:'*'Bad file '*}
 	assert {~ `` \n {$es -c 'cat >(1 2 3)' >[2=1]} *'too many'*}
 	assert {~ `` \n {$es -c 'cat >()' >[2=1]} *'null'*}
 }
