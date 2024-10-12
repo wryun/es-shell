@@ -16,19 +16,19 @@
 
 /* ingroupset -- determine whether gid lies in the user's set of groups */
 static Boolean ingroupset(gidset_t gid) {
-#ifdef NGROUPS
 	int i;
 	static int ngroups;
-	static gidset_t gidset[NGROUPS];
+	static gid_t *gidset;
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initialized = TRUE;
-		ngroups = getgroups(NGROUPS, gidset);
+		ngroups = getgroups(0, gidset);
+		gidset = ealloc(ngroups * sizeof(gid_t));
+		getgroups(ngroups, gidset);
 	}
 	for (i = 0; i < ngroups; i++)
 		if (gid == gidset[i])
 			return TRUE;
-#endif
 	return FALSE;
 }
 
