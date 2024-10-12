@@ -18,12 +18,12 @@
 static Boolean ingroupset(gidset_t gid) {
 	int i;
 	static int ngroups;
-	static gid_t *gidset;
+	static gidset_t *gidset;
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initialized = TRUE;
 		ngroups = getgroups(0, gidset);
-		gidset = ealloc(ngroups * sizeof(gid_t));
+		gidset = ealloc(ngroups * sizeof(gidset_t));
 		getgroups(ngroups, gidset);
 	}
 	for (i = 0; i < ngroups; i++)
