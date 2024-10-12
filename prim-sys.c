@@ -24,12 +24,12 @@ PRIM(newpgrp) {
 		fail("$&newpgrp", "usage: newpgrp");
 	pid = getpid();
 	setpgid(0, 0);
-#ifdef TIOCSPGRP
+#if HAVE_TCSETPGRP
 	{
 		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
 		Sigeffect sigttin = esignal(SIGTTIN, sig_ignore);
 		Sigeffect sigttou = esignal(SIGTTOU, sig_ignore);
-		ioctl(2, TIOCSPGRP, &pid);
+		tcsetpgrp(2, pid);
 		esignal(SIGTSTP, sigtstp);
 		esignal(SIGTTIN, sigttin);
 		esignal(SIGTTOU, sigttou);
