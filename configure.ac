@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT
 AC_CONFIG_SRCDIR([access.c])
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 
 dnl AC_CMDSTDOUT_CPP(variable, command, headers)
@@ -84,7 +84,6 @@ AC_TYPE_SIZE_T
 
 dnl Checks for library functions.
 AC_TYPE_GETGROUPS
-AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MMAP
 
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
