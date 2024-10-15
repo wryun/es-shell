@@ -14,6 +14,14 @@
 #define	GROUP	3
 #define	OTHER	0
 
+#define	IFREG	1
+#define	IFDIR	2
+#define	IFCHR	3
+#define	IFBLK	4
+#define	IFLNK	5
+#define	IFSOCK	6
+#define	IFIFO	7
+
 /* ingroupset -- determine whether gid lies in the user's set of groups */
 static Boolean ingroupset(gidset_t gid) {
 	int i;
@@ -56,16 +64,17 @@ static int testperm(struct stat *stat, int perm) {
 
 static int testfile(char *path, int perm, unsigned int type) {
 	struct stat st;
-#ifdef S_IFLNK
-	if (type == S_IFLNK) {
-		if (lstat(path, &st) == -1)
-			return errno;
-	} else
-#endif
-		if (stat(path, &st) == -1)
-			return errno;
-	if (type != 0 && (st.st_mode & S_IFMT) != type)
-		return EACCES;		/* what is an appropriate return value? */
+	if (stat(path, &st) == -1)
+		return errno;
+	/* is EACCES the right return value? */
+	switch(type) {
+	case IFREG:	if (!S_ISREG(st.st_mode)) return EACCES; break;
+	case IFDIR:	if (!S_ISDIR(st.st_mode)) return EACCES; break;
+	case IFBLK:	if (!S_ISBLK(st.st_mode)) return EACCES; break;
+	case IFLNK:	if (!S_ISLNK(st.st_mode)) return EACCES; break;
+	case IFSOCK:	if (!S_ISSOCK(st.st_mode)) return EACCES; break;
+	case IFIFO:	if (!S_ISFIFO(st.st_mode)) return EACCES; break;
+	}
 	return testperm(&st, perm);
 }
 
@@ -113,19 +122,13 @@ PRIM(access) {
 		case 'r':	perm |= READ;			break;
 		case 'w':	perm |= WRITE;			break;
 		case 'x':	perm |= EXEC;			break;
-		case 'f':	type = S_IFREG;			break;
-		case 'd':	type = S_IFDIR;			break;
-		case 'c':	type = S_IFCHR;			break;
-		case 'b':	type = S_IFBLK;			break;
-#ifdef S_IFLNK
-		case 'l':	type = S_IFLNK;			break;
-#endif
-#ifdef S_IFSOCK
-		case 's':	type = S_IFSOCK;		break;
-#endif
-#ifdef S_IFIFO
-		case 'p':	type = S_IFIFO;			break;
-#endif
+		case 'f':	type = IFREG;			break;
+		case 'd':	type = IFDIR;			break;
+		case 'c':	type = IFCHR;			break;
+		case 'b':	type = IFBLK;			break;
+		case 'l':	type = IFLNK;			break;
+		case 's':	type = IFSOCK;			break;
+		case 'p':	type = IFIFO;			break;
 		default:
 			esoptend();
 			fail("$&access", "access -%c is not supported on this system", c);
@@ -176,6 +179,6 @@ extern Dict *initprims_access(Dict *primdict) {
 }
 
 extern char *checkexecutable(char *file) {
-	int err = testfile(file, EXEC, S_IFREG);
+	int err = testfile(file, EXEC, IFREG);
 	return err == 0 ? NULL : esstrerror(err);
 }
