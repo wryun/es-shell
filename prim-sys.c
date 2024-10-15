@@ -14,6 +14,10 @@
 #if BSD_LIMITS || BUILTIN_TIME
 #include <sys/time.h>
 #include <sys/resource.h>
+#if !HAVE_GETRUSAGE
+#include <sys/times.h>
+#include <limits.h>
+#endif
 #endif
 
 #include <sys/stat.h>
@@ -292,6 +296,8 @@ PRIM(limit) {
 
 #if BUILTIN_TIME
 PRIM(time) {
+#if HAVE_GETRUSAGE
+
 	int pid, status;
 	time_t t0, t1;
 	struct rusage r;
@@ -318,6 +324,52 @@ PRIM(time) {
 
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
+
+#else	/* !HAVE_GETRUSAGE */
+
+	int pid, status;
+	Ref(List *, lp, list);
+
+	gc();	/* do a garbage collection first to ensure reproducible results */
+	pid = efork(TRUE, FALSE);
+	if (pid == 0) {
+		clock_t t0, t1;
+		struct tms tms;
+		static clock_t ticks = 0;
+
+		if (ticks == 0)
+			ticks = sysconf(_SC_CLK_TCK);
+
+		t0 = times(&tms);
+		pid = efork(TRUE, FALSE);
+		if (pid == 0)
+			exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+
+		status = ewaitfor(pid);
+		t1 = times(&tms);
+		SIGCHK();
+		printstatus(0, status);
+
+		tms.tms_cutime += ticks / 20;
+		tms.tms_cstime += ticks / 20;
+
+		eprint(
+			"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
+			(t1 - t0 + ticks / 2) / ticks,
+			tms.tms_cutime / ticks, ((tms.tms_cutime * 10) / ticks) % 10,
+			tms.tms_cstime / ticks, ((tms.tms_cstime * 10) / ticks) % 10,
+			lp, " "
+		);
+		exit(status);
+	}
+	status = ewaitfor(pid);
+	SIGCHK();
+	printstatus(0, status);
+
+	RefEnd(lp);
+	return mklist(mkstr(mkstatus(status)), NULL);
+
+#endif	/* !HAVE_GETRUSAGE */
 }
 #endif	/* BUILTIN_TIME */
 
