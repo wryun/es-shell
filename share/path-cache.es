@@ -72,4 +72,4 @@ set-cache-path = @ {
 }
 
 let (sp = $set-path) set-path = @ {cache-path = $*; $sp $*}
-let (sp = $set-PATH) set-PATH = @ {cache-path = $*; $sp $*}
+let (sp = $set-PATH) set-PATH = @ {cache-path = <={%fsplit : $*}; $sp $*}
