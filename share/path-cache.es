@@ -50,6 +50,26 @@ fn recache progs {
 	}
 }
 
+# precache also takes a list of binaries.  For each one, if the binary is
+# valid, it caches the binary in the path cache without running it.  This can
+# be useful in ~/.esrc for pre-caching binaries which are known ahead of time to
+# be frequently used.
+
+fn precache progs {
+	let (result = ())
+	for (p = $progs) {
+		catch @ e type msg {
+			if {~ $e error} {
+				echo >[1=2] $p: $msg
+			} {
+				throw $e $type $msg
+			}
+		} {
+			result = $result <={%pathsearch $p}
+		}
+	}
+}
+
 # path-cache and the fn-$progs defined by %pathsearch are exported to the
 # environment, under the assumption that subshells will also benefit from the
 # already-built cache.
