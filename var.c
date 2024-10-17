@@ -13,6 +13,18 @@
 #define	ENV_DECODE	"%s"
 #endif
 
+#define	ENVSIZE	40
+
+#define VECPUSH(vec, elt) STMT( \
+	(vec)->vector[(vec)->count++] = (elt); \
+	if ((vec)->count == (vec)->alloclen) { \
+		Vector *CONCAT(new_,vec) = mkvector((vec)->alloclen * 2); \
+		CONCAT(new_,vec)->count = (vec)->count; \
+		memcpy(CONCAT(new_,vec)->vector, (vec)->vector, \
+			(vec)->count * sizeof *(vec)->vector); \
+		(vec) = CONCAT(new_,vec); \
+	} \
+)
 
 Dict *vars;
 static Dict *noexport;
@@ -166,7 +178,7 @@ static List *callsettor(char *name, List *defn) {
 	RefReturn(lp);
 }
 
-extern void vardef(char *name, Binding *binding, List *defn) {
+static void vardef0(char *name, Binding *binding, List *defn, Boolean settor) {
 	Var *var;
 
 	validatevar(name);
@@ -178,7 +190,8 @@ extern void vardef(char *name, Binding *binding, List *defn) {
 		}
 
 	RefAdd(name);
-	defn = callsettor(name, defn);
+	if (settor)
+		defn = callsettor(name, defn);
 	if (isexported(name))
 		isdirty = TRUE;
 
@@ -195,6 +208,10 @@ extern void vardef(char *name, Binding *binding, List *defn) {
 		vars = dictput(vars, name, var);
 	}
 	RefRemove(name);
+}
+
+extern void vardef(char *name, Binding *binding, List *defn) {
+	vardef0(name, binding, defn, TRUE);
 }
 
 extern void varpush(Push *push, char *name, List *defn) {
@@ -291,13 +308,7 @@ static void mkenv0(void unused *dummy, char *key, void *value) {
 		var->env = envstr;
 	}
 	assert(env->count < env->alloclen);
-	env->vector[env->count++] = var->env;
-	if (env->count == env->alloclen) {
-		Vector *newenv = mkvector(env->alloclen * 2);
-		newenv->count = env->count;
-		memcpy(newenv->vector, env->vector, env->count * sizeof *env->vector);
-		env = newenv;
-	}
+	VECPUSH(env, var->env);
 }
 	
 extern Vector *mkenv(void) {
@@ -377,7 +388,7 @@ extern void initvars(void) {
 	globalroot(&sortenv);
 	vars = mkdict();
 	noexport = NULL;
-	env = mkvector(10);
+	env = mkvector(ENVSIZE);
 #if ABUSED_GETENV
 # if READLINE
 	initgetenv();
@@ -434,30 +445,25 @@ static void importvar(char *name0, char *value) {
 		}
 		gcenable();
 	}
-	vardef(name, NULL, defn);
+	vardef0(name, NULL, defn, FALSE);
 	RefEnd2(defn, name);
 }
 
 
 /* initenv -- load variables from the environment */
 extern void initenv(char **envp, Boolean protected) {
+	int i;
 	char *envstr;
 	size_t bufsize = 1024;
 	char *buf = ealloc(bufsize);
 
+	Ref(Vector *, imported, mkvector(ENVSIZE));
+	Ref(char *, name, NULL);
 	for (; (envstr = *envp) != NULL; envp++) {
 		size_t nlen;
 		char *eq = strchr(envstr, '=');
-		char *name;
 		if (eq == NULL) {
-			env->vector[env->count++] = envstr;
-			if (env->count == env->alloclen) {
-				Vector *newenv = mkvector(env->alloclen * 2);
-				newenv->count = env->count;
-				memcpy(newenv->vector, env->vector,
-				       env->count * sizeof *env->vector);
-				env = newenv;
-			}
+			VECPUSH(env, envstr);
 			continue;
 		}
 		for (nlen = eq - envstr; nlen >= bufsize; bufsize *= 2)
@@ -466,10 +472,17 @@ extern void initenv(char **envp, Boolean protected) {
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
 		if (!protected
-		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
+		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
 			importvar(name, eq);
+			VECPUSH(imported, name);
+		}
 	}
+	RefEnd(name);
 
+	for (i = 0; i < imported->count; i++)
+		callsettor(imported->vector[i], varlookup(imported->vector[i], NULL));
+
+	RefEnd(imported);
 	envmin = env->count;
 	efree(buf);
 }
