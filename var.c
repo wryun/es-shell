@@ -479,6 +479,7 @@ extern void initenv(char **envp, Boolean protected) {
 	}
 	RefEnd(name);
 
+	sortvector(imported);
 	for (i = 0; i < imported->count; i++)
 		callsettor(imported->vector[i], varlookup(imported->vector[i], NULL));
 
