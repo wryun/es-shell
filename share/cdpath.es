@@ -12,18 +12,14 @@
 
 let (cd = $fn-cd)
 fn cd dir {
-	if {~ $#dir 1} {
-		if {!~ $dir /* ./* ../*} {
-			let (old = $dir) {
-				dir = <={%cdpathsearch $dir}
-				if {!~ $dir $old} {
-					echo >[1=2] $dir
-				}
-			}
+	if {!~ $#dir 1 || ~ $dir (/* ./* ../*)} {
+		return <={$cd $dir}
+	}
+	let (abs = <={%cdpathsearch $dir}) {
+		if {!~ $abs ($dir ./$dir)} {
+			echo >[1=2] $abs
 		}
-		$cd $dir
-	} {
-		$cd $dir
+		$cd $abs
 	}
 }
 
@@ -35,18 +31,17 @@ fn %cdpathsearch name { access -n $name -1e -d $cdpath }
 
 # cdpath and CDPATH contain the list of directories to search for cd.  They
 # follow the convention that the uppercase CDPATH contains a single colon-
-# separated word as is common in UNIX, while the lowercase cdpath contains an
-# es list.  CDPATH is exported while cdpath is not.
+# separated word which is understandable to other CDPATH-using shells, while
+# the lowercase cdpath contains an es list.  For interoperability with other
+# utilities, CDPATH is exported while cdpath is not.
 
 set-cdpath = @ {local (set-CDPATH = ) CDPATH = <={%flatten : $*}; result $*}
 set-CDPATH = @ {local (set-cdpath = ) cdpath = <={%fsplit  : $*}; result $*}
 
 noexport = $noexport cdpath
 
-# The default value of cdpath is ''.  This corresponds with "the current
-# directory".  If cdpath is the empty list, then path searching behavior will
-# not work, and it will only be possible to cd to paths starting with one of
-# (/ ./ ../).  This is more consistent behavior, but may be more surprising to
-# an unsuspecting user.
+# The default value of cdpath is '.': the current directory.  If cdpath is the
+# empty list, then path searching behavior will not work, and it will only be
+# possible to cd to paths starting with one of (/ ./ ../).
 
-cdpath = ''
+cdpath = .

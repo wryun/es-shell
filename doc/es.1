@@ -2880,8 +2880,8 @@ Features currently distributed via extension scripts include:
 .Cr autoload.es
 adds behavior to
 .I es
-to search a directory of scripts for a file which defines a function which
-would otherwise be undefined.
+to search an autoload directory containing function definitions which it
+will read and define on the fly.
 This corresponds somewhat with the function-autoloading feature of shells
 like
 .IR ksh (1)
@@ -2905,7 +2905,7 @@ By invoking
 .Ci ". " /path/to/ interactive-init.es
 and defining
 .Ds
-.Ci "fn %interactive-loop {"
+.Ci "fn %interactive-init {"
 .Ci "  . " startup-script.es
 .Cr "}"
 .De

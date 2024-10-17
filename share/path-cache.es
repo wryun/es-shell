@@ -50,12 +50,26 @@ fn recache progs {
 	}
 }
 
-# path-cache and the fn-$progs defined by %pathsearch, are exported to the
+# path-cache and the fn-$progs defined by %pathsearch are exported to the
 # environment, under the assumption that subshells will also benefit from the
-# already built cache.
-
-# TODO: recache should be called if PATH is changed.  Exported path-cache
-# complicates this a bit (consider es calling a binary which changes PATH and
-# then calls es again).
+# already-built cache.
 
 path-cache = ()
+
+# cache-path, along with this set of settor functions, ensure that when the path
+# is changed, recache is called.
+
+cache-path = $path
+
+set-cache-path = @ {
+	for (o = $cache-path; n = $*) {
+		if {!~ $o $n} {
+			recache
+			break
+		}
+	}
+	result $*
+}
+
+let (sp = $set-path) set-path = @ {cache-path = $*; $sp $*}
+let (sp = $set-PATH) set-PATH = @ {cache-path = $*; $sp $*}

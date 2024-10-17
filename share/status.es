@@ -4,8 +4,8 @@
 # at the REPL.  This corresponds with $? in Bourne-compatible shells, or $status
 # in rc.  Modifying $status is not very useful.
 #
-# One unique limitation of this $status is that it doesn't understand commands
-# like:
+# One unique limitation of this $status is that it doesn't understand groups of
+# commands like:
 #
 # 	false; echo $status
 #

@@ -1,14 +1,15 @@
 # autoload.es -- Auto-load shell functions on demand.
 #
-# The function, say, foo, should be in the file foo and should contain the
-# definition of the function, as in
+# An autoloadable function, say, foo, should be in the file foo and should
+# contain the definition of the function, as in
 #
+#	; cat foo
 #	fn foo args {
 #		body
 #	}
 #
 # By default, the autoload directory is ~/bin/es.  The $es-autoload variable can
-# be set in order to use a different directory.
+# be set to a different directory if that is desired.
 #
 # This is a light adaptation of the original version written by Paul Haahr.
 # See esrc.haahr in the examples directory for more of his setup.
