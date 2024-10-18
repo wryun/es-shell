@@ -35,8 +35,16 @@ fn %cdpathsearch name { access -n $name -1e -d $cdpath }
 # the lowercase cdpath contains an es list.  For interoperability with other
 # utilities, CDPATH is exported while cdpath is not.
 
+# Somewhat awkwardly, we have to "re-noexport" cdpath in each shell, because
+# noexport is itself not exported, so es "forgets" about noexport state.  This
+# is probably correct, but it's not convenient in this case.
+
 set-cdpath = @ {local (set-CDPATH = ) CDPATH = <={%flatten : $*}; result $*}
-set-CDPATH = @ {local (set-cdpath = ) cdpath = <={%fsplit  : $*}; result $*}
+set-CDPATH = @ {
+	local (set-cdpath = ) cdpath = <={%fsplit  : $*}
+	if {!~ $noexport cdpath} {noexport = $noexport cdpath}
+	result $*
+}
 
 noexport = $noexport cdpath
 
