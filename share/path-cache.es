@@ -60,7 +60,7 @@ fn precache progs {
 	for (p = $progs) {
 		catch @ e type msg {
 			if {~ $e error} {
-				echo >[1=2] $p: $msg
+				echo >[1=2] $msg
 			} {
 				throw $e $type $msg
 			}
