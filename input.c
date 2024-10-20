@@ -110,10 +110,22 @@ static void loghistory(const char *cmd, size_t len) {
 }
 
 #if READLINE
+/* Manage maximum in-memory history length.  This has speed & memory
+ * implications to which different users have different tolerances, so let them
+ * pick. */
+extern void setmaxhistorylength(int len) {
+	static int currenthistlen = 0; /* unlimited */
+	if (len != currenthistlen) {
+		if (len == 0)
+			unstifle_history();
+		else
+			stifle_history(len);
+		currenthistlen = len;
+	}
+}
+
 static void reload_history(void) {
 	/* Attempt to populate readline history with new history file. */
-	if (!history_is_stifled())
-		stifle_history(5000);
 	clear_history();
 	read_history(history);
 	using_history();
