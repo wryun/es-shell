@@ -109,6 +109,7 @@ static void loghistory(const char *cmd, size_t len) {
 	ewrite(historyfd, cmd, len);
 }
 
+#if READLINE
 static void reload_history(void) {
 	/* Attempt to populate readline history with new history file. */
 	if (!history_is_stifled())
@@ -118,11 +119,14 @@ static void reload_history(void) {
 
 	reloadhistory = FALSE;
 }
+#endif
 
 /* sethistory -- change the file for the history log */
 extern void sethistory(char *file) {
+#if READLINE
 	if (reloadhistory)
 		reload_history();
+#endif
 	if (historyfd != -1) {
 		close(historyfd);
 		historyfd = -1;
