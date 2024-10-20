@@ -4,7 +4,6 @@
 #include "es.h"
 #include "input.h"
 
-
 /*
  * constants
  */
@@ -34,9 +33,9 @@ static int historyfd = -1;
 
 #if READLINE
 #include <readline/readline.h>
-extern void add_history(char *);
-extern int read_history(char *);
-extern void stifle_history(int);
+#include <readline/history.h>
+
+Boolean reloadhistory = FALSE;
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -110,16 +109,26 @@ static void loghistory(const char *cmd, size_t len) {
 	ewrite(historyfd, cmd, len);
 }
 
+static void reload_history(void) {
+	/* Attempt to populate readline history with new history file. */
+	if (!history_is_stifled())
+		stifle_history(5000);
+	read_history(history);
+	using_history();
+
+	reloadhistory = FALSE;
+}
+
 /* sethistory -- change the file for the history log */
 extern void sethistory(char *file) {
+	if (reloadhistory)
+		reload_history();
 	if (historyfd != -1) {
 		close(historyfd);
 		historyfd = -1;
 	}
 #if READLINE
-	/* Attempt to populate readline history with new history file. */
-	stifle_history(50000); /* Keep memory usage within sane-ish bounds. */
-	read_history(file);
+	reloadhistory = TRUE;
 #endif
 	history = file;
 }
@@ -204,6 +213,8 @@ static char *callreadline(char *prompt) {
 	char *r;
 	if (prompt == NULL)
 		prompt = ""; /* bug fix for readline 2.0 */
+	if (reloadhistory)
+		reload_history();
 	if (resetterminal) {
 		rl_reset_terminal(NULL);
 		resetterminal = FALSE;
