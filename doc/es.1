@@ -2877,7 +2877,11 @@ Adds behavior to
 to search the directory given by
 .Cr $es-autoload
 (by default
-.Cr $home/bin/es )
+.Cr $XDG_DATA_HOME/es/autoload
+or, if
+.Cr $XDG_DATA_HOME
+is not set,
+.Cr ~/.local/share/es/autoload ,)
 containing function definitions which are then defined on-demand.
 .TP
 .Cr cdpath.es
@@ -2930,6 +2934,7 @@ should peruse the scripts themselves for more precise information on
 their use.
 .SH FILES
 .Cr $home/.esrc ,
+.Cr /usr/share/es ,
 .Cr /dev/null
 .SH BUGS
 Lexical scope which is shared by two variables (or closures) in a parent shell
