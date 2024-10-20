@@ -114,6 +114,7 @@ static void reload_history(void) {
 	/* Attempt to populate readline history with new history file. */
 	if (!history_is_stifled())
 		stifle_history(5000);
+	clear_history();
 	read_history(history);
 	using_history();
 
@@ -123,10 +124,6 @@ static void reload_history(void) {
 
 /* sethistory -- change the file for the history log */
 extern void sethistory(char *file) {
-#if READLINE
-	if (reloadhistory)
-		reload_history();
-#endif
 	if (historyfd != -1) {
 		close(historyfd);
 		historyfd = -1;
