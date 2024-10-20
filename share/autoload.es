@@ -8,17 +8,21 @@
 #		body
 #	}
 #
-# By default, the autoload directory is ~/bin/es.  The $es-autoload variable can
-# be set to a different directory if that is desired.
+# By default, the autoload directory is $XDG_DATA_HOME/es/autoload (if
+# $XDG_DATA_HOME is unset, that defaults to ~/.local/share/es/autoload).
+# The autoload directory can be changed by setting $es-autoload to the desired
+# location.
 #
 # This is a light adaptation of the original version written by Paul Haahr.
 # See esrc.haahr in the examples directory for more of his setup.
 
 let (search = $fn-%pathsearch)
 fn %pathsearch prog {
-	let (autoload = ~/bin/es) {
+	let (autoload = $XDG_DATA_HOME/es/autoload) {
 		if {!~ $#es-autoload 0} {
 			autoload = $es-autoload
+		} {!~ $autoload 1} {
+			autoload = ~/.local/share/es/autoload
 		}
 		if {access -f -r $autoload/$prog} {
 			. $autoload/$prog
