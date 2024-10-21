@@ -39,7 +39,7 @@ PRIM(newpgrp) {
 		esignal(SIGTTOU, sigttou);
 	}
 #endif
-	return true;
+	return ltrue;
 }
 
 PRIM(background) {
@@ -81,7 +81,7 @@ PRIM(umask) {
 		int mask = umask(0);
 		umask(mask);
 		print("%04o\n", mask);
-		return true;
+		return ltrue;
 	}
 	if (list->next == NULL) {
 		int mask;
@@ -91,7 +91,7 @@ PRIM(umask) {
 		if ((t != NULL && *t != '\0') || ((unsigned) mask) > 07777)
 			fail("$&umask", "bad umask: %s", s);
 		umask(mask);
-		return true;
+		return ltrue;
 	}
 	fail("$&umask", "usage: umask [mask]");
 	NOTREACHED;
@@ -104,7 +104,7 @@ PRIM(cd) {
 	dir = getstr(list->term);
 	if (chdir(dir) == -1)
 		fail("$&cd", "chdir %s: %s", dir, esstrerror(errno));
-	return true;
+	return ltrue;
 }
 
 PRIM(setsignals) {
@@ -290,7 +290,7 @@ PRIM(limit) {
 		}
 	}
 	RefEnd(lp);
-	return true;
+	return ltrue;
 }
 #endif	/* BSD_LIMITS */
 
