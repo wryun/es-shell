@@ -68,7 +68,7 @@ static void runesrc(void) {
 }
 
 /* usage -- print usage message and die */
-static noreturn usage(void) {
+static Noreturn usage(void) {
 	eprint(
 		"usage: es [-c command] [-silevxnpo] [file [args ...]]\n"
 		"	-c cmd	execute argument\n"

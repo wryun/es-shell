@@ -4,7 +4,7 @@
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
 
-static noreturn failexec(char *file, List *args) {
+static Noreturn failexec(char *file, List *args) {
 	List *fn;
 	assert(gcisblocked());
 	fn = varlookup("fn-%exec-failure", NULL);
@@ -81,7 +81,7 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 
 /* letbindings -- create a new Binding containing let-bound variables */
 static Binding *letbindings(Tree *defn0, Binding *outer0,
-			    Binding *context0, int unused evalflags) {
+			    Binding *context0, int UNUSED evalflags) {
 	Ref(Binding *, binding, outer0);
 	Ref(Binding *, context, context0);
 	Ref(Tree *, defn, defn0);
@@ -426,8 +426,8 @@ restart:
 			if (t->kind == nPrim)
 				fail("es:eval", "invalid primitive name: %T", cp->tree);
 			RefEnd(t);
-			/* fallthrough */
 		    }
+		    FALLTHROUGH;
 		    default:
 			panic("eval: bad closure node kind %d",
 			      cp->tree->kind);

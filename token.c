@@ -312,7 +312,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		while ((c = GETC()) != '\n') /* skip comment until newline */
 			if (c == EOF)
 				return ENDFILE;
-		/* FALLTHROUGH */
+		FALLTHROUGH;
 	case '\n':
 		input->lineno++;
 		newline = TRUE;
@@ -321,7 +321,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 	case '(':
 		if (w == RW)	/* not keywords, so let & friends work */
 			c = SUB;
-		/* FALLTHROUGH */
+		FALLTHROUGH;
 	case ';':
 	case '^':
 	case ')':
