@@ -85,12 +85,12 @@ MANIFEST:
 
 install : es
 	$(MKDIR_P) $(DESTDIR)$(bindir)
-	$(INSTALL) -s $(srcdir)/es $(DESTDIR)$(bindir)
+	$(INSTALL) -s es $(DESTDIR)$(bindir)
 	$(MKDIR_P) $(DESTDIR)$(mandir)/man1
 	$(INSTALL) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
 
 test	: es $(testdir)/test.es
-	$(srcdir)/es -s < $(testdir)/test.es $(testdir)/tests/*
+	./es -s < $(testdir)/test.es $(testdir)/tests/*
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
