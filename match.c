@@ -21,23 +21,24 @@ enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 
 #define	ISQUOTED(q, n)	((q) == QUOTED || ((q) != UNQUOTED && (q)[n] == 'q'))
 #define TAILQUOTE(q, n) ((q) == UNQUOTED ? UNQUOTED : ((q) + (n)))
-#define QADVANCE(q, n) ((q) += (((q) == QUOTED || (q) == UNQUOTED) ? 0 : (n)))
 
 /* rangematch -- match a character against a character class */
 static int rangematch(const char *p, const char *q, char c) {
 	const char *orig = p;
 	Boolean neg;
 	Boolean matched = FALSE;
+	Boolean advanceq = (q != QUOTED && q != UNQUOTED);
+#define QX(expr) (advanceq ? (expr) : (void)0)
 	if (*p == '~' && !ISQUOTED(q, 0)) {
-		p++, QADVANCE(q, 1);
+		p++, QX(q++);
 	    	neg = TRUE;
 	} else
 		neg = FALSE;
 	if (*p == ']' && !ISQUOTED(q, 0)) {
-		p++, QADVANCE(q, 1);
+		p++, QX(q++);
 		matched = (c == ']');
 	}
-	for (; *p != ']' || ISQUOTED(q, 0); p++, QADVANCE(q, 1)) {
+	for (; *p != ']' || ISQUOTED(q, 0); p++, QX(q++)) {
 		if (*p == '\0')
 			return RANGE_ERROR;	/* bad syntax */
 		if (p[1] == '-' && !ISQUOTED(q, 1) && ((p[2] != ']' && p[2] != '\0') || ISQUOTED(q, 2))) {
@@ -45,7 +46,7 @@ static int rangematch(const char *p, const char *q, char c) {
 			if (c >= *p && c <= p[2])
 				matched = TRUE;
 			p += 2;
-			QADVANCE(q, 2);
+			QX(q += 2);
 		} else if (*p == c)
 			matched = TRUE;
 	}
@@ -53,6 +54,7 @@ static int rangematch(const char *p, const char *q, char c) {
 		return p - orig + 1; /* skip the right-bracket */
 	else
 		return RANGE_FAIL;
+#undef QX
 }
 
 /* match -- match a single pattern against a single string. */
