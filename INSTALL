@@ -33,9 +33,10 @@ execute configure with a path to the source.  For example:
    Also obeying the GNU configure convention, configure will take
 arguments specifying a variety of directories.  Currently the only
 relevant ones are the prefix directory (/usr/local by default); bindir,
-the directory in which `es' will reside ($prefix/bin by default); and
+the directory in which `es' will reside ($prefix/bin by default);
 mandir, the directory that will contain the manpage ($prefix/man by
-default).  These are given to configure by:
+default); and datadir, the directory that will contain the es script
+library ($prefix/share by default).  These are given to configure by:
 
    % ./configure --prefix=directory
    % ./configure --bindir=directory --mandir=directory
