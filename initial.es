@@ -721,14 +721,16 @@ if {~ <=$&primitives resetterminal} {
 }
 
 #	The primitive $&setmaxhistorylength is another readline-only primitive
-#	which limits the length of the in-memory history log, to reduce memory
+#	which limits the length of the in-memory history list, to reduce memory
 #	size implications of a large history file.  Setting max-history-length
-#	to 0, or unsetting it, makes the in-memory history unlimited in size.
+#	to 0 clears the history list and disables adding anything more to it.
+#	Unsetting max-history-length allows the history list to grow unbounded.
 
 if {~ <=$&primitives setmaxhistorylength} {
 	set-max-history-length = $&setmaxhistorylength
 	max-history-length = 5000
 }
+
 
 #
 # Variables
