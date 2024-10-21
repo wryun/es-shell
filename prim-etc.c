@@ -284,7 +284,7 @@ PRIM(setmaxhistorylength) {
 	char *s;
 	int n;
 	if (list == NULL) {
-		setmaxhistorylength(0); /* unlimited */
+		setmaxhistorylength(-1); /* unlimited */
 		return NULL;
 	}
 	if (list->next != NULL)
