@@ -27,7 +27,7 @@ static unsigned long strhash2(const char *str1, const char *str2) {
 		} \
 	}
 
-	int c;
+	unsigned int c;
 	unsigned long n = 0;
 	unsigned char *s = (unsigned char *) str1;
 	assert(str1 != NULL);
