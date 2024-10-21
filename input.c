@@ -126,8 +126,8 @@ extern void setmaxhistorylength(int len) {
 
 static void reload_history(void) {
 	/* Attempt to populate readline history with new history file. */
-	clear_history();
-	read_history(history);
+	if (history != NULL)
+		read_history(history);
 	using_history();
 
 	reloadhistory = FALSE;
