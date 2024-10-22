@@ -1,8 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ([2.64])
 AC_INIT
 AC_CONFIG_SRCDIR([access.c])
 AC_CONFIG_HEADERS([config.h])
-
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl AC_CMDSTDOUT_CPP(variable, command, headers)
 AC_DEFUN([AC_CMDSTDOUT_CPP],
@@ -15,16 +16,7 @@ $1=`(eval "$ac_cpp conftest.$ac_ext") 2>&AS_MESSAGE_LOG_FD | $2`
 rm -f conftest*
 ])
 
-
-use_readline=yes
-use_editline=no
-
-AC_ARG_WITH(readline,
---with-readline		Use GNU Readline, use_readline=yes)
-
 AC_CANONICAL_HOST
-
-dnl saved_CFLAGS="$CFLAGS"
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -32,8 +24,6 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
 AC_PROG_YACC
-
-dnl CFLAGS="$CFLAGS $saved_CFLAGS"
 
 dnl ----------------------------
 dnl CHECK FOR /dev/fd FILESYSTEM
@@ -55,20 +45,7 @@ dnl Checks for libraries.
 
 AC_CHECK_LIB(sun, getpwuid)
 
-if test "$use_readline" = yes || test "$use_editline" = yes
-then
-	AC_CHECK_LIB(terminfo, main)
-	AC_CHECK_LIB(termcap, main)
-	if test "$use_readline" = yes
-	then
-		AC_CHECK_LIB(readline, readline)
-	elif test "$use_editline" = yes
-	then
-		AC_CHECK_LIB(edit, readline)
-	fi
-
-fi
-
+ES_WITH_READLINE
 
 dnl Checks for header files.
 AC_HEADER_DIRENT

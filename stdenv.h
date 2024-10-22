@@ -6,17 +6,6 @@
 #endif
 
 /*
- * type qualifiers
- */
-
-#if !USE_VOLATILE
-# ifndef volatile
-#  define volatile
-# endif
-#endif
-
-
-/*
  * protect the rest of es source from the dance of the includes
  */
 
@@ -84,23 +73,35 @@ extern Dirent *readdir(DIR *);
 #endif
 
 /* stdlib */
+#ifndef Noreturn
 #if __GNUC__
-/* function declaration syntax */
-#define noreturn(F) volatile void F __attribute__((noreturn))
-/* function definition syntax */
-typedef volatile void noreturn;
-#define unused __attribute__((unused))
+#define Noreturn __attribute__((__noreturn__)) void
 #else
-#define noreturn(F) void F
-typedef void noreturn;
-#define unused
+#define Noreturn void
+#endif
+#endif
+
+#ifndef UNUSED
+#if __GNUC__
+#define UNUSED __attribute__((__unused__))
+#else
+#define UNUSED
+#endif
+#endif
+
+#ifndef FALLTHROUGH
+#if __GNUC__
+#define FALLTHROUGH __attribute__((__fallthrough__))
+#else
+#define FALLTHROUGH (void)0
+#endif
 #endif
 
 #if STDC_HEADERS
 # include <stdlib.h>
 #else
-extern noreturn(exit(int));
-extern noreturn(abort(void));
+extern Noreturn exit(int);
+extern Noreturn abort(void);
 extern long strtol(const char *num, char **end, int base);
 extern void *qsort(
 	void *base, size_t nmemb, size_t size,
@@ -108,7 +109,7 @@ extern void *qsort(
 );
 #endif /* !STDC_HEADERS */
 
-#if READLINE
+#if HAVE_READLINE
 # include <stdio.h>
 #endif
 
