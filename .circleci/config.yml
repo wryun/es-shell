@@ -45,6 +45,7 @@ jobs:
       - run:
           name: Test
           command: |
+            make testrun
             mkdir -p ./test/results
             ./es -s < ./test/test.es --junit ./test/tests/* > ./test/results/results.xml
 
