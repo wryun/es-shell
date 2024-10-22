@@ -66,7 +66,7 @@ static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
 #endif
 
 /* dowait -- a waitpid wrapper that gets rusage and interfaces with signals */
-static int dowait(int pid, int *statusp, void unused *rusagep) {
+static int dowait(int pid, int *statusp, void UNUSED *rusagep) {
 	int n;
 #if HAVE_GETRUSAGE
 	static struct rusage ru_saved;
