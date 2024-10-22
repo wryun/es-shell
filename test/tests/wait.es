@@ -6,13 +6,13 @@ test 'exit status' {
 			assert {~ $status 3}
 	}
 
-	let (pid = <={$&background {sleep 1}}) {
+	let (pid = <={$&background {./testrun s}}) {
 		kill -TERM $pid
 		let (status = <={wait $pid >[2] /dev/null})
 			assert {~ $status sigterm}
 	}
 
-	let (pid = <={$&background {sleep 1}}) {
+	let (pid = <={$&background {./testrun s}}) {
 		kill -QUIT $pid
 		# TODO: clean up core file?
 		let (status = <={wait $pid >[2] /dev/null})
@@ -31,7 +31,7 @@ test 'wait is precise' {
 }
 
 test 'setpgid' {
-	let (pid = <={$&background {sleep 1}}) {
+	let (pid = <={$&background {./testrun s}}) {
 		assert {ps -o pid | grep $pid > /dev/null} 'background process appears in ps'
 		kill $pid
 		wait $pid >[2] /dev/null

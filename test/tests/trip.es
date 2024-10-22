@@ -3,7 +3,7 @@
 test 'lexical analysis' {
 	let (tmp = `{mktemp trip-nul.XXXX})
 	unwind-protect {
-		printf '%b\n' 'res\0ult 6' > $tmp
+		./testrun 0 > $tmp
 		let ((status output) = <={$&backquote \n {$es $tmp >[2=1]}}) {
 			assert {~ $output *'null character ignored'*} 'null character produces warning'
 			assert {~ $status 6} 'null character does not disturb behavior'

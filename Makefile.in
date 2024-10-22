@@ -74,7 +74,7 @@ esdump	: ${OFILES} dump.o
 	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
 clean	:
-	rm -f es ${OFILES} ${GEN} dump.o initial.o
+	rm -f es testrun ${OFILES} ${GEN} dump.o initial.o
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile cscope.out tags TAGS core cs.out config.status ltmain.sh
@@ -89,7 +89,10 @@ install : es
 	$(MKDIR_P) $(DESTDIR)$(mandir)/man1
 	$(INSTALL) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
 
-test	: es $(testdir)/test.es
+testrun	: $(testdir)/testrun.c
+	${CC} -o testrun $(testdir)/testrun.c
+
+test	: es testrun $(testdir)/test.es
 	$(srcdir)/es -s < $(testdir)/test.es $(testdir)/tests/*
 
 src	:
