@@ -109,7 +109,7 @@ static void loghistory(const char *cmd, size_t len) {
 	ewrite(historyfd, cmd, len);
 }
 
-#if READLINE
+#if HAVE_READLINE
 /* Manage maximum in-memory history length.  This has speed & memory
  * implications to which different users have different tolerances, so let them
  * pick. */
@@ -142,7 +142,7 @@ static void reload_history(void) {
 
 /* sethistory -- change the file for the history log */
 extern void sethistory(char *file) {
-#if READLINE
+#if HAVE_READLINE
 	/* make sure the old file has a chance to get loaded */
 	if (reloadhistory)
 		reload_history();
