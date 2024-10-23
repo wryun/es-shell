@@ -52,6 +52,29 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
+static pid_t espgid;
+
+extern void newpgrp(void) {
+	setpgid(0, 0);
+	espgid = getpgid(0);
+}
+
+extern void tctakepgrp(void) {
+	Sigeffect tstp, ttin, ttou;
+	if (espgid == 0)
+		espgid = getpgid(0);
+	if (tcgetpgrp(2) == espgid)
+		return;
+	tstp = esignal(SIGTSTP, sig_ignore);
+	ttin = esignal(SIGTTIN, sig_ignore);
+	ttou = esignal(SIGTTOU, sig_ignore);
+	tcsetpgrp(2, espgid);
+	esignal(SIGTSTP, tstp);
+	esignal(SIGTTIN, ttin);
+	esignal(SIGTTOU, ttou);
+}
+
+
 #if HAVE_GETRUSAGE
 /* This function is provided as timersub(3) on some systems, but it's simple enough
  * to do ourselves. */
@@ -126,6 +149,7 @@ extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
 			SIGCHK();
 	}
 	proc = reap(deadpid);
+	tctakepgrp();
 	if (proc->background)
 		printstatus(proc->pid, status);
 	efree(proc);
