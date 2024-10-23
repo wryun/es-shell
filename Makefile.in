@@ -44,7 +44,7 @@ MKDIR_P = @MKDIR_P@
 ## Bison is generating incorrect parsers.  So do not use, for now
 # YACC = @YACC@
 
-CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wdeclaration-after-statement -Wno-clobbered @READLINE_CFLAGS@ @CFLAGS@
+CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wdeclaration-after-statement @READLINE_CFLAGS@ @CFLAGS@
 LDFLAGS	= $(ADDLDFLAGS) @LDFLAGS@
 LIBS	= $(ADDLIBS) @READLINE_LIBS@ @LIBS@
 
