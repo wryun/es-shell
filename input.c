@@ -31,7 +31,7 @@ Boolean resetterminal = FALSE;
 static char *history;
 static int historyfd = -1;
 
-#if READLINE
+#if HAVE_READLINE
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -151,7 +151,7 @@ extern void sethistory(char *file) {
 		close(historyfd);
 		historyfd = -1;
 	}
-#if READLINE
+#if HAVE_READLINE
 	reloadhistory = TRUE;
 #endif
 	history = file;
@@ -231,7 +231,7 @@ static int eoffill(Input *in) {
 	return EOF;
 }
 
-#if READLINE
+#if HAVE_READLINE
 /* callreadline -- readline wrapper */
 static char *callreadline(char *prompt) {
 	char *r;
@@ -326,7 +326,7 @@ initgetenv(void)
 
 #endif /* ABUSED_GETENV */
 
-#endif	/* READLINE */
+#endif	/* HAVE_READLINE */
 
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
@@ -334,7 +334,7 @@ static int fdfill(Input *in) {
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
 
-#if READLINE
+#if HAVE_READLINE
 	if (in->runflags & run_interactive && in->fd == 0) {
 		char *rlinebuf = NULL;
 		do {
@@ -399,7 +399,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
-#if READLINE
+#if HAVE_READLINE
 	prompt = (pr1 == NULL) ? "" : pr1;
 #else
 	if (pr1 != NULL)
@@ -619,7 +619,7 @@ extern Boolean isinteractive(void) {
 /*
  * readline integration.
  */
-#if READLINE
+#if HAVE_READLINE
 /* quote -- teach readline how to quote a word in es during completion */
 static char *quote(char *text, int type, char *qp) {
 	char *p, *r;
@@ -690,7 +690,7 @@ static char *list_completion_function(const char *text, int state) {
 	return result;
 }
 
-char **builtin_completion(const char *text, int unused start, int unused end) {
+char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	char **matches = NULL;
 
 	if (*text == '$') {
@@ -713,7 +713,7 @@ char **builtin_completion(const char *text, int unused start, int unused end) {
 
 	return matches;
 }
-#endif /* READLINE */
+#endif /* HAVE_READLINE */
 
 
 /*
@@ -736,7 +736,7 @@ extern void initinput(void) {
 	/* call the parser's initialization */
 	initparse();
 
-#if READLINE
+#if HAVE_READLINE
 	rl_readline_name = "es";
 
 	/* these two word_break_characters exclude '&' due to primitive completion */
