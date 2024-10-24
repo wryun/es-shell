@@ -4,7 +4,6 @@
 #include "es.h"
 #include "input.h"
 
-
 /*
  * constants
  */
@@ -34,9 +33,9 @@ static int historyfd = -1;
 
 #if HAVE_READLINE
 #include <readline/readline.h>
-extern void add_history(char *);
-extern int read_history(char *);
-extern void stifle_history(int);
+#include <readline/history.h>
+
+Boolean reloadhistory = FALSE;
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -110,16 +109,50 @@ static void loghistory(const char *cmd, size_t len) {
 	ewrite(historyfd, cmd, len);
 }
 
+#if HAVE_READLINE
+/* Manage maximum in-memory history length.  This has speed & memory
+ * implications to which different users have different tolerances, so let them
+ * pick. */
+extern void setmaxhistorylength(int len) {
+	static int currenthistlen = -1; /* unlimited */
+	if (len != currenthistlen) {
+		switch (len) {
+		case -1:
+			unstifle_history();
+			break;
+		case 0:
+			clear_history();
+			FALLTHROUGH;
+		default:
+			stifle_history(len);
+		}
+		currenthistlen = len;
+	}
+}
+
+static void reload_history(void) {
+	/* Attempt to populate readline history with new history file. */
+	if (history != NULL)
+		read_history(history);
+	using_history();
+
+	reloadhistory = FALSE;
+}
+#endif
+
 /* sethistory -- change the file for the history log */
 extern void sethistory(char *file) {
+#if HAVE_READLINE
+	/* make sure the old file has a chance to get loaded */
+	if (reloadhistory)
+		reload_history();
+#endif
 	if (historyfd != -1) {
 		close(historyfd);
 		historyfd = -1;
 	}
 #if HAVE_READLINE
-	/* Attempt to populate readline history with new history file. */
-	stifle_history(50000); /* Keep memory usage within sane-ish bounds. */
-	read_history(file);
+	reloadhistory = TRUE;
 #endif
 	history = file;
 }
@@ -204,6 +237,8 @@ static char *callreadline(char *prompt) {
 	char *r;
 	if (prompt == NULL)
 		prompt = ""; /* bug fix for readline 2.0 */
+	if (reloadhistory)
+		reload_history();
 	if (resetterminal) {
 		rl_reset_terminal(NULL);
 		resetterminal = FALSE;

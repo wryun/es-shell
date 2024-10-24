@@ -284,8 +284,9 @@ extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
 extern void sethistory(char *file);
 extern Boolean isinteractive(void);
-#if ABUSED_GETENV
 #if HAVE_READLINE
+extern void setmaxhistorylength(int length);
+#if ABUSED_GETENV
 extern void initgetenv(void);
 #endif
 #endif
