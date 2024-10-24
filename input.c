@@ -233,7 +233,8 @@ static int eoffill(Input *in) {
 
 #if HAVE_READLINE
 /* callreadline -- readline wrapper */
-static char *callreadline(char *prompt) {
+static char *callreadline(char *prompt0) {
+	char *volatile prompt = prompt0;
 	char *r;
 	if (prompt == NULL)
 		prompt = ""; /* bug fix for readline 2.0 */
