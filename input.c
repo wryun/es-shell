@@ -122,7 +122,7 @@ extern void setmaxhistorylength(int len) {
 			break;
 		case 0:
 			clear_history();
-			/* fallthrough */
+			FALLTHROUGH;
 		default:
 			stifle_history(len);
 		}
