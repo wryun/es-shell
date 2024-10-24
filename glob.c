@@ -55,7 +55,7 @@ static List *dirmatch(const char *prefix, const char *dirname, const char *patte
 	 * is necessary (sigh);  the check is done here instead of with the
 	 * opendir to handle a trailing slash.
 	 */
-	if (stat(dirname, &s) == -1 || (s.st_mode & S_IFMT) != S_IFDIR)
+	if (stat(dirname, &s) == -1 || !S_ISDIR(s.st_mode))
 		return NULL;	
 
 	if (!haswild(pattern, quote)) {

@@ -14,7 +14,7 @@
 #if BSD_LIMITS || BUILTIN_TIME
 #include <sys/time.h>
 #include <sys/resource.h>
-#if !HAVE_WAIT3
+#if !HAVE_GETRUSAGE
 #include <sys/times.h>
 #include <limits.h>
 #endif
@@ -23,22 +23,10 @@
 #include <sys/stat.h>
 
 PRIM(newpgrp) {
-	int pid;
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
-	pid = getpid();
-	setpgrp(pid, pid);
-#ifdef TIOCSPGRP
-	{
-		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
-		Sigeffect sigttin = esignal(SIGTTIN, sig_ignore);
-		Sigeffect sigttou = esignal(SIGTTOU, sig_ignore);
-		ioctl(2, TIOCSPGRP, &pid);
-		esignal(SIGTSTP, sigtstp);
-		esignal(SIGTTIN, sigttin);
-		esignal(SIGTTOU, sigttou);
-	}
-#endif
+	newpgrp();
+	tctakepgrp();
 	return ltrue;
 }
 
@@ -46,8 +34,9 @@ PRIM(background) {
 	int pid = efork(TRUE, TRUE);
 	if (pid == 0) {
 #if JOB_PROTECT
-		/* job control safe version: put it in a new pgroup. */
-		setpgrp(0, getpid());
+		/* job control safe version: put it in a new pgroup if we are interactive. */
+		if (isinteractive())
+			setpgid(0, 0);
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
 		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
@@ -296,8 +285,7 @@ PRIM(limit) {
 
 #if BUILTIN_TIME
 PRIM(time) {
-
-#if HAVE_WAIT3
+#if HAVE_GETRUSAGE
 
 	int pid, status;
 	time_t t0, t1;
@@ -326,7 +314,7 @@ PRIM(time) {
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
 
-#else	/* !HAVE_WAIT3 */
+#else	/* !HAVE_GETRUSAGE */
 
 	int pid, status;
 	Ref(List *, lp, list);
@@ -370,8 +358,7 @@ PRIM(time) {
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
 
-#endif	/* !HAVE_WAIT3 */
-
+#endif	/* !HAVE_GETRUSAGE */
 }
 #endif	/* BUILTIN_TIME */
 

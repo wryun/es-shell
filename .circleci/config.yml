@@ -27,10 +27,15 @@ jobs:
           name: Build
           command: make 'ADDCFLAGS=-DGCDEBUG=1 -DREF_ASSERTIONS=1'
 
+      - run:
+          name: Build test helper
+          command: make testrun
+
       - persist_to_workspace:
           root: .
           paths:
             - es
+            - testrun
 
   test:
     docker:

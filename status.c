@@ -54,20 +54,20 @@ extern int exitstatus(List *status) {
 
 /* mkstatus -- turn a unix exit(2) status into a string */
 extern char *mkstatus(int status) {
-	if (SIFSIGNALED(status)) {
-		char *name = signame(STERMSIG(status));
-		if (SCOREDUMP(status))
+	if (WIFSIGNALED(status)) {
+		char *name = signame(WTERMSIG(status));
+		if (WCOREDUMP(status))
 			name = str("%s+core", name);
 		return name;
 	}
-	return str("%d", SEXITSTATUS(status));
+	return str("%d", WEXITSTATUS(status));
 }
 
 /* printstatus -- print the status if we should */
 extern void printstatus(int pid, int status) {
-	if (SIFSIGNALED(status)) {
-		const char *msg = sigmessage(STERMSIG(status)), *tail = "";
-		if (SCOREDUMP(status)) {
+	if (WIFSIGNALED(status)) {
+		const char *msg = sigmessage(WTERMSIG(status)), *tail = "";
+		if (WCOREDUMP(status)) {
 			tail = "--core dumped";
 			if (*msg == '\0')
 				tail += (sizeof "--") - 1;

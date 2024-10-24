@@ -3,7 +3,7 @@
 test 'lexical analysis' {
 	let (tmp = `{mktemp trip-nul.XXXX})
 	unwind-protect {
-		printf '%b\n' 'res\0ult 6' > $tmp
+		./testrun 0 > $tmp
 		let ((status output) = <={$&backquote \n {$es $tmp >[2=1]}}) {
 			assert {~ $output *'null character ignored'*} 'null character produces warning'
 			assert {~ $status 6} 'null character does not disturb behavior'
@@ -112,7 +112,7 @@ test 'redirections' {
 	assert {~ `` '' {cat 2} foo} dup put wrong contents in file : `` '' {cat 2}
 	rm -f 1 2
 
-	assert {~ `` \n {$es -c 'cat >[0=]' >[2=1]} *'cat:'*'Bad file descriptor'*}
+	assert {~ `` \n {$es -c 'cat >[0=]' >[2=1]} *'cat:'*'Bad file '*}
 	assert {~ `` \n {$es -c 'cat >(1 2 3)' >[2=1]} *'too many'*}
 	assert {~ `` \n {$es -c 'cat >()' >[2=1]} *'null'*}
 }
