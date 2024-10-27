@@ -56,13 +56,13 @@ static pid_t espgid;
 
 extern void newpgrp(void) {
 	setpgid(0, 0);
-	espgid = getpgid(0);
+	espgid = getpgrp();
 }
 
 extern void tctakepgrp(void) {
 	Sigeffect tstp, ttin, ttou;
 	if (espgid == 0)
-		espgid = getpgid(0);
+		espgid = getpgrp();
 	if (tcgetpgrp(2) == espgid)
 		return;
 	tstp = esignal(SIGTSTP, sig_ignore);
