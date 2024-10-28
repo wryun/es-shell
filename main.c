@@ -55,7 +55,7 @@ static void runesrc(void) {
 			runfd(fd, esrc, 0);
 		CatchException (e)
 			if (termeq(e->term, "exit"))
-				exit(exitstatus(e->next));
+				esexit(exitstatus(e->next));
 			else if (termeq(e->term, "error"))
 				eprint("%L\n",
 				       e->next == NULL ? NULL : e->next->next,
@@ -92,13 +92,13 @@ static Noreturn usage(void) {
 		"	-L	print parser results in LISP format\n"
 #endif
 	);
-	exit(1);
+	esexit(1);
 }
 
 
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
-	int c;
+	int c, result;
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */
@@ -153,7 +153,7 @@ getopt_done:
 
 	if (cmd_stdin && cmd != NULL) {
 		eprint("es: -s and -c are incompatible\n");
-		exit(1);
+		esexit(1);
 	}
 
 	if (!keepclosed) {
@@ -194,31 +194,39 @@ getopt_done:
 			argp = argp->next;
 			if ((fd = eopen(file, oOpen)) == -1) {
 				eprint("%s: %s\n", file, esstrerror(errno));
-				return 1;
+				result = 1;
+				goto ret;
 			}
 			vardef("*", NULL, argp);
 			vardef("0", NULL, mklist(mkstr(file), NULL));
-			return exitstatus(runfd(fd, file, runflags));
+			result = exitstatus(runfd(fd, file, runflags));
+			goto ret;
 		}
 	
 		vardef("*", NULL, argp);
 		vardef("0", NULL, mklist(mkstr(argv[0]), NULL));
 		if (cmd != NULL)
-			return exitstatus(runstring(cmd, NULL, runflags));
-		return exitstatus(runfd(0, "stdin", runflags));
+			result = exitstatus(runstring(cmd, NULL, runflags));
+		else
+			result = exitstatus(runfd(0, "stdin", runflags));
 
 	CatchException (e)
 
-		if (termeq(e->term, "exit"))
-			return exitstatus(e->next);
-		else if (termeq(e->term, "error"))
+		if (termeq(e->term, "exit")) {
+			result = exitstatus(e->next);
+			goto ret;
+		} else if (termeq(e->term, "error"))
 			eprint("%L\n",
 			       e->next == NULL ? NULL : e->next->next,
 			       " ");
 		else if (!issilentsignal(e))
 			eprint("uncaught exception: %L\n", e, " ");
-		return 1;
+		result = 1;
 
 	EndExceptionHandler
+
+ret:
+	tcreturnpgrp();
+	return result;
 	RefEnd3(argp, args, cmd);
 }

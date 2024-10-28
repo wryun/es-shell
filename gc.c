@@ -88,7 +88,7 @@ static void *take(size_t n) {
 	kern_return_t error = vm_allocate(task_self(), &addr, n, TRUE);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_allocate", error);
-		exit(1);
+		esexit(1);
 	}
 	memset((void *) addr, 0xC9, n);
 	return (void *) addr;
@@ -99,7 +99,7 @@ static void release(void *p, size_t n) {
 	kern_return_t error = vm_deallocate(task_self(), (vm_address_t) p, n);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_deallocate", error);
-		exit(1);
+		esexit(1);
 	}
 }
 
@@ -108,7 +108,7 @@ static void invalidate(void *p, size_t n) {
 	kern_return_t error = vm_protect(task_self(), (vm_address_t) p, n, FALSE, 0);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_protect 0", error);
-		exit(1);
+		esexit(1);
 	}
 }
 
@@ -118,7 +118,7 @@ static void revalidate(void *p, size_t n) {
 		vm_protect(task_self(), (vm_address_t) p, n, FALSE, VM_PROT_READ|VM_PROT_WRITE);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_protect VM_PROT_READ|VM_PROT_WRITE", error);
-		exit(1);
+		esexit(1);
 	}
 	memset(p, 0x4F, n);
 }

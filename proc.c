@@ -26,6 +26,8 @@ extern Proc *mkproc(int pid, Boolean background) {
 	return proc;
 }
 
+static pid_t espgid, tcpgid, tcpgid0;
+
 /* efork -- fork (if necessary) and clean up as appropriate */
 extern int efork(Boolean parent, Boolean background) {
 	if (parent) {
@@ -41,6 +43,7 @@ extern int efork(Boolean parent, Boolean background) {
 		case 0:		/* child */
 			proclist = NULL;
 			hasforked = TRUE;
+			tcpgid = tcpgid0 = 0;
 			break;
 		case -1:
 			fail("es:efork", "fork: %s", esstrerror(errno));
@@ -52,26 +55,48 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
-static pid_t espgid;
-
 extern void newpgrp(void) {
 	setpgid(0, 0);
 	espgid = getpgrp();
 }
 
-extern void tctakepgrp(void) {
+static void tcspgrp(pid_t pgid) {
+	int e = 0;
 	Sigeffect tstp, ttin, ttou;
-	if (espgid == 0)
-		espgid = getpgrp();
-	if (tcgetpgrp(2) == espgid)
-		return;
 	tstp = esignal(SIGTSTP, sig_ignore);
 	ttin = esignal(SIGTTIN, sig_ignore);
 	ttou = esignal(SIGTTOU, sig_ignore);
-	tcsetpgrp(2, espgid);
+	if (tcsetpgrp(2, pgid) == 0)
+		tcpgid = pgid;
+	else
+		e = errno;
 	esignal(SIGTSTP, tstp);
 	esignal(SIGTTIN, ttin);
 	esignal(SIGTTOU, ttou);
+	if (e != 0)
+		uerror("tcsetpgid");
+}
+
+extern void tcreturnpgrp(void) {
+	if (tcpgid != tcpgid0)
+		tcspgrp(tcpgid0);
+}
+
+extern void tctakepgrp(void) {
+	if (espgid == 0)
+		espgid = getpgrp();
+	if (tcpgid == 0)
+		tcpgid = tcgetpgrp(2);
+	if (tcpgid0 == 0)
+		tcpgid0 = tcpgid;
+	if (tcpgid == espgid)
+		return;
+	tcspgrp(espgid);
+}
+
+extern Noreturn esexit(int code) {
+	tcreturnpgrp();
+	exit(code);
 }
 
 
