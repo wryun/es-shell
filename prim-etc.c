@@ -283,6 +283,23 @@ PRIM(setmaxevaldepth) {
 }
 
 #if HAVE_READLINE
+PRIM(setmaxhistorylength) {
+	char *s;
+	int n;
+	if (list == NULL) {
+		setmaxhistorylength(-1); /* unlimited */
+		return NULL;
+	}
+	if (list->next != NULL)
+		fail("$&setmaxhistorylength", "usage: $&setmaxhistorylength [limit]");
+	Ref(List *, lp, list);
+	n = (int)strtol(getstr(lp->term), &s, 0);
+	if (n < 0 || (s != NULL && *s != '\0'))
+		fail("$&setmaxhistorylength", "max-history-length must be set to a positive integer");
+	setmaxhistorylength(n);
+	RefReturn(lp);
+}
+
 PRIM(resetterminal) {
 	resetterminal = TRUE;
 	return ltrue;
@@ -320,6 +337,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(setmaxevaldepth);
 #if HAVE_READLINE
 	X(resetterminal);
+	X(setmaxhistorylength);
 #endif
 	return primdict;
 }

@@ -97,8 +97,9 @@ static Noreturn usage(void) {
 
 
 /* main -- initialize, parse command arguments, and start running */
-int main(int argc, char **argv) {
+int main(int argc, char **argv0) {
 	int c, result;
+	char **volatile argv = argv0;
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */

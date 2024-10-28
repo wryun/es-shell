@@ -2739,6 +2739,14 @@ and
 .Cr TERMCAP
 variables to notify the line editing packages that the terminal
 configuration has changed.
+Similarly,
+.Cr setmaxhistorylength
+is used as the settor function for the
+.Cr max-history-length
+variable, which signals to the
+.I readline
+library how much of the history file should be read into the in-memory
+history log.
 .PP
 Several primitives are not directly associated with other function.
 They are:
