@@ -64,7 +64,7 @@ static int testperm(struct stat *stat, int perm) {
 
 static int testfile(char *path, int perm, unsigned int type) {
 	struct stat st;
-	if (stat(path, &st) == -1)
+	if ((type == IFLNK ? lstat(path, &st) : stat(path, &st)) == -1)
 		return errno;
 	/* is EACCES the right return value? */
 	switch(type) {
