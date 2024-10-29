@@ -73,7 +73,7 @@ static void catcher(int sig) {
 #endif
 	if (hasforked)
 		/* exit unconditionally on a signal in a child process */
-		esexit(1);
+		exit(1);
 	if (caught[sig] == 0) {
 		caught[sig] = TRUE;
 		++sigcount;
@@ -279,7 +279,7 @@ extern void sigchk(void) {
 		return;
 	if (hasforked)
 		/* exit unconditionally on a signal in a child process */
-		esexit(1);
+		exit(1);
 
 	for (sig = 0;; sig++) {
 		if (caught[sig] != 0) {

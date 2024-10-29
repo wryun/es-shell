@@ -19,7 +19,7 @@ static Noreturn failexec(char *file, List *args) {
 		errno = olderror;
 	}
 	eprint("%s: %s\n", file, esstrerror(errno));
-	esexit(1);
+	exit(1);
 }
 
 /* forkexec -- fork (if necessary) and exec */
@@ -469,7 +469,7 @@ restart:
 done:
 	--evaldepth;
 	if ((flags & eval_exitonfalse) && !istrue(list))
-		esexit(exitstatus(list));
+		exit(exitstatus(list));
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }

@@ -55,7 +55,7 @@ static void runesrc(void) {
 			runfd(fd, esrc, 0);
 		CatchException (e)
 			if (termeq(e->term, "exit"))
-				esexit(exitstatus(e->next));
+				exit(exitstatus(e->next));
 			else if (termeq(e->term, "error"))
 				eprint("%L\n",
 				       e->next == NULL ? NULL : e->next->next,
@@ -92,13 +92,13 @@ static Noreturn usage(void) {
 		"	-L	print parser results in LISP format\n"
 #endif
 	);
-	esexit(1);
+	exit(1);
 }
 
 
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv0) {
-	int c, result;
+	int c;
 	char **volatile argv = argv0;
 
 	volatile int runflags = 0;		/* -[einvxL] */
@@ -154,7 +154,7 @@ getopt_done:
 
 	if (cmd_stdin && cmd != NULL) {
 		eprint("es: -s and -c are incompatible\n");
-		esexit(1);
+		exit(1);
 	}
 
 	if (!keepclosed) {
@@ -195,39 +195,31 @@ getopt_done:
 			argp = argp->next;
 			if ((fd = eopen(file, oOpen)) == -1) {
 				eprint("%s: %s\n", file, esstrerror(errno));
-				result = 1;
-				goto ret;
+				return 1;
 			}
 			vardef("*", NULL, argp);
 			vardef("0", NULL, mklist(mkstr(file), NULL));
-			result = exitstatus(runfd(fd, file, runflags));
-			goto ret;
+			return exitstatus(runfd(fd, file, runflags));
 		}
 	
 		vardef("*", NULL, argp);
 		vardef("0", NULL, mklist(mkstr(argv[0]), NULL));
 		if (cmd != NULL)
-			result = exitstatus(runstring(cmd, NULL, runflags));
-		else
-			result = exitstatus(runfd(0, "stdin", runflags));
+			return exitstatus(runstring(cmd, NULL, runflags));
+		return exitstatus(runfd(0, "stdin", runflags));
 
 	CatchException (e)
 
-		if (termeq(e->term, "exit")) {
-			result = exitstatus(e->next);
-			goto ret;
-		} else if (termeq(e->term, "error"))
+		if (termeq(e->term, "exit"))
+			return exitstatus(e->next);
+		else if (termeq(e->term, "error"))
 			eprint("%L\n",
 			       e->next == NULL ? NULL : e->next->next,
 			       " ");
 		else if (!issilentsignal(e))
 			eprint("uncaught exception: %L\n", e, " ");
-		result = 1;
+		return 1;
 
 	EndExceptionHandler
-
-ret:
-	tcreturnpgrp();
-	return result;
 	RefEnd3(argp, args, cmd);
 }

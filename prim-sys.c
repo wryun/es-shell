@@ -23,10 +23,20 @@
 #include <sys/stat.h>
 
 PRIM(newpgrp) {
+	int pid;
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
-	newpgrp();
-	tctakepgrp();
+	pid = getpid();
+	setpgrp(pid, pid);
+	{
+		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
+		Sigeffect sigttin = esignal(SIGTTIN, sig_ignore);
+		Sigeffect sigttou = esignal(SIGTTOU, sig_ignore);
+		tcsetpgrp(2, pid);
+		esignal(SIGTSTP, sigtstp);
+		esignal(SIGTTIN, sigttin);
+		esignal(SIGTTOU, sigttou);
+	}
 	return ltrue;
 }
 
@@ -34,12 +44,11 @@ PRIM(background) {
 	int pid = efork(TRUE, TRUE);
 	if (pid == 0) {
 #if JOB_PROTECT
-		/* job control safe version: put it in a new pgroup if we are interactive. */
-		if (isinteractive())
-			setpgid(0, 0);
+		/* job control safe version: put it in a new pgroup. */
+		setpgrp(0, getpid());
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
-		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	}
 	return mklist(mkstr(str("%d", pid)), NULL);
 }
@@ -48,7 +57,7 @@ PRIM(fork) {
 	int pid, status;
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
-		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
 	SIGCHK();
 	printstatus(0, status);
@@ -297,7 +306,7 @@ PRIM(time) {
 	t0 = time(NULL);
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
-		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	status = ewait(pid, FALSE, &r);
 	t1 = time(NULL);
 	SIGCHK();
@@ -332,7 +341,7 @@ PRIM(time) {
 		t0 = times(&tms);
 		pid = efork(TRUE, FALSE);
 		if (pid == 0)
-			esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+			exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 
 		status = ewaitfor(pid);
 		t1 = times(&tms);
@@ -349,7 +358,7 @@ PRIM(time) {
 			tms.tms_cstime / ticks, ((tms.tms_cstime * 10) / ticks) % 10,
 			lp, " "
 		);
-		esexit(status);
+		exit(status);
 	}
 	status = ewaitfor(pid);
 	SIGCHK();
