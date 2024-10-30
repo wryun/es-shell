@@ -51,7 +51,7 @@ static int testperm(struct stat *stat, int perm) {
 				: ((gid == stat->st_gid  || ingroupset(stat->st_gid))
 					? GROUP
 					: OTHER)));
-	return (stat->st_mode & mask) ? 0 : EACCES;
+	return (stat->st_mode & mask) == mask ? 0 : EACCES;
 }
 
 static int testfile(char *path, int perm, unsigned int type) {
@@ -153,7 +153,7 @@ PRIM(access) {
 			} else if (error != ENOENT)
 				estatus = error;
 		} else
-			lp = mklist(mkstr(error == 0 ? "0" : esstrerror(error)),
+			lp = mklist(mkstr(error == 0 ? "0" : gcdup(esstrerror(error))),
 				    lp);
 	}
 
