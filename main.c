@@ -68,7 +68,7 @@ static void runesrc(void) {
 }
 
 /* usage -- print usage message and die */
-static noreturn usage(void) {
+static Noreturn usage(void) {
 	eprint(
 		"usage: es [-c command] [-silevxnpo] [file [args ...]]\n"
 		"	-c cmd	execute argument\n"
@@ -97,8 +97,9 @@ static noreturn usage(void) {
 
 
 /* main -- initialize, parse command arguments, and start running */
-int main(int argc, char **argv) {
+int main(int argc, char **argv0) {
 	int c;
+	char **volatile argv = argv0;
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */

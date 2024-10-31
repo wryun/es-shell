@@ -47,9 +47,9 @@ MKDIR_P = @MKDIR_P@
 ## Bison is generating incorrect parsers.  So do not use, for now
 # YACC = @YACC@
 
-CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wdeclaration-after-statement -Wno-clobbered @CFLAGS@
+CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wdeclaration-after-statement @READLINE_CFLAGS@ @CFLAGS@
 LDFLAGS	= $(ADDLDFLAGS) @LDFLAGS@
-LIBS	= $(ADDLIBS) @LIBS@
+LIBS	= $(ADDLIBS) @READLINE_LIBS@ @LIBS@
 
 VPATH = $(srcdir)
 
@@ -88,14 +88,14 @@ MANIFEST:
 
 install : es
 	$(MKDIR_P) $(DESTDIR)$(bindir)
-	$(INSTALL_PROGRAM) -s $(srcdir)/es $(DESTDIR)$(bindir)
+	$(INSTALL_PROGRAM) -s es $(DESTDIR)$(bindir)
 	$(MKDIR_P) $(DESTDIR)$(mandir)/man1
 	$(INSTALL_DATA) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
 	$(MKDIR_P) $(DESTDIR)$(datadir)/es
 	$(INSTALL_DATA) $(srcdir)/share/* $(DESTDIR)$(datadir)/es
 
 test	: es $(testdir)/test.es
-	$(srcdir)/es -s < $(testdir)/test.es $(testdir)/tests/*
+	./es -s < $(testdir)/test.es $(testdir)/tests/*
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
