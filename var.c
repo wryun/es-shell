@@ -481,7 +481,7 @@ extern void initenv(char **envp, Boolean protected) {
 
 	sortvector(imported);
 	for (i = 0; i < imported->count; i++)
-		callsettor(imported->vector[i], varlookup(imported->vector[i], NULL));
+		vardef(imported->vector[i], NULL, varlookup(imported->vector[i], NULL));
 
 	RefEnd(imported);
 	envmin = env->count;
