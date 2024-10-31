@@ -178,7 +178,7 @@ static List *callsettor(char *name, List *defn) {
 	RefReturn(lp);
 }
 
-static void vardef0(char *name, Binding *binding, List *defn, Boolean settor) {
+static void vardef0(char *name, Binding *binding, List *defn, Boolean startup) {
 	Var *var;
 
 	validatevar(name);
@@ -190,10 +190,11 @@ static void vardef0(char *name, Binding *binding, List *defn, Boolean settor) {
 		}
 
 	RefAdd(name);
-	if (settor)
+	if (!startup) {
 		defn = callsettor(name, defn);
-	if (isexported(name))
-		isdirty = TRUE;
+		if (isexported(name))
+			isdirty = TRUE;
+	}
 
 	var = dictget(vars, name);
 	if (var != NULL)
@@ -211,7 +212,7 @@ static void vardef0(char *name, Binding *binding, List *defn, Boolean settor) {
 }
 
 extern void vardef(char *name, Binding *binding, List *defn) {
-	vardef0(name, binding, defn, TRUE);
+	vardef0(name, binding, defn, FALSE);
 }
 
 extern void varpush(Push *push, char *name, List *defn) {
@@ -445,7 +446,7 @@ static void importvar(char *name0, char *value) {
 		}
 		gcenable();
 	}
-	vardef0(name, NULL, defn, FALSE);
+	vardef0(name, NULL, defn, TRUE);
 	RefEnd2(defn, name);
 }
 
@@ -480,10 +481,18 @@ extern void initenv(char **envp, Boolean protected) {
 	RefEnd(name);
 
 	sortvector(imported);
-	for (i = 0; i < imported->count; i++)
-		vardef(imported->vector[i], NULL, varlookup(imported->vector[i], NULL));
+	Ref(Var *, var, NULL);
+	for (i = 0; i < imported->count; i++) {
+		char *name = imported->vector[i];
+		List *defn;
+		if (specialvar(name) || varlookup2("set-", name, NULL) == NULL)
+			continue;
+		var = dictget(vars, name);
+		defn = callsettor(name, var->defn);
+		var->defn = defn;
+	}
 
-	RefEnd(imported);
+	RefEnd2(var, imported);
 	envmin = env->count;
 	efree(buf);
 }
