@@ -2,8 +2,12 @@
 
 #include "es.h"
 
+/* TODO: the rusage code for the time builtin really needs to be cleaned up */
+
+#if HAVE_GETRUSAGE
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 
 Boolean hasforked = FALSE;
 
@@ -114,7 +118,7 @@ static Proc *reap(int pid) {
 	return proc;
 }
 
-/* ewait -- wait for a specific process to die, or any process if pid == 0 */
+/* ewait -- wait for a specific process to die, or any process if pid == -1 */
 extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
 	int deadpid, status;
 	Proc *proc;

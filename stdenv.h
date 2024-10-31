@@ -272,19 +272,19 @@ extern int getgroups(int, int *);
  */
 
 #ifdef HAVE_SETSID
-# define setpgrp(a, b) setsid()
+# define setpgrp(a, b)	setsid()
 #else
 #if defined(linux) || defined(__GLIBC__)
 #include "unistd.h"
-#define setpgrp(a, b)  setpgid(a, b)
+#define setpgrp(a, b)	setpgid(a, b)
 #endif
 
 #if sgi
-#define        setpgrp(a, b)   BSDsetpgrp(a,b)
+#define	setpgrp(a, b)	BSDsetpgrp(a,b)
 #endif
 
 #if HPUX
-#define        setpgrp(a, b)   setpgrp()
+#define	setpgrp(a, b)	setpgrp()
 #endif
 #endif
 
