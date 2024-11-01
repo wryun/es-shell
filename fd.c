@@ -105,8 +105,10 @@ extern int fdmap(int fd) {
 
 /* remapfds -- apply the fd map to the current file descriptor table */
 static void remapfds(void) {
-	Defer *defer, *defend = &deftab[defcount];
-	for (defer = deftab; defer < defend; defer++) {
+	Defer *defer, *defend;
+	if (deftab == NULL)
+		return;
+	for (defer = deftab, defend = &deftab[defcount]; defer < defend; defer++) {
 		unregisterfd(&defer->realfd);
 		dodeferred(defer->realfd, defer->userfd);
 	}

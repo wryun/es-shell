@@ -70,27 +70,27 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
 	| MATCH word nl '(' cases ')'		{ $$ = mkmatch($2, $5); }
 
-cases	: case				{ $$ = treecons2($1, NULL); }
-	| cases ';' case		{ $$ = treeconsend2($1, $3); }
-	| cases NL case			{ $$ = treeconsend2($1, $3); }
+cases	: case				{ $$ = treecons($1, NULL); }
+	| cases ';' case		{ $$ = treeconsend($1, $3); }
+	| cases NL case			{ $$ = treeconsend($1, $3); }
 
 case	:				{ $$ = NULL; }
-	| word first			{ $$ = mk(nList, $1, thunkify($2)); }
+	| word first			{ $$ = mk(nMatch, $1, thunkify($2)); }
 
-simple	: first				{ $$ = treecons2($1, NULL); }
+simple	: first				{ $$ = treecons($1, NULL); }
 	| first args			{ $$ = firstprepend($1, $2); }
 
-args	: word				{ $$ = treecons2($1, NULL); }
+args	: word				{ $$ = treecons($1, NULL); }
 	| redir				{ $$ = redirappend(NULL, $1); }
-	| args word			{ $$ = treeconsend2($1, $2); }
+	| args word			{ $$ = treeconsend($1, $2); }
 	| args redir			{ $$ = redirappend($1, $2); }
 
 redir	: DUP				{ $$ = $1; }
 	| REDIR word			{ $$ = mkredir($1, $2); }
 
-bindings: binding			{ $$ = treecons2($1, NULL); }
-	| bindings ';' binding		{ $$ = treeconsend2($1, $3); }
-	| bindings NL binding		{ $$ = treeconsend2($1, $3); }
+bindings: binding			{ $$ = treecons($1, NULL); }
+	| bindings ';' binding		{ $$ = treeconsend($1, $3); }
+	| bindings NL binding		{ $$ = treeconsend($1, $3); }
 
 binding	:				{ $$ = NULL; }
 	| fn				{ $$ = $1; }

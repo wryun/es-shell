@@ -68,7 +68,7 @@ const char dnw[] = {
 /* print_prompt2 -- called before all continuation lines */
 extern void print_prompt2(void) {
 	input->lineno++;
-#if READLINE
+#if HAVE_READLINE
 	prompt = prompt2;
 #else
 	if ((input->runflags & run_interactive) && prompt2 != NULL)
@@ -312,7 +312,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		while ((c = GETC()) != '\n') /* skip comment until newline */
 			if (c == EOF)
 				return ENDFILE;
-		/* FALLTHROUGH */
+		FALLTHROUGH;
 	case '\n':
 		input->lineno++;
 		newline = TRUE;
@@ -321,7 +321,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 	case '(':
 		if (w == RW)	/* not keywords, so let & friends work */
 			c = SUB;
-		/* FALLTHROUGH */
+		FALLTHROUGH;
 	case ';':
 	case '^':
 	case ')':
