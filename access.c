@@ -32,8 +32,8 @@ static Boolean ingroupset(gidset_t gid) {
 	return FALSE;
 }
 
-static int testperm(struct stat *stat, int perm) {
-	int mask;
+static int testperm(struct stat *stat, unsigned int perm) {
+	unsigned int mask;
 	static gidset_t uid, gid;
 	static Boolean initialized = FALSE;
 	if (perm == 0)
@@ -54,7 +54,7 @@ static int testperm(struct stat *stat, int perm) {
 	return (stat->st_mode & mask) == mask ? 0 : EACCES;
 }
 
-static int testfile(char *path, int perm, unsigned int type) {
+static int testfile(char *path, unsigned int perm, unsigned int type) {
 	struct stat st;
 #ifdef S_IFLNK
 	if (type == S_IFLNK) {
@@ -97,8 +97,9 @@ static char *pathcat(char *prefix, char *suffix) {
 }
 
 PRIM(access) {
-	int c, perm = 0, type = 0, estatus = ENOENT;
-	Boolean first = FALSE, exception = FALSE;
+	int c, estatus = ENOENT;
+	unsigned int perm = 0, type = 0;
+	Boolean first = FALSE, throws = FALSE;
 	char *suffix = NULL;
 	List *lp;
 	const char * const usage = "access [-n name] [-1e] [-rwx] [-fdcblsp] path ...";
@@ -109,7 +110,7 @@ PRIM(access) {
 		switch (c) {
 		case 'n':	suffix = getstr(esoptarg());	break;
 		case '1':	first = TRUE;			break;
-		case 'e':	exception = TRUE;		break;
+		case 'e':	throws = TRUE;			break;
 		case 'r':	perm |= READ;			break;
 		case 'w':	perm |= WRITE;			break;
 		case 'x':	perm |= EXEC;			break;
@@ -157,7 +158,7 @@ PRIM(access) {
 				    lp);
 	}
 
-	if (first && exception) {
+	if (first && throws) {
 		gcenable();
 		if (suffix)
 			fail("$&access", "%s: %s", suffix, esstrerror(estatus));
