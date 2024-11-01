@@ -20,8 +20,8 @@ let (search = $fn-%pathsearch)
 fn %pathsearch prog {
 	let (autoload = $XDG_DATA_HOME/es/autoload) {
 		if {!~ $#es-autoload 0} {
-			autoload = $es-autoload
-		} {!~ $autoload 1} {
+			autoload = $es-autoload(1)
+		} {!~ $#autoload 1} {
 			autoload = ~/.local/share/es/autoload
 		}
 		if {access -f -r $autoload/$prog} {
