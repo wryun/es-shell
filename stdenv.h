@@ -319,7 +319,7 @@ extern int getgroups(int, int *);
 #endif
 
 #ifndef 	WIFEXITED
-# define	WIFEXITED(status)	(!SIFSIGNALED(status))
+# define	WIFEXITED(status)	(!WIFSIGNALED(status))
 #endif
 
 #ifndef 	WEXITSTATUS
