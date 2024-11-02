@@ -1790,7 +1790,6 @@ when invoked in this way, the shell prints the internal form of its commands
 rather than executing them.
 .ta 2.3i
 .SS "Control Flow"
-\&
 .Ds
 .ft \*(Cf
 ! \fIcmd\fP	%not {\fIcmd\fP}
@@ -1802,7 +1801,6 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Input/Output Commands"
-\&
 .Ds
 .ft \*(Cf
 \fIcmd\fP < \fIfile\fP	%open 0 \fIfile\fP {\fIcmd\fP}
@@ -1824,7 +1822,6 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Expressions"
-\&
 .Ds
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
@@ -1898,7 +1895,6 @@ Is the file writable?
 .TP
 .Cr \-x
 Is the file executable?
-.sp .7v
 .TP
 .Cr \-f
 Is the file a plain file?
@@ -2168,7 +2164,6 @@ functions
 .TP
 .Cr \-s
 settor functions
-.sp .7v
 .TP
 .Cr \-e
 exported values
@@ -2178,7 +2173,6 @@ private (not exported) values
 .TP
 .Cr \-i
 internal (predefined and builtin) values
-.sp .7v
 .TP
 .Cr \-a
 all of the above
@@ -2854,8 +2848,99 @@ Don't trap
 or
 .Cr SIGTERM .
 This is used for debugging.
+.SH CANONICAL EXTENSIONS
+.I Es
+is distributed with a directory of ``canonical extension'' scripts, which
+implement a number of features commonly desired by users but not built into
+the shell itself.
+They are typically installed into either
+.Cr /usr/share/es
+or
+.Cr /usr/local/share/es ,
+corresponding with wherever the
+.I es
+binary itself is installed.
+.PP
+In general, these scripts work by spoofing hook functions within
+.I es
+and can be read as a demonstration of how these spoofs and hooks work.
+They are intended to be invoked as
+.Ds
+.Ci ". " /path/to/script.es
+.De
+.PP
+in
+.Cr $home/.esrc .
+They can also be invoked at the interactive command line or even within other
+scripts, though they may not be particularly useful when invoked in those
+contexts.
+.PP
+Features currently distributed as canonical extensions include:
+.TP
+.Cr autoload.es
+Adds behavior to
+.I es
+to search the directory given by
+.Cr $es-autoload
+(by default
+.Cr $XDG_DATA_HOME/es/autoload
+or, if
+.Cr $XDG_DATA_HOME
+is not set,
+.Cr ~/.local/share/es/autoload ,)
+containing function definitions which are then defined on-demand.
+.TP
+.Cr cdpath.es
+Implements
+.IR rc (1)-style
+.Cr $cdpath
+searching to the
+.Cr cd
+builtin.
+.TP
+.Cr interactive-init.es
+Adds a hook for a function
+.Cr %interactive-init
+to be called at the beginning of
+.Cr %interactive-loop .
+By invoking
+.Ci ". " /path/to/ interactive-init.es
+and defining
+.Ds
+.Ci "fn %interactive-init {"
+.Ci "  . " startup-script.es
+.Cr "}"
+.De
+.sp .7v
+in
+.Cr .esrc ,
+this function also enables interactive-shell startup scripts.
+.TP
+.Cr path-cache.es
+Adds behavior to
+.Cr %pathsearch
+to ``cache'' the location of external commands by automatically defining
+.Ds
+.Ci fn- command " = " /path/to/command
+.De
+.sp .7v
+when paths to external commands are found.
+This can be helpful to performance when path searching is slow, and
+corresponds with the ``hashing'' behavior found in some other shells.
+.TP
+.Cr status.es
+Adds a variable
+.Cr $status
+which contains the return value of commands run at the interactive command
+line, somewhat like that of
+.IR rc (1).
+.PP
+These are only short descriptions; users interested in these features
+should peruse the scripts themselves for more precise information on
+their use.
 .SH FILES
 .Cr $home/.esrc ,
+.Cr /usr/share/es ,
 .Cr /dev/null
 .SH BUGS
 Lexical scope which is shared by two variables (or closures) in a parent shell

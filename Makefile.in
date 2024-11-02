@@ -26,8 +26,9 @@
 # to get definitions of all signals from <sys/signal.h>.
 # _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones.
 
-datarootdir = @datarootdir@
 prefix  = @prefix@
+datarootdir = @datarootdir@
+datadir	= @datadir@
 exec_prefix	= @exec_prefix@
 mandir	= @mandir@
 bindir	= @bindir@
@@ -38,6 +39,8 @@ testdir	= @srcdir@/test
 SHELL	= /bin/sh
 CC	= @CC@
 INSTALL	= @INSTALL@
+INSTALL_PROGRAM	= ${INSTALL}
+INSTALL_DATA	= ${INSTALL} -m 644
 MKDIR_P = @MKDIR_P@
 
 
@@ -85,9 +88,11 @@ MANIFEST:
 
 install : es
 	$(MKDIR_P) $(DESTDIR)$(bindir)
-	$(INSTALL) -s es $(DESTDIR)$(bindir)
+	$(INSTALL_PROGRAM) -s es $(DESTDIR)$(bindir)
 	$(MKDIR_P) $(DESTDIR)$(mandir)/man1
-	$(INSTALL) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
+	$(INSTALL_DATA) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
+	$(MKDIR_P) $(DESTDIR)$(datadir)/es
+	$(INSTALL_DATA) $(srcdir)/share/* $(DESTDIR)$(datadir)/es
 
 test	: es $(testdir)/test.es
 	./es -s < $(testdir)/test.es $(testdir)/tests/*
