@@ -21,6 +21,9 @@ struct Proc {
 static Proc *proclist = NULL;
 
 static pid_t espgid;
+#if JOB_PROTECT
+static pid_t tcpgid0;
+#endif
 
 /* mkproc -- create a Proc structure */
 extern Proc *mkproc(int pid, Boolean background) {
@@ -47,6 +50,9 @@ extern int efork(Boolean parent, Boolean background) {
 		case 0:		/* child */
 			proclist = NULL;
 			hasforked = TRUE;
+#if JOB_PROTECT
+			tcpgid0 = 0;
+#endif
 			break;
 		case -1:
 			fail("es:efork", "fork: %s", esstrerror(errno));
@@ -75,12 +81,29 @@ static void tcspgrp(pid_t pgid) {
 
 extern void tctakepgrp(void) {
 	pid_t tcpgid;
-	if (espgid == 0)
-		espgid = getpgrp();
 	tcpgid = tcgetpgrp(2);
 	if (tcpgid != espgid)
 		tcspgrp(espgid);
 }
+
+extern void initpgrp(void) {
+	espgid = getpgrp();
+#if JOB_PROTECT
+	tcpgid0 = tcgetpgrp(2);
+#endif
+}
+
+#if JOB_PROTECT
+extern void tcreturnpgrp(void) {
+	if (tcpgid0 != 0 && tcpgid0 != tcgetpgrp(2))
+		tcspgrp(tcpgid0);
+}
+
+extern Noreturn esexit(int code) {
+	tcreturnpgrp();
+	exit(code);
+}
+#endif
 
 #if HAVE_GETRUSAGE
 /* This function is provided as timersub(3) on some systems, but it's simple enough

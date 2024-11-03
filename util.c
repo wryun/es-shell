@@ -64,7 +64,7 @@ extern void *ealloc(size_t n) {
 	void *p = malloc(n);
 	if (p == NULL) {
 		uerror("malloc");
-		exit(1);
+		esexit(1);
 	}
 	return p;
 }
@@ -77,7 +77,7 @@ extern void *erealloc(void *p, size_t n) {
 	p = realloc(p, n);
 	if (p == NULL) {
 		uerror("realloc");
-		exit(1);
+		esexit(1);
 	}
 	return p;
 }

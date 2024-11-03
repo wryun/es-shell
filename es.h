@@ -225,8 +225,16 @@ extern Boolean hasforked;
 extern int efork(Boolean parent, Boolean background);
 extern void newpgrp(void);
 extern void tctakepgrp(void);
+extern void initpgrp(void);
 extern int ewait(int pid, Boolean interruptible, void *rusage);
 #define	ewaitfor(pid)	ewait(pid, FALSE, NULL)
+
+#if JOB_PROTECT
+extern void tcreturnpgrp(void);
+extern Noreturn esexit(int);
+#else
+#define	esexit(n)	(exit(n))
+#endif
 
 
 /* dict.c */

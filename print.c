@@ -292,7 +292,7 @@ static void fprint_flush(Format *format, size_t UNUSED more) {
 		if (written == -1) {
 			if (format->u.n != 2)
 				uerror("write");
-			exit(1);
+			esexit(1);
 		}
 		n -= written;
 	}
@@ -346,5 +346,5 @@ extern Noreturn panic VARARGS1(const char *, fmt) {
 	fdprint(&format, 2, fmt);
 	va_end(format.args);
 	eprint("\n");
-	exit(1);
+	esexit(1);
 }
