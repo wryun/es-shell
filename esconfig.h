@@ -200,16 +200,6 @@
 #endif
 #endif	/* sgi */
 
-
-/* SunOS 4.x defaults */
-
-#if sun && !SOLARIS
-#ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/ucb", "/usr/bin", ""
-#endif
-#endif	/* sun */
-
-
 /* HP/UX 9.0.1 -- from rsalz@osf.org (Rich $alz) and haahr*/
 
 #if HPUX

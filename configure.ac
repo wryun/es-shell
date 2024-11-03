@@ -18,12 +18,6 @@ rm -f conftest*
 
 AC_CANONICAL_HOST
 
-case "$host" in
-	*sun5* | *solaris2*)
-		AC_DEFINE(SOLARIS, [], [Are we Solaris?])
-	;;
-esac
-
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
@@ -67,12 +61,10 @@ AC_TYPE_SIZE_T
 
 dnl Checks for library functions.
 AC_TYPE_GETGROUPS
-AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MMAP
 
-AC_FUNC_WAIT3
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
-sysconf setsid sigsetjmp)
+sysconf setsid sigsetjmp getrusage)
 
 AC_CACHE_CHECK(for an abused getenv, es_cv_abused_getenv,
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
