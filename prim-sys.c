@@ -27,12 +27,13 @@ PRIM(newpgrp) {
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
 	pid = getpid();
-	setpgrp(pid, pid);
+	setpgid(pid, pid);
 	{
 		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
 		Sigeffect sigttin = esignal(SIGTTIN, sig_ignore);
 		Sigeffect sigttou = esignal(SIGTTOU, sig_ignore);
-		tcsetpgrp(2, pid);
+		if (tcsetpgrp(2, pid) != 0)
+			uerror("tcsetpgrp");
 		esignal(SIGTSTP, sigtstp);
 		esignal(SIGTTIN, sigttin);
 		esignal(SIGTTOU, sigttou);
@@ -44,8 +45,9 @@ PRIM(background) {
 	int pid = efork(TRUE, TRUE);
 	if (pid == 0) {
 #if JOB_PROTECT
-		/* job control safe version: put it in a new pgroup. */
-		setpgrp(0, getpid());
+		/* job control safe version: put it in a new pgroup, if interactive. */
+		if (isinteractive())
+			setpgid(0, 0);
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
 		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
