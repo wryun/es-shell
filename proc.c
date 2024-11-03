@@ -20,6 +20,8 @@ struct Proc {
 
 static Proc *proclist = NULL;
 
+static pid_t espgid;
+
 /* mkproc -- create a Proc structure */
 extern Proc *mkproc(int pid, Boolean background) {
 	Proc *proc = ealloc(sizeof (Proc));
@@ -56,6 +58,29 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
+extern void newpgrp(void) {
+	setpgid(0, 0);
+	espgid = getpgrp();
+}
+
+static void tcspgrp(pid_t pgid) {
+	Sigeffect tstp = esignal(SIGTSTP, sig_ignore);
+	Sigeffect ttin = esignal(SIGTTIN, sig_ignore);
+	Sigeffect ttou = esignal(SIGTTOU, sig_ignore);
+	tcsetpgrp(2, pgid);
+	esignal(SIGTSTP, tstp);
+	esignal(SIGTTIN, ttin);
+	esignal(SIGTTOU, ttou);
+}
+
+extern void tctakepgrp(void) {
+	pid_t tcpgid;
+	if (espgid == 0)
+		espgid = getpgrp();
+	tcpgid = tcgetpgrp(2);
+	if (tcpgid != espgid)
+		tcspgrp(espgid);
+}
 
 #if HAVE_GETRUSAGE
 /* This function is provided as timersub(3) on some systems, but it's simple enough
@@ -131,6 +156,9 @@ extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
 			SIGCHK();
 	}
 	proc = reap(deadpid);
+#if JOB_PROTECT
+	tctakepgrp();
+#endif
 	if (proc->background)
 		printstatus(proc->pid, status);
 	efree(proc);

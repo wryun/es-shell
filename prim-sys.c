@@ -23,21 +23,10 @@
 #include <sys/stat.h>
 
 PRIM(newpgrp) {
-	int pid;
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
-	pid = getpid();
-	setpgid(pid, pid);
-	{
-		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
-		Sigeffect sigttin = esignal(SIGTTIN, sig_ignore);
-		Sigeffect sigttou = esignal(SIGTTOU, sig_ignore);
-		if (tcsetpgrp(2, pid) != 0)
-			uerror("tcsetpgrp");
-		esignal(SIGTSTP, sigtstp);
-		esignal(SIGTTIN, sigttin);
-		esignal(SIGTTOU, sigttou);
-	}
+	newpgrp();
+	tctakepgrp();
 	return ltrue;
 }
 
