@@ -73,7 +73,8 @@ static void tcspgrp(pid_t pgid) {
 	Sigeffect tstp = esignal(SIGTSTP, sig_ignore);
 	Sigeffect ttin = esignal(SIGTTIN, sig_ignore);
 	Sigeffect ttou = esignal(SIGTTOU, sig_ignore);
-	tcsetpgrp(2, pgid);
+	if (tcsetpgrp(2, pgid) != 0)
+		uerror("tcsetpgrp");
 	esignal(SIGTSTP, tstp);
 	esignal(SIGTTIN, ttin);
 	esignal(SIGTTOU, ttou);
@@ -82,7 +83,7 @@ static void tcspgrp(pid_t pgid) {
 extern void tctakepgrp(void) {
 	pid_t tcpgid;
 	tcpgid = tcgetpgrp(2);
-	if (tcpgid != espgid)
+	if (espgid != 0 && tcpgid != espgid)
 		tcspgrp(espgid);
 }
 
