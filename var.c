@@ -455,11 +455,8 @@ extern int setenv(const char *name, const char *value, int overwrite) {
 		return -1;
 	}
 	Ref(char *, envname, str(ENV_DECODE, name));
-	if (!overwrite && varlookup(envname, NULL) != NULL) {
-		RefPop(envname);
-		return 0;
-	}
-	importvar(envname, (char *)value);
+	if (overwrite || varlookup(envname, NULL) == NULL)
+		importvar(envname, (char *)value);
 	RefEnd(envname);
 	return 0;
 }
@@ -469,7 +466,7 @@ extern int unsetenv(const char *name) {
 		errno = EINVAL;
 		return -1;
 	}
-	vardef(str(ENV_DECODE, name), NULL, NULL);
+	vardef0(str(ENV_DECODE, name), NULL, NULL, TRUE);
 	return 0;
 }
 
