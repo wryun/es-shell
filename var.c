@@ -390,10 +390,8 @@ extern void initvars(void) {
 	vars = mkdict();
 	noexport = NULL;
 	env = mkvector(ENVSIZE);
-#if ABUSED_GETENV
-# if HAVE_READLINE
+#if REPLACEABLE_GETENV
 	initgetenv();
-# endif
 #endif
 }
 
@@ -403,7 +401,7 @@ static void importvar(char *name0, char *value) {
 
 	Ref(char *, name, name0);
 	Ref(List *, defn, NULL);
-	defn = fsplit(sep, mklist(mkstr(value + 1), NULL), FALSE);
+	defn = fsplit(sep, mklist(mkstr(value), NULL), FALSE);
 
 	if (strchr(value, ENV_ESCAPE) != NULL) {
 		List *list;
@@ -450,6 +448,47 @@ static void importvar(char *name0, char *value) {
 	RefEnd2(defn, name);
 }
 
+#if REPLACEABLE_GETENV
+extern int setenv(const char *name, const char *value, int overwrite) {
+	if (name == NULL || name[0] == '\0' || strchr(name, '=') != NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+	Ref(char *, envname, str(ENV_DECODE, name));
+	if (!overwrite && varlookup(envname, NULL) != NULL) {
+		RefPop(envname);
+		return 0;
+	}
+	importvar(envname, (char *)value);
+	RefEnd(envname);
+	return 0;
+}
+
+extern int unsetenv(const char *name) {
+	if (name[0] == '\0' || strchr(name, '=') != NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+	vardef(str(ENV_DECODE, name), NULL, NULL);
+	return 0;
+}
+
+extern int putenv(char *envstr) {
+	size_t n = strcspn(envstr, "=");
+	char *envname;
+	int status;
+	if (n == 0 || envstr[n] != '=') {
+		/* null variable name or missing '=' char */
+		errno = EINVAL;
+		return -1;
+	}
+	envname = ealloc(n);
+	memcpy(envname, envstr, n);
+	status = setenv(envname, envstr + n + 1, 1);
+	efree(envname);
+	return status;
+}
+#endif
 
 /* initenv -- load variables from the environment */
 extern void initenv(char **envp, Boolean protected) {
@@ -474,7 +513,7 @@ extern void initenv(char **envp, Boolean protected) {
 		name = str(ENV_DECODE, buf);
 		if (!protected
 		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
-			importvar(name, eq);
+			importvar(name, eq+1);
 			VECPUSH(imported, name);
 		}
 	}

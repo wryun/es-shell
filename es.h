@@ -286,10 +286,8 @@ extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 #if HAVE_READLINE
 extern void setmaxhistorylength(int length);
-#if ABUSED_GETENV
+#endif
 extern void initgetenv(void);
-#endif
-#endif
 extern void initinput(void);
 extern void resetparser(void);
 

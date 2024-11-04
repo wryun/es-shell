@@ -36,13 +36,14 @@ static int historyfd = -1;
 #include <readline/history.h>
 
 Boolean reloadhistory = FALSE;
+#endif
 
-#if ABUSED_GETENV
+#if REPLACEABLE_GETENV
 static char *stdgetenv(const char *);
 static char *esgetenv(const char *);
 static char *(*realgetenv)(const char *) = stdgetenv;
 #endif
-#endif
+
 
 
 /*
@@ -258,10 +259,10 @@ static char *callreadline(char *prompt0) {
 	SIGCHK();
 	return r;
 }
+#endif
 
-#if ABUSED_GETENV
-
-/* getenv -- fake version of getenv for readline (or other libraries) */
+#if REPLACEABLE_GETENV
+/* esgetenv -- fake version of getenv for readline (or other libraries) */
 static char *esgetenv(const char *name) {
 	List *value = varlookup(name, NULL);
 	if (value == NULL)
@@ -293,9 +294,7 @@ static char *esgetenv(const char *name) {
 	}
 }
 
-static char *
-stdgetenv(const char *name)
-{
+static char *stdgetenv(const char *name) {
 	extern char **environ;
 	register int len;
 	register const char *np;
@@ -313,21 +312,14 @@ stdgetenv(const char *name)
 	return (NULL);
 }
 
-char *
-getenv(const char *name)
-{
+char *getenv(const char *name) {
 	return realgetenv(name);
 }
 
-extern void
-initgetenv(void)
-{
+extern void initgetenv(void) {
 	realgetenv = esgetenv;
 }
-
-#endif /* ABUSED_GETENV */
-
-#endif	/* HAVE_READLINE */
+#endif
 
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {

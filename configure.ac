@@ -66,22 +66,22 @@ AC_FUNC_MMAP
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
 sysconf setsid sigsetjmp getrusage)
 
-AC_CACHE_CHECK(for an abused getenv, es_cv_abused_getenv,
+AC_CACHE_CHECK(whether getenv can be redefined, es_cv_replaceable_getenv,
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
-changequote(,)
-char *foo = 0;
-char *foov[] = { "-a", "-bfoo", "bar" };
-int fooc = (sizeof(foov) / sizeof(foov[0]));
+#include <stdlib.h>
+static char *sentinel = "a value";
 
-int getenv() { return *foo; }
-int main() { while (-1 != getopt(fooc, foov, "ab:")); exit(0); }
-changequote([,])
-]])],[es_cv_abused_getenv=no],[es_cv_abused_getenv=yes
-AC_DEFINE([ABUSED_GETENV], [1], [Is getenv called by crt*.o or getopt?])],[]))
+char *getenv(const char *name) { return sentinel; }
 
-if test "$es_cv_abused_getenv" = yes
+int main(int argc, char **argv) {
+	char *v = getenv("key");
+	return (v == sentinel) ? 0 : 1;
+}
+]])],[es_cv_replaceable_getenv=yes],[es_cv_replaceable_getenv=no]))
+
+if test "$es_cv_replaceable_getenv" = yes
 then
-	rm -f core conftest.core
+	AC_DEFINE(REPLACEABLE_GETENV, [1], [Can getenv() be replaced with a local definition?])
 fi
 
 dnl Check to see if you can assign to a va_list
