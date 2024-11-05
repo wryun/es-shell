@@ -23,10 +23,15 @@
 #include <sys/stat.h>
 
 PRIM(newpgrp) {
+	pid_t pgid;
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
-	newpgrp();
-	tctakepgrp();
+	pgid = newpgrp();
+	if (tctakepgrp() != 0) {
+		int e = errno;
+		spgrp(pgid);
+		fail("$&newpgrp", "newpgrp: %s", esstrerror(e));
+	}
 	return ltrue;
 }
 

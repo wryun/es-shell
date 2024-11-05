@@ -65,31 +65,50 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
-extern void newpgrp(void) {
+extern pid_t newpgrp(void) {
+	pid_t old = getpgrp();
 	setpgid(0, 0);
 	espgid = getpgrp();
+	return old;
 }
 
-static void tcspgrp(pid_t pgid) {
+extern pid_t spgrp(pid_t pgid) {
+	pid_t old = getpgrp();
+	setpgid(0, pgid);
+	espgid = pgid;
+	return old;
+}
+
+static int tcspgrp(pid_t pgid) {
+	int e = 0;
 	Sigeffect tstp, ttin, ttou;
-	if (ttyfd <= 0)
-		return;
+	if (ttyfd < 0) {
+		errno = ENOTTY;
+		return -1;
+	}
 	tstp = esignal(SIGTSTP, sig_ignore);
 	ttin = esignal(SIGTTIN, sig_ignore);
 	ttou = esignal(SIGTTOU, sig_ignore);
 	if (tcsetpgrp(ttyfd, pgid) != 0)
-		uerror("tcsetpgrp");
+		e = errno;
 	esignal(SIGTSTP, tstp);
 	esignal(SIGTTIN, ttin);
 	esignal(SIGTTOU, ttou);
+	if (e != 0)
+		errno = e;
+	return (e != 0) ? -1 : 0;
 }
 
-extern void tctakepgrp(void) {
-	pid_t tcpgid;
-	if (ttyfd > 0)
-		tcpgid = tcgetpgrp(ttyfd);
-	if (espgid != 0 && tcpgid != espgid)
-		tcspgrp(espgid);
+extern int tctakepgrp(void) {
+	pid_t tcpgid = 0;
+	if (ttyfd <= 0) {
+		errno = ENOTTY;
+		return -1;
+	}
+	tcpgid = tcgetpgrp(ttyfd);
+	if (espgid == 0 || tcpgid == espgid)
+		return 0;
+	return tcspgrp(espgid);
 }
 
 extern void initpgrp(void) {
