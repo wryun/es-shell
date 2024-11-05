@@ -20,6 +20,7 @@ struct Proc {
 
 static Proc *proclist = NULL;
 
+static int ttyfd = -1;
 static pid_t espgid;
 #if JOB_PROTECT
 static pid_t tcpgid0;
@@ -70,10 +71,13 @@ extern void newpgrp(void) {
 }
 
 static void tcspgrp(pid_t pgid) {
-	Sigeffect tstp = esignal(SIGTSTP, sig_ignore);
-	Sigeffect ttin = esignal(SIGTTIN, sig_ignore);
-	Sigeffect ttou = esignal(SIGTTOU, sig_ignore);
-	if (tcsetpgrp(2, pgid) != 0)
+	Sigeffect tstp, ttin, ttou;
+	if (ttyfd <= 0)
+		return;
+	tstp = esignal(SIGTSTP, sig_ignore);
+	ttin = esignal(SIGTTIN, sig_ignore);
+	ttou = esignal(SIGTTOU, sig_ignore);
+	if (tcsetpgrp(ttyfd, pgid) != 0)
 		uerror("tcsetpgrp");
 	esignal(SIGTSTP, tstp);
 	esignal(SIGTTIN, ttin);
@@ -82,21 +86,27 @@ static void tcspgrp(pid_t pgid) {
 
 extern void tctakepgrp(void) {
 	pid_t tcpgid;
-	tcpgid = tcgetpgrp(2);
+	if (ttyfd > 0)
+		tcpgid = tcgetpgrp(ttyfd);
 	if (espgid != 0 && tcpgid != espgid)
 		tcspgrp(espgid);
 }
 
 extern void initpgrp(void) {
 	espgid = getpgrp();
+	if (isatty(2))
+		ttyfd = dup(2);
+	else
+		ttyfd = opentty();
 #if JOB_PROTECT
-	tcpgid0 = tcgetpgrp(2);
+	if (ttyfd > 0)
+		tcpgid0 = tcgetpgrp(ttyfd);
 #endif
 }
 
 #if JOB_PROTECT
 extern void tcreturnpgrp(void) {
-	if (tcpgid0 != 0 && tcpgid0 != tcgetpgrp(2))
+	if (tcpgid0 != 0 && ttyfd > 0 && tcpgid0 != tcgetpgrp(ttyfd))
 		tcspgrp(tcpgid0);
 }
 

@@ -370,6 +370,7 @@ extern void unblocksignals(void);
 
 typedef enum { oOpen, oCreate, oAppend, oReadWrite, oReadCreate, oReadAppend } OpenKind;
 extern int eopen(char *name, OpenKind k);
+extern int opentty(void);
 
 
 /* version.c */
