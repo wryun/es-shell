@@ -9,9 +9,7 @@
 extern Tree errornode;
 
 extern Tree *treecons(Tree *car, Tree *cdr);
-extern Tree *treecons2(Tree *car, Tree *cdr);
 extern Tree *treeconsend(Tree *p, Tree *q);
-extern Tree *treeconsend2(Tree *p, Tree *q);
 extern Tree *treeappend(Tree *head, Tree *tail);
 extern Tree *thunkify(Tree *tree);
 

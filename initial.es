@@ -385,10 +385,10 @@ fn-%or = $&noreturn @ first rest {
 
 fn %background cmd {
 	let (pid = <={$&background $cmd}) {
+		apid = $pid
 		if {%is-interactive} {
 			echo >[1=2] $pid
 		}
-		apid = $pid
 	}
 }
 
@@ -774,6 +774,18 @@ if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }
 	set-TERMCAP	= @ { $&resetterminal; result $* }
 }
+
+#	The primitive $&setmaxhistorylength is another readline-only primitive
+#	which limits the length of the in-memory history list, to reduce memory
+#	size implications of a large history file.  Setting max-history-length
+#	to 0 clears the history list and disables adding anything more to it.
+#	Unsetting max-history-length allows the history list to grow unbounded.
+
+if {~ <=$&primitives setmaxhistorylength} {
+	set-max-history-length = $&setmaxhistorylength
+	max-history-length = 5000
+}
+
 
 #
 # Variables

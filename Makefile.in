@@ -26,8 +26,9 @@
 # to get definitions of all signals from <sys/signal.h>.
 # _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones.
 
-datarootdir = @datarootdir@
 prefix  = @prefix@
+datarootdir = @datarootdir@
+datadir	= @datadir@
 exec_prefix	= @exec_prefix@
 mandir	= @mandir@
 bindir	= @bindir@
@@ -38,15 +39,17 @@ testdir	= @srcdir@/test
 SHELL	= /bin/sh
 CC	= @CC@
 INSTALL	= @INSTALL@
+INSTALL_PROGRAM	= ${INSTALL}
+INSTALL_DATA	= ${INSTALL} -m 644
 MKDIR_P = @MKDIR_P@
 
 
 ## Bison is generating incorrect parsers.  So do not use, for now
 # YACC = @YACC@
 
-CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wdeclaration-after-statement -Wno-clobbered @CFLAGS@
+CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wdeclaration-after-statement @READLINE_CFLAGS@ @CFLAGS@
 LDFLAGS	= $(ADDLDFLAGS) @LDFLAGS@
-LIBS	= $(ADDLIBS) @LIBS@
+LIBS	= $(ADDLIBS) @READLINE_LIBS@ @LIBS@
 
 VPATH = $(srcdir)
 
@@ -74,7 +77,7 @@ esdump	: ${OFILES} dump.o
 	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
 clean	:
-	rm -f es ${OFILES} ${GEN} dump.o initial.o
+	rm -f es testrun ${OFILES} ${GEN} dump.o initial.o
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile cscope.out tags TAGS core cs.out config.status ltmain.sh
@@ -85,12 +88,17 @@ MANIFEST:
 
 install : es
 	$(MKDIR_P) $(DESTDIR)$(bindir)
-	$(INSTALL) -s $(srcdir)/es $(DESTDIR)$(bindir)
+	$(INSTALL_PROGRAM) -s es $(DESTDIR)$(bindir)
 	$(MKDIR_P) $(DESTDIR)$(mandir)/man1
-	$(INSTALL) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
+	$(INSTALL_DATA) $(srcdir)/doc/es.1 $(DESTDIR)$(mandir)/man1
+	$(MKDIR_P) $(DESTDIR)$(datadir)/es
+	$(INSTALL_DATA) $(srcdir)/share/* $(DESTDIR)$(datadir)/es
 
-test	: es $(testdir)/test.es
-	$(srcdir)/es -s < $(testdir)/test.es $(testdir)/tests/*
+testrun	: $(testdir)/testrun.c
+	${CC} -o testrun $(testdir)/testrun.c
+
+test	: es testrun $(testdir)/test.es
+	./es -s < $(testdir)/test.es $(testdir)/tests/*
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}

@@ -18,13 +18,10 @@
 
 static Buffer *histbuffer = NULL;
 
-#if READLINE
-extern void add_history(char *);
-extern int read_history(char *);
-extern void stifle_history(int);
-extern int append_history(int, const char *);
-extern void using_history(void);
+#if HAVE_READLINE
+#include <readline/history.h>
 
+Boolean reloadhistory = FALSE;
 static char *history;
 
 #if 0
@@ -72,7 +69,24 @@ extern char *dumphistbuffer() {
  * history file
  */
 
-#if READLINE
+#if HAVE_READLINE
+extern void setmaxhistorylength(int len) {
+	static int currenthistlen = -1; /* unlimited */
+	if (len != currenthistlen) {
+		switch (len) {
+		case -1:
+			unstifle_history();
+			break;
+		case 0:
+			clear_history();
+			FALLTHROUGH;
+		default:
+			stifle_history(len);
+		}
+		currenthistlen = len;
+	}
+}
+
 extern void loghistory(char *cmd) {
 	int err;
 	if (cmd == NULL)
@@ -87,13 +101,26 @@ extern void loghistory(char *cmd) {
 	}
 }
 
-extern void sethistory(char *file) {
+static void reload_history(void) {
 	/* Attempt to populate readline history with new history file. */
-	stifle_history(50000); /* Keep memory usage within sane-ish bounds. */
-	read_history(file);
+	if (history != NULL)
+		read_history(history);
+	using_history();
+
+	reloadhistory = FALSE;
+}
+
+extern void sethistory(char *file) {
+	if (reloadhistory)
+		reload_history();
+	reloadhistory = TRUE;
 	history = file;
 }
 
+extern void checkreloadhistory(void) {
+	if (reloadhistory)
+		reload_history();
+}
 
 /*
  * initialization
@@ -103,6 +130,5 @@ extern void sethistory(char *file) {
 extern void inithistory(void) {
 	/* declare the global roots */
 	globalroot(&history);		/* history file */
-	using_history();
 }
 #endif
