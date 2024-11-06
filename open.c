@@ -8,6 +8,9 @@
 extern int open(const char *, int, ...);
 #endif
 
+#define	MIN_ttyfd	3
+
+
 /*
  * Opens a file with the necessary flags.  Assumes the following order:
  *	typedef enum {
@@ -30,5 +33,16 @@ extern int eopen(char *name, OpenKind k) {
 }
 
 extern int opentty(void) {
-	return open("/dev/tty", O_RDWR|O_NONBLOCK);
+	int e = 0, old, fd = 2;
+	if (isatty(fd))
+		return fcntl(fd, F_DUPFD, MIN_ttyfd);
+	old = open("/dev/tty", O_RDWR|O_NONBLOCK);
+	fd = fcntl(old, F_DUPFD, MIN_ttyfd);
+	if (fd == -1)
+		e = errno;
+	close(old);
+	if (e != 0)
+		errno = e;
+	assert(fd < 0 || fd >= MIN_ttyfd);
+	return fd;
 }

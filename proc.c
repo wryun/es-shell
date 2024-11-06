@@ -65,13 +65,6 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
-extern pid_t newpgrp(void) {
-	pid_t old = getpgrp();
-	setpgid(0, 0);
-	espgid = getpgrp();
-	return old;
-}
-
 extern pid_t spgrp(pid_t pgid) {
 	pid_t old = getpgrp();
 	setpgid(0, pgid);
@@ -82,10 +75,8 @@ extern pid_t spgrp(pid_t pgid) {
 static int tcspgrp(pid_t pgid) {
 	int e = 0;
 	Sigeffect tstp, ttin, ttou;
-	if (ttyfd < 0) {
-		errno = ENOTTY;
-		return -1;
-	}
+	if (ttyfd < 0)
+		return ENOTTY;
 	tstp = esignal(SIGTSTP, sig_ignore);
 	ttin = esignal(SIGTTIN, sig_ignore);
 	ttou = esignal(SIGTTOU, sig_ignore);
@@ -94,17 +85,13 @@ static int tcspgrp(pid_t pgid) {
 	esignal(SIGTSTP, tstp);
 	esignal(SIGTTIN, ttin);
 	esignal(SIGTTOU, ttou);
-	if (e != 0)
-		errno = e;
-	return (e != 0) ? -1 : 0;
+	return e;
 }
 
 extern int tctakepgrp(void) {
 	pid_t tcpgid = 0;
-	if (ttyfd <= 0) {
-		errno = ENOTTY;
-		return -1;
-	}
+	if (ttyfd < 0)
+		return ENOTTY;
 	tcpgid = tcgetpgrp(ttyfd);
 	if (espgid == 0 || tcpgid == espgid)
 		return 0;
@@ -113,19 +100,16 @@ extern int tctakepgrp(void) {
 
 extern void initpgrp(void) {
 	espgid = getpgrp();
-	if (isatty(2))
-		ttyfd = dup(2);
-	else
-		ttyfd = opentty();
+	ttyfd = opentty();
 #if JOB_PROTECT
-	if (ttyfd > 0)
+	if (ttyfd >= 0)
 		tcpgid0 = tcgetpgrp(ttyfd);
 #endif
 }
 
 #if JOB_PROTECT
 extern void tcreturnpgrp(void) {
-	if (tcpgid0 != 0 && ttyfd > 0 && tcpgid0 != tcgetpgrp(ttyfd))
+	if (tcpgid0 != 0 && ttyfd >= 0 && tcpgid0 != tcgetpgrp(ttyfd))
 		tcspgrp(tcpgid0);
 }
 

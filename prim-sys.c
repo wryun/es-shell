@@ -23,12 +23,12 @@
 #include <sys/stat.h>
 
 PRIM(newpgrp) {
+	int e;
 	pid_t pgid;
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
-	pgid = newpgrp();
-	if (tctakepgrp() != 0) {
-		int e = errno;
+	pgid = spgrp(getpid());
+	if ((e = tctakepgrp()) != 0) {
 		spgrp(pgid);
 		fail("$&newpgrp", "newpgrp: %s", esstrerror(e));
 	}
