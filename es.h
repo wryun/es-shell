@@ -280,7 +280,7 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 /* input.c */
 
 extern char *prompt, *prompt2;
-extern Tree *parse(char *esprompt1, char *esprompt2);
+extern Tree *parse(Boolean hist, char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
 extern Boolean isinteractive(void);
 #if HAVE_READLINE

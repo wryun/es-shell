@@ -2685,13 +2685,15 @@ The
 .Cr parse
 primitive is used to implement the
 .Cr %parse
-hook function, but it returns the input which it used to parse the
-command as the first value of its result.  It also includes the input as
-the first element of the
-.I message
-of any
-.Cr error
-exceptions it throws.
+hook function.
+If given the
+.Cr -i
+flag, it returns the input it collected as the first element of its return
+value, and includes the input in exceptions that it throws.
+The
+.Cr --
+flag can be used to prevent the interpretation of
+.Cr -i .
 .PP
 The
 .Cr background

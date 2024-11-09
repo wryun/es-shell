@@ -149,6 +149,7 @@ PRIM(var) {
 }
 
 PRIM(parse) {
+	Boolean hist = FALSE;
 	Tree *tree = NULL;
 
 	Ref(List *, result, NULL);
@@ -156,22 +157,39 @@ PRIM(parse) {
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
 	if (lp != NULL) {
-		prompt1 = getstr(lp->term);
-		if ((lp = lp->next) != NULL)
+		char *first = getstr(lp->term);
+		if (streq(first, "--")) {
+			first = NULL;
+			lp = lp->next;
+		} else if (!hist && streq(first, "-i")) {
+			first = NULL;
+			hist = TRUE;
+			lp = lp->next;
+		}
+		prompt1 = (first != NULL)
+				? first
+				: (lp != NULL) ? getstr(lp->term) : NULL;
+		if (lp != NULL && (lp = lp->next) != NULL)
 			prompt2 = getstr(lp->term);
 	}
-	newhistbuffer();
 	RefEnd(lp);
+	if (hist)
+		newhistbuffer();
 
 	ExceptionHandler
 
-		tree = parse(prompt1, prompt2);
+		tree = parse(hist, prompt1, prompt2);
 
 	CatchException (e)
 
-		char *h = dumphistbuffer();
+		char *h;
 
-		if (termeq(e->term, "error")) {
+		if (!hist)
+			throw(e);
+
+		h = dumphistbuffer();
+
+		if (e != NULL && e->next != NULL) {
 			gcdisable();
 			e = mklist(e->term,
 				mklist(e->next->term,
@@ -188,7 +206,8 @@ PRIM(parse) {
 	if (tree != NULL)
 		result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
 
-	result = mklist(mkstr(dumphistbuffer()), result);
+	if (hist)
+		result = mklist(mkstr(dumphistbuffer()), result);
 	gcenable();
 
 	RefEnd2(prompt2, prompt1);
@@ -210,23 +229,9 @@ PRIM(batchloop) {
 		for (;;) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
-			if (parser == NULL) {
-				ExceptionHandler
-					cmd = prim("parse", NULL, NULL, 0);
-					cmd = cmd->next;
-				CatchException(e)
-					if (termeq(e->term, "error")) {
-						gcdisable();
-						e = mklist(e->term,
-								mklist(e->next->term,
-									e->next->next->next));
-						gcenable();
-					}
-					throw(e);
-				EndExceptionHandler
-
-			} else
-				cmd = eval(parser, NULL, 0);
+			cmd = (parser == NULL)
+					? prim("parse", NULL, NULL, 0)
+					: eval(parser, NULL, 0);
 			SIGCHK();
 			dispatch = varlookup("fn-%dispatch", NULL);
 			if (cmd != NULL) {

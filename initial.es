@@ -626,35 +626,32 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	result gets set to zero when it should not be.
 
 fn-%is-interactive	= $&isinteractive
-fn-%batch-loop		= $&batchloop
+fn-%parse		= $&parse --
+
+fn %batch-loop {local (fn-%parse = $&parse --) $&batchloop $*}
 
 
-#	The first element of the $&parse primitive's return value is the input
-#	that it read in order to produce its parsed command.  In addition, any
-#	error exceptions coming from $&parse include the input such that instead
-#	of the typical set of
+#	If run with the -i flag as the first argument, then the $&parse
+#	primitive includes its input in its output.  Upon normal return, the
+#	input is made the first element of the return value, while upon any
+#	exception, instead of the typical (e type msg), $&parse throws an
+#	exception of the form (e type input msg).  (To avoid ambiguity,
+#	exceptions like eof, which do not specify a type, do not include their
+#	input either.)
 #
-#		e type msg
-#
-#	terms, those exceptions contain
-#
-#		e type input msg
-#
-#	Both of these are "consumed" by %parse, which only returns the parsed
-#	command and only throws the `e type msg' terms.
+#	In general it is expected that any caller of $&parse -i will "consume"
+#	these extra values itself and present the "normal" $&parse output, as is
+#	done in %interactive-parse here.
 
-fn %parse {
-	catch @ e type msg {
-		if {~ $e error} {
-			if {%is-interactive && !~ $#fn-%write-history 0} {
-				%write-history $msg(1)
-			}
-			msg = $msg(2 ...)
+fn %interactive-parse {
+	catch @ e type input msg {
+		if {!~ $#fn-%write-history 0} {
+			%write-history $input
 		}
 		throw $e $type $msg
 	} {
-		let ((line code) = <={$&parse $*}) {
-			if {%is-interactive && !~ $#fn-%write-history 0} {
+		let ((line code) = <={$&parse -i $*}) {
+			if {!~ $#fn-%write-history 0} {
 				%write-history $line
 			}
 			result $code
@@ -683,6 +680,7 @@ if {~ <=$&primitives writehistory} {
 }
 
 fn %interactive-loop {
+	local (fn-%parse = $fn-%interactive-parse)
 	let (result = <=true) {
 		catch @ e type msg {
 			if {~ $e eof} {

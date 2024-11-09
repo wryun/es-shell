@@ -26,6 +26,7 @@ Input *input;
 char *prompt, *prompt2;
 
 Boolean ignoreeof = FALSE;
+Boolean buildhistbuffer = FALSE;
 Boolean resetterminal = FALSE;
 
 #if HAVE_READLINE
@@ -295,12 +296,13 @@ static int fdfill(Input *in) {
  */
 
 /* parse -- call yyparse(), but disable garbage collection and catch errors */
-extern Tree *parse(char *pr1, char *pr2) {
+extern Tree *parse(Boolean hist, char *pr1, char *pr2) {
 	int result;
 	assert(error == NULL);
 
 	inityy();
 	emptyherequeue();
+	buildhistbuffer = hist;
 
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
@@ -475,7 +477,7 @@ extern Tree *parseinput(Input *in) {
 	input = in;
 
 	ExceptionHandler
-		result = parse(NULL, NULL);
+		result = parse(FALSE, NULL, NULL);
 		if (get(in) != EOF)
 			fail("$&parse", "more than one value in term");
 	CatchException (e)
