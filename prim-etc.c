@@ -149,7 +149,7 @@ PRIM(var) {
 }
 
 PRIM(parse) {
-	Boolean hist = FALSE;
+	volatile Boolean hist = FALSE;
 	Tree *tree = NULL;
 
 	Ref(List *, result, NULL);
@@ -161,7 +161,7 @@ PRIM(parse) {
 		if (streq(first, "--")) {
 			first = NULL;
 			lp = lp->next;
-		} else if (!hist && streq(first, "-i")) {
+		} else if (streq(first, "-i")) {
 			first = NULL;
 			hist = TRUE;
 			lp = lp->next;
