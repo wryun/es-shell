@@ -26,7 +26,7 @@
 	} \
 )
 
-Dict *vars;
+Dict *vars = NULL;
 static Dict *noexport;
 static Vector *env, *sortenv;
 static int envmin;
@@ -450,6 +450,7 @@ static void importvar(char *name0, char *value) {
 
 #if REPLACEABLE_GETENV
 extern int setenv(const char *name, const char *value, int overwrite) {
+	assert(vars != NULL);
 	if (name == NULL || name[0] == '\0' || strchr(name, '=') != NULL) {
 		errno = EINVAL;
 		return -1;
@@ -462,6 +463,7 @@ extern int setenv(const char *name, const char *value, int overwrite) {
 }
 
 extern int unsetenv(const char *name) {
+	assert(vars != NULL);
 	if (name[0] == '\0' || strchr(name, '=') != NULL) {
 		errno = EINVAL;
 		return -1;
@@ -474,6 +476,7 @@ extern int putenv(char *envstr) {
 	size_t n = strcspn(envstr, "=");
 	char *envname;
 	int status;
+	assert(vars != NULL);
 	if (n == 0 || envstr[n] != '=') {
 		/* null variable name or missing '=' char */
 		errno = EINVAL;
