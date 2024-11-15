@@ -70,11 +70,14 @@ AC_CACHE_CHECK(whether getenv can be redefined, es_cv_replaceable_getenv,
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 static char *sentinel = "a value";
+static int   in_main  = 0;
 
-char *getenv(const char *name) { return sentinel; }
+char *getenv(const char *name) { return in_main ? sentinel : NULL; }
 
 int main(int argc, char **argv) {
-	char *v = getenv("key");
+	char *v;
+	in_main = 1;
+	v = getenv("key");
 	return (v == sentinel) ? 0 : 1;
 }
 ]])],[es_cv_replaceable_getenv=yes],[es_cv_replaceable_getenv=no]))
