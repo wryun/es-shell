@@ -38,7 +38,7 @@ static int historyfd = -1;
 Boolean reloadhistory = FALSE;
 #endif
 
-#if REPLACEABLE_GETENV
+#if LOCAL_GETENV
 static char *stdgetenv(const char *);
 static char *esgetenv(const char *);
 static char *(*realgetenv)(const char *) = stdgetenv;
@@ -261,7 +261,7 @@ static char *callreadline(char *prompt0) {
 }
 #endif
 
-#if REPLACEABLE_GETENV
+#if LOCAL_GETENV
 /* esgetenv -- fake version of getenv for readline (or other libraries) */
 static char *esgetenv(const char *name) {
 	List *value = varlookup(name, NULL);

@@ -390,7 +390,7 @@ extern void initvars(void) {
 	vars = mkdict();
 	noexport = NULL;
 	env = mkvector(ENVSIZE);
-#if REPLACEABLE_GETENV
+#if LOCAL_GETENV
 	initgetenv();
 #endif
 }
@@ -448,7 +448,7 @@ static void importvar(char *name0, char *value) {
 	RefEnd2(defn, name);
 }
 
-#if REPLACEABLE_GETENV
+#if LOCAL_GETENV
 extern int setenv(const char *name, const char *value, int overwrite) {
 	assert(vars != NULL);
 	if (name == NULL || name[0] == '\0' || strchr(name, '=') != NULL) {

@@ -66,7 +66,11 @@ AC_FUNC_MMAP
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
 sysconf setsid sigsetjmp getrusage)
 
-AC_CACHE_CHECK(whether getenv can be redefined, es_cv_replaceable_getenv,
+AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
+if test "$ac_cv_header_stdlib_h" = no; then
+	es_cv_local_getenv=yes
+fi
+if test "$ac_cv_header_stdlib_h" = yes; then
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 static char *sentinel = "a value";
@@ -80,11 +84,13 @@ int main(int argc, char **argv) {
 	v = getenv("key");
 	return (v == sentinel) ? 0 : 1;
 }
-]])],[es_cv_replaceable_getenv=yes],[es_cv_replaceable_getenv=no]))
+]])],[es_cv_local_getenv=yes],[es_cv_local_getenv=no])
+fi
+)
 
-if test "$es_cv_replaceable_getenv" = yes
+if test "$es_cv_local_getenv" = yes
 then
-	AC_DEFINE(REPLACEABLE_GETENV, [1], [Can getenv() be replaced with a local definition?])
+	AC_DEFINE(LOCAL_GETENV, [1], [Can getenv() be defined locally?])
 fi
 
 dnl Check to see if you can assign to a va_list
