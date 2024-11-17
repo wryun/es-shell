@@ -43,7 +43,11 @@ extern int efork(Boolean parent, Boolean background) {
 			return pid;
 		}
 		case 0:		/* child */
-			proclist = NULL;
+			while (proclist != NULL) {
+				Proc *p = proclist;
+				proclist = proclist->next;
+				efree(p);
+			}
 			hasforked = TRUE;
 			break;
 		case -1:

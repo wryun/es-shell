@@ -204,7 +204,7 @@ PRIM(pipe) {
 
 	for (;; list = list->next) {
 		int p[2], pid;
-		
+
 		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork(p, &inpipe);
 
 		if (pid == 0) {		/* child */
@@ -222,7 +222,8 @@ PRIM(pipe) {
 			exit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
 		}
 		pids[n++] = pid;
-		close(inpipe);
+		if (inpipe != -1)
+			close(inpipe);
 		if (list->next == NULL)
 			break;
 		list = list->next->next;
