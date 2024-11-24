@@ -9,7 +9,7 @@ struct Format {
     /* for the buffer maintenance routines */
 	char *buf, *bufbegin, *bufend;
 	int flushed;
-	void (*grow)(Format *, size_t);
+	int (*grow)(Format *, size_t);
 	union { int n; void *p; } u;
 };
 
