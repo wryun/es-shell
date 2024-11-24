@@ -407,7 +407,10 @@ PRIM(read) {
 	buffer = openbuffer(0);
 
 	while ((c = read1(fd)) != EOF && c != '\n')
-		buffer = bufputc(buffer, c);
+		if (c == '\0')
+			fail("$&read", "%%read: null character encountered");
+		else
+			buffer = bufputc(buffer, c);
 
 	if (c == EOF && buffer->current == 0) {
 		freebuffer(buffer);
