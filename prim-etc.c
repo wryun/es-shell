@@ -265,6 +265,10 @@ PRIM(importenvfuncs) {
 	return true;
 }
 
+PRIM(getpid) {
+	return mklist(mkstr(str("%d", getpid())), NULL);
+}
+
 #if READLINE
 PRIM(resetterminal) {
 	resetterminal = TRUE;
@@ -302,6 +306,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(noreturn);
 	X(setmaxevaldepth);
 	X(importenvfuncs);
+	X(getpid);
 #if READLINE
 	X(resetterminal);
 #endif

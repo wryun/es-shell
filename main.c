@@ -2,11 +2,6 @@
 
 #include "es.h"
 
-/* initpid -- set $pid for this shell */
-static void initpid(void) {
-	vardef("pid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
-}
-
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
 	initgc();
@@ -18,7 +13,6 @@ int main(int argc, char **argv) {
 
 	runinitial();
 
-	initpid();
 	initsignals();
 	hidevariables();
 	importenv(FALSE);

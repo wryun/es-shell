@@ -36,6 +36,7 @@ let (
 )
 fn %main argv {
 	fn-%main = ()
+	pid = <=$&getpid
 
 	let (
 		es = es
