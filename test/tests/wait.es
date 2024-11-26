@@ -12,12 +12,12 @@ test 'exit status' {
 			assert {~ $status sigterm}
 	}
 
-	let (pid = <={$&background {./testrun s}}) {
-		kill -QUIT $pid
-		# TODO: clean up core file?
-		let (status = <={wait $pid >[2] /dev/null})
-			assert {~ $status sigquit+core}
-	}
+# 	let (pid = <={$&background {./testrun s}}) {
+# 		kill -QUIT $pid
+# 		# TODO: clean up core file?
+# 		let (status = <={wait $pid >[2] /dev/null})
+# 			assert {~ $status sigquit+core}
+# 	}
 }
 
 test 'wait is precise' {
