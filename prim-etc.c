@@ -148,35 +148,70 @@ PRIM(var) {
 	return list;
 }
 
-PRIM(sethistory) {
-	if (list == NULL) {
-		sethistory(NULL);
-		return NULL;
-	}
-	Ref(List *, lp, list);
-	sethistory(getstr(lp->term));
-	RefReturn(lp);
-}
-
 PRIM(parse) {
-	List *result;
-	Tree *tree;
+	volatile Boolean hist = FALSE;
+	Tree *tree = NULL;
+
+	Ref(List *, result, NULL);
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
 	if (lp != NULL) {
-		prompt1 = getstr(lp->term);
-		if ((lp = lp->next) != NULL)
+		char *first = getstr(lp->term);
+		if (streq(first, "--")) {
+			first = NULL;
+			lp = lp->next;
+		} else if (streq(first, "-i")) {
+			first = NULL;
+			hist = TRUE;
+			lp = lp->next;
+		}
+		prompt1 = (first != NULL)
+				? first
+				: (lp != NULL) ? getstr(lp->term) : NULL;
+		if (lp != NULL && (lp = lp->next) != NULL)
 			prompt2 = getstr(lp->term);
 	}
 	RefEnd(lp);
-	tree = parse(prompt1, prompt2);
-	result = (tree == NULL)
-		   ? NULL
-		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
-			    NULL);
+	if (hist)
+		newhistbuffer();
+
+	ExceptionHandler
+
+		tree = parse(hist, prompt1, prompt2);
+
+	CatchException (e)
+
+		char *h;
+
+		if (!hist)
+			throw(e);
+
+		h = dumphistbuffer();
+
+		if (e != NULL && e->next != NULL) {
+			gcdisable();
+			e = mklist(e->term,
+				mklist(e->next->term,
+					mklist(mkstr(h),
+						e->next->next)));
+			gcenable();
+		}
+
+		throw(e);
+
+	EndExceptionHandler
+
+	gcdisable();
+	if (tree != NULL)
+		result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
+
+	if (hist)
+		result = mklist(mkstr(dumphistbuffer()), result);
+	gcenable();
+
 	RefEnd2(prompt2, prompt1);
-	return result;
+	RefReturn(result);
 }
 
 PRIM(exitonfalse) {
@@ -283,6 +318,23 @@ PRIM(setmaxevaldepth) {
 }
 
 #if HAVE_READLINE
+PRIM(sethistory) {
+	if (list == NULL) {
+		sethistory(NULL);
+		return NULL;
+	}
+	Ref(List *, lp, list);
+	sethistory(getstr(lp->term));
+	RefReturn(lp);
+}
+
+PRIM(writehistory) {
+	if (list == NULL || list->next != NULL)
+		fail("$&writehistory", "usage: $&writehistory command");
+	loghistory(getstr(list->term));
+	return NULL;
+}
+
 PRIM(setmaxhistorylength) {
 	char *s;
 	int n;
@@ -319,7 +371,6 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(dot);
 	X(flatten);
 	X(whatis);
-	X(sethistory);
 	X(split);
 	X(fsplit);
 	X(var);
@@ -336,6 +387,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(noreturn);
 	X(setmaxevaldepth);
 #if HAVE_READLINE
+	X(sethistory);
+	X(writehistory);
 	X(resetterminal);
 	X(setmaxhistorylength);
 #endif

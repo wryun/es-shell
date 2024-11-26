@@ -599,12 +599,11 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	%batch-loop is used.
 #
 #	The function %parse can be used to call the parser, which returns
-#	an es command.  %parse takes two arguments, which are used as the
-#	main and secondary prompts, respectively.  %parse typically returns
-#	one line of input, but es allows commands (notably those with braces
-#	or backslash continuations) to continue across multiple lines; in
-#	that case, the complete command and not just one physical line is
-#	returned.
+#	an es command.  %parse takes two arguments, which are used as the main
+#	and secondary prompts, respectively.  %parse typically returns one line
+#	of input, but es allows commands (notably those with braces or backslash
+#	continuations) to continue across multiple lines; in that case, the
+#	complete command and not just one physical line is returned.
 #
 #	By convention, the REPL must pass commands to the fn %dispatch,
 #	which has the actual responsibility for executing the command.
@@ -626,11 +625,62 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%parse	= $&parse
-fn-%batch-loop	= $&batchloop
-fn-%is-interactive = $&isinteractive
+fn-%is-interactive	= $&isinteractive
+fn-%parse		= $&parse --
+
+fn %batch-loop {local (fn-%parse = $&parse --) $&batchloop $*}
+
+
+#	If run with the -i flag as the first argument, then the $&parse
+#	primitive includes its input in its output.  Upon normal return, the
+#	input is made the first element of the return value, while upon any
+#	exception, instead of the typical (e type msg), $&parse throws an
+#	exception of the form (e type input msg).  (To avoid ambiguity,
+#	exceptions like eof, which do not specify a type, do not include their
+#	input either.)
+#
+#	In general it is expected that any caller of $&parse -i will "consume"
+#	these extra values itself and present the "normal" $&parse output, as is
+#	done in %interactive-parse here.
+
+fn %interactive-parse {
+	catch @ e type input msg {
+		if {!~ $#fn-%write-history 0} {
+			%write-history $input
+		}
+		throw $e $type $msg
+	} {
+		let ((line code) = <={$&parse -i $*}) {
+			if {!~ $#fn-%write-history 0} {
+				%write-history $line
+			}
+			result $code
+		}
+	}
+}
+
+if {~ <=$&primitives writehistory} {
+	fn %write-history input {
+		if {!~ $input ''} {
+			$&writehistory $input
+		}
+	}
+} {
+	fn %write-history input {
+		if {!~ $history ()} {
+			if {access -w $history} {
+				if {!~ $input () && !~ $input ''} {
+					echo $input >> $history
+				}
+			} {
+				history = ()
+			}
+		}
+	}
+}
 
 fn %interactive-loop {
+	local (fn-%parse = $fn-%interactive-parse)
 	let (result = <=true) {
 		catch @ e type msg {
 			if {~ $e eof} {
@@ -706,14 +756,17 @@ set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
-#	If the primitive $&resetterminal is defined (meaning that readline
-#	is being used), setting the variables $TERM or $TERMCAP should
-#	notify the line editor library.
+#	If the primitives $&sethistory or $&resetterminal are defined (meaning
+#	that readline or editline is being used), setting the variables $TERM,
+#	$TERMCAP, or $history should notify the line editor library.
+
+if {~ <=$&primitives sethistory} {
+	set-history = $&sethistory
+}
 
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }
