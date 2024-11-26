@@ -67,10 +67,10 @@ AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
 sysconf sigsetjmp getrusage)
 
 AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
-[if test "$ac_cv_header_stdc" = no; then
+[if test "$ac_cv_header_stdlib_h" = no || test "$ac_cv_header_stdc" = no; then
 	es_cv_local_getenv=yes
 fi
-if test "$ac_cv_header_stdc" = yes; then
+if test "$ac_cv_header_stdlib_h" = yes || test "$ac_cv_header_stdc" = yes; then
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 static char *sentinel = "a value";
