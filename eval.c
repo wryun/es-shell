@@ -432,7 +432,7 @@ restart:
 done:
 	--evaldepth;
 	if ((flags & eval_exitonfalse) && !istrue(list))
-		exit(exitstatus(list));
+		esexit(exitstatus(list));
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }

@@ -222,8 +222,18 @@ extern char *checkexecutable(char *file);
 
 extern Boolean hasforked;
 extern int efork(Boolean parent, Boolean background);
+extern pid_t spgrp(pid_t pgid);
+extern int tctakepgrp(void);
+extern void initpgrp(void);
 extern int ewait(int pid, Boolean interruptible, void *rusage);
 #define	ewaitfor(pid)	ewait(pid, FALSE, NULL)
+
+#if JOB_PROTECT
+extern void tcreturnpgrp(void);
+extern Noreturn esexit(int);
+#else
+#define	esexit(n)	(exit(n))
+#endif
 
 
 /* dict.c */
@@ -285,10 +295,8 @@ extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 #if HAVE_READLINE
 extern void setmaxhistorylength(int length);
-#if ABUSED_GETENV
+#endif
 extern void initgetenv(void);
-#endif
-#endif
 extern void initinput(void);
 extern void resetparser(void);
 
@@ -359,6 +367,7 @@ extern void unblocksignals(void);
 
 typedef enum { oOpen, oCreate, oAppend, oReadWrite, oReadCreate, oReadAppend } OpenKind;
 extern int eopen(char *name, OpenKind k);
+extern int opentty(void);
 
 
 /* version.c */

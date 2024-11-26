@@ -14,26 +14,34 @@
 #define	GROUP	3
 #define	OTHER	0
 
+#define	IFREG	1
+#define	IFDIR	2
+#define	IFCHR	3
+#define	IFBLK	4
+#define	IFLNK	5
+#define	IFSOCK	6
+#define	IFIFO	7
+
 /* ingroupset -- determine whether gid lies in the user's set of groups */
 static Boolean ingroupset(gidset_t gid) {
-#ifdef NGROUPS
 	int i;
 	static int ngroups;
-	static gidset_t gidset[NGROUPS];
+	static gidset_t *gidset;
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initialized = TRUE;
-		ngroups = getgroups(NGROUPS, gidset);
+		ngroups = getgroups(0, gidset);
+		gidset = ealloc(ngroups * sizeof(gidset_t));
+		getgroups(ngroups, gidset);
 	}
 	for (i = 0; i < ngroups; i++)
 		if (gid == gidset[i])
 			return TRUE;
-#endif
 	return FALSE;
 }
 
-static int testperm(struct stat *stat, int perm) {
-	int mask;
+static int testperm(struct stat *stat, unsigned int perm) {
+	unsigned int mask;
 	static gidset_t uid, gid;
 	static Boolean initialized = FALSE;
 	if (perm == 0)
@@ -51,21 +59,22 @@ static int testperm(struct stat *stat, int perm) {
 				: ((gid == stat->st_gid  || ingroupset(stat->st_gid))
 					? GROUP
 					: OTHER)));
-	return (stat->st_mode & mask) ? 0 : EACCES;
+	return (stat->st_mode & mask) == mask ? 0 : EACCES;
 }
 
-static int testfile(char *path, int perm, unsigned int type) {
+static int testfile(char *path, unsigned int perm, unsigned int type) {
 	struct stat st;
-#ifdef S_IFLNK
-	if (type == S_IFLNK) {
-		if (lstat(path, &st) == -1)
-			return errno;
-	} else
-#endif
-		if (stat(path, &st) == -1)
-			return errno;
-	if (type != 0 && (st.st_mode & S_IFMT) != type)
-		return EACCES;		/* what is an appropriate return value? */
+	if ((type == IFLNK ? lstat(path, &st) : stat(path, &st)) == -1)
+		return errno;
+	/* is EACCES the right return value? */
+	switch(type) {
+	case IFREG:	if (!S_ISREG(st.st_mode)) return EACCES; break;
+	case IFDIR:	if (!S_ISDIR(st.st_mode)) return EACCES; break;
+	case IFBLK:	if (!S_ISBLK(st.st_mode)) return EACCES; break;
+	case IFLNK:	if (!S_ISLNK(st.st_mode)) return EACCES; break;
+	case IFSOCK:	if (!S_ISSOCK(st.st_mode)) return EACCES; break;
+	case IFIFO:	if (!S_ISFIFO(st.st_mode)) return EACCES; break;
+	}
 	return testperm(&st, perm);
 }
 
@@ -97,8 +106,9 @@ static char *pathcat(char *prefix, char *suffix) {
 }
 
 PRIM(access) {
-	int c, perm = 0, type = 0, estatus = ENOENT;
-	Boolean first = FALSE, exception = FALSE;
+	int c, estatus = ENOENT;
+	unsigned int perm = 0, type = 0;
+	Boolean first = FALSE, throws = FALSE;
 	char *suffix = NULL;
 	List *lp;
 	const char * const usage = "access [-n name] [-1e] [-rwx] [-fdcblsp] path ...";
@@ -109,23 +119,17 @@ PRIM(access) {
 		switch (c) {
 		case 'n':	suffix = getstr(esoptarg());	break;
 		case '1':	first = TRUE;			break;
-		case 'e':	exception = TRUE;		break;
+		case 'e':	throws = TRUE;			break;
 		case 'r':	perm |= READ;			break;
 		case 'w':	perm |= WRITE;			break;
 		case 'x':	perm |= EXEC;			break;
-		case 'f':	type = S_IFREG;			break;
-		case 'd':	type = S_IFDIR;			break;
-		case 'c':	type = S_IFCHR;			break;
-		case 'b':	type = S_IFBLK;			break;
-#ifdef S_IFLNK
-		case 'l':	type = S_IFLNK;			break;
-#endif
-#ifdef S_IFSOCK
-		case 's':	type = S_IFSOCK;		break;
-#endif
-#ifdef S_IFIFO
-		case 'p':	type = S_IFIFO;			break;
-#endif
+		case 'f':	type = IFREG;			break;
+		case 'd':	type = IFDIR;			break;
+		case 'c':	type = IFCHR;			break;
+		case 'b':	type = IFBLK;			break;
+		case 'l':	type = IFLNK;			break;
+		case 's':	type = IFSOCK;			break;
+		case 'p':	type = IFIFO;			break;
 		default:
 			esoptend();
 			fail("$&access", "access -%c is not supported on this system", c);
@@ -153,11 +157,11 @@ PRIM(access) {
 			} else if (error != ENOENT)
 				estatus = error;
 		} else
-			lp = mklist(mkstr(error == 0 ? "0" : esstrerror(error)),
+			lp = mklist(mkstr(error == 0 ? "0" : gcdup(esstrerror(error))),
 				    lp);
 	}
 
-	if (first && exception) {
+	if (first && throws) {
 		gcenable();
 		if (suffix)
 			fail("$&access", "%s: %s", suffix, esstrerror(estatus));
@@ -176,6 +180,6 @@ extern Dict *initprims_access(Dict *primdict) {
 }
 
 extern char *checkexecutable(char *file) {
-	int err = testfile(file, EXEC, S_IFREG);
+	int err = testfile(file, EXEC, IFREG);
 	return err == 0 ? NULL : esstrerror(err);
 }
