@@ -30,12 +30,11 @@ test 'wait is precise' {
 	}
 }
 
-# TODO: Fix setpgid-related behavior to make this work
-# test 'setpgid' {
-# 	let (pid = <={$&background {./testrun s}}) {
-# 		assert {ps -o pid | grep $pid > /dev/null} 'background process appears in ps'
-# 		kill $pid
-# 		wait $pid >[2] /dev/null
-# 		assert {!{ps -o pid | grep $pid}}
-# 	}
-# }
+test 'setpgid' {
+	let (pid = <={$&background {./testrun s}}) {
+		assert {ps -o pid | grep $pid > /dev/null} 'background process appears in ps'
+		kill $pid
+		wait $pid >[2] /dev/null
+		assert {!{ps -o pid | grep $pid}}
+	}
+}

@@ -20,6 +20,12 @@ struct Proc {
 
 static Proc *proclist = NULL;
 
+static int ttyfd = -1;
+static pid_t espgid;
+#if JOB_PROTECT
+static pid_t tcpgid0;
+#endif
+
 /* mkproc -- create a Proc structure */
 extern Proc *mkproc(int pid, Boolean background) {
 	Proc *proc = ealloc(sizeof (Proc));
@@ -49,6 +55,9 @@ extern int efork(Boolean parent, Boolean background) {
 				efree(p);
 			}
 			hasforked = TRUE;
+#if JOB_PROTECT
+			tcpgid0 = 0;
+#endif
 			break;
 		case -1:
 			fail("es:efork", "fork: %s", esstrerror(errno));
@@ -60,6 +69,59 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
+extern pid_t spgrp(pid_t pgid) {
+	pid_t old = getpgrp();
+	setpgid(0, pgid);
+	espgid = pgid;
+	return old;
+}
+
+static int tcspgrp(pid_t pgid) {
+	int e = 0;
+	Sigeffect tstp, ttin, ttou;
+	if (ttyfd < 0)
+		return ENOTTY;
+	tstp = esignal(SIGTSTP, sig_ignore);
+	ttin = esignal(SIGTTIN, sig_ignore);
+	ttou = esignal(SIGTTOU, sig_ignore);
+	if (tcsetpgrp(ttyfd, pgid) != 0)
+		e = errno;
+	esignal(SIGTSTP, tstp);
+	esignal(SIGTTIN, ttin);
+	esignal(SIGTTOU, ttou);
+	return e;
+}
+
+extern int tctakepgrp(void) {
+	pid_t tcpgid = 0;
+	if (ttyfd < 0)
+		return ENOTTY;
+	tcpgid = tcgetpgrp(ttyfd);
+	if (espgid == 0 || tcpgid == espgid)
+		return 0;
+	return tcspgrp(espgid);
+}
+
+extern void initpgrp(void) {
+	espgid = getpgrp();
+	ttyfd = opentty();
+#if JOB_PROTECT
+	if (ttyfd >= 0)
+		tcpgid0 = tcgetpgrp(ttyfd);
+#endif
+}
+
+#if JOB_PROTECT
+extern void tcreturnpgrp(void) {
+	if (tcpgid0 != 0 && ttyfd >= 0 && tcpgid0 != tcgetpgrp(ttyfd))
+		tcspgrp(tcpgid0);
+}
+
+extern Noreturn esexit(int code) {
+	tcreturnpgrp();
+	exit(code);
+}
+#endif
 
 #if HAVE_GETRUSAGE
 /* This function is provided as timersub(3) on some systems, but it's simple enough
@@ -135,6 +197,9 @@ extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
 			SIGCHK();
 	}
 	proc = reap(deadpid);
+#if JOB_PROTECT
+	tctakepgrp();
+#endif
 	if (proc->background)
 		printstatus(proc->pid, status);
 	efree(proc);

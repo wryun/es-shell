@@ -23,19 +23,14 @@
 #include <sys/stat.h>
 
 PRIM(newpgrp) {
-	int pid;
+	int e;
+	pid_t pgid;
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
-	pid = getpid();
-	setpgrp(pid, pid);
-	{
-		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
-		Sigeffect sigttin = esignal(SIGTTIN, sig_ignore);
-		Sigeffect sigttou = esignal(SIGTTOU, sig_ignore);
-		tcsetpgrp(2, pid);
-		esignal(SIGTSTP, sigtstp);
-		esignal(SIGTTIN, sigttin);
-		esignal(SIGTTOU, sigttou);
+	pgid = spgrp(getpid());
+	if ((e = tctakepgrp()) != 0) {
+		spgrp(pgid);
+		fail("$&newpgrp", "newpgrp: %s", esstrerror(e));
 	}
 	return ltrue;
 }
@@ -44,11 +39,12 @@ PRIM(background) {
 	int pid = efork(TRUE, TRUE);
 	if (pid == 0) {
 #if JOB_PROTECT
-		/* job control safe version: put it in a new pgroup. */
-		setpgrp(0, getpid());
+		/* job control safe version: put it in a new pgroup, if interactive. */
+		if (isinteractive())
+			setpgid(0, 0);
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
-		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	}
 	return mklist(mkstr(str("%d", pid)), NULL);
 }
@@ -57,7 +53,7 @@ PRIM(fork) {
 	int pid, status;
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
-		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
 	SIGCHK();
 	printstatus(0, status);
@@ -306,7 +302,7 @@ PRIM(time) {
 	t0 = time(NULL);
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
-		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	status = ewait(pid, FALSE, &r);
 	t1 = time(NULL);
 	SIGCHK();
@@ -341,7 +337,7 @@ PRIM(time) {
 		t0 = times(&tms);
 		pid = efork(TRUE, FALSE);
 		if (pid == 0)
-			exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+			esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 
 		status = ewaitfor(pid);
 		t1 = times(&tms);
@@ -358,7 +354,7 @@ PRIM(time) {
 			tms.tms_cstime / ticks, ((tms.tms_cstime * 10) / ticks) % 10,
 			lp, " "
 		);
-		exit(status);
+		esexit(status);
 	}
 	status = ewaitfor(pid);
 	SIGCHK();

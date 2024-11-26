@@ -358,5 +358,5 @@ extern Noreturn panic VARARGS1(const char *, fmt) {
 	fdprint(&format, 2, fmt);
 	va_end(format.args);
 	eprint("\n");
-	exit(1);
+	esexit(1);
 }
