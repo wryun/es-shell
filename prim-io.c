@@ -234,9 +234,10 @@ PRIM(pipe) {
 
 	Ref(List *, result, NULL);
 	do {
+		int pid = pids[--n];
 		Term *t;
-		int status = ewaitfor(pids[--n]);
-		printstatus(0, status);
+		int status = ewaitfor(pid);
+		printstatus(pid, status);
 		t = mkstr(mkstatus(status));
 		result = mklist(t, result);
 	} while (0 < n);
@@ -280,7 +281,7 @@ PRIM(readfrom) {
 
 	close(p[0]);
 	status = ewaitfor(pid);
-	printstatus(0, status);
+	printstatus(pid, status);
 	varpop(&push);
 	RefEnd3(cmd, input, var);
 	RefReturn(lp);
@@ -320,7 +321,7 @@ PRIM(writeto) {
 
 	close(p[1]);
 	status = ewaitfor(pid);
-	printstatus(0, status);
+	printstatus(pid, status);
 	varpop(&push);
 	RefEnd3(cmd, output, var);
 	RefReturn(lp);
@@ -365,11 +366,11 @@ PRIM(backquote) {
 	}
 
 	close(p[1]);
-	gcdisable();
 	lp = bqinput(sep, p[0]);
 	close(p[0]);
 	status = ewaitfor(pid);
-	printstatus(0, status);
+	printstatus(pid, status);
+	gcdisable();
 	lp = mklist(mkstr(mkstatus(status)), lp);
 	gcenable();
 	list = lp;

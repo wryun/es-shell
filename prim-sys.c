@@ -56,7 +56,7 @@ PRIM(fork) {
 		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
 	SIGCHK();
-	printstatus(0, status);
+	printstatus(pid, status);
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
 
@@ -126,6 +126,26 @@ PRIM(setsignals) {
 	setsigeffects(effects);
 	unblocksignals();
 	return mksiglist();
+}
+
+PRIM(sigmessage) {
+	int sig;
+	char *s, *p;
+	if (list == NULL || list->next != NULL)
+		fail("$&sigmessage", "usage: $&sigmessage signal");
+	s = getstr(list->term);
+	if ((p = strchr(s, '+')) != NULL) {
+		if (streq(p, "+core"))
+			*p = '\0';
+		else
+			p = NULL;
+	}
+	sig = signumber(s);
+	if (p != NULL)
+		*p = '+';
+	if (sig < 0)
+		fail("$&sigmessage", "unknown signal: %s", s);
+	return mklist(mkstr(sigmessage(sig)), NULL);
 }
 
 /*
@@ -306,7 +326,7 @@ PRIM(time) {
 	status = ewait(pid, FALSE, &r);
 	t1 = time(NULL);
 	SIGCHK();
-	printstatus(0, status);
+	printstatus(pid, status);
 
 	eprint(
 		"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
@@ -342,7 +362,7 @@ PRIM(time) {
 		status = ewaitfor(pid);
 		t1 = times(&tms);
 		SIGCHK();
-		printstatus(0, status);
+		printstatus(pid, status);
 
 		tms.tms_cutime += ticks / 20;
 		tms.tms_cstime += ticks / 20;
@@ -358,7 +378,7 @@ PRIM(time) {
 	}
 	status = ewaitfor(pid);
 	SIGCHK();
-	printstatus(0, status);
+	printstatus(pid, status);
 
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
@@ -439,6 +459,7 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(fork);
 	X(run);
 	X(setsignals);
+	X(sigmessage);
 #if BSD_LIMITS
 	X(limit);
 #endif

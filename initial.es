@@ -76,7 +76,6 @@ fn-newpgrp	= $&newpgrp
 fn-result	= $&result
 fn-throw	= $&throw
 fn-umask	= $&umask
-fn-wait		= $&wait
 
 fn-%read	= $&read
 
@@ -579,6 +578,26 @@ fn %pathsearch name { access -n $name -1e -xf $path }
 
 if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
+#	The %print-status hook is used to print any potentially interesting
+#	status from an exec()ed binary.
+
+fn %print-status pid did status {
+	if {~ $did signaled} {
+		let (msg = <={if {$print-status-pid} {result $pid^': '} {result ''}}) {
+			msg = $msg^<={$&sigmessage $status}
+			if {~ $status *+core} {
+				msg = $msg^'--core dumped'
+			}
+			echo >[1=2] $msg
+		}
+	}
+}
+
+print-status-pid = false
+
+fn wait {
+	local (print-status-pid = true) $&wait $*
+}
 
 #
 # Read-eval-print loops
@@ -756,7 +775,7 @@ max-eval-depth	= 640
 #	is does.  fn-%dispatch is really only important to the current
 #	interpreter loop.
 
-noexport = noexport pid signals apid bqstatus fn-%dispatch path home matchexpr
+noexport = noexport pid signals apid bqstatus fn-%dispatch path home matchexpr print-status-pid
 
 
 #

@@ -41,7 +41,7 @@ extern List *forkexec(char *file, List *list, Boolean inchild) {
 		sigint_newline = TRUE;
 	} else
 		SIGCHK();
-	printstatus(0, status);
+	printstatus(pid, status);
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
 }
 
