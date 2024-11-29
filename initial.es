@@ -582,7 +582,7 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	status from an exec()ed binary.
 
 fn %print-status pid did status {
-	if {~ $did signaled} {
+	if {~ $did signaled && !~ $status (sigint sigpipe)} {
 		let (msg = <={if {$print-status-pid} {result $pid^': '} {result ''}}) {
 			msg = $msg^<={$&sigmessage $status}
 			if {~ $status *+core} {
