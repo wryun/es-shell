@@ -323,7 +323,7 @@ PRIM(time) {
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
 		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewait(pid, FALSE, &r);
+	status = ewait(pid, 0, &r);
 	t1 = time(NULL);
 	SIGCHK();
 	printstatus(pid, status);
