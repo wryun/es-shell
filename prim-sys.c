@@ -36,7 +36,7 @@ PRIM(newpgrp) {
 }
 
 PRIM(background) {
-	int pid = efork(TRUE, TRUE);
+	int pid = efork(TRUE);
 	if (pid == 0) {
 #if JOB_PROTECT
 		/* job control safe version: put it in a new pgroup, if interactive. */
@@ -51,12 +51,11 @@ PRIM(background) {
 
 PRIM(fork) {
 	int pid, status;
-	pid = efork(TRUE, FALSE);
+	pid = efork(TRUE);
 	if (pid == 0)
 		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
 	SIGCHK();
-	printstatus(pid, status);
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
 
@@ -320,13 +319,12 @@ PRIM(time) {
 
 	gc();	/* do a garbage collection first to ensure reproducible results */
 	t0 = time(NULL);
-	pid = efork(TRUE, FALSE);
+	pid = efork(TRUE);
 	if (pid == 0)
 		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	status = ewait(pid, 0, &r);
 	t1 = time(NULL);
 	SIGCHK();
-	printstatus(pid, status);
 
 	eprint(
 		"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
@@ -345,7 +343,7 @@ PRIM(time) {
 	Ref(List *, lp, list);
 
 	gc();	/* do a garbage collection first to ensure reproducible results */
-	pid = efork(TRUE, FALSE);
+	pid = efork(TRUE);
 	if (pid == 0) {
 		clock_t t0, t1;
 		struct tms tms;
@@ -355,14 +353,13 @@ PRIM(time) {
 			ticks = sysconf(_SC_CLK_TCK);
 
 		t0 = times(&tms);
-		pid = efork(TRUE, FALSE);
+		pid = efork(TRUE);
 		if (pid == 0)
 			esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 
 		status = ewaitfor(pid);
 		t1 = times(&tms);
 		SIGCHK();
-		printstatus(pid, status);
 
 		tms.tms_cutime += ticks / 20;
 		tms.tms_cstime += ticks / 20;
@@ -378,7 +375,6 @@ PRIM(time) {
 	}
 	status = ewaitfor(pid);
 	SIGCHK();
-	printstatus(pid, status);
 
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);

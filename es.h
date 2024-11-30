@@ -222,7 +222,7 @@ extern char *checkexecutable(char *file);
 /* proc.c */
 
 extern Boolean hasforked;
-extern int efork(Boolean parent, Boolean background);
+extern int efork(Boolean parent);
 extern pid_t spgrp(pid_t pgid);
 extern int tctakepgrp(void);
 extern void initpgrp(void);

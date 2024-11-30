@@ -141,7 +141,7 @@ static int pipefork(int p[2], int *extra) {
 		registerfd(extra, FALSE);
 
 	ExceptionHandler
-		pid = efork(TRUE, FALSE);
+		pid = efork(TRUE);
 	CatchExceptionIf (pid != 0, e)
 		unregisterfd(&p[0]);
 		unregisterfd(&p[1]);
@@ -205,7 +205,7 @@ PRIM(pipe) {
 	for (;; list = list->next) {
 		int p[2], pid;
 
-		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork(p, &inpipe);
+		pid = (list->next == NULL) ? efork(TRUE) : pipefork(p, &inpipe);
 
 		if (pid == 0) {		/* child */
 			if (inpipe != -1) {
@@ -237,7 +237,6 @@ PRIM(pipe) {
 		int pid = pids[--n];
 		Term *t;
 		int status = ewaitfor(pid);
-		printstatus(pid, status);
 		t = mkstr(mkstatus(status));
 		result = mklist(t, result);
 	} while (0 < n);
@@ -248,7 +247,7 @@ PRIM(pipe) {
 
 #if HAVE_DEV_FD
 PRIM(readfrom) {
-	int pid, p[2], status;
+	int pid, p[2];
 	Push push;
 
 	caller = "$&readfrom";
@@ -280,15 +279,14 @@ PRIM(readfrom) {
 	EndExceptionHandler
 
 	close(p[0]);
-	status = ewaitfor(pid);
-	printstatus(pid, status);
+	ewaitfor(pid);
 	varpop(&push);
 	RefEnd3(cmd, input, var);
 	RefReturn(lp);
 }
 
 PRIM(writeto) {
-	int pid, p[2], status;
+	int pid, p[2];
 	Push push;
 
 	caller = "$&writeto";
@@ -320,8 +318,7 @@ PRIM(writeto) {
 	EndExceptionHandler
 
 	close(p[1]);
-	status = ewaitfor(pid);
-	printstatus(pid, status);
+	ewaitfor(pid);
 	varpop(&push);
 	RefEnd3(cmd, output, var);
 	RefReturn(lp);
@@ -369,7 +366,6 @@ PRIM(backquote) {
 	lp = bqinput(sep, p[0]);
 	close(p[0]);
 	status = ewaitfor(pid);
-	printstatus(pid, status);
 	gcdisable();
 	lp = mklist(mkstr(mkstatus(status)), lp);
 	gcenable();

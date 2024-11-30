@@ -17,7 +17,6 @@ Boolean hasforked = FALSE;
 typedef struct Proc Proc;
 struct Proc {
 	int pid;
-	Boolean background;
 	Proc *next, *prev;
 };
 
@@ -30,22 +29,21 @@ static pid_t tcpgid0;
 #endif
 
 /* mkproc -- create a Proc structure */
-extern Proc *mkproc(int pid, Boolean background) {
+extern Proc *mkproc(int pid) {
 	Proc *proc = ealloc(sizeof (Proc));
 	proc->next = proclist;
 	proc->pid = pid;
-	proc->background = background;
 	proc->prev = NULL;
 	return proc;
 }
 
 /* efork -- fork (if necessary) and clean up as appropriate */
-extern int efork(Boolean parent, Boolean background) {
+extern int efork(Boolean parent) {
 	if (parent) {
 		int pid = fork();
 		switch (pid) {
 		default: {	/* parent */
-			Proc *proc = mkproc(pid, background);
+			Proc *proc = mkproc(pid);
 			if (proclist != NULL)
 				proclist->prev = proc;
 			proclist = proc;
@@ -208,8 +206,7 @@ extern int ewait(int pidarg, int opts, void *rusage) {
 	if (deadpid == 0) /* dowait(EWNOHANG) returned nothing */
 		return -1; /* FIXME: replace this with a better value! */
 	proc = reap(deadpid);
-	if (proc->background)
-		printstatus(proc->pid, status);
+	printstatus(proc->pid, status);
 	efree(proc);
 	return status;
 }
@@ -219,11 +216,10 @@ extern int ewait(int pidarg, int opts, void *rusage) {
 PRIM(apids) {
 	Proc *p;
 	Ref(List *, lp, NULL);
-	for (p = proclist; p != NULL; p = p->next)
-		if (p->background) {
-			Term *t = mkstr(str("%d", p->pid));
-			lp = mklist(t, lp);
-		}
+	for (p = proclist; p != NULL; p = p->next) {
+		Term *t = mkstr(str("%d", p->pid));
+		lp = mklist(t, lp);
+	}
 	/* TODO: sort the return value, but by number? */
 	RefReturn(lp);
 }
