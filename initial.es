@@ -578,12 +578,12 @@ fn %pathsearch name { access -n $name -1e -xf $path }
 
 if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
-#	The %print-status hook is used to print any potentially interesting
+#	The %echo-status hook is used to print any potentially interesting
 #	status from an exec()ed binary.
 
-fn %print-status pid did status {
+fn %echo-status pid did status {
 	if {~ $did signaled && !~ $status (sigint sigpipe)} {
-		let (msg = <={if {$print-status-pid} {result $pid^': '} {result ''}}) {
+		let (msg = <={if {$echo-status-pid} {result $pid^': '} {result ''}}) {
 			msg = $msg^<={$&sigmessage $status}
 			if {~ $status *+core} {
 				msg = $msg^'--core dumped'
@@ -593,10 +593,10 @@ fn %print-status pid did status {
 	}
 }
 
-print-status-pid = false
+echo-status-pid = false
 
 fn wait {
-	local (print-status-pid = true) $&wait $*
+	local (echo-status-pid = true) $&wait $*
 }
 
 #

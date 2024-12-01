@@ -65,7 +65,7 @@ extern char *mkstatus(int status) {
 
 /* printstatus -- print the status if we should */
 extern void printstatus(int pid, int status) {
-	Ref(List *, fn, varlookup("fn-%print-status", NULL));
+	Ref(List *, fn, varlookup("fn-%echo-status", NULL));
 	Ref(List *, list, NULL);
 	if (fn != NULL) {
 		gcdisable();
