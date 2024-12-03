@@ -232,7 +232,7 @@ PRIM(wait) {
 		lp = lp->next;
 	}
 	if (lp != NULL) {
-		pid = atoi(getstr(list->term));
+		pid = atoi(getstr(lp->term));
 		if (pid <= 0) {
 			fail("$&wait", "wait: %d: bad pid", pid);
 			NOTREACHED;
