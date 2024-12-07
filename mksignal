@@ -34,12 +34,14 @@ sed -n '
 		mesg["SIGHUP"]		= "hangup"
 		mesg["SIGILL"]		= "illegal instruction"
 		mesg["SIGINFO"]		= "information request"
+		mesg["SIGINT"]		= "interrupt"
 		mesg["SIGIO"]		= "input/output possible"
 		mesg["SIGIOT"]		= "IOT instruction"
 		mesg["SIGKILL"]		= "killed"
 		mesg["SIGLOST"]		= "resource lost"
 		mesg["SIGLWP"]		= "lightweight process library signal"
 		mesg["SIGMIGRATE"]	= "migrate process"
+		mesg["SIGPIPE"]		= "broken pipe"
 		mesg["SIGPOLL"]		= "pollable event occurred"
 		mesg["SIGPROF"]		= "profiling timer alarm"
 		mesg["SIGPWR"]		= "power failure"
@@ -82,13 +84,6 @@ sed -n '
 		mesg["SIGVIRT"]		= "virtual time alarm"
 		mesg["SIGWINDOW"]	= "window size changed"
 
-
-		# set nomesg["SIGNAME"] to suppress message printing
-
-		nomesg["SIGINT"] = 1
-		nomesg["SIGPIPE"] = 1
-
-
 		# set ignore["SIGNAME"] to explicitly ignore a named signal (usually, this
 		# is just for things that look like signals but really are not)
 
@@ -117,7 +112,7 @@ sed -n '
 	sig[$1] == 0 && ignore[$1] == 0 {
 		sig[$1] = ++nsig
 		signame[nsig] = $1
-		if (mesg[$1] == "" && nomesg[$1] == 0) {
+		if (mesg[$1] == "") {
 			str = $3
 			for (i = 4; i <= NF; i++)
 				str = str " " $i

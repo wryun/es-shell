@@ -9,12 +9,14 @@
 #include <sys/resource.h>
 #endif
 
+#define	EWINTERRUPTIBLE	1
+#define	EWNOHANG	2
+
 Boolean hasforked = FALSE;
 
 typedef struct Proc Proc;
 struct Proc {
 	int pid;
-	Boolean background;
 	Proc *next, *prev;
 };
 
@@ -27,22 +29,21 @@ static pid_t tcpgid0;
 #endif
 
 /* mkproc -- create a Proc structure */
-extern Proc *mkproc(int pid, Boolean background) {
+extern Proc *mkproc(int pid) {
 	Proc *proc = ealloc(sizeof (Proc));
 	proc->next = proclist;
 	proc->pid = pid;
-	proc->background = background;
 	proc->prev = NULL;
 	return proc;
 }
 
 /* efork -- fork (if necessary) and clean up as appropriate */
-extern int efork(Boolean parent, Boolean background) {
+extern int efork(Boolean parent) {
 	if (parent) {
 		int pid = fork();
 		switch (pid) {
 		default: {	/* parent */
-			Proc *proc = mkproc(pid, background);
+			Proc *proc = mkproc(pid);
 			if (proclist != NULL)
 				proclist->prev = proc;
 			proclist = proc;
@@ -137,7 +138,7 @@ static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
 #endif
 
 /* dowait -- a waitpid wrapper that gets rusage and interfaces with signals */
-static int dowait(int pid, int *statusp, void UNUSED *rusagep) {
+static int dowait(int pid, int opts, int *statusp, void UNUSED *rusagep) {
 	int n;
 #if HAVE_GETRUSAGE
 	static struct rusage ru_saved;
@@ -147,7 +148,7 @@ static int dowait(int pid, int *statusp, void UNUSED *rusagep) {
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		n = interrupted ? -2 :
-			waitpid(pid, statusp, 0);
+			waitpid(pid, statusp, (opts & EWNOHANG ? WNOHANG : 0));
 #if HAVE_GETRUSAGE
 		if (rusagep != NULL) {
 			struct rusage *rusage = (struct rusage *)rusagep;
@@ -185,23 +186,27 @@ static Proc *reap(int pid) {
 }
 
 /* ewait -- wait for a specific process to die, or any process if pid == -1 */
-extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
+extern int ewait(int pidarg, int opts, void *rusage) {
 	int deadpid, status;
 	Proc *proc;
-	while ((deadpid = dowait(pidarg, &status, rusage)) == -1) {
+	while ((deadpid = dowait(pidarg, (opts & EWNOHANG), &status, rusage)) == -1) {
 		if (errno == ECHILD && pidarg > 0)
 			fail("es:ewait", "wait: %d is not a child of this shell", pidarg);
-		else if (errno != EINTR)
+		else if (errno == ECHILD && (opts & EWNOHANG) > 0) {
+			deadpid = 0;
+			break;
+		} else if (errno != EINTR)
 			fail("es:ewait", "wait: %s", esstrerror(errno));
-		if (interruptible)
+		if (opts & EWINTERRUPTIBLE)
 			SIGCHK();
 	}
-	proc = reap(deadpid);
 #if JOB_PROTECT
 	tctakepgrp();
 #endif
-	if (proc->background)
-		printstatus(proc->pid, status);
+	if (deadpid == 0) /* dowait(EWNOHANG) returned nothing */
+		return -1; /* FIXME: replace this with a better value! */
+	proc = reap(deadpid);
+	printstatus(proc->pid, status);
 	efree(proc);
 	return status;
 }
@@ -211,30 +216,38 @@ extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
 PRIM(apids) {
 	Proc *p;
 	Ref(List *, lp, NULL);
-	for (p = proclist; p != NULL; p = p->next)
-		if (p->background) {
-			Term *t = mkstr(str("%d", p->pid));
-			lp = mklist(t, lp);
-		}
+	for (p = proclist; p != NULL; p = p->next) {
+		Term *t = mkstr(str("%d", p->pid));
+		lp = mklist(t, lp);
+	}
 	/* TODO: sort the return value, but by number? */
 	RefReturn(lp);
 }
 
 PRIM(wait) {
-	int pid;
-	if (list == NULL)
-		pid = -1;
-	else if (list->next == NULL) {
-		pid = atoi(getstr(list->term));
+	int status, pid = -1, opts = EWINTERRUPTIBLE;
+	Ref(List *, lp, list);
+	if (lp != NULL && streq(getstr(lp->term), "-n")) {
+		opts = opts | EWNOHANG;
+		lp = lp->next;
+	}
+	if (lp != NULL) {
+		pid = atoi(getstr(lp->term));
 		if (pid <= 0) {
 			fail("$&wait", "wait: %d: bad pid", pid);
 			NOTREACHED;
 		}
-	} else {
-		fail("$&wait", "usage: wait [pid]");
+		lp = lp->next;
+	}
+	if (lp != NULL) {
+		fail("$&wait", "usage: wait [-n] [pid]");
 		NOTREACHED;
 	}
-	return mklist(mkstr(mkstatus(ewait(pid, TRUE, NULL))), NULL);
+	RefEnd(lp);
+	status = ewait(pid, opts, NULL);
+	if (status == -1) /* FIXME: this will be a better value soon */
+		return NULL;
+	return mklist(mkstr(mkstatus(status)), NULL);
 }
 
 extern Dict *initprims_proc(Dict *primdict) {

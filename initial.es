@@ -76,7 +76,6 @@ fn-newpgrp	= $&newpgrp
 fn-result	= $&result
 fn-throw	= $&throw
 fn-umask	= $&umask
-fn-wait		= $&wait
 
 fn-%read	= $&read
 
@@ -579,6 +578,26 @@ fn %pathsearch name { access -n $name -1e -xf $path }
 
 if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
+#	The %echo-status hook is used to print any potentially interesting
+#	status from an exec()ed binary.
+
+fn %echo-status pid did status {
+	if {~ $did signaled && !~ $status (sigint sigpipe)} {
+		let (msg = <={if {$echo-status-pid} {result $pid^': '} {result ''}}) {
+			msg = $msg^<={$&sigmessage $status}
+			if {~ $status *+core} {
+				msg = $msg^'--core dumped'
+			}
+			echo >[1=2] $msg
+		}
+	}
+}
+
+echo-status-pid = false
+
+fn wait {
+	local (echo-status-pid = true) $&wait $*
+}
 
 #
 # Read-eval-print loops
@@ -642,7 +661,7 @@ fn %interactive-loop {
 				$fn-%dispatch false
 			} {~ $e signal} {
 				if {!~ $type sigint sigterm sigquit} {
-					echo >[1=2] caught unexpected signal: $type
+					echo >[1=2] caught unexpected signal: $type: <={$&sigmessage $type}
 				}
 			} {
 				echo >[1=2] uncaught exception: $e $type $msg
@@ -756,7 +775,7 @@ max-eval-depth	= 640
 #	is does.  fn-%dispatch is really only important to the current
 #	interpreter loop.
 
-noexport = noexport pid signals apid bqstatus fn-%dispatch path home matchexpr
+noexport = noexport pid signals apid bqstatus fn-%dispatch path home matchexpr print-status-pid
 
 
 #

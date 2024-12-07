@@ -65,18 +65,15 @@ extern char *mkstatus(int status) {
 
 /* printstatus -- print the status if we should */
 extern void printstatus(int pid, int status) {
-	if (WIFSIGNALED(status)) {
-		const char *msg = sigmessage(WTERMSIG(status)), *tail = "";
-		if (WCOREDUMP(status)) {
-			tail = "--core dumped";
-			if (*msg == '\0')
-				tail += (sizeof "--") - 1;
-		}
-		if (*msg != '\0' || *tail != '\0') {
-			if (pid == 0)
-				eprint("%s%s\n", msg, tail);
-			else
-				eprint("%d: %s%s\n", pid, msg, tail);
-		}
+	Ref(List *, fn, varlookup("fn-%echo-status", NULL));
+	Ref(List *, list, NULL);
+	if (fn != NULL) {
+		gcdisable();
+		list = mklist(mkstr(mkstatus(status)), NULL);
+		list = mklist(mkstr((WIFSIGNALED(status) ? "signaled" : "exited")), list);
+		list = mklist(mkstr(str("%d", pid)), list);
+		gcenable();
+		eval(append(fn, list), NULL, 0);
 	}
+	RefEnd2(list, fn);
 }
