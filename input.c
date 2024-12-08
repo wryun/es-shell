@@ -245,6 +245,8 @@ static char *callreadline(char *prompt0) {
 		rl_reset_terminal(NULL);
 		resetterminal = FALSE;
 	}
+	if (RL_ISSTATE(RL_STATE_INITIALIZED))
+		rl_reset_screen_size();
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
