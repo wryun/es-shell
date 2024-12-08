@@ -289,30 +289,52 @@ PRIM(limit) {
 #endif	/* BSD_LIMITS */
 
 #if BUILTIN_TIME
+#if HAVE_GETRUSAGE
+/* This function is provided as timersub(3) on some systems, but it's simple enough
+ * to do ourselves. */
+static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
+	res->tv_sec = a->tv_sec - b->tv_sec;
+	res->tv_usec = a->tv_usec - b->tv_usec;
+	if (res->tv_usec < 0) {
+		res->tv_sec -= 1;
+		res->tv_usec += 1000000;
+	}
+}
+#endif
+
 PRIM(time) {
 #if HAVE_GETRUSAGE
 
 	int pid, status;
 	time_t t0, t1;
-	struct rusage r;
+	struct rusage ru_prev, ru_new, ru_diff;
 
 	Ref(List *, lp, list);
+
+	if (getrusage(RUSAGE_CHILDREN, &ru_prev) == -1)
+		fail("es:ewait", "getrusage: %s", esstrerror(errno));
 
 	gc();	/* do a garbage collection first to ensure reproducible results */
 	t0 = time(NULL);
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
 		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewait(pid, FALSE, &r);
+	status = ewait(pid, FALSE);
 	t1 = time(NULL);
 	SIGCHK();
 	printstatus(0, status);
 
+	if (getrusage(RUSAGE_CHILDREN, &ru_new) == -1)
+		fail("es:ewait", "getrusage: %s", esstrerror(errno));
+
+	timesub(&ru_new.ru_utime, &ru_prev.ru_utime, &ru_diff.ru_utime);
+	timesub(&ru_new.ru_stime, &ru_prev.ru_stime, &ru_diff.ru_stime);
+
 	eprint(
 		"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
 		t1 - t0,
-		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 100000),
-		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 100000),
+		ru_diff.ru_utime.tv_sec, (long) (ru_diff.ru_utime.tv_usec / 100000),
+		ru_diff.ru_stime.tv_sec, (long) (ru_diff.ru_stime.tv_usec / 100000),
 		lp, " "
 	);
 
