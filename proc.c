@@ -148,19 +148,19 @@ static int dowait(int pid, int *statusp, void UNUSED *rusagep) {
 		slow = TRUE;
 		n = interrupted ? -2 :
 			waitpid(pid, statusp, 0);
-#if HAVE_GETRUSAGE
-		if (rusagep != NULL) {
-			struct rusage *rusage = (struct rusage *)rusagep;
-			if (getrusage(RUSAGE_CHILDREN, &ru_new) == -1)
-				fail("es:ewait", "getrusage: %s", esstrerror(errno));
-			timesub(&ru_new.ru_utime, &ru_saved.ru_utime, &rusage->ru_utime);
-			timesub(&ru_new.ru_stime, &ru_saved.ru_stime, &rusage->ru_stime);
-			ru_saved = ru_new;
-		}
-#endif
 	} else
 		n = -2;
 	slow = FALSE;
+#if HAVE_GETRUSAGE
+	if (getrusage(RUSAGE_CHILDREN, &ru_new) == -1)
+		fail("es:ewait", "getrusage: %s", esstrerror(errno));
+	if (rusagep != NULL) {
+		struct rusage *rusage = (struct rusage *)rusagep;
+		timesub(&ru_new.ru_utime, &ru_saved.ru_utime, &rusage->ru_utime);
+		timesub(&ru_new.ru_stime, &ru_saved.ru_stime, &rusage->ru_stime);
+	}
+	ru_saved = ru_new;
+#endif
 	if (n == -2) {
 		errno = EINTR;
 		n = -1;
