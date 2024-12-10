@@ -311,9 +311,7 @@ PRIM(time) {
 
 	Ref(List *, lp, list);
 
-	if (getrusage(RUSAGE_CHILDREN, &ru_prev) == -1)
-		fail("es:ewait", "getrusage: %s", esstrerror(errno));
-
+	getrusage(RUSAGE_CHILDREN, &ru_prev);
 	gc();	/* do a garbage collection first to ensure reproducible results */
 	t0 = time(NULL);
 	pid = efork(TRUE, FALSE);
@@ -324,9 +322,7 @@ PRIM(time) {
 	SIGCHK();
 	printstatus(0, status);
 
-	if (getrusage(RUSAGE_CHILDREN, &ru_new) == -1)
-		fail("es:ewait", "getrusage: %s", esstrerror(errno));
-
+	getrusage(RUSAGE_CHILDREN, &ru_new);
 	timesub(&ru_new.ru_utime, &ru_prev.ru_utime, &ru_diff.ru_utime);
 	timesub(&ru_new.ru_stime, &ru_prev.ru_stime, &ru_diff.ru_stime);
 
