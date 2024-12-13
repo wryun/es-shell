@@ -2,13 +2,6 @@
 
 #include "es.h"
 
-/* TODO: the rusage code for the time builtin really needs to be cleaned up */
-
-#if HAVE_GETRUSAGE
-#include <sys/time.h>
-#include <sys/resource.h>
-#endif
-
 Boolean hasforked = FALSE;
 
 typedef struct Proc Proc;
@@ -123,41 +116,14 @@ extern Noreturn esexit(int code) {
 }
 #endif
 
-#if HAVE_GETRUSAGE
-/* This function is provided as timersub(3) on some systems, but it's simple enough
- * to do ourselves. */
-static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
-	res->tv_sec = a->tv_sec - b->tv_sec;
-	res->tv_usec = a->tv_usec - b->tv_usec;
-	if (res->tv_usec < 0) {
-		res->tv_sec -= 1;
-		res->tv_usec += 1000000;
-	}
-}
-#endif
-
-/* dowait -- a waitpid wrapper that gets rusage and interfaces with signals */
-static int dowait(int pid, int *statusp, void UNUSED *rusagep) {
+/* dowait -- a waitpid wrapper that interfaces with signals */
+static int dowait(int pid, int *statusp) {
 	int n;
-#if HAVE_GETRUSAGE
-	static struct rusage ru_saved;
-	struct rusage ru_new;
-#endif
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		n = interrupted ? -2 :
 			waitpid(pid, statusp, 0);
-#if HAVE_GETRUSAGE
-		if (rusagep != NULL) {
-			struct rusage *rusage = (struct rusage *)rusagep;
-			if (getrusage(RUSAGE_CHILDREN, &ru_new) == -1)
-				fail("es:ewait", "getrusage: %s", esstrerror(errno));
-			timesub(&ru_new.ru_utime, &ru_saved.ru_utime, &rusage->ru_utime);
-			timesub(&ru_new.ru_stime, &ru_saved.ru_stime, &rusage->ru_stime);
-			ru_saved = ru_new;
-		}
-#endif
 	} else
 		n = -2;
 	slow = FALSE;
@@ -185,10 +151,10 @@ static Proc *reap(int pid) {
 }
 
 /* ewait -- wait for a specific process to die, or any process if pid == -1 */
-extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
+extern int ewait(int pidarg, Boolean interruptible) {
 	int deadpid, status;
 	Proc *proc;
-	while ((deadpid = dowait(pidarg, &status, rusage)) == -1) {
+	while ((deadpid = dowait(pidarg, &status)) == -1) {
 		if (errno == ECHILD && pidarg > 0)
 			fail("es:ewait", "wait: %d is not a child of this shell", pidarg);
 		else if (errno != EINTR)
@@ -234,7 +200,7 @@ PRIM(wait) {
 		fail("$&wait", "usage: wait [pid]");
 		NOTREACHED;
 	}
-	return mklist(mkstr(mkstatus(ewait(pid, TRUE, NULL))), NULL);
+	return mklist(mkstr(mkstatus(ewait(pid, TRUE))), NULL);
 }
 
 extern Dict *initprims_proc(Dict *primdict) {
