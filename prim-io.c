@@ -4,6 +4,8 @@
 #include "gc.h"
 #include "prim.h"
 
+#include <limits.h>
+
 static const char *caller;
 
 static int getnumber(const char *s) {
@@ -158,8 +160,11 @@ static int pipefork(int p[2], int *extra) {
 }
 
 PRIM(here) {
-	int pid, fd, p[2], status, ticket = UNREGISTERED;
-	List *doc, *tail, **tailp;
+	int fd, doclen, p[2], status, ticket = UNREGISTERED;
+	List *tail, **tailp;
+
+	volatile int pid;
+	volatile Boolean forked = TRUE;
 
 	caller = "$&here";
 	if (length(list) < 2)
@@ -169,13 +174,19 @@ PRIM(here) {
 	Ref(List *, lp, list->next);
 	for (tailp = &lp; (tail = *tailp)->next != NULL; tailp = &tail->next)
 		;
-	doc = (lp == tail) ? NULL : lp;
 	*tailp = NULL;
 
+	Ref(char *, doc, (lp == tail) ? NULL : str("%L", lp, ""));
+	doclen = strlen(doc);
+
 	Ref(List *, cmd, tail);
-	if ((pid = pipefork(p, NULL)) == 0) {		/* child that writes to pipe */
+	if (doclen <= PIPE_BUF) {
+		forked = FALSE;
+		pipe(p);
+		write(p[1], doc, doclen);
+	} else if ((pid = pipefork(p, NULL)) == 0) {	/* child that writes to pipe */
 		close(p[0]);
-		fprint(p[1], "%L", doc, "");
+		write(p[1], doc, doclen);
 		esexit(0);
 	}
 
@@ -187,15 +198,18 @@ PRIM(here) {
 	CatchException (e)
 		undefer(ticket);
 		close(p[0]);
-		ewaitfor(pid);
+		if (forked)
+			ewaitfor(pid);
 		throw(e);
 	EndExceptionHandler
 
 	undefer(ticket);
 	close(p[0]);
-	status = ewaitfor(pid);
-	printstatus(0, status);
-	RefEnd(cmd);
+	if (forked) {
+		status = ewaitfor(pid);
+		printstatus(0, status);
+	}
+	RefEnd2(cmd, doc);
 	RefReturn(lp);
 }
 
