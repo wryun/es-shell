@@ -159,19 +159,20 @@ static int pipefork(int p[2], int *extra) {
 
 PRIM(here) {
 	int pid, fd, p[2], status, ticket = UNREGISTERED;
-	List *doc, *tail, *cmd, **tailp;
+	List *doc, *tail, **tailp;
 
 	caller = "$&here";
 	if (length(list) < 2)
 		argcount("%here fd [word ...] cmd");
 
 	fd = getnumber(getstr(list->term));
-	for (tailp = &(list->next); (tail = *tailp)->next != NULL; tailp = &tail->next)
+	Ref(List *, lp, list->next);
+	for (tailp = &lp; (tail = *tailp)->next != NULL; tailp = &tail->next)
 		;
-	doc = (list->next == tail) ? NULL : list->next;
+	doc = (lp == tail) ? NULL : lp;
 	*tailp = NULL;
-	cmd = tail;
 
+	Ref(List *, cmd, tail);
 	if ((pid = pipefork(p, NULL)) == 0) {		/* child that writes to pipe */
 		close(p[0]);
 		fprint(p[1], "%L", doc, "");
@@ -182,7 +183,7 @@ PRIM(here) {
 	ticket = defer_mvfd(TRUE, p[0], fd);
 
 	ExceptionHandler
-		list = eval(cmd, NULL, evalflags);
+		lp = eval(cmd, NULL, evalflags);
 	CatchException (e)
 		undefer(ticket);
 		close(p[0]);
@@ -194,7 +195,8 @@ PRIM(here) {
 	close(p[0]);
 	status = ewaitfor(pid);
 	printstatus(0, status);
-	return list;
+	RefEnd(cmd);
+	RefReturn(lp);
 }
 
 PRIM(pipe) {
