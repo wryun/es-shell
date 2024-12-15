@@ -157,15 +157,20 @@ static int pipefork(int p[2], int *extra) {
 	return pid;
 }
 
-REDIR(here) {
-	int pid, p[2];
-	List *doc, *tail, **tailp;
+PRIM(here) {
+	int pid, fd, p[2], status, ticket = UNREGISTERED;
+	List *doc, *tail, *cmd, **tailp;
 
-	assert(list != NULL);
-	for (tailp = &list; (tail = *tailp)->next != NULL; tailp = &tail->next)
+	caller = "$&here";
+	if (length(list) < 2)
+		argcount("%here fd [word ...] cmd");
+
+	fd = getnumber(getstr(list->term));
+	for (tailp = &(list->next); (tail = *tailp)->next != NULL; tailp = &tail->next)
 		;
-	doc = (list == tail) ? NULL : list;
+	doc = (list->next == tail) ? NULL : list->next;
 	*tailp = NULL;
+	cmd = tail;
 
 	if ((pid = pipefork(p, NULL)) == 0) {		/* child that writes to pipe */
 		close(p[0]);
@@ -174,15 +179,22 @@ REDIR(here) {
 	}
 
 	close(p[1]);
-	*srcfdp = p[0];
-	return tail;
-}
+	ticket = defer_mvfd(TRUE, p[0], fd);
 
-PRIM(here) {
-	caller = "$&here";
-	if (length(list) < 2)
-		argcount("%here fd [word ...] cmd");
-	return redir(redir_here, list, evalflags);
+	ExceptionHandler
+		list = eval(cmd, NULL, evalflags);
+	CatchException (e)
+		undefer(ticket);
+		close(p[0]);
+		ewaitfor(pid);
+		throw(e);
+	EndExceptionHandler
+
+	undefer(ticket);
+	close(p[0]);
+	status = ewaitfor(pid);
+	printstatus(0, status);
+	return list;
 }
 
 PRIM(pipe) {
