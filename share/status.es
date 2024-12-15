@@ -19,6 +19,15 @@ fn %interactive-loop {
 	local (
 		noexport = $noexport status
 		status = <=true
-		fn %dispatch {status = <={$d $*}}
+		fn-%dispatch = $&noreturn @ {
+			catch @ e rest {
+				if {~ $e return} {
+					status = $rest
+				}
+				throw $e $rest
+			} {
+				status = <={$d $*}
+			}
+		}
 	) $loop $*
 }
