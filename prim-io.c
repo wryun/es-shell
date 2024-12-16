@@ -180,13 +180,16 @@ PRIM(here) {
 	doclen = strlen(doc);
 
 	Ref(List *, cmd, tail);
+#ifdef PIPE_BUF
 	if (doclen <= PIPE_BUF) {
 		forked = FALSE;
 		pipe(p);
-		write(p[1], doc, doclen);
-	} else if ((pid = pipefork(p, NULL)) == 0) {	/* child that writes to pipe */
+		ewrite(p[1], doc, doclen);
+	} else
+#endif
+	if ((pid = pipefork(p, NULL)) == 0) {	/* child that writes to pipe */
 		close(p[0]);
-		write(p[1], doc, doclen);
+		ewrite(p[1], doc, doclen);
 		esexit(0);
 	}
 
