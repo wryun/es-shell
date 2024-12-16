@@ -161,10 +161,8 @@ static int pipefork(int p[2], int *extra) {
 
 PRIM(here) {
 	int fd, doclen, p[2], status, ticket = UNREGISTERED;
+	volatile int pid = -1;
 	List *tail, **tailp;
-
-	volatile int pid;
-	volatile Boolean forked = TRUE;
 
 	caller = "$&here";
 	if (length(list) < 2)
@@ -182,7 +180,6 @@ PRIM(here) {
 	Ref(List *, cmd, tail);
 #ifdef PIPE_BUF
 	if (doclen <= PIPE_BUF) {
-		forked = FALSE;
 		pipe(p);
 		ewrite(p[1], doc, doclen);
 	} else
@@ -201,14 +198,14 @@ PRIM(here) {
 	CatchException (e)
 		undefer(ticket);
 		close(p[0]);
-		if (forked)
+		if (pid > 0)
 			ewaitfor(pid);
 		throw(e);
 	EndExceptionHandler
 
 	undefer(ticket);
 	close(p[0]);
-	if (forked) {
+	if (pid > 0) {
 		status = ewaitfor(pid);
 		printstatus(0, status);
 	}
