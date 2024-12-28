@@ -109,8 +109,8 @@ int main(int argc, char **argv0) {
 	Boolean keepclosed = FALSE;		/* -o */
 	Ref(const char *volatile, cmd, NULL);	/* -c */
 
-	initgc();
 	initconv();
+	initgc();
 
 	if (argc == 0) {
 		argc = 1;
