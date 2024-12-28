@@ -68,7 +68,7 @@ const char dnw[] = {
 /* print_prompt2 -- called before all continuation lines */
 extern void print_prompt2(void) {
 	input->lineno++;
-#if READLINE
+#if HAVE_READLINE
 	prompt = prompt2;
 #else
 	if ((input->runflags & run_interactive) && prompt2 != NULL)
@@ -77,11 +77,9 @@ extern void print_prompt2(void) {
 }
 
 /* scanerror -- called for lexical errors */
-static void scanerror(char *s) {
-	int c;
-	/* TODO: check previous character? rc's last hack? */
-	while ((c = GETC()) != '\n' && c != EOF)
-		;
+static void scanerror(char c, char *s) {
+	while (c != '\n' && c != EOF)
+		c = GETC();
 	goterror = TRUE;
 	yyerror(s);
 }
@@ -108,7 +106,7 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 		return TRUE;
 	}
 	if ((unsigned int) (n = GETC() - '0') > 9) {
-		scanerror("expected digit after '['");
+		scanerror(n + '0', "expected digit after '['");
 		return FALSE;
 	}
 
@@ -120,7 +118,7 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	case '=':
 		if ((unsigned int) (n = GETC() - '0') > 9) {
 			if (n != ']' - '0') {
-				scanerror("expected digit or ']' after '='");
+				scanerror(n + '0', "expected digit or ']' after '='");
 				return FALSE;
 			}
 			fd[1] = CLOSED;
@@ -128,7 +126,7 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 			while ((unsigned int) (c = GETC() - '0') <= 9)
 				n = n * 10 + c;
 			if (c != ']' - '0') {
-				scanerror("expected ']' after digit");
+				scanerror(c + '0', "expected ']' after digit");
 				return FALSE;
 			}
 			fd[1] = n;
@@ -137,7 +135,7 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	case ']':
 		break;
 	default:
-		scanerror("expected '=' or ']' after digit");
+		scanerror(c, "expected '=' or ']' after digit");
 		return FALSE;
 	}
 	return TRUE;
@@ -238,7 +236,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 				print_prompt2();
 			if (c == EOF) {
 				w = NW;
-				scanerror("eof in quoted string");
+				scanerror(c, "eof in quoted string");
 				return ERROR;
 			}
 			if (i >= bufsize)
@@ -301,7 +299,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		default:
 			if (isalnum(c)) {
 			badescape:
-				scanerror("bad backslash escape");
+				scanerror(c, "bad backslash escape");
 				return ERROR;
 			}
 			*buf = c;
@@ -314,7 +312,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		while ((c = GETC()) != '\n') /* skip comment until newline */
 			if (c == EOF)
 				return ENDFILE;
-		/* FALLTHROUGH */
+		FALLTHROUGH;
 	case '\n':
 		input->lineno++;
 		newline = TRUE;
@@ -323,7 +321,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 	case '(':
 		if (w == RW)	/* not keywords, so let & friends work */
 			c = SUB;
-		/* FALLTHROUGH */
+		FALLTHROUGH;
 	case ';':
 	case '^':
 	case ')':
@@ -347,7 +345,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		if (!getfds(p, c, 1, 0))
 			return ERROR;
 		if (p[1] == CLOSED) {
-			scanerror("expected digit after '='");	/* can't close a pipe */
+			scanerror(c, "expected digit after '='");	/* can't close a pipe */
 			return ERROR;
 		}
 		y->tree = mk(nPipe, p[0], p[1]);

@@ -5,7 +5,7 @@
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
 static Boolean did_assign;
 
-static noreturn failexec(char *file, List *args) {
+static Noreturn failexec(char *file, List *args) {
 	List *fn;
 	assert(gcisblocked());
 	fn = varlookup("fn-%exec-failure", NULL);
@@ -20,7 +20,7 @@ static noreturn failexec(char *file, List *args) {
 		errno = olderror;
 	}
 	eprint("%s: %s\n", file, esstrerror(errno));
-	exit(1);
+	esexit(1);
 }
 
 /* forkexec -- fork (if necessary) and exec */
@@ -83,7 +83,7 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 
 /* letbindings -- create a new Binding containing let-bound variables */
 static Binding *letbindings(Tree *defn0, Binding *outer0,
-			    Binding *context0, int evalflags) {
+			    Binding *context0, int UNUSED evalflags) {
 	Ref(Binding *, binding, outer0);
 	Ref(Binding *, context, context0);
 	Ref(Tree *, defn, defn0);
@@ -165,7 +165,7 @@ static List *forloop(Tree *defn0, Tree *body0,
 		     Binding *binding, int evalflags) {
 	static List MULTIPLE = { NULL, NULL };
 
-	Ref(List *, result, true);
+	Ref(List *, result, ltrue);
 	Ref(Binding *, outer, binding);
 	Ref(Binding *, looping, NULL);
 	Ref(Tree *, body, body0);
@@ -247,7 +247,7 @@ static List *matchpattern(Tree *subjectform0, Tree *patternform0,
 	pattern = glom2(patternform, bp, &quote);
 	result = listmatch(subject, pattern, quote);
 	RefEnd4(quote, subject, patternform, bp);
-	return result ? true : false;
+	return result ? ltrue : lfalse;
 }
 
 /* extractpattern -- Like matchpattern, but returns matches */
@@ -274,7 +274,7 @@ extern List *walk(Tree *tree0, Binding *binding0, int flags) {
 
 top:
 	if (tree == NULL)
-		return true;
+		return ltrue;
 
 	switch (tree->kind) {
 
@@ -373,7 +373,7 @@ restart:
 	if (list == NULL) {
 		RefPop3(funcname, binding, list);
 		--evaldepth;
-		return true;
+		return ltrue;
 	}
 	assert(list->term != NULL);
 	did_assign = FALSE;
@@ -417,10 +417,20 @@ restart:
 			EndExceptionHandler
 			break;
 		    case nList: {
-			list = glom(cp->tree, cp->binding, TRUE);
-			list = append(list, list->next);
+			Ref(List *, lp, glom(cp->tree, cp->binding, TRUE));
+			list = append(lp, list->next);
+			RefEnd(lp);
 			goto restart;
 		    }
+		    case nConcat: {
+			Ref(Tree *, t, cp->tree);
+			while (t->kind == nConcat)
+				t = t->u[0].p;
+			if (t->kind == nPrim)
+				fail("es:eval", "invalid primitive name: %T", cp->tree);
+			RefEnd(t);
+		    }
+		    FALLTHROUGH;
 		    default:
 			panic("eval: bad closure node kind %d",
 			      cp->tree->kind);

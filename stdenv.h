@@ -6,17 +6,6 @@
 #endif
 
 /*
- * type qualifiers
- */
-
-#if !USE_VOLATILE
-# ifndef volatile
-#  define volatile
-# endif
-#endif
-
-
-/*
  * protect the rest of es source from the dance of the includes
  */
 
@@ -84,17 +73,35 @@ extern Dirent *readdir(DIR *);
 #endif
 
 /* stdlib */
+#ifndef Noreturn
 #if __GNUC__
-typedef volatile void noreturn;
+#define Noreturn __attribute__((__noreturn__)) void
 #else
-typedef void noreturn;
+#define Noreturn void
+#endif
+#endif
+
+#ifndef UNUSED
+#if __GNUC__
+#define UNUSED __attribute__((__unused__))
+#else
+#define UNUSED
+#endif
+#endif
+
+#ifndef FALLTHROUGH
+#if __GNUC__
+#define FALLTHROUGH __attribute__((__fallthrough__))
+#else
+#define FALLTHROUGH (void)0
+#endif
 #endif
 
 #if STDC_HEADERS
 # include <stdlib.h>
 #else
-extern noreturn exit(int);
-extern noreturn abort(void);
+extern Noreturn exit(int);
+extern Noreturn abort(void);
 extern long strtol(const char *num, char **end, int base);
 extern void *qsort(
 	void *base, size_t nmemb, size_t size,
@@ -102,7 +109,7 @@ extern void *qsort(
 );
 #endif /* !STDC_HEADERS */
 
-#if READLINE
+#if HAVE_READLINE
 # include <stdio.h>
 #endif
 
@@ -147,13 +154,8 @@ extern void *qsort(
 #define	memzero(dest, count)	memset(dest, 0, count)
 #define	atoi(s)			strtol(s, NULL, 0)
 
-#if SOLARIS
-#define	STMT(stmt)		if (1) { stmt; } else
-#define	NOP			if (1) ; else
-#else
 #define	STMT(stmt)		do { stmt; } while (0)
 #define	NOP			do {} while (0)
-#endif
 
 #if REISER_CPP
 #define CONCAT(a,b)	a/**/b
@@ -247,7 +249,6 @@ extern int getpagesize(void);
 extern int getpid(void);
 extern int pipe(int p[2]);
 extern int read(int fd, void *buf, size_t n);
-extern int setpgrp(int pid, int pgrp);
 extern int umask(int mask);
 extern int write(int fd, const void *buf, size_t n);
 
@@ -269,23 +270,6 @@ extern int getgroups(int, int *);
  * hacks to present a standard system call interface
  */
 
-#ifdef HAVE_SETSID
-# define setpgrp(a, b)	setsid()
-#else
-#if defined(linux) || defined(__GLIBC__)
-#include "unistd.h"
-#define setpgrp(a, b)	setpgid(a, b)
-#endif
-
-#if sgi
-#define	setpgrp(a, b)	BSDsetpgrp(a,b)
-#endif
-
-#if HPUX
-#define	setpgrp(a, b)	setpgrp()
-#endif
-#endif
-
 #if !HAVE_LSTAT
 #define	lstat	stat
 #endif
@@ -294,17 +278,32 @@ extern int getgroups(int, int *);
 
 /*
  * macros for picking apart statuses
- *	we should be able to use the W* forms from <sys/wait.h> but on
- *	some machines they take a union wait (what a bad idea!) and on
- *	others an integer.  we just renamed the first letter to s and
- *	let things be.  on some systems these could just be defined in
- *	terms of the W* forms.
+ *	in general systems should have these macros defined, so this
+ *	should all be a bunch of no-ops.  the only interesting case is
+ *	WCOREDUMP, which was only very recently standardized and is
+ *	still spelled by some systems as WIFCORED.
  */
 
-#define	SIFSIGNALED(status)	(((status) & 0xff) != 0)
-#define	STERMSIG(status)	((status) & 0x7f)
-#define	SCOREDUMP(status)	((status) & 0x80)
-#define	SIFEXITED(status)	(!SIFSIGNALED(status))
-#define	SEXITSTATUS(status)	(((status) >> 8) & 0xff)
+#ifndef 	WIFSIGNALED
+# define	WIFSIGNALED(status)	(((status) & 0xff) != 0)
+#endif
 
+#ifndef 	WTERMSIG
+# define	WTERMSIG(status)	((status) & 0x7f)
+#endif
 
+#ifndef 	WCOREDUMP
+# ifdef 	WIFCORED
+#  define	WCOREDUMP(status)	(WIFCORED(status))
+# else
+#  define	WCOREDUMP(status)	((status) & 0x80)
+# endif
+#endif
+
+#ifndef 	WIFEXITED
+# define	WIFEXITED(status)	(!WIFSIGNALED(status))
+#endif
+
+#ifndef 	WEXITSTATUS
+# define	WEXITSTATUS(status)	(((status) >> 8) & 0xff)
+#endif

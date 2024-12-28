@@ -16,13 +16,9 @@ extern void initparse(void) {
 /* treecons -- create new tree list cell */
 extern Tree *treecons(Tree *car, Tree *cdr) {
 	assert(cdr == NULL || cdr->kind == nList);
-	return mk(nList, car, cdr);
-}
-
-/* treecons2 -- create new tree list cell or do nothing if car is NULL */
-extern Tree *treecons2(Tree *car, Tree *cdr) {
-	assert(cdr == NULL || cdr->kind == nList);
-	return car == NULL ? cdr : mk(nList, car, cdr);
+	return (car == NULL) ? cdr
+		: (cdr == NULL && car->kind == nList) ? car
+		: mk(nList, car, cdr);
 }
 
 /* treeappend -- destructive append for tree lists */
@@ -36,11 +32,6 @@ extern Tree *treeappend(Tree *head, Tree *tail) {
 
 /* treeconsend -- destructive add node at end for tree lists */
 extern Tree *treeconsend(Tree *head, Tree *tail) {
-	return treeappend(head, treecons(tail, NULL));
-}
-
-/* treeconsend2 -- destructive add node at end for tree lists or nothing if tail is NULL */
-extern Tree *treeconsend2(Tree *head, Tree *tail) {
 	if (tail == NULL) {
 		assert(head == NULL || head->kind == nList || head->kind == nRedir);
 		return head;
@@ -50,12 +41,10 @@ extern Tree *treeconsend2(Tree *head, Tree *tail) {
 
 /* thunkify -- wrap a tree in thunk braces if it isn't already a thunk */
 extern Tree *thunkify(Tree *tree) {
-	if (tree != NULL && (
-		   (tree->kind == nThunk)
-		|| (tree->kind == nList && tree->CAR->kind == nThunk && tree->CDR == NULL)
-	))
-		return tree;
-	return mk(nThunk, tree);
+	Tree *t;
+	for (t = tree; t != NULL && t->kind == nList && t->CDR == NULL; t = t->CAR)
+		;
+	return (t != NULL && t->kind == nThunk) ? tree : mk(nThunk, tree);
 }
 
 /* firstis -- check if the first word of a literal command matches a known string */
@@ -145,7 +134,7 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
  *	tree and then rewriting the tree to include the appropriate commands
  */
 
-static Tree placeholder = { nRedir };
+static Tree placeholder = { nRedir, {{NULL}} };
 
 extern Tree *redirect(Tree *t) {
 	Tree *r, *p;
@@ -234,6 +223,8 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 
 /* mkmatch -- rewrite match as appropriate if with ~ commands */
 extern Tree *mkmatch(Tree *subj, Tree *cases) {
+	const char *varname = "matchexpr";
+	Tree *sass, *svar, *matches;
 	/*
 	 * Empty match -- with no patterns to match the subject,
 	 * it's like saying {if}, which simply returns true.
@@ -246,16 +237,16 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 	 * repeatedly by assigning it to a temporary variable and using that
 	 * variable as the first argument to '~' .
 	 */
-	const char *varname = "matchexpr";
-	Tree *sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
-	Tree *svar = mk(nVar, mk(nWord, varname));
-	Tree *matches = NULL;
+	sass = treecons(mk(nAssign, mk(nWord, varname), subj), NULL);
+	svar = mk(nVar, mk(nWord, varname));
+	matches = NULL;
 	for (; cases != NULL; cases = cases->CDR) {
+		Tree *match;
 		Tree *pattlist = cases->CAR->CAR;
 		Tree *cmd = cases->CAR->CDR;
 		if (pattlist != NULL && pattlist->kind != nList)
 			pattlist = treecons(pattlist, NULL);
-		Tree *match = treecons(
+		match = treecons(
 			thunkify(mk(nMatch, svar, pattlist)),
 			treecons(cmd, NULL)
 		);
@@ -268,7 +259,8 @@ extern Tree *mkmatch(Tree *subj, Tree *cases) {
 /* firstprepend -- insert a command node before its arg nodes after all redirections */
 extern Tree *firstprepend(Tree *first, Tree *args) {
 	Tree *t, **tp;
-	assert(first != NULL);
+	if (first == NULL)
+		return args;
 	for (t = args, tp = &args; t != NULL && t->kind == nRedir; t = *(tp = &t->CDR))
 		;
 	assert(t == NULL || t->kind == nList);

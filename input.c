@@ -4,7 +4,6 @@
 #include "es.h"
 #include "input.h"
 
-
 /*
  * constants
  */
@@ -27,22 +26,24 @@ Input *input;
 char *prompt, *prompt2;
 
 Boolean disablehistory = FALSE;
+Boolean ignoreeof = FALSE;
 Boolean resetterminal = FALSE;
 static char *history;
 static int historyfd = -1;
 
-#if READLINE
+#if HAVE_READLINE
 #include <readline/readline.h>
-extern void add_history(char *);
-extern int read_history(char *);
-extern void stifle_history(int);
+#include <readline/history.h>
 
-#if ABUSED_GETENV
+Boolean reloadhistory = FALSE;
+#endif
+
+#if LOCAL_GETENV
 static char *stdgetenv(const char *);
 static char *esgetenv(const char *);
 static char *(*realgetenv)(const char *) = stdgetenv;
 #endif
-#endif
+
 
 
 /*
@@ -109,16 +110,50 @@ static void loghistory(const char *cmd, size_t len) {
 	ewrite(historyfd, cmd, len);
 }
 
+#if HAVE_READLINE
+/* Manage maximum in-memory history length.  This has speed & memory
+ * implications to which different users have different tolerances, so let them
+ * pick. */
+extern void setmaxhistorylength(int len) {
+	static int currenthistlen = -1; /* unlimited */
+	if (len != currenthistlen) {
+		switch (len) {
+		case -1:
+			unstifle_history();
+			break;
+		case 0:
+			clear_history();
+			FALLTHROUGH;
+		default:
+			stifle_history(len);
+		}
+		currenthistlen = len;
+	}
+}
+
+static void reload_history(void) {
+	/* Attempt to populate readline history with new history file. */
+	if (history != NULL)
+		read_history(history);
+	using_history();
+
+	reloadhistory = FALSE;
+}
+#endif
+
 /* sethistory -- change the file for the history log */
 extern void sethistory(char *file) {
+#if HAVE_READLINE
+	/* make sure the old file has a chance to get loaded */
+	if (reloadhistory)
+		reload_history();
+#endif
 	if (historyfd != -1) {
 		close(historyfd);
 		historyfd = -1;
 	}
-#if READLINE
-	/* Attempt to populate readline history with new history file. */
-	stifle_history(50000); /* Keep memory usage within sane-ish bounds. */
-	read_history(file);
+#if HAVE_READLINE
+	reloadhistory = TRUE;
 #endif
 	history = file;
 }
@@ -197,32 +232,39 @@ static int eoffill(Input *in) {
 	return EOF;
 }
 
-#if READLINE
+#if HAVE_READLINE
 /* callreadline -- readline wrapper */
-static char *callreadline(char *prompt) {
+static char *callreadline(char *prompt0) {
+	char *volatile prompt = prompt0;
 	char *r;
 	if (prompt == NULL)
 		prompt = ""; /* bug fix for readline 2.0 */
+	if (reloadhistory)
+		reload_history();
 	if (resetterminal) {
 		rl_reset_terminal(NULL);
 		resetterminal = FALSE;
 	}
+	if (RL_ISSTATE(RL_STATE_INITIALIZED))
+		rl_reset_screen_size();
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		r = interrupted ? NULL : readline(prompt);
-	} else
+		if (interrupted)
+			errno = EINTR;
+	} else {
 		r = NULL;
-	slow = FALSE;
-	if (r == NULL)
 		errno = EINTR;
+	}
+	slow = FALSE;
 	SIGCHK();
 	return r;
 }
+#endif
 
-#if ABUSED_GETENV
-
-/* getenv -- fake version of getenv for readline (or other libraries) */
+#if LOCAL_GETENV
+/* esgetenv -- fake version of getenv for readline (or other libraries) */
 static char *esgetenv(const char *name) {
 	List *value = varlookup(name, NULL);
 	if (value == NULL)
@@ -254,10 +296,7 @@ static char *esgetenv(const char *name) {
 	}
 }
 
-static char *
-stdgetenv(name)
-	register const char *name;
-{
+static char *stdgetenv(const char *name) {
 	extern char **environ;
 	register int len;
 	register const char *np;
@@ -275,21 +314,14 @@ stdgetenv(name)
 	return (NULL);
 }
 
-char *
-getenv(char *name)
-{
+char *getenv(const char *name) {
 	return realgetenv(name);
 }
 
-extern void
-initgetenv(void)
-{
+extern void initgetenv(void) {
 	realgetenv = esgetenv;
 }
-
-#endif /* ABUSED_GETENV */
-
-#endif	/* READLINE */
+#endif
 
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
@@ -297,11 +329,14 @@ static int fdfill(Input *in) {
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
 
-#if READLINE
+#if HAVE_READLINE
 	if (in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = callreadline(prompt);
-		if (rlinebuf == NULL)
+		char *rlinebuf = NULL;
+		do {
+			rlinebuf = callreadline(prompt);
+		} while (rlinebuf == NULL && errno == EINTR);
 
+		if (rlinebuf == NULL)
 			nread = 0;
 		else {
 			if (*rlinebuf != '\0')
@@ -324,10 +359,12 @@ static int fdfill(Input *in) {
 	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
-		close(in->fd);
-		in->fd = -1;
-		in->fill = eoffill;
-		in->runflags &= ~run_interactive;
+		if (!ignoreeof) {
+			close(in->fd);
+			in->fd = -1;
+			in->fill = eoffill;
+			in->runflags &= ~run_interactive;
+		}
 		if (nread == -1)
 			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
 		return EOF;
@@ -357,7 +394,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
-#if READLINE
+#if HAVE_READLINE
 	prompt = (pr1 == NULL) ? "" : pr1;
 #else
 	if (pr1 != NULL)
@@ -577,7 +614,7 @@ extern Boolean isinteractive(void) {
 /*
  * readline integration.
  */
-#if READLINE
+#if HAVE_READLINE
 /* quote -- teach readline how to quote a word in es during completion */
 static char *quote(char *text, int type, char *qp) {
 	char *p, *r;
@@ -620,7 +657,7 @@ static List *(*wordslistgen)(char *);
 static char *list_completion_function(const char *text, int state) {
 	static char **matches = NULL;
 	static int matches_idx, matches_len;
-	int rlen;
+	int i, rlen;
 	char *result;
 
 	const int pfx_len = strlen(complprefix);
@@ -639,7 +676,7 @@ static char *list_completion_function(const char *text, int state) {
 
 	rlen = strlen(matches[matches_idx]);
 	result = ealloc(rlen + pfx_len + 1);
-	for (int i = 0; i < pfx_len; i++)
+	for (i = 0; i < pfx_len; i++)
 		result[i] = complprefix[i];
 	strcpy(&result[pfx_len], matches[matches_idx]);
 	result[rlen + pfx_len] = '\0';
@@ -648,7 +685,7 @@ static char *list_completion_function(const char *text, int state) {
 	return result;
 }
 
-char **builtin_completion(const char *text, int start, int end) {
+char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	char **matches = NULL;
 
 	if (*text == '$') {
@@ -671,7 +708,7 @@ char **builtin_completion(const char *text, int start, int end) {
 
 	return matches;
 }
-#endif /* READLINE */
+#endif /* HAVE_READLINE */
 
 
 /*
@@ -694,7 +731,7 @@ extern void initinput(void) {
 	/* call the parser's initialization */
 	initparse();
 
-#if READLINE
+#if HAVE_READLINE
 	rl_readline_name = "es";
 
 	/* these two word_break_characters exclude '&' due to primitive completion */
@@ -705,7 +742,7 @@ extern void initinput(void) {
 
 	rl_attempted_completion_function = builtin_completion;
 
-	rl_filename_quote_characters = " \t\n\\`$><=;|&{()}";
+	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_filename_quoting_function = quote;
 	rl_filename_dequoting_function = unquote;
 #endif

@@ -68,7 +68,7 @@ static void runesrc(void) {
 }
 
 /* usage -- print usage message and die */
-static noreturn usage(void) {
+static Noreturn usage(void) {
 	eprint(
 		"usage: es [-c command] [-silevxnpo] [file [args ...]]\n"
 		"	-c cmd	execute argument\n"
@@ -97,8 +97,9 @@ static noreturn usage(void) {
 
 
 /* main -- initialize, parse command arguments, and start running */
-int main(int argc, char **argv) {
-	int c;
+int main(int argc, char **argv0) {
+	int c, status = 0;
+	char **volatile argv = argv0;
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */
@@ -106,7 +107,7 @@ int main(int argc, char **argv) {
 	volatile Boolean cmd_stdin = FALSE;		/* -s */
 	volatile Boolean loginshell = FALSE;	/* -l or $0[0] == '-' */
 	Boolean keepclosed = FALSE;		/* -o */
-	const char *volatile cmd = NULL;	/* -c */
+	Ref(const char *volatile, cmd, NULL);	/* -c */
 
 	initgc();
 	initconv();
@@ -182,6 +183,7 @@ getopt_done:
 		initpath();
 		initpid();
 		initsignals(runflags & run_interactive, allowquit);
+		initpgrp();
 		hidevariables();
 		initenv(environ, protected);
 	
@@ -194,31 +196,40 @@ getopt_done:
 			argp = argp->next;
 			if ((fd = eopen(file, oOpen)) == -1) {
 				eprint("%s: %s\n", file, esstrerror(errno));
-				return 1;
+				status = 1;
+				goto return_main;
 			}
 			vardef("*", NULL, argp);
 			vardef("0", NULL, mklist(mkstr(file), NULL));
-			return exitstatus(runfd(fd, file, runflags));
+			status = exitstatus(runfd(fd, file, runflags));
+			goto return_main;
 		}
 	
 		vardef("*", NULL, argp);
 		vardef("0", NULL, mklist(mkstr(argv[0]), NULL));
 		if (cmd != NULL)
-			return exitstatus(runstring(cmd, NULL, runflags));
-		return exitstatus(runfd(0, "stdin", runflags));
+			status = exitstatus(runstring(cmd, NULL, runflags));
+		else
+			status = exitstatus(runfd(0, "stdin", runflags));
 
 	CatchException (e)
 
-		if (termeq(e->term, "exit") || termeq(e->term, "false"))
-			return exitstatus(e->next);
-		else if (termeq(e->term, "error"))
+		if (termeq(e->term, "exit") || termeq(e->term, "false")) {
+			status = exitstatus(e->next);
+			goto return_main;
+		} else if (termeq(e->term, "error"))
 			eprint("%L\n",
 			       e->next == NULL ? NULL : e->next->next,
 			       " ");
 		else if (!issilentsignal(e))
 			eprint("uncaught exception: %L\n", e, " ");
-		return 1;
+		status = 1;
 
 	EndExceptionHandler
-	RefEnd2(argp, args);
+	RefEnd3(argp, args, cmd);
+return_main:
+#if JOB_PROTECT
+	tcreturnpgrp();
+#endif
+	return status;
 }

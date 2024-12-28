@@ -27,7 +27,7 @@ static unsigned long strhash2(const char *str1, const char *str2) {
 		} \
 	}
 
-	int c;
+	unsigned int c;
 	unsigned long n = 0;
 	unsigned char *s = (unsigned char *) str1;
 	assert(str1 != NULL);
@@ -111,6 +111,8 @@ static Assoc *get(Dict *dict, const char *name) {
 	return NULL;
 }
 
+static void recurseput(void *, char *, void *);
+
 static Dict *put(Dict *dict, char *name, void *value) {
 	unsigned long n, mask;
 	Assoc *ap;
@@ -123,7 +125,7 @@ static Dict *put(Dict *dict, char *name, void *value) {
 		Ref(char *, np, name);
 		Ref(void *, vp, value);
 		new = mkdict0(GROW(old->size));
-		dictforall(old, (void (*)(void *, char *, void *)) put, new);
+		dictforall(old, recurseput, new);
 		dict = new;
 		name = np;
 		value = vp;
@@ -142,6 +144,11 @@ static Dict *put(Dict *dict, char *name, void *value) {
 	ap->value = value;
 	return dict;
 }
+
+static void recurseput(void *v1, char *c, void *v2) {
+	put(v1, c, v2);
+}
+
 
 static void rm(Dict *dict, Assoc *ap) {
 	unsigned long n, mask;

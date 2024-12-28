@@ -42,7 +42,7 @@ static Space *new, *old;
 #if GCPROTECT
 static Space *spaces;
 #endif
-static Root *globalrootlist;
+static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
 
 
@@ -88,7 +88,7 @@ static void *take(size_t n) {
 	kern_return_t error = vm_allocate(task_self(), &addr, n, TRUE);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_allocate", error);
-		exit(1);
+		esexit(1);
 	}
 	memset((void *) addr, 0xC9, n);
 	return (void *) addr;
@@ -99,7 +99,7 @@ static void release(void *p, size_t n) {
 	kern_return_t error = vm_deallocate(task_self(), (vm_address_t) p, n);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_deallocate", error);
-		exit(1);
+		esexit(1);
 	}
 }
 
@@ -108,7 +108,7 @@ static void invalidate(void *p, size_t n) {
 	kern_return_t error = vm_protect(task_self(), (vm_address_t) p, n, FALSE, 0);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_protect 0", error);
-		exit(1);
+		esexit(1);
 	}
 }
 
@@ -118,7 +118,7 @@ static void revalidate(void *p, size_t n) {
 		vm_protect(task_self(), (vm_address_t) p, n, FALSE, VM_PROT_READ|VM_PROT_WRITE);
 	if (error != KERN_SUCCESS) {
 		mach_error("vm_protect VM_PROT_READ|VM_PROT_WRITE", error);
-		exit(1);
+		esexit(1);
 	}
 	memset(p, 0x4F, n);
 }
@@ -300,6 +300,24 @@ extern void globalroot(void *addr) {
 	globalrootlist = root;
 }
 
+/* exceptionroot -- add an exception to the list of rooted exceptions */
+extern void exceptionroot(Root *root, List **e) {
+	Root *r;
+#if ASSERTIONS
+	for (r = exceptionrootlist; r != NULL; r = r->next)
+		assert(r->p != (void **)e);
+#endif
+	root->p = (void **)e;
+	root->next = exceptionrootlist;
+	exceptionrootlist = root;
+}
+
+/* exceptionunroot -- remove an exception from the list of rooted exceptions */
+extern void exceptionunroot(void) {
+	assert(exceptionrootlist != NULL);
+	exceptionrootlist = exceptionrootlist->next;
+}
+
 /* not portable to word addressed machines */
 #define	TAG(p)		(((Tag **) p)[-1])
 #define	FORWARDED(tagp)	(((size_t) tagp) & 1)
@@ -443,6 +461,8 @@ extern void gc(void) {
 		scanroots(rootlist);
 		VERBOSE(("GC scanning global root list\n"));
 		scanroots(globalrootlist);
+		VERBOSE(("GC scanning exception root list\n"));
+		scanroots(exceptionrootlist);
 		VERBOSE(("GC scanning new space\n"));
 		scanspace();
 		VERBOSE(("GC collection done\n\n"));

@@ -41,7 +41,7 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 
 #define	REDIR(name)	static List *CONCAT(redir_,name)(int *srcfdp, List *list)
 
-static noreturn argcount(const char *s) {
+static Noreturn argcount(const char *s) {
 	fail(caller, "argument count: usage: %s", s);
 }
 
@@ -170,7 +170,7 @@ REDIR(here) {
 	if ((pid = pipefork(p, NULL)) == 0) {		/* child that writes to pipe */
 		close(p[0]);
 		fprint(p[1], "%L", doc, "");
-		exit(0);
+		esexit(0);
 	}
 
 	close(p[1]);
@@ -204,7 +204,7 @@ PRIM(pipe) {
 
 	for (;; list = list->next) {
 		int p[2], pid;
-		
+
 		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork(p, &inpipe);
 
 		if (pid == 0) {		/* child */
@@ -219,10 +219,11 @@ PRIM(pipe) {
 				mvfd(p[1], fd);
 				close(p[0]);
 			}
-			exit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
+			esexit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
 		}
 		pids[n++] = pid;
-		close(inpipe);
+		if (inpipe != -1)
+			close(inpipe);
 		if (list->next == NULL)
 			break;
 		list = list->next->next;
@@ -240,7 +241,7 @@ PRIM(pipe) {
 		result = mklist(t, result);
 	} while (0 < n);
 	if (evalflags & eval_inchild)
-		exit(exitstatus(result));
+		esexit(exitstatus(result));
 	RefReturn(result);
 }
 
@@ -262,7 +263,7 @@ PRIM(readfrom) {
 	if ((pid = pipefork(p, NULL)) == 0) {
 		close(p[0]);
 		mvfd(p[1], 1);
-		exit(exitstatus(eval1(input, evalflags &~ eval_inchild)));
+		esexit(exitstatus(eval1(input, evalflags &~ eval_inchild)));
 	}
 
 	close(p[1]);
@@ -302,7 +303,7 @@ PRIM(writeto) {
 	if ((pid = pipefork(p, NULL)) == 0) {
 		close(p[1]);
 		mvfd(p[0], 0);
-		exit(exitstatus(eval1(output, evalflags &~ eval_inchild)));
+		esexit(exitstatus(eval1(output, evalflags &~ eval_inchild)));
 	}
 
 	close(p[0]);
@@ -360,7 +361,7 @@ PRIM(backquote) {
 	if ((pid = pipefork(p, NULL)) == 0) {
 		mvfd(p[1], 1);
 		close(p[0]);
-		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	}
 
 	close(p[1]);
@@ -406,7 +407,10 @@ PRIM(read) {
 	buffer = openbuffer(0);
 
 	while ((c = read1(fd)) != EOF && c != '\n')
-		buffer = bufputc(buffer, c);
+		if (c == '\0')
+			fail("$&read", "%%read: null character encountered");
+		else
+			buffer = bufputc(buffer, c);
 
 	if (c == EOF && buffer->current == 0) {
 		freebuffer(buffer);

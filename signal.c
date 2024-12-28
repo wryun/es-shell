@@ -73,7 +73,7 @@ static void catcher(int sig) {
 #endif
 	if (hasforked)
 		/* exit unconditionally on a signal in a child process */
-		exit(1);
+		esexit(1);
 	if (caught[sig] == 0) {
 		caught[sig] = TRUE;
 		++sigcount;
@@ -123,6 +123,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 				eprint("$&setsignals: special handler not defined for %s\n", signame(sig));
 				return old;
 			}
+			FALLTHROUGH;
 		case sig_catch:
 		case sig_noop:
 			if (setsignal(sig, catcher) == SIG_ERR) {
@@ -278,7 +279,7 @@ extern void sigchk(void) {
 		return;
 	if (hasforked)
 		/* exit unconditionally on a signal in a child process */
-		exit(1);
+		esexit(1);
 
 	for (sig = 0;; sig++) {
 		if (caught[sig] != 0) {
@@ -300,7 +301,6 @@ extern void sigchk(void) {
 		while (gcisblocked())
 			gcenable();
 		throw(e);
-		NOTREACHED;
 	case sig_special:
 		assert(sig == SIGINT);
 		/* this is the newline you see when you hit ^C while typing a command */
@@ -310,8 +310,6 @@ extern void sigchk(void) {
 		while (gcisblocked())
 			gcenable();
 		throw(e);
-		NOTREACHED;
-		break;
 	case sig_noop:
 		break;
 	default:

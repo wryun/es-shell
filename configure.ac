@@ -1,8 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ([2.64])
 AC_INIT
 AC_CONFIG_SRCDIR([access.c])
-AC_CONFIG_HEADER(config.h)
-
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl AC_CMDSTDOUT_CPP(variable, command, headers)
 AC_DEFUN([AC_CMDSTDOUT_CPP],
@@ -15,30 +16,14 @@ $1=`(eval "$ac_cpp conftest.$ac_ext") 2>&AS_MESSAGE_LOG_FD | $2`
 rm -f conftest*
 ])
 
-
-use_readline=yes
-use_editline=no
-
-AC_ARG_WITH(readline,
---with-readline		Use GNU Readline, use_readline=yes)
-
 AC_CANONICAL_HOST
-
-case "$host" in
-	*sun5* | *solaris2*)
-		AC_DEFINE(SOLARIS, [], [Are we Solaris?])
-	;;
-esac
-
-dnl saved_CFLAGS="$CFLAGS"
 
 dnl Checks for programs.
 AC_PROG_CC
+AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
 AC_PROG_YACC
-
-dnl CFLAGS="$CFLAGS $saved_CFLAGS"
 
 dnl ----------------------------
 dnl CHECK FOR /dev/fd FILESYSTEM
@@ -60,20 +45,7 @@ dnl Checks for libraries.
 
 AC_CHECK_LIB(sun, getpwuid)
 
-if test "$use_readline" = yes || test "$use_editline" = yes
-then
-	AC_CHECK_LIB(terminfo, main)
-	AC_CHECK_LIB(termcap, main)
-	if test "$use_readline" = yes
-	then
-		AC_CHECK_LIB(readline, readline)
-	elif test "$use_editline" = yes
-	then
-		AC_CHECK_LIB(edit, readline)
-	fi
-
-fi
-
+ES_WITH_READLINE
 
 dnl Checks for header files.
 AC_HEADER_DIRENT
@@ -89,29 +61,36 @@ AC_TYPE_SIZE_T
 
 dnl Checks for library functions.
 AC_TYPE_GETGROUPS
-AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MMAP
 
-AC_FUNC_WAIT3
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
-sysconf setsid sigsetjmp)
+sysconf sigsetjmp getrusage)
 
-AC_CACHE_CHECK(for an abused getenv, es_cv_abused_getenv,
+AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
+[if test "$ac_cv_header_stdlib_h" = no || test "$ac_cv_header_stdc" = no; then
+	es_cv_local_getenv=yes
+fi
+if test "$ac_cv_header_stdlib_h" = yes || test "$ac_cv_header_stdc" = yes; then
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
-changequote(,)
-char *foo = 0;
-char *foov[] = { "-a", "-bfoo", "bar" };
-int fooc = (sizeof(foov) / sizeof(foov[0]));
+#include <stdlib.h>
+static char *sentinel = "a value";
+static int   in_main  = 0;
 
-int getenv() { return *foo; }
-int main() { while (-1 != getopt(fooc, foov, "ab:")); exit(0); }
-changequote([,])
-]])],[es_cv_abused_getenv=no],[es_cv_abused_getenv=yes
-AC_DEFINE([ABUSED_GETENV], [1], [Is getenv called by crt*.o or getopt?])],[]))
+char *getenv(const char *name) { return in_main ? sentinel : NULL; }
 
-if test "$es_cv_abused_getenv" = yes
+int main(int argc, char **argv) {
+	char *v;
+	in_main = 1;
+	v = getenv("key");
+	return (v == sentinel) ? 0 : 1;
+}
+]])],[es_cv_local_getenv=yes],[es_cv_local_getenv=no])
+fi
+])
+
+if test "$es_cv_local_getenv" = yes
 then
-	rm -f core conftest.core
+	AC_DEFINE(LOCAL_GETENV, [1], [Can getenv() be defined locally?])
 fi
 
 dnl Check to see if you can assign to a va_list
@@ -138,7 +117,7 @@ AC_CACHE_CHECK(for files to extract signal information from,
 es_cv_sigfiles,
 AC_CMDSTDOUT_CPP(es_cv_sigfiles,
 [changequote(,)
-egrep '^#[ 	]+1[	 ]+' | sed 's/.*"\(.*\)".*/\1/' |sort -u |  
+grep -E '^#[ 	]+1[	 ]+' | sed 's/.*"\(.*\)".*/\1/' |sort -u |  
 grep '^/' |tr '\012' ' ' 
 changequote([,])],
 [#include <signal.h>], /usr/include/signal.h))
