@@ -84,10 +84,18 @@ top:
 		tailcall(n->u[1].p, TRUE);
 
 	case nMatch:
+		if (n->u[1].p == NULL) {
+			fmtprint(f, "~ %#T", n->u[0].p);
+			return FALSE;
+		}
 		fmtprint(f, "~ %#T ", n->u[0].p);
 		tailcall(n->u[1].p, FALSE);
 
 	case nExtract:
+		if (n->u[1].p == NULL) {
+			fmtprint(f, "~~ %#T", n->u[0].p);
+			return FALSE;
+		}
 		fmtprint(f, "~~ %#T ", n->u[0].p);
 		tailcall(n->u[1].p, FALSE);
 
@@ -129,7 +137,9 @@ top:
 	case nVar:
 		fmtputc(f, '$');
 		n = n->u[0].p;
-		if (n == NULL || n->kind == nWord || n->kind == nQword)
+		if (n == NULL || n->kind == nList)
+			tailcall(n, TRUE);
+		else if (n->kind == nWord || n->kind == nQword)
 			goto top;
 		fmtprint(f, "(%#T)", n);
 		return FALSE;
@@ -137,7 +147,7 @@ top:
 	case nLambda:
 		fmtprint(f, "@ ");
 		if (n->u[0].p == NULL)
-			fmtprint(f, "* ");
+			fmtprint(f, "*");
 		else
 			fmtprint(f, "%T", n->u[0].p);
 		fmtprint(f, "{%T}", n->u[1].p);
