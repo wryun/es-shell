@@ -63,7 +63,9 @@ static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space
 #endif
 
 #if GCPROTECT
+#if HAVE_MMAP
 #include <sys/mman.h>
+#endif
 
 static int pagesize;
 #define	PAGEROUND(n)	((n) + pagesize - 1) &~ (pagesize - 1)
