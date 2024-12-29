@@ -251,8 +251,8 @@ extern void globalroot(void *addr) {
 
 /* exceptionroot -- add an exception to the list of rooted exceptions */
 extern void exceptionroot(Root *root, List **e) {
-	Root *r;
 #if ASSERTIONS
+	Root *r;
 	for (r = exceptionrootlist; r != NULL; r = r->next)
 		assert(r->p != (void **)e);
 #endif

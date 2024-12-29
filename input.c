@@ -227,7 +227,7 @@ static int getverbose(Input *in) {
 }
 
 /* eoffill -- report eof when called to fill input buffer */
-static int eoffill(Input *in) {
+static int eoffill(Input UNUSED *in) {
 	assert(in->fd == -1);
 	return EOF;
 }
