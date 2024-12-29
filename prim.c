@@ -6,11 +6,11 @@
 static Dict *prims;
 
 extern List *prim(char *s, List *list, Binding *binding, int evalflags) {
-	List *(*p)(List *, Binding *, int);
-	p = (List *(*)(List *, Binding *, int)) dictget(prims, s);
+	Prim *p;
+	p = (Prim *) dictget(prims, s);
 	if (p == NULL)
 		fail("es:prim", "unknown primitive: %s", s);
-	return (*p)(list, binding, evalflags);
+	return (p->prim)(list, binding, evalflags);
 }
 
 static char *list_prefix;

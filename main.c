@@ -82,6 +82,8 @@ static Noreturn usage(void) {
 		"	-p	don't load functions from the environment\n"
 		"	-o	don't open stdin, stdout, and stderr if they were closed\n"
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
+	);
+	eprint(""
 #if GCINFO
 		"	-I	print garbage collector information\n"
 #endif
