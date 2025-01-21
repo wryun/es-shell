@@ -2,13 +2,6 @@
 
 #include "es.h"
 
-/* TODO: the rusage code for the time builtin really needs to be cleaned up */
-
-#if HAVE_GETRUSAGE
-#include <sys/time.h>
-#include <sys/resource.h>
-#endif
-
 Boolean hasforked = FALSE;
 
 typedef struct Proc Proc;
@@ -19,6 +12,12 @@ struct Proc {
 };
 
 static Proc *proclist = NULL;
+
+static int ttyfd = -1;
+static pid_t espgid;
+#if JOB_PROTECT
+static pid_t tcpgid0;
+#endif
 
 /* mkproc -- create a Proc structure */
 extern Proc *mkproc(int pid, Boolean background) {
@@ -43,8 +42,15 @@ extern int efork(Boolean parent, Boolean background) {
 			return pid;
 		}
 		case 0:		/* child */
-			proclist = NULL;
+			while (proclist != NULL) {
+				Proc *p = proclist;
+				proclist = proclist->next;
+				efree(p);
+			}
 			hasforked = TRUE;
+#if JOB_PROTECT
+			tcpgid0 = 0;
+#endif
 			break;
 		case -1:
 			fail("es:efork", "fork: %s", esstrerror(errno));
@@ -56,42 +62,68 @@ extern int efork(Boolean parent, Boolean background) {
 	return 0;
 }
 
+extern pid_t spgrp(pid_t pgid) {
+	pid_t old = getpgrp();
+	setpgid(0, pgid);
+	espgid = pgid;
+	return old;
+}
 
-#if HAVE_GETRUSAGE
-/* This function is provided as timersub(3) on some systems, but it's simple enough
- * to do ourselves. */
-static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
-	res->tv_sec = a->tv_sec - b->tv_sec;
-	res->tv_usec = a->tv_usec - b->tv_usec;
-	if (res->tv_usec < 0) {
-		res->tv_sec -= 1;
-		res->tv_usec += 1000000;
-	}
+static int tcspgrp(pid_t pgid) {
+	int e = 0;
+	Sigeffect tstp, ttin, ttou;
+	if (ttyfd < 0)
+		return ENOTTY;
+	tstp = esignal(SIGTSTP, sig_ignore);
+	ttin = esignal(SIGTTIN, sig_ignore);
+	ttou = esignal(SIGTTOU, sig_ignore);
+	if (tcsetpgrp(ttyfd, pgid) != 0)
+		e = errno;
+	esignal(SIGTSTP, tstp);
+	esignal(SIGTTIN, ttin);
+	esignal(SIGTTOU, ttou);
+	return e;
+}
+
+extern int tctakepgrp(void) {
+	pid_t tcpgid = 0;
+	if (ttyfd < 0)
+		return ENOTTY;
+	tcpgid = tcgetpgrp(ttyfd);
+	if (espgid == 0 || tcpgid == espgid)
+		return 0;
+	return tcspgrp(espgid);
+}
+
+extern void initpgrp(void) {
+	espgid = getpgrp();
+	ttyfd = opentty();
+#if JOB_PROTECT
+	if (ttyfd >= 0)
+		tcpgid0 = tcgetpgrp(ttyfd);
+#endif
+}
+
+#if JOB_PROTECT
+extern void tcreturnpgrp(void) {
+	if (tcpgid0 != 0 && ttyfd >= 0 && tcpgid0 != tcgetpgrp(ttyfd))
+		tcspgrp(tcpgid0);
+}
+
+extern Noreturn esexit(int code) {
+	tcreturnpgrp();
+	exit(code);
 }
 #endif
 
-/* dowait -- a waitpid wrapper that gets rusage and interfaces with signals */
-static int dowait(int pid, int *statusp, void UNUSED *rusagep) {
+/* dowait -- a waitpid wrapper that interfaces with signals */
+static int dowait(int pid, int *statusp) {
 	int n;
-#if HAVE_GETRUSAGE
-	static struct rusage ru_saved;
-	struct rusage ru_new;
-#endif
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		n = interrupted ? -2 :
 			waitpid(pid, statusp, 0);
-#if HAVE_GETRUSAGE
-		if (rusagep != NULL) {
-			struct rusage *rusage = (struct rusage *)rusagep;
-			if (getrusage(RUSAGE_CHILDREN, &ru_new) == -1)
-				fail("es:ewait", "getrusage: %s", esstrerror(errno));
-			timesub(&ru_new.ru_utime, &ru_saved.ru_utime, &rusage->ru_utime);
-			timesub(&ru_new.ru_stime, &ru_saved.ru_stime, &rusage->ru_stime);
-			ru_saved = ru_new;
-		}
-#endif
 	} else
 		n = -2;
 	slow = FALSE;
@@ -119,10 +151,10 @@ static Proc *reap(int pid) {
 }
 
 /* ewait -- wait for a specific process to die, or any process if pid == -1 */
-extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
+extern int ewait(int pidarg, Boolean interruptible) {
 	int deadpid, status;
 	Proc *proc;
-	while ((deadpid = dowait(pidarg, &status, rusage)) == -1) {
+	while ((deadpid = dowait(pidarg, &status)) == -1) {
 		if (errno == ECHILD && pidarg > 0)
 			fail("es:ewait", "wait: %d is not a child of this shell", pidarg);
 		else if (errno != EINTR)
@@ -131,6 +163,9 @@ extern int ewait(int pidarg, Boolean interruptible, void *rusage) {
 			SIGCHK();
 	}
 	proc = reap(deadpid);
+#if JOB_PROTECT
+	tctakepgrp();
+#endif
 	if (proc->background)
 		printstatus(proc->pid, status);
 	efree(proc);
@@ -165,7 +200,7 @@ PRIM(wait) {
 		fail("$&wait", "usage: wait [pid]");
 		NOTREACHED;
 	}
-	return mklist(mkstr(mkstatus(ewait(pid, TRUE, NULL))), NULL);
+	return mklist(mkstr(mkstatus(ewait(pid, TRUE))), NULL);
 }
 
 extern Dict *initprims_proc(Dict *primdict) {

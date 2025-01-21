@@ -249,7 +249,6 @@ extern int getpagesize(void);
 extern int getpid(void);
 extern int pipe(int p[2]);
 extern int read(int fd, void *buf, size_t n);
-extern int setpgrp(int pid, int pgrp);
 extern int umask(int mask);
 extern int write(int fd, const void *buf, size_t n);
 
@@ -270,23 +269,6 @@ extern int getgroups(int, int *);
 /*
  * hacks to present a standard system call interface
  */
-
-#ifdef HAVE_SETSID
-# define setpgrp(a, b)	setsid()
-#else
-#if defined(linux) || defined(__GLIBC__)
-#include "unistd.h"
-#define setpgrp(a, b)	setpgid(a, b)
-#endif
-
-#if sgi
-#define	setpgrp(a, b)	BSDsetpgrp(a,b)
-#endif
-
-#if HPUX
-#define	setpgrp(a, b)	setpgrp()
-#endif
-#endif
 
 #if !HAVE_LSTAT
 #define	lstat	stat

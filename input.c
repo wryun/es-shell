@@ -30,13 +30,14 @@ Boolean resetterminal = FALSE;
 
 #if HAVE_READLINE
 #include <readline/readline.h>
+#endif
 
-#if ABUSED_GETENV
+#if LOCAL_GETENV
 static char *stdgetenv(const char *);
 static char *esgetenv(const char *);
 static char *(*realgetenv)(const char *) = stdgetenv;
 #endif
-#endif
+
 
 
 /*
@@ -155,6 +156,8 @@ static char *callreadline(char *prompt0) {
 		rl_reset_terminal(NULL);
 		resetterminal = FALSE;
 	}
+	if (RL_ISSTATE(RL_STATE_INITIALIZED))
+		rl_reset_screen_size();
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
@@ -169,10 +172,10 @@ static char *callreadline(char *prompt0) {
 	SIGCHK();
 	return r;
 }
+#endif
 
-#if ABUSED_GETENV
-
-/* getenv -- fake version of getenv for readline (or other libraries) */
+#if LOCAL_GETENV
+/* esgetenv -- fake version of getenv for readline (or other libraries) */
 static char *esgetenv(const char *name) {
 	List *value = varlookup(name, NULL);
 	if (value == NULL)
@@ -204,9 +207,7 @@ static char *esgetenv(const char *name) {
 	}
 }
 
-static char *
-stdgetenv(const char *name)
-{
+static char *stdgetenv(const char *name) {
 	extern char **environ;
 	register int len;
 	register const char *np;
@@ -224,21 +225,14 @@ stdgetenv(const char *name)
 	return (NULL);
 }
 
-char *
-getenv(const char *name)
-{
+char *getenv(const char *name) {
 	return realgetenv(name);
 }
 
-extern void
-initgetenv(void)
-{
+extern void initgetenv(void) {
 	realgetenv = esgetenv;
 }
-
-#endif /* ABUSED_GETENV */
-
-#endif	/* HAVE_READLINE */
+#endif
 
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
