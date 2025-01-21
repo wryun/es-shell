@@ -148,70 +148,50 @@ PRIM(var) {
 	return list;
 }
 
-PRIM(parse) {
-	volatile Boolean hist = FALSE;
-	Tree *tree = NULL;
+static void loginput(char *input) {
+	char *c;
+	List *fn = varlookup("fn-%write-history", NULL);
+	if (!isinteractive() || !isfromfd() || fn == NULL)
+		return;
+	for (c = input;; c++)
+		switch (*c) {
+		case '#': case '\n': return;
+		case ' ': case '\t': break;
+		default: goto writeit;
+		}
+writeit:
+	Ref(List *, list, append(fn, mklist(mkstr(input), NULL)));
+	eval(list, NULL, 0);
+	RefEnd(list);
+}
 
-	Ref(List *, result, NULL);
+PRIM(parse) {
+	List *result;
+	Tree *tree;
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
 	if (lp != NULL) {
-		char *first = getstr(lp->term);
-		if (streq(first, "--")) {
-			first = NULL;
-			lp = lp->next;
-		} else if (streq(first, "-i")) {
-			first = NULL;
-			hist = TRUE;
-			lp = lp->next;
-		}
-		prompt1 = (first != NULL)
-				? first
-				: (lp != NULL) ? getstr(lp->term) : NULL;
-		if (lp != NULL && (lp = lp->next) != NULL)
+		prompt1 = getstr(lp->term);
+		if ((lp = lp->next) != NULL)
 			prompt2 = getstr(lp->term);
 	}
 	RefEnd(lp);
-	if (hist)
-		newhistbuffer();
-
+	newhistbuffer();
 	ExceptionHandler
-
-		tree = parse(hist, prompt1, prompt2);
-
+		tree = parse(prompt1, prompt2);
 	CatchException (e)
-
-		char *h;
-
-		if (!hist)
-			throw(e);
-
-		h = dumphistbuffer();
-
-		if (e != NULL && e->next != NULL) {
-			gcdisable();
-			e = mklist(e->term,
-				mklist(e->next->term,
-					mklist(mkstr(h),
-						e->next->next)));
-			gcenable();
-		}
-
+		loginput(dumphistbuffer());
 		throw(e);
-
 	EndExceptionHandler
 
-	gcdisable();
-	if (tree != NULL)
-		result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
-
-	if (hist)
-		result = mklist(mkstr(dumphistbuffer()), result);
-	gcenable();
-
+	loginput(dumphistbuffer());
+	result = (tree == NULL)
+		   ? NULL
+		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
+			    NULL);
 	RefEnd2(prompt2, prompt1);
-	RefReturn(result);
+	return result;
 }
 
 PRIM(exitonfalse) {

@@ -626,52 +626,17 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	result gets set to zero when it should not be.
 
 fn-%is-interactive	= $&isinteractive
-fn-%parse		= $&parse --
+fn-%parse		= $&parse
+fn-%batch-loop		= $&batchloop
 
-fn %batch-loop {local (fn-%parse = $&parse --) $&batchloop $*}
-
-
-#	If run with the -i flag as the first argument, then the $&parse
-#	primitive includes its input in its output.  Upon normal return, the
-#	input is made the first element of the return value, while upon any
-#	exception, instead of the typical (e type msg), $&parse throws an
-#	exception of the form (e type input msg).  (To avoid ambiguity,
-#	exceptions like eof, which do not specify a type, do not include their
-#	input either.)
-#
-#	In general it is expected that any caller of $&parse -i will "consume"
-#	these extra values itself and present the "normal" $&parse output, as is
-#	done in %interactive-parse here.
-
-fn %interactive-parse {
-	catch @ e type input msg {
-		if {!~ $#fn-%write-history 0} {
-			%write-history $input
-		}
-		throw $e $type $msg
-	} {
-		let ((line code) = <={$&parse -i $*}) {
-			if {!~ $#fn-%write-history 0} {
-				%write-history $line
-			}
-			result $code
-		}
-	}
-}
 
 if {~ <=$&primitives writehistory} {
-	fn %write-history input {
-		if {!~ $input ''} {
-			$&writehistory $input
-		}
-	}
+	fn-%write-history = $&writehistory
 } {
 	fn %write-history input {
 		if {!~ $history ()} {
 			if {access -w $history} {
-				if {!~ $input () && !~ $input ''} {
-					echo $input >> $history
-				}
+				echo $input >> $history
 			} {
 				history = ()
 			}
@@ -680,7 +645,6 @@ if {~ <=$&primitives writehistory} {
 }
 
 fn %interactive-loop {
-	local (fn-%parse = $fn-%interactive-parse)
 	let (result = <=true) {
 		catch @ e type msg {
 			if {~ $e eof} {
