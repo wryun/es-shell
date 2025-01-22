@@ -579,6 +579,28 @@ fn %pathsearch name { access -n $name -1e -xf $path }
 
 if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
+#	The %write-history hook is used in interactive contexts to write
+#	command input to the history file (and/or readline's in-memory
+#	history log).  By default, $&writehistory (which is available if
+#	readline is compiled in) will write to readline's history log if
+#	$max-history-length allows, and will write to the file designated
+#	by $history if that variable is set and the file it points to
+#	exists and is writeable.
+
+if {~ <=$&primitives writehistory} {
+	fn-%write-history = $&writehistory
+} {
+	fn %write-history input {
+		if {!~ $history ()} {
+			if {access -w $history} {
+				echo $input >> $history
+			} {
+				history = ()
+			}
+		}
+	}
+}
+
 
 #
 # Read-eval-print loops
@@ -625,24 +647,9 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%is-interactive	= $&isinteractive
 fn-%parse		= $&parse
 fn-%batch-loop		= $&batchloop
-
-
-if {~ <=$&primitives writehistory} {
-	fn-%write-history = $&writehistory
-} {
-	fn %write-history input {
-		if {!~ $history ()} {
-			if {access -w $history} {
-				echo $input >> $history
-			} {
-				history = ()
-			}
-		}
-	}
-}
+fn-%is-interactive	= $&isinteractive
 
 fn %interactive-loop {
 	let (result = <=true) {
