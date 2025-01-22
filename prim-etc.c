@@ -160,7 +160,9 @@ static void loginput(char *input) {
 		default: goto writeit;
 		}
 writeit:
+	gcdisable();
 	Ref(List *, list, append(fn, mklist(mkstr(input), NULL)));
+	gcenable();
 	eval(list, NULL, 0);
 	RefEnd(list);
 }
