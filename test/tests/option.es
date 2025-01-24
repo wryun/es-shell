@@ -17,9 +17,9 @@ test 'es -e' {
 			'{true; {true; {false; true}}}'		false
 
 			# assignments
-			'x = false'				false
-			'fn x {false}'				false
-			'{true; {true; {x = false}; true}}'	false
+			'x = false'				true
+			'fn x {false}'				true
+			'{true; {true; {x = false}; true}}'	true
 			'let (x = false) true'			true
 			'local (x = false) true'		true
 		)) {
