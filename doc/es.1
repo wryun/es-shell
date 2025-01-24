@@ -2690,8 +2690,8 @@ apids	here	read
 close	home	run
 count	newfd	seq
 dup	openfile	split
-flatten	parse	var
-fsplit	pipe	whatis
+flatten	var	fsplit
+pipe	whatis
 .ft R
 .De
 .PP
@@ -2707,12 +2707,19 @@ batchloop	exitonfalse	isinteractive
 .De
 .PP
 The
+.Cr parse
+primitive is used to implement the
+.Cr %parse
+hook function.
+.PP
+The
 .Cr background
 primitive is used to implement the
 .Cr %background
 hook function, but does not print the process ID of the
 background process or set
 .Cr $apid .
+.PP
 The
 .Cr backquote
 primitive is used to implement the
@@ -2726,7 +2733,7 @@ The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-sethistory	setnoexport	setsignals
+setnoexport	setsignals
 .ft R
 .De
 .PP
@@ -2745,9 +2752,12 @@ writeto	%writeto
 .ft R
 .De
 .PP
-The primitive
-.Cr resetterminal
-is if
+The primitives
+.Cr resetterminal ,
+.Cr sethistory ,
+and
+.Cr writehistory
+are if
 .I es
 is compiled with support for the
 .I readline
@@ -2758,7 +2768,20 @@ and
 .Cr TERMCAP
 variables to notify the line editing packages that the terminal
 configuration has changed.
-Similarly,
+.Cr sethistory
+is used in the
+.Cr set-history
+settor function to signal to line editing packages which history file is
+being used.
+.Cr writehistory
+is used in the
+.Cr %write-history
+function to log a new line to the line editing packages' internal
+command log, and write to the
+.Cr history
+file if that variable is set via the
+.Cr sethistory
+primitive.
 .Cr setmaxhistorylength
 is used as the settor function for the
 .Cr max-history-length
