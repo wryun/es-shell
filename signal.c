@@ -13,6 +13,7 @@ Atomic interrupted = FALSE;
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
+static Sighandler handler_in[NSIG];
 
 #if HAVE_SIGACTION
 #ifndef	SA_NOCLDSTOP
@@ -132,7 +133,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 			}
 			break;
 		case sig_default:
-			setsignal(sig, SIG_DFL);
+			setsignal(sig, (handler_in[sig] == NULL ? SIG_DFL : handler_in[sig]));
 			break;
 		default:
 			NOTREACHED;
@@ -185,11 +186,17 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 #endif /* !HAVE_SIGACTION */
 		else if (h == SIG_DFL || h == SIG_ERR)
 			sigeffect[sig] = sig_default;
-		else
+		else {
+#if TRUST_INCOMING_SIGNAL_HANDLERS
+			sigeffect[sig] = sig_default;
+			handler_in[sig] = h;
+#else
 			panic(
 				"initsignals: bad incoming signal value for %s: %x",
 				signame(sig), h
 			);
+#endif
+		}
 	}
 
 	if (interactive || sigeffect[SIGINT] == sig_default)
