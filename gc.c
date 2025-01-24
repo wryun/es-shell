@@ -56,85 +56,24 @@ static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space
 #define	VERBOSE(p)	NOP
 #endif
 
-
-/*
- * GCPROTECT
- *	to use the GCPROTECT option, you must provide the following functions
- *		initmmu
- *		take
- *		release
- *		invalidate
- *		revalidate
- *	for your operating system
- */
+#ifndef	MAP_ANONYMOUS
+#ifdef	MAP_ANON
+#define	MAP_ANONYMOUS	MAP_ANON
+#endif
+#endif
 
 #if GCPROTECT
-#if __MACH__
-
-/* mach versions of mmu operations */
-
-#include <mach.h>
-#include <mach_error.h>
-
-#define	PAGEROUND(n)	((n) + vm_page_size - 1) &~ (vm_page_size - 1)
-
-/* initmmu -- initialization for memory management calls */
-static void initmmu(void) {
-}
-
-/* take -- allocate memory for a space */
-static void *take(size_t n) {
-	vm_address_t addr;
-	kern_return_t error = vm_allocate(task_self(), &addr, n, TRUE);
-	if (error != KERN_SUCCESS) {
-		mach_error("vm_allocate", error);
-		esexit(1);
-	}
-	memset((void *) addr, 0xC9, n);
-	return (void *) addr;
-}
-
-/* release -- deallocate a range of memory */
-static void release(void *p, size_t n) {
-	kern_return_t error = vm_deallocate(task_self(), (vm_address_t) p, n);
-	if (error != KERN_SUCCESS) {
-		mach_error("vm_deallocate", error);
-		esexit(1);
-	}
-}
-
-/* invalidate -- disable access to a range of memory */
-static void invalidate(void *p, size_t n) {
-	kern_return_t error = vm_protect(task_self(), (vm_address_t) p, n, FALSE, 0);
-	if (error != KERN_SUCCESS) {
-		mach_error("vm_protect 0", error);
-		esexit(1);
-	}
-}
-
-/* revalidate -- enable access to a range of memory */
-static void revalidate(void *p, size_t n) {
-	kern_return_t error =
-		vm_protect(task_self(), (vm_address_t) p, n, FALSE, VM_PROT_READ|VM_PROT_WRITE);
-	if (error != KERN_SUCCESS) {
-		mach_error("vm_protect VM_PROT_READ|VM_PROT_WRITE", error);
-		esexit(1);
-	}
-	memset(p, 0x4F, n);
-}
-
-#else /* !__MACH__ */
-
-/* sunos-derived mmap(2) version of mmu operations */
-
+#if HAVE_MMAP
 #include <sys/mman.h>
+#endif
 
 static int pagesize;
 #define	PAGEROUND(n)	((n) + pagesize - 1) &~ (pagesize - 1)
 
 /* take -- allocate memory for a space */
 static void *take(size_t n) {
-	caddr_t addr;
+	void *addr;
+#if HAVE_MMAP
 #ifdef MAP_ANONYMOUS
 	addr = mmap(0, n, PROT_READ|PROT_WRITE,	MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 #else
@@ -143,28 +82,40 @@ static void *take(size_t n) {
 		devzero = eopen("/dev/zero", oOpen);
 	addr = mmap(0, n, PROT_READ|PROT_WRITE, MAP_PRIVATE, devzero, 0);
 #endif
-	if (addr == (caddr_t) -1)
+	if (addr == MAP_FAILED)
 		panic("mmap: %s", esstrerror(errno));
+#else	/* !HAVE_MMAP */
+	addr = ealloc(n);
+#endif
 	memset(addr, 0xA5, n);
 	return addr;
 }
 
 /* release -- deallocate a range of memory */
 static void release(void *p, size_t n) {
+#if HAVE_MMAP
 	if (munmap(p, n) == -1)
 		panic("munmap: %s", esstrerror(errno));
+#else
+	efree(p);
+#endif
 }
 
 /* invalidate -- disable access to a range of memory */
 static void invalidate(void *p, size_t n) {
+	memset(p, 0x5e, n);
+#if HAVE_MMAP && HAVE_MPROTECT
 	if (mprotect(p, n, PROT_NONE) == -1)
 		panic("mprotect(PROT_NONE): %s", esstrerror(errno));
+#endif
 }
 
 /* revalidate -- enable access to a range of memory */
 static void revalidate(void *p, size_t n) {
+#if HAVE_MMAP && HAVE_MPROTECT
 	if (mprotect(p, n, PROT_READ|PROT_WRITE) == -1)
 		panic("mprotect(PROT_READ|PROT_WRITE): %s", esstrerror(errno));
+#endif
 }
 
 /* initmmu -- initialization for memory management calls */
@@ -175,8 +126,6 @@ static void initmmu(void) {
 	pagesize = getpagesize();
 #endif
 }
-
-#endif	/* !__MACH__ */
 #endif	/* GCPROTECT */
 
 
@@ -194,7 +143,7 @@ static Space *mkspace(Space *space, Space *next) {
 		Space *sp;
 		if (space->bot == NULL)
 			sp = NULL;
-		else if (SPACESIZE(space) < minspace)
+		else if ((size_t) SPACESIZE(space) < minspace)
 			sp = space;
 		else {
 			sp = space->next;
@@ -302,8 +251,8 @@ extern void globalroot(void *addr) {
 
 /* exceptionroot -- add an exception to the list of rooted exceptions */
 extern void exceptionroot(Root *root, List **e) {
-	Root *r;
 #if ASSERTIONS
+	Root *r;
 	for (r = exceptionrootlist; r != NULL; r = r->next)
 		assert(r->p != (void **)e);
 #endif

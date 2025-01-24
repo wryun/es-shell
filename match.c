@@ -28,7 +28,7 @@ static int rangematch(const char *p, const char *q, char c) {
 	Boolean neg;
 	Boolean matched = FALSE;
 	Boolean advanceq = (q != QUOTED && q != UNQUOTED);
-#define QX(expr) (advanceq ? (expr) : (void)0)
+#define QX(expr) (advanceq ? (expr) : 0)
 	if (*p == '~' && !ISQUOTED(q, 0)) {
 		p++, QX(q++);
 	    	neg = TRUE;

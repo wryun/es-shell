@@ -114,6 +114,8 @@ static Boolean isexported(const char *name) {
 
 /* setnoexport -- mark a list of variable names not for export */
 extern void setnoexport(List *list) {
+	static char noexportchar = '!';
+
 	isdirty = TRUE;
 	if (list == NULL) {
 		noexport = NULL;
@@ -121,7 +123,7 @@ extern void setnoexport(List *list) {
 	}
 	gcdisable();
 	for (noexport = mkdict(); list != NULL; list = list->next)
-		noexport = dictput(noexport, getstr(list->term), (void *) setnoexport);
+		noexport = dictput(noexport, getstr(list->term), &noexportchar);
 	gcenable();
 }
 

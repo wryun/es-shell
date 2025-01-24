@@ -64,7 +64,7 @@ AC_TYPE_GETGROUPS
 AC_FUNC_MMAP
 
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
-sysconf sigsetjmp getrusage)
+sysconf sigsetjmp getrusage mmap mprotect)
 
 AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
 [if test "$ac_cv_header_stdlib_h" = no || test "$ac_cv_header_stdc" = no; then
