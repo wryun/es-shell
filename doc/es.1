@@ -2559,6 +2559,22 @@ For each named
 returns the pathname, primitive, lambda, or code fragment which
 would be run if the program appeared as the first word of a command.
 .TP
+.Cr "%write-history \fIinput\fP"
+Called at the end of
+.Cr %parse
+to write the
+.I input
+to the file given in
+.Cr $history ,
+if such a file exists and can be written.
+Also appends the
+.I input
+to the in-memory history log if
+.I readline
+support is compiled in.
+(For more on this, see
+.Cr max-history-length .)
+.TP
 .Cr "%writeto \fIvar output cmd\fP"
 Runs
 .I cmd
@@ -2752,43 +2768,37 @@ writeto	%writeto
 .ft R
 .De
 .PP
-The primitives
-.Cr resetterminal ,
-.Cr sethistory ,
-and
-.Cr writehistory
-are if
+The following primitives in particular are included if
 .I es
 is compiled with support for the
 .I readline
-library.
-It is used in the implementation of settor functions of the
+library:
+.ta 2i
+.Ds
+.ft \*(Cf
+resetterminal	sethistory
+setmaxhistorylength	writehistory
+.ft R
+.De
+.PP
+.Cr sethistory
+and
+.Cr setmaxhistorylength
+are used as settor functions for the
+.Cr history
+and
+.Cr max-history-length
+variables.
+.Cr resetterminal
+is used in the settor functions for the
 .Cr TERM
 and
 .Cr TERMCAP
-variables to notify the line editing packages that the terminal
-configuration has changed.
-.Cr sethistory
-is used in the
-.Cr set-history
-settor function to signal to line editing packages which history file is
-being used.
+variables.
 .Cr writehistory
-is used in the
+is used as the initial implementation of the
 .Cr %write-history
-function to log a new line to the line editing packages' internal
-command log, and write to the
-.Cr history
-file if that variable is set via the
-.Cr sethistory
-primitive.
-.Cr setmaxhistorylength
-is used as the settor function for the
-.Cr max-history-length
-variable, which signals to the
-.I readline
-library how much of the history file should be read into the in-memory
-history log.
+function.
 .PP
 Several primitives are not directly associated with other function.
 They are:
