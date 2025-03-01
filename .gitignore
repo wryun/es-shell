@@ -41,6 +41,7 @@ y.*
 initial.c
 sigmsgs.c
 token.h
+version.h
 es
 esdump
 testrun

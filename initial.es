@@ -767,4 +767,5 @@ noexport = noexport pid signals apid bqstatus fn-%dispatch path home matchexpr
 #	is printed in the header comment in initial.c;  nobody really
 #	wants to look at initial.c anyway.
 
-result es initial state built in `/bin/pwd on `/bin/date for <=$&version
+let ((version date) = <=$&version)
+	result es initial state generated from version $version from $date

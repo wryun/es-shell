@@ -66,7 +66,7 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o
 OTHER	= Makefile parse.y mksignal
-GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
+GEN	= esdump y.tab.c y.tab.h y.output token.h version.h sigmsgs.c initial.c
 
 SIGFILES = @SIGFILES@
 
@@ -109,6 +109,9 @@ y.tab.c y.tab.h : parse.y
 token.h : y.tab.h
 	-cmp -s y.tab.h token.h || cp y.tab.h token.h
 
+version.h : mkversion .git/index
+	sh $(srcdir)/mkversion > version.h
+
 initial.c : esdump $(srcdir)/initial.es
 	./esdump < $(srcdir)/initial.es > initial.c
 
@@ -140,7 +143,7 @@ open.o : open.c es.h config.h stdenv.h
 opt.o : opt.c es.h config.h stdenv.h 
 prim.o : prim.c es.h config.h stdenv.h prim.h 
 prim-ctl.o : prim-ctl.c es.h config.h stdenv.h prim.h 
-prim-etc.o : prim-etc.c es.h config.h stdenv.h prim.h 
+prim-etc.o : prim-etc.c es.h config.h stdenv.h prim.h version.h
 prim-io.o : prim-io.c es.h config.h stdenv.h gc.h prim.h 
 prim-sys.o : prim-sys.c es.h config.h stdenv.h prim.h 
 print.o : print.c es.h config.h stdenv.h print.h 
@@ -156,4 +159,4 @@ tree.o : tree.c es.h config.h stdenv.h gc.h
 util.o : util.c es.h config.h stdenv.h 
 var.o : var.c es.h config.h stdenv.h gc.h var.h term.h 
 vec.o : vec.c es.h config.h stdenv.h gc.h 
-version.o : version.c es.h config.h stdenv.h 
+version.o : version.c es.h config.h stdenv.h version.h
