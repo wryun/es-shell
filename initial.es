@@ -82,14 +82,14 @@ fn-%read	= $&read
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.
 
-fn eval { '{' ^ $^* ^ '}' }
+fn-eval = $&noreturn @ { '{' ^ $^* ^ '}' }
 
 #	Through version 0.84 of es, true and false were primitives,
 #	but, as many pointed out, they don't need to be.  These
 #	values are not very clear, but unix demands them.
 
-fn-true		= result 0
-fn-false	= result 1
+fn-true		= { result 0 }
+fn-false	= { result 1 }
 
 #	These functions just generate exceptions for control-flow
 #	constructions.  The for command and the while builtin both
@@ -494,7 +494,7 @@ fn-%pipe	= $&pipe
 if {~ <=$&primitives readfrom} {
 	fn-%readfrom = $&readfrom
 } {
-	fn %readfrom var input cmd {
+	fn-%readfrom = $&noreturn @ var input cmd {
 		local ($var = /tmp/es.$var.$pid) {
 			unwind-protect {
 				$input > $$var
@@ -510,7 +510,7 @@ if {~ <=$&primitives readfrom} {
 if {~ <=$&primitives writeto} {
 	fn-%writeto = $&writeto
 } {
-	fn %writeto var output cmd {
+	fn-%writeto = $&noreturn @ var output cmd {
 		local ($var = /tmp/es.$var.$pid) {
 			unwind-protect {
 				> $$var
@@ -686,11 +686,11 @@ fn %interactive-loop {
 #	function.  (For %eval-noprint, note that an empty list prepended
 #	to a command just causes the command to be executed.)
 
-fn %eval-noprint				# <default>
-fn %eval-print		{ echo $* >[1=2]; $* }	# -x
-fn %noeval-noprint	{ }			# -n
-fn %noeval-print	{ echo $* >[1=2] }	# -n -x
-fn-%exit-on-false = $&exitonfalse		# -e
+fn-%eval-noprint	=					# <default>
+fn-%eval-print		= $&noreturn @ { echo $* >[1=2]; $* }	# -x
+fn-%noeval-noprint	= { }					# -n
+fn-%noeval-print	= @ { echo $* >[1=2] }			# -n -x
+fn-%exit-on-false	= $&exitonfalse				# -e
 
 
 #

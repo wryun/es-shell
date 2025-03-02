@@ -226,8 +226,8 @@ extern int efork(Boolean parent);
 extern pid_t spgrp(pid_t pgid);
 extern int tctakepgrp(void);
 extern void initpgrp(void);
-extern int ewait(int pid, int opts, void *rusage);
-#define	ewaitfor(pid)	ewait(pid, 0, NULL)
+extern int ewait(int pid, int opts);
+#define	ewaitfor(pid)	ewait(pid, 0)
 
 #if JOB_PROTECT
 extern void tcreturnpgrp(void);

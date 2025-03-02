@@ -165,6 +165,11 @@ extern void *qsort(
 #define STRING(s)	#s
 #endif
 
+/* this is not a principled fallback, but it should work on most systems */
+#ifndef NSIG
+#define NSIG 64
+#endif
+
 
 /*
  * types we use throughout es

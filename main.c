@@ -82,6 +82,8 @@ static Noreturn usage(void) {
 		"	-p	don't load functions from the environment\n"
 		"	-o	don't open stdin, stdout, and stderr if they were closed\n"
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
+	);
+	eprint(""
 #if GCINFO
 		"	-I	print garbage collector information\n"
 #endif
@@ -109,8 +111,8 @@ int main(int argc, char **argv0) {
 	Boolean keepclosed = FALSE;		/* -o */
 	Ref(const char *volatile, cmd, NULL);	/* -c */
 
-	initgc();
 	initconv();
+	initgc();
 
 	if (argc == 0) {
 		argc = 1;
