@@ -103,8 +103,10 @@ test	: es testrun $(testdir)/test.es
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
 
-y.tab.c y.tab.h : parse.y
+y.tab.h	: parse.y
 	${YACC} -vd $(srcdir)/parse.y
+
+y.tab.c	: y.tab.h
 
 token.h : y.tab.h
 	-cmp -s y.tab.h token.h || cp y.tab.h token.h
