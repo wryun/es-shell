@@ -117,7 +117,7 @@ extern Noreturn esexit(int code) {
 }
 #endif
 
-/* dowait -- a waitpid wrapper that gets rusage and interfaces with signals */
+/* dowait -- a waitpid wrapper that interfaces with signals */
 static int dowait(int pid, int opts, int *statusp) {
 	int n;
 	interrupted = FALSE;
@@ -171,8 +171,8 @@ extern int ewait(int pidarg, int opts) {
 #if JOB_PROTECT
 	tctakepgrp();
 #endif
-	if (deadpid == 0) /* dowait(EWNOHANG) returned nothing */
-		return -1; /* FIXME: replace this with a better value! */
+	if (deadpid == 0)	/* dowait(EWNOHANG) returned nothing */
+		return -1;
 	proc = reap(deadpid);
 	printstatus(proc->pid, status);
 	efree(proc);
@@ -213,7 +213,7 @@ PRIM(wait) {
 	}
 	RefEnd(lp);
 	status = ewait(pid, opts);
-	if (status == -1) /* FIXME: this will be a better value soon */
+	if (status == -1)	/* ewait got no exited processes */
 		return NULL;
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
