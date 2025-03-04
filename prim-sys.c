@@ -36,7 +36,7 @@ PRIM(newpgrp) {
 }
 
 PRIM(background) {
-	int pid = efork(TRUE, TRUE);
+	int pid = efork(TRUE);
 	if (pid == 0) {
 #if JOB_PROTECT
 		/* job control safe version: put it in a new pgroup, if interactive. */
@@ -51,12 +51,11 @@ PRIM(background) {
 
 PRIM(fork) {
 	int pid, status;
-	pid = efork(TRUE, FALSE);
+	pid = efork(TRUE);
 	if (pid == 0)
 		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
 	SIGCHK();
-	printstatus(0, status);
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
 
@@ -126,6 +125,26 @@ PRIM(setsignals) {
 	setsigeffects(effects);
 	unblocksignals();
 	return mksiglist();
+}
+
+PRIM(sigmessage) {
+	int sig;
+	char *s, *p;
+	if (list == NULL || list->next != NULL)
+		fail("$&sigmessage", "usage: $&sigmessage signal");
+	s = getstr(list->term);
+	if ((p = strchr(s, '+')) != NULL) {
+		if (streq(p, "+core"))
+			*p = '\0';
+		else
+			p = NULL;
+	}
+	sig = signumber(s);
+	if (p != NULL)
+		*p = '+';
+	if (sig < 0)
+		fail("$&sigmessage", "unknown signal: %s", s);
+	return mklist(mkstr(sigmessage(sig)), NULL);
 }
 
 /*
@@ -314,13 +333,12 @@ PRIM(time) {
 	getrusage(RUSAGE_CHILDREN, &ru_prev);
 	gc();	/* do a garbage collection first to ensure reproducible results */
 	t0 = time(NULL);
-	pid = efork(TRUE, FALSE);
+	pid = efork(TRUE);
 	if (pid == 0)
 		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewait(pid, FALSE);
+	status = ewait(pid, 0);
 	t1 = time(NULL);
 	SIGCHK();
-	printstatus(0, status);
 
 	getrusage(RUSAGE_CHILDREN, &ru_new);
 	timesub(&ru_new.ru_utime, &ru_prev.ru_utime, &ru_diff.ru_utime);
@@ -343,7 +361,7 @@ PRIM(time) {
 	Ref(List *, lp, list);
 
 	gc();	/* do a garbage collection first to ensure reproducible results */
-	pid = efork(TRUE, FALSE);
+	pid = efork(TRUE);
 	if (pid == 0) {
 		clock_t t0, t1;
 		struct tms tms;
@@ -353,14 +371,13 @@ PRIM(time) {
 			ticks = sysconf(_SC_CLK_TCK);
 
 		t0 = times(&tms);
-		pid = efork(TRUE, FALSE);
+		pid = efork(TRUE);
 		if (pid == 0)
 			esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 
 		status = ewaitfor(pid);
 		t1 = times(&tms);
 		SIGCHK();
-		printstatus(0, status);
 
 		tms.tms_cutime += ticks / 20;
 		tms.tms_cstime += ticks / 20;
@@ -376,7 +393,6 @@ PRIM(time) {
 	}
 	status = ewaitfor(pid);
 	SIGCHK();
-	printstatus(0, status);
 
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
@@ -457,6 +473,7 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(fork);
 	X(run);
 	X(setsignals);
+	X(sigmessage);
 #if BSD_LIMITS
 	X(limit);
 #endif

@@ -1892,7 +1892,7 @@ as input to
 and executes its contents.
 The options are a subset of the invocation options for the shell (see below).
 .TP
-.Cr "access \fR[\fP-n \fIname\fP\fR]\fP \fR[\fP-1e\fR]\fP \fR[\fP-rwx\fR]\fP  \fR[\fP-fdcblsp\fR]\fP \fIpath ...\fP"
+.Cr "access \fR[\fP-n \fIname\fP\fR]\fP \fR[\fP-1e\fR]\fP \fR[\fP-rwx\fR]\fP \fR[\fP-fdcblsp\fR]\fP \fIpath ...\fP"
 Tests if the named paths are accessible according to the options presented.
 Normally,
 .Cr access
@@ -2228,7 +2228,7 @@ are specified,
 .Cr \-e
 is used.
 .TP
-.Cr "wait \fI\fR[\fPpid\fR]"
+.Cr "wait \fR[\fP-n\fR]\fP \fI\fR[\fPpid\fR]"
 Waits for the specified
 .IR pid ,
 which must have been started by
@@ -2236,6 +2236,11 @@ which must have been started by
 If no
 .I pid
 is specified, waits for any child process to exit.
+If
+.Cr \-n
+is specified and the process(es) to be waited for is (are) not ready
+at call time, returns immediately instead of blocking or throwing an
+error.
 .TP
 .Cr "whatis \fIprogram ...\fP"
 For each named
@@ -2328,6 +2333,19 @@ copied (via
 .IR dup (2))
 to file descriptor
 .IR newfd .
+.TP
+.Cr "%echo-status \fIpid did status\fP"
+Inspects the exit
+.I status
+of an exited (and waited-for) process
+.IR pid ,
+where
+.I did
+indicates if the process
+.Cr exited
+or was
+.Cr signaled ,
+and prints any interesting condition.
 .TP
 .Cr "%eval-noprint \fIcmd\fP"
 Run the command.
@@ -2767,7 +2785,7 @@ variable, which signals to the
 library how much of the history file should be read into the in-memory
 history log.
 .PP
-Several primitives are not directly associated with other function.
+Several primitives are not directly associated with other functions.
 They are:
 .TP
 .Cr "$&collect"
@@ -2777,7 +2795,7 @@ The garbage collector in
 runs rather frequently;
 there should be no reason for a user to issue this command.
 .TP
-.Cr "$&noreturn \fIlambda args ...\fP"
+.Cr "$&noreturn \fIlambda args ..."
 Call the
 .IR lambda ,
 but in such a way that it does not catch the
@@ -2791,6 +2809,11 @@ operations in
 and
 .Cr "&&" )
 can be implemented as lambdas rather than primitives.
+.TP
+.Cr "$&sigmessage"
+converts a signal name such as
+.Cr sigint
+to a short message describing the signal, used for error reporting.
 .TP
 .Cr "$&primitives"
 Returns a list of the names of es primitives.

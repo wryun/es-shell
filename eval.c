@@ -28,7 +28,7 @@ extern List *forkexec(char *file, List *list, Boolean inchild) {
 	Vector *env;
 	gcdisable();
 	env = mkenv();
-	pid = efork(!inchild, FALSE);
+	pid = efork(!inchild);
 	if (pid == 0) {
 		execve(file, vectorize(list)->vector, env->vector);
 		failexec(file, list);
@@ -41,7 +41,6 @@ extern List *forkexec(char *file, List *list, Boolean inchild) {
 		sigint_newline = TRUE;
 	} else
 		SIGCHK();
-	printstatus(0, status);
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
 }
 
