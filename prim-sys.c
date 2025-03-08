@@ -60,6 +60,47 @@ PRIM(fork) {
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
 
+static Noreturn failexec(char *file, List *args) {
+	List *fn;
+	assert(gcisblocked());
+	fn = varlookup("fn-%exec-failure", NULL);
+	if (fn != NULL) {
+		int olderror = errno;
+		Ref(List *, list, append(fn, mklist(mkstr(file), args)));
+		RefAdd(file);
+		gcenable();
+		RefRemove(file);
+		eval(list, NULL, 0);
+		RefEnd(list);
+		errno = olderror;
+	}
+	eprint("%s: %s\n", file, esstrerror(errno));
+	esexit(1);
+}
+
+/* forkexec -- fork (if necessary) and exec */
+static List *forkexec(char *file, List *list, Boolean inchild) {
+	int pid, status;
+	Vector *env;
+	gcdisable();
+	env = mkenv();
+	pid = efork(!inchild, FALSE);
+	if (pid == 0) {
+		execve(file, vectorize(list)->vector, env->vector);
+		failexec(file, list);
+	}
+	gcenable();
+	status = ewaitfor(pid);
+	if ((status & 0xff) == 0) {
+		sigint_newline = FALSE;
+		SIGCHK();
+		sigint_newline = TRUE;
+	} else
+		SIGCHK();
+	printstatus(0, status);
+	return mklist(mkterm(mkstatus(status), NULL), NULL);
+}
+
 PRIM(run) {
 	char *file;
 	if (list == NULL)
