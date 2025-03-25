@@ -311,24 +311,18 @@ static void scanroots(Root *rootlist) {
 
 /* scanspace -- scan new space until it is up to date */
 static void scanspace(void) {
-	Space *sp, *scanned;
-	for (scanned = NULL;;) {
-		Space *front = new;
-		for (sp = new; sp != scanned; sp = sp->next) {
-			char *scan;
-			assert(sp != NULL);
-			scan = sp->bot;
-			while (scan < sp->current) {
-				Tag *tag = *(Tag **) scan;
-				assert(tag->magic == TAGMAGIC);
-				scan += sizeof (Tag *);
-				VERBOSE(("GC %8ux : %s	scan\n", scan, tag->typename));
-				scan += ALIGN((*tag->scan)(scan));
-			}
+	Space *sp;
+	for (sp = new; sp != NULL; sp = sp->next) {
+		char *scan;
+		assert(sp != NULL);
+		scan = sp->bot;
+		while (scan < sp->current) {
+			Tag *tag = *(Tag **) scan;
+			assert(tag->magic == TAGMAGIC);
+			scan += sizeof (Tag *);
+			VERBOSE(("GC %8ux : %s	scan\n", scan, tag->typename));
+			scan += ALIGN((*tag->scan)(scan));
 		}
-		if (new == front)
-			break;
-		scanned = front;
 	}
 }
 
@@ -372,71 +366,69 @@ extern Boolean gcisblocked(void) {
 
 /* gc -- actually do a garbage collection */
 extern void gc(void) {
-	do {
-		size_t livedata;
-		Space *space;
+	size_t livedata;
+	Space *space;
 
 #if GCINFO
-		size_t olddata = 0;
-		if (gcinfo)
-			for (space = new; space != NULL; space = space->next)
-				olddata += SPACEUSED(space);
+	size_t olddata = 0;
+	if (gcinfo)
+		for (space = new; space != NULL; space = space->next)
+			olddata += SPACEUSED(space);
 #endif
 
-		assert(gcblocked >= 0);
-		if (gcblocked > 0)
-			return;
-		++gcblocked;
+	assert(gcblocked >= 0);
+	if (gcblocked > 0)
+		return;
+	++gcblocked;
 
-		assert(new != NULL);
-		assert(old == NULL);
-		old = new;
+	assert(new != NULL);
+	assert(old == NULL);
+	old = new;
 #if GCPROTECT
-		for (; new->next != NULL; new = new->next)
-			;
-		if (++new >= &spaces[NSPACES])
-			new = &spaces[0];
-		new = mkspace(new, NULL);
+	for (; new->next != NULL; new = new->next)
+		;
+	if (++new >= &spaces[NSPACES])
+		new = &spaces[0];
+	new = mkspace(new, NULL);
 #else
-		new = newspace(NULL);
+	new = newspace(NULL);
 #endif
-		VERBOSE(("\nGC collection starting\n"));
+	VERBOSE(("\nGC collection starting\n"));
 #if GCVERBOSE
-		for (space = old; space != NULL; space = space->next)
-			VERBOSE(("GC old space = %ux ... %ux\n", space->bot, space->current));
+	for (space = old; space != NULL; space = space->next)
+		VERBOSE(("GC old space = %ux ... %ux\n", space->bot, space->current));
 #endif
-		VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
-		VERBOSE(("GC scanning root list\n"));
-		scanroots(rootlist);
-		VERBOSE(("GC scanning global root list\n"));
-		scanroots(globalrootlist);
-		VERBOSE(("GC scanning exception root list\n"));
-		scanroots(exceptionrootlist);
-		VERBOSE(("GC scanning new space\n"));
-		scanspace();
-		VERBOSE(("GC collection done\n\n"));
+	VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
+	VERBOSE(("GC scanning root list\n"));
+	scanroots(rootlist);
+	VERBOSE(("GC scanning global root list\n"));
+	scanroots(globalrootlist);
+	VERBOSE(("GC scanning exception root list\n"));
+	scanroots(exceptionrootlist);
+	VERBOSE(("GC scanning new space\n"));
+	scanspace();
+	VERBOSE(("GC collection done\n\n"));
 
-		deprecate(old);
-		old = NULL;
+	deprecate(old);
+	old = NULL;
 
-		for (livedata = 0, space = new; space != NULL; space = space->next)
-			livedata += SPACEUSED(space);
+	for (livedata = 0, space = new; space != NULL; space = space->next)
+		livedata += SPACEUSED(space);
 
 #if GCINFO
-		if (gcinfo)
-			eprint(
-				"[GC: old %8d  live %8d  min %8d  (pid %5d)]\n",
-				olddata, livedata, minspace, getpid()
-			);
+	if (gcinfo)
+		eprint(
+			"[GC: old %8d  live %8d  min %8d  (pid %5d)]\n",
+			olddata, livedata, minspace, getpid()
+		);
 #endif
 
-		if (minspace < livedata * 2)
-			minspace = livedata * 4;
-		else if (minspace > livedata * 12 && minspace > (MIN_minspace * 2))
-			minspace /= 2;
+	if (minspace < livedata * 2)
+		minspace = livedata * 4;
+	else if (minspace > livedata * 12 && minspace > (MIN_minspace * 2))
+		minspace /= 2;
 
-		--gcblocked;
-	} while (new->next != NULL);
+	--gcblocked;
 }
 
 /* initgc -- initialize the garbage collector */
