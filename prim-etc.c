@@ -169,7 +169,6 @@ writeit:
 
 PRIM(parse) {
 	List *result;
-	Tree *tree;
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
@@ -180,6 +179,8 @@ PRIM(parse) {
 	}
 	RefEnd(lp);
 	newhistbuffer();
+
+	Ref(Tree *, tree, NULL);
 	ExceptionHandler
 		tree = parse(prompt1, prompt2);
 	CatchException (e)
@@ -192,7 +193,7 @@ PRIM(parse) {
 		   ? NULL
 		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
 			    NULL);
-	RefEnd2(prompt2, prompt1);
+	RefEnd3(tree, prompt2, prompt1);
 	return result;
 }
 
