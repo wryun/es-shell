@@ -136,7 +136,7 @@ extern List *sortlist(List *list);
 
 /* tree.c */
 
-extern Tree *mk(NodeKind VARARGS);
+extern Tree *gcmk(NodeKind VARARGS);
 
 
 /* closure.c */
@@ -391,6 +391,11 @@ extern void gcreserve(size_t nbytes);		/* provoke a collection, if enabled and n
 extern void gcenable(void);			/* enable collections */
 extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
+
+extern void *palloc(size_t n, Tag *t);		/* allocate like gcalloc but in pspace */
+extern void *pseal(void *p);			/* collect pspace into gcspace and return pointer */
+extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */
+extern char *pndup(const char *s, size_t n);	/* copy a counted string into pspace */
 
 
 /*

@@ -4,6 +4,11 @@
 #define	CDR	u[1].p
 
 
+/* tree.c */
+
+extern Tree *mk(NodeKind VARARGS);
+
+
 /* syntax.c */
 
 extern Tree errornode;
@@ -30,6 +35,10 @@ extern Tree *redirappend(Tree *t, Tree *r);
 extern Tree *firstprepend(Tree *first, Tree *args);
 
 extern Tree *mkmatch(Tree *subj, Tree *cases);
+
+/* str.c */
+
+extern char *pstr(const char *fmt VARARGS);
 
 /* heredoc.c */
 

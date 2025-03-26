@@ -14,8 +14,7 @@ static int str_grow(Format *f, size_t more) {
 	return 0;
 }
 
-/* strv -- print a formatted string into gc space */
-extern char *strv(const char *fmt, va_list args) {
+static char *sstrv(char *(*seal)(Buffer *buf), const char *fmt, va_list args) {
 	Buffer *buf;
 	Format format;
 
@@ -37,7 +36,12 @@ extern char *strv(const char *fmt, va_list args) {
 	fmtputc(&format, '\0');
 	gcenable();
 
-	return sealbuffer(format.u.p);
+	return seal(format.u.p);
+}
+
+/* strv -- print a formatted string into gc space */
+extern char *strv(const char *fmt, va_list args) {
+	return sstrv(sealbuffer, fmt, args);
 }
 
 /* str -- create a string (in garbage collection space) by printing to it */
@@ -46,6 +50,16 @@ extern char *str VARARGS1(const char *, fmt) {
 	va_list args;
 	VA_START(args, fmt);
 	s = strv(fmt, args);
+	va_end(args);
+	return s;
+}
+
+/* pstr -- create a string (in pspace) by printing to it */
+extern char *pstr VARARGS1(const char *, fmt) {
+	char *s;
+	va_list args;
+	VA_START(args, fmt);
+	s = sstrv(psealbuffer, fmt, args);
 	va_end(args);
 	return s;
 }

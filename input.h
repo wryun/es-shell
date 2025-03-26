@@ -44,7 +44,6 @@ extern void print_prompt2(void);
 
 extern Tree *parsetree;
 extern int yyparse(void);
-extern void initparse(void);
 
 
 /* heredoc.c */

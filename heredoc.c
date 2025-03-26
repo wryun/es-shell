@@ -22,7 +22,7 @@ extern Tree *getherevar(void) {
 	while ((c = GETC()) != EOF && !dnw[c])
 		buf = bufputc(buf, c);
 	len = buf->len;
-	s = sealcountedbuffer(buf);
+	s = psealcountedbuffer(buf);
 	if (len == 0) {
 		yyerror("null variable name in here document");
 		return NULL;
@@ -55,7 +55,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 			if (buf->current == 0 && tree != NULL)
 				freebuffer(buf);
 			else
-				*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
+				*tailp = treecons(mk(nQword, psealcountedbuffer(buf)), NULL);
 			break;
 		}
 		if (s != (unsigned char *) eof)
@@ -74,7 +74,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 				if (buf->current == 0)
 					freebuffer(buf);
 				else {
-					*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
+					*tailp = treecons(mk(nQword, psealcountedbuffer(buf)), NULL);
 					tailp = &(*tailp)->CDR;
 				}
 				var = getherevar();
@@ -137,7 +137,7 @@ extern Boolean queueheredoc(Tree *t) {
 		return FALSE;
 	}
 
-	here = gcalloc(sizeof (Here), NULL);
+	here = palloc(sizeof (Here), NULL);
 	here->next = hereq;
 	here->marker = eof;
 	hereq = here;

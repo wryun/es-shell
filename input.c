@@ -402,7 +402,6 @@ extern Tree *parse(char *pr1, char *pr2) {
 #endif
 	prompt2 = pr2;
 
-	gcreserve(300 * sizeof (Tree));
 	gcdisable();
 	result = yyparse();
 	gcenable();
@@ -414,11 +413,13 @@ extern Tree *parse(char *pr1, char *pr2) {
 		error = NULL;
 		fail("$&parse", "%s", e);
 	}
+
+	Ref(Tree *, pt, pseal(parsetree));
 #if LISPTREES
 	if (input->runflags & run_lisptrees)
-		eprint("%B\n", parsetree);
+		eprint("%B\n", pt);
 #endif
-	return parsetree;
+	RefReturn(pt);
 }
 
 /* resetparser -- clear parser errors in the signal handler */
@@ -727,9 +728,6 @@ extern void initinput(void) {
 
 	/* mark the historyfd as a file descriptor to hold back from forked children */
 	registerfd(&historyfd, TRUE);
-
-	/* call the parser's initialization */
-	initparse();
 
 #if HAVE_READLINE
 	rl_readline_name = "es";
