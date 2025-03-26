@@ -23,7 +23,6 @@ static Buffer *histbuffer = NULL;
  * histbuffer -- build the history line during input and dump it as a gc-string
  */
 
-
 extern void newhistbuffer() {
 	assert(histbuffer == NULL);
 	histbuffer = openbuffer(BUFSIZE);
@@ -48,10 +47,3 @@ extern char *dumphistbuffer() {
 		s[len - 1] = '\0';
 	return s;
 }
-
-
-/*
- * history file
- */
-
-

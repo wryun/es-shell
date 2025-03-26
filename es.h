@@ -308,10 +308,6 @@ extern List *runstring(const char *str, const char *name, int flags);
 #define	run_printcmds		32	/* -x */
 #define	run_lisptrees		64	/* -L and defined(LISPTREES) */
 
-#if HAVE_READLINE
-extern Boolean resetterminal;
-#endif
-
 
 /* readline.c */
 
@@ -321,7 +317,7 @@ extern void inithistory(void);
 extern void sethistory(char *file);
 extern void loghistory(char *cmd);
 extern void setmaxhistorylength(int length);
-extern void checkreloadhistory(void);
+extern void rlsetup(Boolean fromprim);
 #endif
 
 

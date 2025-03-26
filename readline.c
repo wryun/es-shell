@@ -7,7 +7,8 @@
 
 #include <readline/history.h>
 
-Boolean reloadhistory = FALSE;
+static Boolean reloadhistory = FALSE;
+static Boolean resetterminal = FALSE;
 static char *history;
 
 #if 0
@@ -69,9 +70,136 @@ extern void sethistory(char *file) {
 	history = file;
 }
 
-extern void checkreloadhistory(void) {
+/*
+ * readey liney
+ */
+
+/* quote -- teach readline how to quote a word in es during completion */
+static char *quote(char *text, int type, char *qp) {
+	char *p, *r;
+
+	/* worst-case size: string is 100% quote characters which will all be
+	 * doubled, plus initial and final quotes and \0 */
+	p = r = ealloc(strlen(text) * 2 + 3);
+	/* supply opening quote if not already present */
+	if (*qp != '\'')
+		*p++ = '\'';
+	while (*text) {
+		/* double any quotes for es quote-escaping rules */
+		if (*text == '\'')
+			*p++ = '\'';
+		*p++ = *text++;
+	}
+	if (type == SINGLE_MATCH)
+		*p++ = '\'';
+	*p = '\0';
+	return r;
+}
+
+/* unquote -- teach es how to unquote a word */
+static char *unquote(char *text, int quote_char) {
+	char *p, *r;
+
+	p = r = ealloc(strlen(text) + 1);
+	while (*text) {
+		*p++ = *text++;
+		if (quote_char && *(text - 1) == '\'' && *text == '\'')
+			++text;
+	}
+	*p = '\0';
+	return r;
+}
+
+static char *complprefix;
+static List *(*wordslistgen)(char *);
+
+static char *list_completion_function(const char *text, int state) {
+	static char **matches = NULL;
+	static int matches_idx, matches_len;
+	int i, rlen;
+	char *result;
+
+	const int pfx_len = strlen(complprefix);
+
+	if (!state) {
+		const char *name = &text[pfx_len];
+
+		Vector *vm = vectorize(wordslistgen((char *)name));
+		matches = vm->vector;
+		matches_len = vm->count;
+		matches_idx = 0;
+	}
+
+	if (!matches || matches_idx >= matches_len)
+		return NULL;
+
+	rlen = strlen(matches[matches_idx]);
+	result = ealloc(rlen + pfx_len + 1);
+	for (i = 0; i < pfx_len; i++)
+		result[i] = complprefix[i];
+	strcpy(&result[pfx_len], matches[matches_idx]);
+	result[rlen + pfx_len] = '\0';
+
+	matches_idx++;
+	return result;
+}
+
+char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
+	char **matches = NULL;
+
+	if (*text == '$') {
+		wordslistgen = varswithprefix;
+		complprefix = "$";
+		switch (text[1]) {
+		case '&':
+			wordslistgen = primswithprefix;
+			complprefix = "$&";
+			break;
+		case '^': complprefix = "$^"; break;
+		case '#': complprefix = "$#"; break;
+		}
+		matches = rl_completion_matches(text, list_completion_function);
+	}
+
+	/* ~foo => username.  ~foo/bar already gets completed as filename. */
+	if (!matches && *text == '~' && !strchr(text, '/'))
+		matches = rl_completion_matches(text, rl_username_completion_function);
+
+	return matches;
+}
+
+static void initreadline(void) {
+	rl_readline_name = "es";
+
+	/* these two word_break_characters exclude '&' due to primitive completion */
+	rl_completer_word_break_characters = " \t\n\\'`$><=;|{()}";
+	rl_basic_word_break_characters = " \t\n\\'`$><=;|{()}";
+	rl_completer_quote_characters = "'";
+	rl_special_prefixes = "$";
+
+	rl_attempted_completion_function = builtin_completion;
+
+	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
+	rl_filename_quoting_function = quote;
+	rl_filename_dequoting_function = unquote;
+}
+
+/* set up readline for the next call */
+extern void rlsetup(UNUSED Boolean fromprim) {
+	static Boolean initialized = FALSE;
+	if (!initialized) {
+		initreadline();
+		initialized = TRUE;
+	}
+
 	if (reloadhistory)
 		reload_history();
+	if (resetterminal) {
+		rl_reset_terminal(NULL);
+		resetterminal = FALSE;
+	}
+	if (RL_ISSTATE(RL_STATE_INITIALIZED))
+		rl_reset_screen_size();
 }
 
 /*
@@ -92,7 +220,7 @@ PRIM(writehistory) {
 	if (list == NULL || list->next != NULL)
 		fail("$&writehistory", "usage: $&writehistory command");
 	loghistory(getstr(list->term));
-	return NULL;
+	return ltrue;
 }
 
 PRIM(setmaxhistorylength) {
@@ -118,6 +246,17 @@ PRIM(resetterminal) {
 }
 
 /*
+PRIM(readline) {
+	char *line;
+	rlsetup(TRUE);
+	Ref(char *, prompt, (list == NULL ? "" : getstr(list->term)));
+	line = readline(prompt);
+	RefEnd(prompt);
+	return mklist(mkstr(line), NULL);
+}
+*/
+
+/*
  * initialization
  */
 
@@ -126,6 +265,7 @@ extern Dict *initprims_readline(Dict *primdict) {
 	X(writehistory);
 	X(resetterminal);
 	X(setmaxhistorylength);
+	/* X(readline); */
 	return primdict;
 }
 
