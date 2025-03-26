@@ -5,6 +5,8 @@
 
 #if HAVE_READLINE
 
+#include <stdio.h>
+#include <readline/readline.h>
 #include <readline/history.h>
 
 static Boolean reloadhistory = FALSE;
@@ -205,18 +207,15 @@ static void initreadline(void) {
 }
 
 /* set up readline for the next call */
-extern void rlsetup(Boolean fromprim) {
+extern void rlsetup(void) {
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initreadline();
 		initialized = TRUE;
 	}
 
-	if (fromprim) {
-		rl_attempted_completion_function = es_completion;
-	} else {
-		rl_attempted_completion_function = builtin_completion;
-	}
+	rl_attempted_completion_function = builtin_completion;
+	/* rl_attempted_completion_function = es_completion; */
 
 	if (reloadhistory)
 		reload_history();
@@ -274,7 +273,7 @@ PRIM(resetterminal) {
 static char *callreadline(char *prompt) {
 	char *r, *volatile line = NULL;
 	/* should this be called after each interruption, or? */
-	rlsetup(TRUE);
+	rlsetup();
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
@@ -294,15 +293,35 @@ static char *callreadline(char *prompt) {
 	return line;
 }
 
+static char *emptyprompt = "";
+
 PRIM(readline) {
 	char *line;
 	/* TODO: estrdup? */
-	char *prompt = (list == NULL ? "" : strdup(getstr(list->term)));
-	do {
-		line = callreadline(prompt);
-	} while (line == NULL && errno == EINTR);
-	if (prompt != NULL)
+	char *prompt = (list == NULL ? emptyprompt : strdup(getstr(list->term)));
+	int old = dup(0), in = fdmap(0);
+	if (dup2(in, 0) == -1)
+		fail("$&readline", "dup2: %s", esstrerror(errno));
+
+	ExceptionHandler
+
+		do {
+			line = callreadline(prompt);
+		} while (line == NULL && errno == EINTR);
+
+	CatchException (e)
+
+		mvfd(old, 0);
+		if (prompt != emptyprompt)
+			efree(prompt);
+		throw(e);
+
+	EndExceptionHandler
+
+	mvfd(old, 0);
+	if (prompt != emptyprompt)
 		efree(prompt);
+
 	if (line == NULL)
 		return NULL;
 	list = mklist(mkstr(line), NULL);

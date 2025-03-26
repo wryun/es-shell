@@ -291,7 +291,7 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 /* input.c */
 
 extern char *prompt, *prompt2;
-extern Tree *parse(char *esprompt1, char *esprompt2);
+extern Tree *parse(List *);
 extern Tree *parsestring(const char *str);
 extern Boolean isinteractive(void);
 extern Boolean isfromfd(void);
@@ -317,15 +317,8 @@ extern void inithistory(void);
 extern void sethistory(char *file);
 extern void loghistory(char *cmd);
 extern void setmaxhistorylength(int length);
-extern void rlsetup(Boolean fromprim);
+extern void rlsetup(void);
 #endif
-
-
-/* history.c */
-
-extern void newhistbuffer(void);
-extern void addhistbuffer(char c);
-extern char *dumphistbuffer(void);
 
 
 /* opt.c */

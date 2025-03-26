@@ -109,11 +109,6 @@ extern void *qsort(
 );
 #endif /* !STDC_HEADERS */
 
-#if HAVE_READLINE
-# include <stdio.h>
-# include <readline/readline.h> /* ugly but we need it in both input.c and readline.c */
-#endif
-
 #include <sys/wait.h>
 #include <time.h>
 

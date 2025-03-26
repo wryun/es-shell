@@ -148,53 +148,12 @@ PRIM(var) {
 	return list;
 }
 
-static void loginput(char *input) {
-	char *c;
-	List *fn = varlookup("fn-%write-history", NULL);
-	if (!isinteractive() || !isfromfd() || fn == NULL)
-		return;
-	for (c = input;; c++)
-		switch (*c) {
-		case '#': case '\n': return;
-		case ' ': case '\t': break;
-		default: goto writeit;
-		}
-writeit:
-	gcdisable();
-	Ref(List *, list, append(fn, mklist(mkstr(input), NULL)));
-	gcenable();
-	eval(list, NULL, 0);
-	RefEnd(list);
-}
-
 PRIM(parse) {
-	List *result;
-	Ref(char *, prompt1, NULL);
-	Ref(char *, prompt2, NULL);
-	Ref(List *, lp, list);
-	if (lp != NULL) {
-		prompt1 = getstr(lp->term);
-		if ((lp = lp->next) != NULL)
-			prompt2 = getstr(lp->term);
-	}
-	RefEnd(lp);
-	newhistbuffer();
-
-	Ref(Tree *, tree, NULL);
-	ExceptionHandler
-		tree = parse(prompt1, prompt2);
-	CatchException (e)
-		loginput(dumphistbuffer());
-		throw(e);
-	EndExceptionHandler
-
-	loginput(dumphistbuffer());
-	result = (tree == NULL)
+	Tree *tree = parse(list);
+	return (tree == NULL)
 		   ? NULL
 		   : mklist(mkterm(NULL, mkclosure(gcmk(nThunk, tree), NULL)),
 			    NULL);
-	RefEnd3(prompt2, prompt1, tree);
-	return result;
 }
 
 PRIM(exitonfalse) {

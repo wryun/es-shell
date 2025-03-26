@@ -47,7 +47,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 
 	for (tree = NULL, tailp = &tree, buf = openbuffer(0);;) {
 		int c;
-		print_prompt2();
+		increment_line();
 		for (s = (unsigned char *) eof; (c = GETC()) == *s; s++)
 			;
 		if (*s == '\0' && (c == '\n' || c == EOF)) {

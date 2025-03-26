@@ -22,8 +22,6 @@
  */
 
 Input *input;
-char *prompt, *prompt2;
-
 Boolean ignoreeof = FALSE;
 
 
@@ -103,11 +101,8 @@ extern void unget(Input *in, int c) {
 /* get -- get a character, filter out nulls */
 static int get(Input *in) {
 	int c;
-	Boolean uf = (in->fill == ungetfill);
 	while ((c = (in->buf < in->bufend ? *in->buf++ : (*in->fill)(in))) == '\0')
 		warn("null character ignored");
-	if (!uf && c != EOF)
-		addhistbuffer((char)c);
 	return c;
 }
 
@@ -131,58 +126,9 @@ static int eoffill(Input UNUSED *in) {
 	return EOF;
 }
 
-#if HAVE_READLINE
-/* callreadline -- readline wrapper */
-static char *callreadline(char *prompt0) {
-	char *volatile prompt = prompt0;
-	char *r;
-	if (prompt == NULL)
-		prompt = ""; /* bug fix for readline 2.0 */
-	rlsetup(FALSE);
-	interrupted = FALSE;
-	if (!setjmp(slowlabel)) {
-		slow = TRUE;
-		r = interrupted ? NULL : readline(prompt);
-		if (interrupted)
-			errno = EINTR;
-	} else {
-		r = NULL;
-		errno = EINTR;
-	}
-	slow = FALSE;
-	SIGCHK();
-	return r;
-}
-#endif
-
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
 	long nread;
-	assert(in->buf == in->bufend);
-	assert(in->fd >= 0);
-
-#if HAVE_READLINE
-	if (in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = NULL;
-		do {
-			rlinebuf = callreadline(prompt);
-		} while (rlinebuf == NULL && errno == EINTR);
-
-		if (rlinebuf == NULL)
-			nread = 0;
-		else {
-			nread = strlen(rlinebuf) + 1;
-			if (in->buflen < (unsigned int)nread) {
-				while (in->buflen < (unsigned int)nread)
-					in->buflen *= 2;
-				in->bufbegin = erealloc(in->bufbegin, in->buflen);
-			}
-			memcpy(in->bufbegin, rlinebuf, nread - 1);
-			in->bufbegin[nread - 1] = '\n';
-			efree(rlinebuf);
-		}
-	} else
-#endif
 	do {
 		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
 		SIGCHK();
@@ -205,13 +151,69 @@ static int fdfill(Input *in) {
 	return *in->buf++;
 }
 
+static List *fillcmd = NULL;
+
+static int cmdfill(Input *in) {
+	char *read;
+	List *result;
+	size_t nread;
+	int oldf;
+
+	assert(in->buf == in->bufend);
+	assert(in->fd >= 0);
+
+	if (fillcmd == NULL)
+		return fdfill(in);
+
+	oldf = dup(0);
+	if (dup2(in->fd, 0) == -1)
+		fail("$&parse", "dup2: %s", esstrerror(errno));
+
+	ExceptionHandler
+
+		result = eval(fillcmd, NULL, 0);
+
+	CatchException (e)
+
+		mvfd(oldf, 0);
+		throw(e);
+
+	EndExceptionHandler
+
+	mvfd(oldf, 0);
+
+	if (result == NULL) { /* eof */
+		if (!ignoreeof) {
+			close(in->fd);
+			in->fd = -1;
+			in->fill = eoffill;
+			in->runflags &= ~run_interactive;
+		}
+		return EOF;
+	}
+	read = str("%L\n", result, " ");
+
+	if ((nread = strlen(read)) > in->buflen) {
+		in->bufbegin = erealloc(in->bufbegin, nread);
+		in->buflen = nread;
+	}
+	memcpy(in->bufbegin, read, nread);
+
+	in->buf = in->bufbegin;
+	in->bufend = &in->buf[nread];
+
+	return *in->buf++;
+}
 
 /*
  * the input loop
  */
 
-/* parse -- call yyparse(), but disable garbage collection and catch errors */
-extern Tree *parse(char *pr1, char *pr2) {
+
+static Boolean parsing = FALSE;
+
+/* parse -- call yyparse() and catch errors */
+extern Tree *parse(List *fc) {
 	int result;
 	assert(error == NULL);
 
@@ -221,17 +223,26 @@ extern Tree *parse(char *pr1, char *pr2) {
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
-#if HAVE_READLINE
-	prompt = (pr1 == NULL) ? "" : pr1;
-#else
-	if (pr1 != NULL)
-		eprint("%s", pr1);
-#endif
-	prompt2 = pr2;
+	if (parsing)
+		fail("$&parse", "cannot perform nested parsing");
 
-	gcdisable();
-	result = yyparse();
-	gcenable();
+	fillcmd = fc;
+	parsing = TRUE;
+
+	ExceptionHandler
+
+		result = yyparse();
+
+	CatchException (e)
+
+		parsing = FALSE;
+		fillcmd = NULL;
+		throw(e);
+
+	EndExceptionHandler
+
+	parsing = FALSE;
+	fillcmd = NULL;
 
 	if (result || error != NULL) {
 		char *e;
@@ -328,7 +339,7 @@ extern List *runfd(int fd, const char *name, int flags) {
 
 	memzero(&in, sizeof (Input));
 	in.lineno = 1;
-	in.fill = fdfill;
+	in.fill = cmdfill;
 	in.cleanup = fdcleanup;
 	in.fd = fd;
 	registerfd(&in.fd, TRUE);
@@ -391,7 +402,7 @@ extern Tree *parseinput(Input *in) {
 	input = in;
 
 	ExceptionHandler
-		result = parse(NULL, NULL);
+		result = parse(NULL);
 		if (get(in) != EOF)
 			fail("$&parse", "more than one value in term");
 	CatchException (e)
@@ -439,7 +450,7 @@ extern Boolean isinteractive(void) {
 }
 
 extern Boolean isfromfd(void) {
-	return input == NULL ? FALSE : (input->fill == fdfill);
+	return input == NULL ? FALSE : (input->fill == fdfill || input->fill == cmdfill);
 }
 
 
@@ -452,7 +463,6 @@ extern void initinput(void) {
 	input = NULL;
 
 	/* declare the global roots */
+	globalroot(&fillcmd);
 	globalroot(&error);		/* parse errors */
-	globalroot(&prompt);		/* main prompt */
-	globalroot(&prompt2);		/* secondary prompt */
 }
