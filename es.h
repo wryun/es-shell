@@ -188,6 +188,7 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes);
 
 extern void initvars(void);
 extern void initenv(char **envp, Boolean protected);
+extern void initgetenv(void);
 extern void hidevariables(void);
 extern void validatevar(const char *var);
 extern List *varlookup(const char *name, Binding *binding);
@@ -297,7 +298,6 @@ extern Boolean isinteractive(void);
 #if HAVE_READLINE
 extern void setmaxhistorylength(int length);
 #endif
-extern void initgetenv(void);
 extern void initinput(void);
 extern void resetparser(void);
 
