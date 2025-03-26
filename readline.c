@@ -168,6 +168,28 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	return matches;
 }
 
+static List *cmdcomplete(char *prefix) {
+	List *fn = varlookup("fn-%complete", NULL);
+	if (fn == NULL)
+		return NULL;
+	gcdisable();
+	fn = append(fn, mklist(mkstr(str("%s", prefix)), NULL));
+	gcenable();
+	return eval(fn, NULL, 0);
+}
+
+char **es_completion(UNUSED const char *text, UNUSED int start, UNUSED int end) {
+	char **matches;
+
+	complprefix = "";
+	wordslistgen = cmdcomplete;
+
+	matches = rl_completion_matches(text, list_completion_function);
+
+	rl_attempted_completion_over = 1;	/* suppress "default" completions */
+	return matches;
+}
+
 static void initreadline(void) {
 	rl_readline_name = "es";
 
@@ -177,23 +199,24 @@ static void initreadline(void) {
 	rl_completer_quote_characters = "'";
 	rl_special_prefixes = "$";
 
-	rl_attempted_completion_function = builtin_completion;
-
 	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_filename_quoting_function = quote;
 	rl_filename_dequoting_function = unquote;
 }
 
 /* set up readline for the next call */
-extern void rlsetup(UNUSED Boolean fromprim) {
+extern void rlsetup(Boolean fromprim) {
 	static Boolean initialized = FALSE;
 	if (!initialized) {
 		initreadline();
 		initialized = TRUE;
 	}
 
-	/* TODO: from-primitive completion function */
-	rl_attempted_completion_function = (fromprim ? NULL : builtin_completion);
+	if (fromprim) {
+		rl_attempted_completion_function = es_completion;
+	} else {
+		rl_attempted_completion_function = builtin_completion;
+	}
 
 	if (reloadhistory)
 		reload_history();
@@ -249,7 +272,7 @@ PRIM(resetterminal) {
 }
 
 static char *callreadline(char *prompt) {
-	char *r, *volatile line;
+	char *r, *volatile line = NULL;
 	/* should this be called after each interruption, or? */
 	rlsetup(TRUE);
 	interrupted = FALSE;
@@ -273,11 +296,13 @@ static char *callreadline(char *prompt) {
 
 PRIM(readline) {
 	char *line;
-	Ref(char *, prompt, (list == NULL ? "" : getstr(list->term)));
+	/* TODO: estrdup? */
+	char *prompt = (list == NULL ? "" : strdup(getstr(list->term)));
 	do {
 		line = callreadline(prompt);
 	} while (line == NULL && errno == EINTR);
-	RefEnd(prompt);
+	if (prompt != NULL)
+		efree(prompt);
 	if (line == NULL)
 		return NULL;
 	list = mklist(mkstr(line), NULL);
