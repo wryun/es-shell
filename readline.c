@@ -192,6 +192,9 @@ extern void rlsetup(UNUSED Boolean fromprim) {
 		initialized = TRUE;
 	}
 
+	/* TODO: from-primitive completion function */
+	rl_attempted_completion_function = (fromprim ? NULL : builtin_completion);
+
 	if (reloadhistory)
 		reload_history();
 	if (resetterminal) {
@@ -245,16 +248,41 @@ PRIM(resetterminal) {
 	return ltrue;
 }
 
-/*
+static char *callreadline(char *prompt) {
+	char *r, *volatile line;
+	/* should this be called after each interruption, or? */
+	rlsetup(TRUE);
+	interrupted = FALSE;
+	if (!setjmp(slowlabel)) {
+		slow = TRUE;
+		r = interrupted ? NULL : readline(prompt);
+		if (interrupted)
+			errno = EINTR;
+	} else {
+		r = NULL;
+		errno = EINTR;
+	}
+	slow = FALSE;
+	if (r != NULL) {
+		line = str("%s", r);
+		efree(r);
+	}
+	SIGCHK();
+	return line;
+}
+
 PRIM(readline) {
 	char *line;
-	rlsetup(TRUE);
 	Ref(char *, prompt, (list == NULL ? "" : getstr(list->term)));
-	line = readline(prompt);
+	do {
+		line = callreadline(prompt);
+	} while (line == NULL && errno == EINTR);
 	RefEnd(prompt);
-	return mklist(mkstr(line), NULL);
+	if (line == NULL)
+		return NULL;
+	list = mklist(mkstr(line), NULL);
+	return list;
 }
-*/
 
 /*
  * initialization
@@ -265,7 +293,7 @@ extern Dict *initprims_readline(Dict *primdict) {
 	X(writehistory);
 	X(resetterminal);
 	X(setmaxhistorylength);
-	/* X(readline); */
+	X(readline);
 	return primdict;
 }
 
