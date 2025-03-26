@@ -313,8 +313,7 @@ extern Boolean resetterminal;
 #endif
 
 
-/* history.c */
-
+/* readline.c */
 
 #if HAVE_READLINE
 extern void inithistory(void);
@@ -324,6 +323,9 @@ extern void loghistory(char *cmd);
 extern void setmaxhistorylength(int length);
 extern void checkreloadhistory(void);
 #endif
+
+
+/* history.c */
 
 extern void newhistbuffer(void);
 extern void addhistbuffer(char c);

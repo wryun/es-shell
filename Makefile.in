@@ -57,14 +57,14 @@ HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h \
 	  stdenv.h syntax.h term.h var.h
 CFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c glob.c \
 	  glom.c input.c heredoc.c history.c list.c main.c match.c open.c opt.c \
-	  prim-ctl.c prim-etc.c prim-io.c prim-sys.c prim.c print.c proc.c \
-	  sigmsgs.c signal.c split.c status.c str.c syntax.c term.c token.c \
-	  tree.c util.c var.c vec.c version.c y.tab.c dump.c
+	  prim-ctl.c prim-etc.c prim-io.c readline.c prim-sys.c prim.c \
+	  print.c proc.c sigmsgs.c signal.c split.c status.c str.c syntax.c \
+	  term.c token.c tree.c util.c var.c vec.c version.c y.tab.c dump.c
 OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  glom.o input.o heredoc.o history.o list.o main.o match.o open.o opt.o \
-	  prim-ctl.o prim-etc.o prim-io.o prim-sys.o prim.o print.o proc.o \
-	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
-	  tree.o util.o var.o vec.o version.o y.tab.o
+	  prim-ctl.o prim-etc.o prim-io.o readline.o prim-sys.o prim.o \
+	  print.o proc.o sigmsgs.o signal.o split.o status.o str.o syntax.o \
+	  term.o token.o tree.o util.o var.o vec.o version.o y.tab.o
 OTHER	= Makefile parse.y mksignal
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c
 
@@ -145,6 +145,7 @@ prim.o : prim.c es.h config.h stdenv.h prim.h
 prim-ctl.o : prim-ctl.c es.h config.h stdenv.h prim.h 
 prim-etc.o : prim-etc.c es.h config.h stdenv.h prim.h 
 prim-io.o : prim-io.c es.h config.h stdenv.h gc.h prim.h 
+readline.o : readline.c es.h config.h stdenv.h prim.h 
 prim-sys.o : prim-sys.c es.h config.h stdenv.h prim.h 
 print.o : print.c es.h config.h stdenv.h print.h 
 proc.o : proc.c es.h config.h stdenv.h prim.h 
