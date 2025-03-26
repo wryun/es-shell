@@ -393,7 +393,7 @@ extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
 
 extern void *palloc(size_t n, Tag *t);		/* allocate like gcalloc but in pspace */
-extern void *pseal(void *p);			/* collect pspace into gcspace and return pointer */
+extern void *pseal(void *p);			/* collect pspace into gcspace with one root */
 extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */
 extern char *pndup(const char *s, size_t n);	/* copy a counted string into pspace */
 

@@ -308,6 +308,7 @@ extern void *forward(void *p) {
 
 	tag = TAG(p);
 	assert(tag != NULL);
+
 	if (FORWARDED(tag)) {
 		np = FOLLOW(tag);
 		assert(TAG(np)->magic == TAGMAGIC);
@@ -318,6 +319,13 @@ extern void *forward(void *p) {
 		VERBOSE(("%s	-> %8ux (forwarded)\n", tag->typename, np));
 		TAG(p) = FOLLOWTO(np);
 	}
+
+	/* hack of the decade: recurse, sometimes */
+	if (pmode) {
+		tag = TAG(np);
+		(*tag->scan)(np);
+	}
+
 	return np;
 }
 
@@ -463,6 +471,7 @@ extern void *pseal(void *p) {
 	if (psize == 0)
 		return p;
 
+	/* TODO: this is an overestimate since it contains garbage */
 	gcreserve(psize);
 	pmode = TRUE;
 	VERBOSE(("Reserved %d for pspace copy\n", psize));
@@ -477,8 +486,7 @@ extern void *pseal(void *p) {
 	VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
 
 	p = forward(p);
-	/* slow */
-	scanspace();
+	(*(TAG(p))->scan)(p);
 
 	/* TODO: possible performance win: save+reuse the first pspace */
 	for (sp = pspace; sp != NULL;) {
