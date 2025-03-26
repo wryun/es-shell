@@ -56,12 +56,12 @@ VPATH = $(srcdir)
 HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h \
 	  stdenv.h syntax.h term.h var.h
 CFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c glob.c \
-	  glom.c input.c heredoc.c list.c main.c match.c open.c opt.c \
+	  glom.c input.c heredoc.c history.c list.c main.c match.c open.c opt.c \
 	  prim-ctl.c prim-etc.c prim-io.c prim-sys.c prim.c print.c proc.c \
 	  sigmsgs.c signal.c split.c status.c str.c syntax.c term.c token.c \
 	  tree.c util.c var.c vec.c version.c y.tab.c dump.c
 OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
-	  glom.o input.o heredoc.o list.o main.o match.o open.o opt.o \
+	  glom.o input.o heredoc.o history.o list.o main.o match.o open.o opt.o \
 	  prim-ctl.o prim-etc.o prim-io.o prim-sys.o prim.o print.o proc.o \
 	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o
@@ -135,6 +135,7 @@ glob.o : glob.c es.h config.h stdenv.h gc.h
 glom.o : glom.c es.h config.h stdenv.h gc.h 
 input.o : input.c es.h config.h stdenv.h input.h 
 heredoc.o : heredoc.c es.h config.h stdenv.h gc.h input.h syntax.h 
+history.o : history.c es.h config.h stdenv.h gc.h input.h 
 list.o : list.c es.h config.h stdenv.h gc.h 
 main.o : main.c es.h config.h stdenv.h 
 match.o : match.c es.h config.h stdenv.h 

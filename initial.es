@@ -579,6 +579,28 @@ fn %pathsearch name { access -n $name -1e -xf $path }
 
 if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
+#	The %write-history hook is used in interactive contexts to write
+#	command input to the history file (and/or readline's in-memory
+#	history log).  By default, $&writehistory (which is available if
+#	readline is compiled in) will write to readline's history log if
+#	$max-history-length allows, and will write to the file designated
+#	by $history if that variable is set and the file it points to
+#	exists and is writeable.
+
+if {~ <=$&primitives writehistory} {
+	fn-%write-history = $&writehistory
+} {
+	fn %write-history input {
+		if {!~ $history ()} {
+			if {access -w $history} {
+				echo $input >> $history
+			} {
+				history = ()
+			}
+		}
+	}
+}
+
 
 #
 # Read-eval-print loops
@@ -706,14 +728,17 @@ set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
-#	If the primitive $&resetterminal is defined (meaning that readline
-#	is being used), setting the variables $TERM or $TERMCAP should
-#	notify the line editor library.
+#	If the primitives $&sethistory or $&resetterminal are defined (meaning
+#	that readline or editline is being used), setting the variables $TERM,
+#	$TERMCAP, or $history should notify the line editor library.
+
+if {~ <=$&primitives sethistory} {
+	set-history = $&sethistory
+}
 
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }
