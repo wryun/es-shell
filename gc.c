@@ -471,7 +471,7 @@ extern void *pseal(void *p) {
 	if (psize == 0)
 		return p;
 
-	/* TODO: this is an overestimate since it contains garbage */
+	/* TODO: this is an overestimate since it includes garbage */
 	gcreserve(psize);
 	pmode = TRUE;
 	VERBOSE(("Reserved %d for pspace copy\n", psize));
@@ -483,10 +483,12 @@ extern void *pseal(void *p) {
 	for (sp = pspace; sp != NULL; sp = sp->next)
 		VERBOSE(("GC pspace = %ux ... %ux\n", sp->bot, sp->current));
 #endif
-	VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
+	if (p != NULL) {
+		VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
 
-	p = forward(p);
-	(*(TAG(p))->scan)(p);
+		p = forward(p);
+		(*(TAG(p))->scan)(p);
+	}
 
 	/* TODO: possible performance win: save+reuse the first pspace */
 	for (sp = pspace; sp != NULL;) {

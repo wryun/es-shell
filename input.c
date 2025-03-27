@@ -237,6 +237,7 @@ extern Tree *parse(List *fc) {
 
 		parsing = FALSE;
 		fillcmd = NULL;
+		pseal(NULL);
 		throw(e);
 
 	EndExceptionHandler
