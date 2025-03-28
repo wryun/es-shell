@@ -297,11 +297,20 @@ static char *emptyprompt = "";
 
 PRIM(readline) {
 	char *line;
-	/* TODO: estrdup? */
-	char *prompt = (list == NULL ? emptyprompt : strdup(getstr(list->term)));
+	char *pr0 = getstr(list->term);
+	char *prompt = emptyprompt;
 	int old = dup(0), in = fdmap(0);
-	if (dup2(in, 0) == -1)
+
+	if (list != NULL) {
+		size_t psize = strlen(pr0) * sizeof(char) + 1;
+		prompt = ealloc(psize);
+		memcpy(prompt, pr0, psize);
+	}
+	if (dup2(in, 0) == -1) {
+		if (prompt != emptyprompt)
+			efree(prompt);
 		fail("$&readline", "dup2: %s", esstrerror(errno));
+	}
 
 	ExceptionHandler
 
@@ -311,16 +320,16 @@ PRIM(readline) {
 
 	CatchException (e)
 
-		mvfd(old, 0);
 		if (prompt != emptyprompt)
 			efree(prompt);
+		mvfd(old, 0);
 		throw(e);
 
 	EndExceptionHandler
 
-	mvfd(old, 0);
 	if (prompt != emptyprompt)
 		efree(prompt);
+	mvfd(old, 0);
 
 	if (line == NULL)
 		return NULL;
