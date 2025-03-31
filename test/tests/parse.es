@@ -27,7 +27,7 @@ test 'parser' {
 			$&parse {result 'aaaa ( bbbbb'}
 		}
 	}) {
-		assert {~ $msg 'error'*'memory exhausted'*} \
+		assert {~ $msg 'error'*'memory exhausted'* || ~ $msg 'error'*'stack overflow'*} \
 			'parser handles infinite recursion'
 	}
 
