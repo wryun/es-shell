@@ -297,7 +297,7 @@ static char *emptyprompt = "";
 
 PRIM(readline) {
 	char *line;
-	char *pr0 = getstr(list->term);
+	char *pr0 = list == NULL ? "" : getstr(list->term);
 	char *prompt = emptyprompt;
 	int old = dup(0), in = fdmap(0);
 
