@@ -38,14 +38,18 @@ static char *locate(Input *in, char *s) {
 
 static char *error = NULL;
 
+static int eoffill(Input UNUSED *in);
+
 /* yyerror -- yacc error entry point */
 extern void yyerror(char *s) {
-#if sgi
-	/* this is so that trip.es works */
-	if (streq(s, "Syntax error"))
-		s = "syntax error";
-#endif
-	if (error == NULL)	/* first error is generally the most informative */
+	/* TODO: more graceful handling for memory exhaustion?
+	 * if we're here, then we're probably hopelessly lost */
+	if (streq(s, "memory exhausted")) {
+		input->fd = -1;
+		input->fill = eoffill;
+		input->runflags &= ~run_interactive;
+		error = s;
+	} else if (error == NULL)	/* first error is generally the most informative */
 		error = locate(input, s);
 }
 
@@ -129,6 +133,9 @@ static int eoffill(Input UNUSED *in) {
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
 	long nread;
+	if (in->fd < 0)
+		fail("$&parse", "cannot read from closed file descriptor");
+
 	do {
 		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
 		SIGCHK();
@@ -160,14 +167,16 @@ static int cmdfill(Input *in) {
 	int oldf;
 
 	assert(in->buf == in->bufend);
-	assert(in->fd >= 0);
 
 	if (fillcmd == NULL)
 		return fdfill(in);
 
 	oldf = dup(0);
-	if (dup2(in->fd, 0) == -1)
-		fail("$&parse", "dup2: %s", esstrerror(errno));
+	if (in->fd >= 0) {
+		if (dup2(in->fd, 0) == -1)
+			fail("$&parse", "dup2: %s", esstrerror(errno));
+	} else
+		close(0);
 
 	ExceptionHandler
 
@@ -209,7 +218,6 @@ static int cmdfill(Input *in) {
  * the input loop
  */
 
-
 static Boolean parsing = FALSE;
 
 /* parse -- call yyparse() and catch errors */
@@ -246,11 +254,12 @@ extern Tree *parse(List *fc) {
 	fillcmd = NULL;
 
 	if (result || error != NULL) {
-		char *e;
 		assert(error != NULL);
-		e = error;
+		Ref(char *, e, error);
 		error = NULL;
+		pseal(NULL);
 		fail("$&parse", "%s", e);
+		RefEnd(e);
 	}
 
 	Ref(Tree *, pt, pseal(parsetree));
