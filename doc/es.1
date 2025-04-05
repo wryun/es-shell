@@ -988,6 +988,24 @@ If any element of a list is not equal to
 (or the empty string), that list is considered false.
 .PP
 The return value of an assignment operation is the assigned value.
+.PP
+When
+.I es
+is invoked with the
+.Cr \-e
+option, false return values generate the
+.Cr false
+exception.
+(See the section entitled
+.B Exceptions
+for more information about the
+.Cr false
+exception.)
+The
+.Cr false
+exception is caught and treated as a return value by the
+.Cr "<="
+construct.
 .SS "Logical Operators"
 There are a number of operators in
 .I es
@@ -1556,6 +1574,7 @@ Raised by the
 .Cr $&exitonfalse
 primitive when a command exits with a falsey status.
 Causes the shell to exit if not caught.
+By default, this exception is caught in an interactive shell.
 .PP
 See the builtin commands
 .Cr catch
@@ -2084,6 +2103,13 @@ If none of the
 are true, the
 .I else
 command is run.
+The
+.Cr if
+function catches any
+.Cr false
+exceptions generated from
+.IR test s
+and treats them as a false return value.
 .TP
 .Cr "limit \fR[\fP-h\fR]\fP \fI\fR[\fPresource \fR[\fPvalue\fR]\fP\fR]\fP\fP"
 Similar to the
@@ -2382,9 +2408,7 @@ shell scripts if the kernel does not.
 .Cr "%exit-on-false \fIcmd\fP"
 Runs the command, and throws the
 .Cr false
-exception if any command
-(except assignments, or those executing as the tests of
-conditional statements)
+exception if any command (except assignments)
 returns a non-zero status.
 (This function is used in the definition of
 .Cr %dispatch
@@ -2857,8 +2881,10 @@ starts with a dash
 .Rc ( - ).
 .TP
 .Cr \-e
-Exit if any command (except those executing as assignments or
-the tests of conditional statements) returns a non-zero status.
+Throw a
+.Cr false
+exception if any command (other than assignments) returns a non-zero
+status.
 .TP
 .Cr \-v
 Echo all input to standard error.
