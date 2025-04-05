@@ -18,6 +18,8 @@ test 'es -e' {
 			'if {true} {false; true}'		false
 			'if {false} {true} {false; true}'	false
 			'{true; {true; {false; true}}}'		false
+			'let (fn-x = {false; true})
+				if {x} {true} {false}'		false
 
 			# assignments
 			'x = false'				true

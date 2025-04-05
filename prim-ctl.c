@@ -17,7 +17,15 @@ PRIM(if) {
 	for (; lp != NULL; lp = lp->next) {
 		List *cond = ltrue;
 		if (lp->next != NULL) {
-			cond = eval1(lp->term, 0);
+			ExceptionHandler
+				cond = eval1(lp->term,
+						evalflags &~ (lp->next == NULL ? 0 : eval_inchild));
+			CatchException (e)
+				if (termeq(e->term, "false"))
+					cond = e->next;
+				else
+					throw(e);
+			EndExceptionHandler
 			lp = lp->next;
 		}
 		if (istrue(cond)) {
