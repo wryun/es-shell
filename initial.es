@@ -189,7 +189,7 @@ fn-while = $&noreturn @ cond body {
 				if {!$cond} {
 					throw break $result
 				} {
-					result = <=$body
+					result <={result = <=$body}
 				}
 			}
 	}
@@ -643,8 +643,9 @@ fn %interactive-loop {
 				if {!~ $type sigint sigterm sigquit} {
 					echo >[1=2] caught unexpected signal: $type
 				}
-			} {~ $e false} {
-				echo >[1=2] caught false result: $type $msg
+			} {~ $e (false caught-false)} {
+				result = $type $msg
+				echo >[1=2] result '=' $result
 			} {
 				echo >[1=2] uncaught exception: $e $type $msg
 			}
@@ -656,7 +657,15 @@ fn %interactive-loop {
 				}
 				let (code = <={%parse $prompt}) {
 					if {!~ $#code 0} {
-						result = <={$fn-%dispatch $code}
+						result = <={catch @ e rest {
+							if {~ $e false} {
+								throw caught-false $rest
+							} {
+								throw $e $rest
+							}
+						} {
+							$fn-%dispatch $code
+						}}
 					}
 				}
 			}
