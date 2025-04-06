@@ -14,12 +14,17 @@ test 'es -e' {
 			'false'					false
 			'if {false} {true}'			true
 			'if {true} {false}'			false
+			'if {false; true} {true}'		true
+			'if {true} {false; true}'		false
+			'if {false} {true} {false; true}'	false
 			'{true; {true; {false; true}}}'		false
+			'let (fn-x = {false; true})
+				if {x} {true} {false}'		false
 
 			# assignments
-			'x = false'				false
-			'fn x {false}'				false
-			'{true; {true; {x = false}; true}}'	false
+			'x = false'				true
+			'fn x {false}'				true
+			'{true; {true; {x = false}; true}}'	true
 			'let (x = false) true'			true
 			'local (x = false) true'		true
 		)) {

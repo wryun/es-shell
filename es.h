@@ -167,8 +167,8 @@ extern unsigned long evaldepth, maxevaldepth;
 
 /* glom.c */
 
-extern List *glom(Tree *tree, Binding *binding, Boolean globit);
-extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
+extern List *glom(Tree *tree, Binding *binding, Boolean globit, int evalflags);
+extern List *glom2(Tree *tree, Binding *binding, StrList **quotep, int evalflags);
 
 
 /* glob.c */
