@@ -234,6 +234,23 @@ extern Boolean issilentsignal(List *e) {
 		&& termeq(e->next->term, "sigint");
 }
 
+extern void exitonsignal(List *exception) {
+	int sig;
+	Sigeffect e;
+	if (exception == NULL || exception->next == NULL || !termeq(exception->term, "signal"))
+		return;
+	sig = signumber(getstr(exception->next->term));
+	if (sig == -1)
+		return;
+
+	/* try to die via this signal */
+	e = esignal(sig, sig_default);
+	kill(getpid(), sig);
+
+	/* didn't work, put the handler back */
+	esignal(sig, e);
+}
+
 extern List *mksiglist(void) {
 	int sig = NSIG;
 	Sigeffect effects[NSIG];
@@ -300,8 +317,10 @@ extern void sigchk(void) {
 		}
 	}
 	resetparser();
-	Ref(List *, e,
-	    mklist(mkstr("signal"), mklist(mkstr(signame(sig)), NULL)));
+	Ref(List *, e, NULL);
+	gcdisable();
+	e = mklist(mkstr("signal"), mklist(mkstr(signame(sig)), NULL));
+	gcenable();
 
 	switch (sigeffect[sig]) {
 	case sig_catch:
