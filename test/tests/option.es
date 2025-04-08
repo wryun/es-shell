@@ -14,6 +14,9 @@ test 'es -e' {
 			'false'					false
 			'if {false} {true}'			true
 			'if {true} {false}'			false
+			'if {false; true} {true}'		true
+			'if {true} {false; true}'		false
+			'if {false} {true} {false; true}'	false
 			'{true; {true; {false; true}}}'		false
 
 			# assignments
