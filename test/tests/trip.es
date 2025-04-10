@@ -214,7 +214,6 @@ test 'flat command expansion' {
 	assert {~ `` \n {$es -c '`^^{true}' >[2=1]} *'syntax error'*}
 }
 
-# Redundant with tests/embedded-eq.es
 test 'equal sign in command arguments' {
 	assert {$es -c 'echo foo=bar' > /dev/null} '''='' in argument does not cause error'
 	assert {~ `^{echo foo=bar} 'foo=bar'} '''='' is automatically concatenated with adjacent strings'
@@ -222,4 +221,13 @@ test 'equal sign in command arguments' {
 	assert {~ `^{echo foo = bar} 'foo = bar'} '''='' is not automatically concatenated with non-adjacent strings'
 	assert {~ `` \n {$es -c 'foo^= = 384; echo $foo'} *'= 384'*}
 	assert {~ `` \n {$es -c 'echo =foo; echo $echo'} *'foo'*}
+}
+
+test 'exit with signal codes' {
+	assert {~ <={$es -c 'signals = sigterm; kill -TERM $pid' >[2] /dev/null} sigterm} \
+		'die with a signal code'
+	assert {~ <={$es -c 'signals = sigchld; kill -CHLD $pid' >[2] /dev/null} 1} \
+		'die normally with an ignored signal'
+	assert {~ <={$es -c 'signals = -sigterm; throw signal sigterm' >[2] /dev/null} sigterm} \
+		'die from a thrown signal even if we would ignore it externally'
 }
