@@ -116,24 +116,6 @@ extern Noreturn esexit(int code) {
 }
 #endif
 
-/* dowait -- a waitpid wrapper that interfaces with signals */
-static int dowait(int pid, int *statusp) {
-	int n;
-	interrupted = FALSE;
-	if (!setjmp(slowlabel)) {
-		slow = TRUE;
-		n = interrupted ? -2 :
-			waitpid(pid, statusp, 0);
-	} else
-		n = -2;
-	slow = FALSE;
-	if (n == -2) {
-		errno = EINTR;
-		n = -1;
-	}
-	return n;
-}
-
 /* reap -- mark a process as dead and return it */
 static Proc *reap(int pid) {
 	Proc *proc;
@@ -154,7 +136,7 @@ static Proc *reap(int pid) {
 extern int ewait(int pidarg, Boolean interruptible) {
 	int deadpid, status;
 	Proc *proc;
-	while ((deadpid = dowait(pidarg, &status)) == -1) {
+	while ((deadpid = waitpid(pidarg, &status, 0)) == -1) {
 		if (errno == ECHILD && pidarg > 0)
 			fail("es:ewait", "wait: %d is not a child of this shell", pidarg);
 		else if (errno != EINTR)
