@@ -224,12 +224,9 @@ test 'equal sign in command arguments' {
 }
 
 test 'exit with signal codes' {
-	# TODO: these `& wait`s work around a race against
-	#   `wait: $pid is not a child of this shell'
-	# Possibly #7?
-	assert {~ <={$es -c 'signals = sigterm; kill -TERM $pid & wait' >[2] /dev/null} sigterm} \
+	assert {~ <={$es -c 'signals = sigterm; kill -TERM $pid' >[2] /dev/null} sigterm} \
 		'die with a signal code'
-	assert {~ <={$es -c 'signals = sigchld; kill -CHLD $pid & wait' >[2] /dev/null} 1} \
+	assert {~ <={$es -c 'signals = sigchld; kill -CHLD $pid' >[2] /dev/null} 1} \
 		'die normally with an ignored signal'
 	assert {~ <={$es -c 'signals = -sigterm; throw signal sigterm' >[2] /dev/null} sigterm} \
 		'die from a thrown signal even if we would ignore it externally'
