@@ -76,3 +76,15 @@ test 'match sugar' {
 		assert {~ `` \n {eval echo '{'$have'}'} '{'$want'}'}
 	}
 }
+
+test 'odd var formatting' {
+	for (syntax = (
+		'$()'
+		'$foo'
+		'$(foo bar)'
+		'$(foo^$bar)'
+		'$(<={foo})'
+	)) {
+		assert {~ `` \n {eval echo '{'$syntax'}'} '{'^$syntax^'}'}
+	}
+}
