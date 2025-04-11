@@ -8,11 +8,6 @@
 Tree errornode;
 Tree *parsetree;
 
-/* initparse -- called at the dawn of time */
-extern void initparse(void) {
-	globalroot(&parsetree);
-}
-
 /* treecons -- create new tree list cell */
 extern Tree *treecons(Tree *car, Tree *cdr) {
 	assert(cdr == NULL || cdr->kind == nList);
@@ -116,8 +111,8 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
 	Boolean pipetail;
 
 	pipetail = firstis(t2, "%pipe");
-	tail = prefix(str("%d", outfd),
-		      prefix(str("%d", infd),
+	tail = prefix(pstr("%d", outfd),
+		      prefix(pstr("%d", infd),
 			     pipetail ? t2->CDR : treecons(thunkify(t2), NULL)));
 	if (firstis(t1, "%pipe"))
 		return treeappend(t1, tail);
@@ -158,7 +153,7 @@ extern Tree *redirect(Tree *t) {
 }
 
 extern Tree *mkredircmd(char *cmd, int fd) {
-	return prefix(cmd, prefix(str("%d", fd), NULL));
+	return prefix(cmd, prefix(pstr("%d", fd), NULL));
 }
 
 extern Tree *mkredir(Tree *cmd, Tree *file) {
@@ -175,7 +170,7 @@ extern Tree *mkredir(Tree *cmd, Tree *file) {
 			yyerror("bad /dev/fd redirection");
 			op = "";
 		}
-		var = mk(nWord, str("_devfd%d", id++));
+		var = mk(nWord, pstr("_devfd%d", id++));
 		cmd = treecons(
 			mk(nWord, op),
 			treecons(var, NULL)
@@ -197,14 +192,14 @@ extern Tree *mkredir(Tree *cmd, Tree *file) {
 
 /* mkclose -- make a %close node with a placeholder */
 extern Tree *mkclose(int fd) {
-	return prefix("%close", prefix(str("%d", fd), treecons(&placeholder, NULL)));
+	return prefix("%close", prefix(pstr("%d", fd), treecons(&placeholder, NULL)));
 }
 
 /* mkdup -- make a %dup node with a placeholder */
 extern Tree *mkdup(int fd0, int fd1) {
 	return prefix("%dup",
-		      prefix(str("%d", fd0),
-			     prefix(str("%d", fd1),
+		      prefix(pstr("%d", fd0),
+			     prefix(pstr("%d", fd1),
 				    treecons(&placeholder, NULL))));
 }
 

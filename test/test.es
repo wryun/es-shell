@@ -170,8 +170,10 @@ if $junit {
 # the tests passed.
 let (status = ()) {
 	for (testfile = $*) {
-		. $testfile
-		status = $status <=report-testfile
+		status = $status <={fork {
+			. $testfile
+			report-testfile
+		}}
 	}
 
 	if $junit {

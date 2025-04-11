@@ -51,7 +51,7 @@ jobs:
           name: Test
           command: |
             mkdir -p ./test/results
-            ./es -s < ./test/test.es --junit ./test/tests/* > ./test/results/results.xml
+            ./es -ps < ./test/test.es --junit ./test/tests/* > ./test/results/results.xml
 
       - store_artifacts:
           path: ./test/results/
