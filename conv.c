@@ -84,19 +84,11 @@ top:
 		tailcall(n->u[1].p, TRUE);
 
 	case nMatch:
-		if (n->u[1].p == NULL) {
-			fmtprint(f, "~ %#T", n->u[0].p);
-			return FALSE;
-		}
-		fmtprint(f, "~ %#T ", n->u[0].p);
+		fmtprint(f, "~ %#T%s", n->u[0].p, (n->u[1].p != NULL ? " " : ""));
 		tailcall(n->u[1].p, FALSE);
 
 	case nExtract:
-		if (n->u[1].p == NULL) {
-			fmtprint(f, "~~ %#T", n->u[0].p);
-			return FALSE;
-		}
-		fmtprint(f, "~~ %#T ", n->u[0].p);
+		fmtprint(f, "~~ %#T%s", n->u[0].p, (n->u[1].p != NULL ? " " : ""));
 		tailcall(n->u[1].p, FALSE);
 
 	case nThunk:
@@ -106,7 +98,6 @@ top:
 	case nVarsub:
 		fmtprint(f, "$%#T(%T)", n->u[0].p, n->u[1].p);
 		return FALSE;
-
 
 	case nLocal:
 		binding(f, "local", n);
@@ -124,7 +115,6 @@ top:
 		binding(f, "%closure", n);
 		tailcall(n->u[1].p, FALSE);
 
-
 	case nCall: {
 		Tree *t = n->u[0].p;
 		fmtprint(f, "<=");
@@ -137,11 +127,16 @@ top:
 	case nVar:
 		fmtputc(f, '$');
 		n = n->u[0].p;
-		if (n == NULL || n->kind == nList)
+		switch (treecount(n)) {
+		case 0: default:
 			tailcall(n, TRUE);
-		else if (n->kind == nWord || n->kind == nQword)
-			goto top;
-		fmtprint(f, "(%#T)", n);
+		case 1:
+			if (n->kind == nWord || n->kind == nQword ||
+				(n->kind == nList &&
+				 (n->u[0].p->kind == nWord || n->u[0].p->kind == nQword)))
+				goto top;
+			fmtprint(f, "(%#T)", n);
+		}
 		return FALSE;
 
 	case nLambda:
