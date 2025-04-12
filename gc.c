@@ -19,6 +19,7 @@ struct Space {
 #define	INSPACE(p, sp)	((sp)->bot <= (char *) (p) && (char *) (p) < (sp)->top)
 
 #define	MIN_minspace	10000
+#define	MIN_minpspace	5000
 
 #if GCPROTECT
 #define	NSPACES		10
@@ -38,12 +39,14 @@ int gcblocked = 0;
 Tag StringTag;
 
 /* own variables */
-static Space *new, *old;
+static Space *new, *old, *pspace;
 #if GCPROTECT
 static Space *spaces;
 #endif
 static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
+
+static size_t minpspace = MIN_minpspace;	/* minimum number of bytes in a new pspace */
 
 
 /*
@@ -192,6 +195,18 @@ static Space *newspace(Space *next) {
 
 #endif	/* !GCPROTECT */
 
+/* newpspace -- create a new ``half'' space for use while parsing
+ * only exists to avoid gcprotect which I don't understand */
+static Space *newpspace(Space *next) {
+	size_t n = ALIGN(minpspace);
+	Space *space = ealloc(sizeof (Space) + n);
+	space->bot = (void *) &space[1];
+	space->top = (void *) (((char *) space->bot) + n);
+	space->current = space->bot;
+	space->next = next;
+	return space;
+}
+
 /* deprecate -- take a space and invalidate it */
 static void deprecate(Space *space) {
 #if GCPROTECT
@@ -222,7 +237,8 @@ static void deprecate(Space *space) {
 }
 
 /* isinspace -- does an object lie inside a given Space? */
-extern Boolean isinspace(Space *space, void *p) {
+extern Boolean isinspace(Space *space0, void *p) {
+	Space *space = space0;
 	for (; space != NULL; space = space->next)
 		if (INSPACE(p, space)) {
 		 	assert((char *) p < space->current);
@@ -273,12 +289,17 @@ extern void exceptionunroot(void) {
 #define	FOLLOWTO(p)	((Tag *) (((char *) p) + 1))
 #define	FOLLOW(tagp)	((void *) (((char *) tagp) - 1))
 
+static Boolean pmode = FALSE;
+
 /* forward -- forward an individual pointer from old space */
 extern void *forward(void *p) {
 	Tag *tag;
 	void *np;
 
-	if (!isinspace(old, p)) {
+	if (pmode && !isinspace(pspace, p)) {
+		VERBOSE(("GC %8ux : <<not in pspace>>\n", p));
+		return p;
+	} else if (!pmode && !isinspace(old, p)) {
 		VERBOSE(("GC %8ux : <<not in old space>>\n", p));
 		return p;
 	}
@@ -287,6 +308,7 @@ extern void *forward(void *p) {
 
 	tag = TAG(p);
 	assert(tag != NULL);
+
 	if (FORWARDED(tag)) {
 		np = FOLLOW(tag);
 		assert(TAG(np)->magic == TAGMAGIC);
@@ -297,6 +319,13 @@ extern void *forward(void *p) {
 		VERBOSE(("%s	-> %8ux (forwarded)\n", tag->typename, np));
 		TAG(p) = FOLLOWTO(np);
 	}
+
+	/* hack of the decade: recurse, sometimes */
+	if (pmode) {
+		tag = TAG(np);
+		(*tag->scan)(np);
+	}
+
 	return np;
 }
 
@@ -311,24 +340,16 @@ static void scanroots(Root *rootlist) {
 
 /* scanspace -- scan new space until it is up to date */
 static void scanspace(void) {
-	Space *sp, *scanned;
-	for (scanned = NULL;;) {
-		Space *front = new;
-		for (sp = new; sp != scanned; sp = sp->next) {
-			char *scan;
-			assert(sp != NULL);
-			scan = sp->bot;
-			while (scan < sp->current) {
-				Tag *tag = *(Tag **) scan;
-				assert(tag->magic == TAGMAGIC);
-				scan += sizeof (Tag *);
-				VERBOSE(("GC %8ux : %s	scan\n", scan, tag->typename));
-				scan += ALIGN((*tag->scan)(scan));
-			}
+	Space *sp;
+	for (sp = new; sp != NULL; sp = sp->next) {
+		char *scan = sp->bot;
+		while (scan < sp->current) {
+			Tag *tag = *(Tag **) scan;
+			assert(tag->magic == TAGMAGIC);
+			scan += sizeof (Tag *);
+			VERBOSE(("GC %8ux : %s	scan\n", scan, tag->typename));
+			scan += ALIGN((*tag->scan)(scan));
 		}
-		if (new == front)
-			break;
-		scanned = front;
 	}
 }
 
@@ -439,6 +460,49 @@ extern void gc(void) {
 	} while (new->next != NULL);
 }
 
+/* pseal -- collect pspace to new, and translate p to its new location */
+extern void *pseal(void *p) {
+	size_t psize = 0;
+	Space *sp;
+
+	for (sp = pspace; sp != NULL; sp = sp->next)
+		psize += SPACEUSED(sp);
+
+	if (psize == 0)
+		return p;
+
+	/* TODO: this is an overestimate since it includes garbage */
+	gcreserve(psize);
+	pmode = TRUE;
+	VERBOSE(("Reserved %d for pspace copy\n", psize));
+
+	assert (gcblocked >= 0);
+	++gcblocked;
+
+#if GCVERBOSE
+	for (sp = pspace; sp != NULL; sp = sp->next)
+		VERBOSE(("GC pspace = %ux ... %ux\n", sp->bot, sp->current));
+#endif
+	if (p != NULL) {
+		VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
+
+		p = forward(p);
+		(*(TAG(p))->scan)(p);
+	}
+
+	/* TODO: possible performance win: save+reuse the first pspace */
+	for (sp = pspace; sp != NULL;) {
+		Space *old = sp;
+		sp = sp->next;
+		efree(old);
+	}
+	pspace = newpspace(NULL);
+
+	--gcblocked;
+	pmode = FALSE;
+	return p;
+}
+
 /* initgc -- initialize the garbage collector */
 extern void initgc(void) {
 #if GCPROTECT
@@ -449,6 +513,7 @@ extern void initgc(void) {
 #else
 	new = newspace(NULL);
 #endif
+	pspace = newpspace(NULL);
 	old = NULL;
 }
 
@@ -478,6 +543,24 @@ extern void *gcalloc(size_t nbytes, Tag *tag) {
 			new = newspace(new);
 		else
 			gc();
+	}
+}
+
+/* palloc -- allocate an object in pspace during parse */
+extern void *palloc(size_t nbytes, Tag *tag) {
+	size_t n = ALIGN(nbytes + sizeof (Tag *));
+	assert(tag == NULL || tag->magic == TAGMAGIC);
+	for (;;) {
+		Tag **p = (void *) pspace->current;
+		char *q = ((char *) p) + n;
+		if (q <= pspace->top) {
+			pspace->current = q;
+			*p++ = tag;
+			return p;
+		}
+		if (minpspace < nbytes)
+			minpspace = nbytes + sizeof (Tag *);
+		pspace = newpspace(pspace);
 	}
 }
 
@@ -519,6 +602,22 @@ static size_t StringScan(void *p) {
 }
 
 
+extern char *pndup(const char *s, size_t n) {
+	char *ns;
+
+	ns = palloc((n + 1) * sizeof (char), &StringTag);
+	memcpy(ns, s, n);
+	ns[n] = '\0';
+	assert(strlen(ns) == n);
+
+	return ns;
+}
+
+extern char *pdup(const char *s) {
+	return pndup(s, strlen(s));
+}
+
+
 /*
  * allocation of large, contiguous buffers for large object creation
  *	see the use of this in str().  note that this region may not
@@ -547,8 +646,20 @@ extern char *sealbuffer(Buffer *buf) {
 	return s;
 }
 
+extern char *psealbuffer(Buffer *buf) {
+	char *s = pdup(buf->str);
+	efree(buf);
+	return s;
+}
+
 extern char *sealcountedbuffer(Buffer *buf) {
 	char *s = gcndup(buf->str, buf->current);
+	efree(buf);
+	return s;
+}
+
+extern char *psealcountedbuffer(Buffer *buf) {
+	char *s = pndup(buf->str, buf->current);
 	efree(buf);
 	return s;
 }

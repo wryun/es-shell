@@ -50,6 +50,8 @@ extern Buffer *bufcat(Buffer *buf, const char *s);
 extern Buffer *bufputc(Buffer *buf, char c);
 extern char *sealbuffer(Buffer *buf);
 extern char *sealcountedbuffer(Buffer *buf);
+extern char *psealbuffer(Buffer *buf);
+extern char *psealcountedbuffer(Buffer *buf);
 extern void freebuffer(Buffer *buf);
 
 extern void *forward(void *p);
