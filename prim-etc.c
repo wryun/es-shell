@@ -19,7 +19,7 @@ PRIM(echo) {
 			list = list->next;
 	}
 	print("%L%s", list, " ", eol);
-	return true;
+	return ltrue;
 }
 
 PRIM(count) {
@@ -148,19 +148,27 @@ PRIM(var) {
 	return list;
 }
 
-PRIM(sethistory) {
-	if (list == NULL) {
-		sethistory(NULL);
-		return NULL;
-	}
-	Ref(List *, lp, list);
-	sethistory(getstr(lp->term));
-	RefReturn(lp);
+static void loginput(char *input) {
+	char *c;
+	List *fn = varlookup("fn-%write-history", NULL);
+	if (!isinteractive() || !isfromfd() || fn == NULL)
+		return;
+	for (c = input;; c++)
+		switch (*c) {
+		case '#': case '\n': return;
+		case ' ': case '\t': break;
+		default: goto writeit;
+		}
+writeit:
+	gcdisable();
+	Ref(List *, list, append(fn, mklist(mkstr(input), NULL)));
+	gcenable();
+	eval(list, NULL, 0);
+	RefEnd(list);
 }
 
 PRIM(parse) {
 	List *result;
-	Tree *tree;
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
@@ -170,12 +178,22 @@ PRIM(parse) {
 			prompt2 = getstr(lp->term);
 	}
 	RefEnd(lp);
-	tree = parse(prompt1, prompt2);
+	newhistbuffer();
+
+	Ref(Tree *, tree, NULL);
+	ExceptionHandler
+		tree = parse(prompt1, prompt2);
+	CatchException (e)
+		loginput(dumphistbuffer());
+		throw(e);
+	EndExceptionHandler
+
+	loginput(dumphistbuffer());
 	result = (tree == NULL)
 		   ? NULL
 		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
 			    NULL);
-	RefEnd2(prompt2, prompt1);
+	RefEnd3(tree, prompt2, prompt1);
 	return result;
 }
 
@@ -184,7 +202,7 @@ PRIM(exitonfalse) {
 }
 
 PRIM(batchloop) {
-	Ref(List *, result, true);
+	Ref(List *, result, ltrue);
 	Ref(List *, dispatch, NULL);
 
 	SIGCHK();
@@ -212,8 +230,8 @@ PRIM(batchloop) {
 		if (!termeq(e->term, "eof"))
 			throw(e);
 		RefEnd(dispatch);
-		if (result == true)
-			result = true;
+		if (result == ltrue)
+			result = ltrue;
 		RefReturn(result);
 
 	EndExceptionHandler
@@ -221,7 +239,7 @@ PRIM(batchloop) {
 
 PRIM(collect) {
 	gc();
-	return true;
+	return ltrue;
 }
 
 PRIM(home) {
@@ -243,9 +261,12 @@ PRIM(internals) {
 }
 
 PRIM(isinteractive) {
-	return isinteractive() ? true : false;
+	return isinteractive() ? ltrue : lfalse;
 }
 
+#ifdef noreturn
+#undef noreturn
+#endif
 PRIM(noreturn) {
 	if (list == NULL)
 		fail("$&noreturn", "usage: $&noreturn lambda args ...");
@@ -279,10 +300,44 @@ PRIM(setmaxevaldepth) {
 	RefReturn(lp);
 }
 
-#if READLINE
+#if HAVE_READLINE
+PRIM(sethistory) {
+	if (list == NULL) {
+		sethistory(NULL);
+		return NULL;
+	}
+	Ref(List *, lp, list);
+	sethistory(getstr(lp->term));
+	RefReturn(lp);
+}
+
+PRIM(writehistory) {
+	if (list == NULL || list->next != NULL)
+		fail("$&writehistory", "usage: $&writehistory command");
+	loghistory(getstr(list->term));
+	return NULL;
+}
+
+PRIM(setmaxhistorylength) {
+	char *s;
+	int n;
+	if (list == NULL) {
+		setmaxhistorylength(-1); /* unlimited */
+		return NULL;
+	}
+	if (list->next != NULL)
+		fail("$&setmaxhistorylength", "usage: $&setmaxhistorylength [limit]");
+	Ref(List *, lp, list);
+	n = (int)strtol(getstr(lp->term), &s, 0);
+	if (n < 0 || (s != NULL && *s != '\0'))
+		fail("$&setmaxhistorylength", "max-history-length must be set to a positive integer");
+	setmaxhistorylength(n);
+	RefReturn(lp);
+}
+
 PRIM(resetterminal) {
 	resetterminal = TRUE;
-	return true;
+	return ltrue;
 }
 #endif
 
@@ -299,7 +354,6 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(dot);
 	X(flatten);
 	X(whatis);
-	X(sethistory);
 	X(split);
 	X(fsplit);
 	X(var);
@@ -315,8 +369,11 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(exitonfalse);
 	X(noreturn);
 	X(setmaxevaldepth);
-#if READLINE
+#if HAVE_READLINE
+	X(sethistory);
+	X(writehistory);
 	X(resetterminal);
+	X(setmaxhistorylength);
 #endif
 	return primdict;
 }

@@ -13,6 +13,7 @@ Atomic interrupted = FALSE;
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
+static Sighandler handler_in[NSIG];
 
 #if HAVE_SIGACTION
 #ifndef	SA_NOCLDSTOP
@@ -73,7 +74,7 @@ static void catcher(int sig) {
 #endif
 	if (hasforked)
 		/* exit unconditionally on a signal in a child process */
-		exit(1);
+		esexit(1);
 	if (caught[sig] == 0) {
 		caught[sig] = TRUE;
 		++sigcount;
@@ -123,6 +124,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 				eprint("$&setsignals: special handler not defined for %s\n", signame(sig));
 				return old;
 			}
+			FALLTHROUGH;
 		case sig_catch:
 		case sig_noop:
 			if (setsignal(sig, catcher) == SIG_ERR) {
@@ -131,7 +133,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 			}
 			break;
 		case sig_default:
-			setsignal(sig, SIG_DFL);
+			setsignal(sig, (handler_in[sig] == NULL ? SIG_DFL : handler_in[sig]));
 			break;
 		default:
 			NOTREACHED;
@@ -184,11 +186,17 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 #endif /* !HAVE_SIGACTION */
 		else if (h == SIG_DFL || h == SIG_ERR)
 			sigeffect[sig] = sig_default;
-		else
+		else {
+#if TRUST_INCOMING_SIGNAL_HANDLERS
+			sigeffect[sig] = sig_default;
+			handler_in[sig] = h;
+#else
 			panic(
 				"initsignals: bad incoming signal value for %s: %x",
 				signame(sig), h
 			);
+#endif
+		}
 	}
 
 	if (interactive || sigeffect[SIGINT] == sig_default)
@@ -224,6 +232,23 @@ extern Boolean issilentsignal(List *e) {
 	return (termeq(e->term, "signal"))
 		&& e->next != NULL
 		&& termeq(e->next->term, "sigint");
+}
+
+extern void exitonsignal(List *exception) {
+	int sig;
+	Sigeffect e;
+	if (exception == NULL || exception->next == NULL || !termeq(exception->term, "signal"))
+		return;
+	sig = signumber(getstr(exception->next->term));
+	if (sig == -1)
+		return;
+
+	/* try to die via this signal */
+	e = esignal(sig, sig_default);
+	kill(getpid(), sig);
+
+	/* didn't work, put the handler back */
+	esignal(sig, e);
 }
 
 extern List *mksiglist(void) {
@@ -278,7 +303,7 @@ extern void sigchk(void) {
 		return;
 	if (hasforked)
 		/* exit unconditionally on a signal in a child process */
-		exit(1);
+		esexit(1);
 
 	for (sig = 0;; sig++) {
 		if (caught[sig] != 0) {
@@ -292,15 +317,16 @@ extern void sigchk(void) {
 		}
 	}
 	resetparser();
-	Ref(List *, e,
-	    mklist(mkstr("signal"), mklist(mkstr(signame(sig)), NULL)));
+	Ref(List *, e, NULL);
+	gcdisable();
+	e = mklist(mkstr("signal"), mklist(mkstr(signame(sig)), NULL));
+	gcenable();
 
 	switch (sigeffect[sig]) {
 	case sig_catch:
 		while (gcisblocked())
 			gcenable();
 		throw(e);
-		NOTREACHED;
 	case sig_special:
 		assert(sig == SIGINT);
 		/* this is the newline you see when you hit ^C while typing a command */
@@ -310,8 +336,6 @@ extern void sigchk(void) {
 		while (gcisblocked())
 			gcenable();
 		throw(e);
-		NOTREACHED;
-		break;
 	case sig_noop:
 		break;
 	default:

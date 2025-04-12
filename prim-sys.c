@@ -14,7 +14,7 @@
 #if BSD_LIMITS || BUILTIN_TIME
 #include <sys/time.h>
 #include <sys/resource.h>
-#if !HAVE_WAIT3
+#if !HAVE_GETRUSAGE
 #include <sys/times.h>
 #include <limits.h>
 #endif
@@ -23,34 +23,28 @@
 #include <sys/stat.h>
 
 PRIM(newpgrp) {
-	int pid;
+	int e;
+	pid_t pgid;
 	if (list != NULL)
 		fail("$&newpgrp", "usage: newpgrp");
-	pid = getpid();
-	setpgrp(pid, pid);
-#ifdef TIOCSPGRP
-	{
-		Sigeffect sigtstp = esignal(SIGTSTP, sig_ignore);
-		Sigeffect sigttin = esignal(SIGTTIN, sig_ignore);
-		Sigeffect sigttou = esignal(SIGTTOU, sig_ignore);
-		ioctl(2, TIOCSPGRP, &pid);
-		esignal(SIGTSTP, sigtstp);
-		esignal(SIGTTIN, sigttin);
-		esignal(SIGTTOU, sigttou);
+	pgid = spgrp(getpid());
+	if ((e = tctakepgrp()) != 0) {
+		spgrp(pgid);
+		fail("$&newpgrp", "newpgrp: %s", esstrerror(e));
 	}
-#endif
-	return true;
+	return ltrue;
 }
 
 PRIM(background) {
 	int pid = efork(TRUE, TRUE);
 	if (pid == 0) {
 #if JOB_PROTECT
-		/* job control safe version: put it in a new pgroup. */
-		setpgrp(0, getpid());
+		/* job control safe version: put it in a new pgroup, if interactive. */
+		if (isinteractive())
+			setpgid(0, 0);
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
-		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	}
 	return mklist(mkstr(str("%d", pid)), NULL);
 }
@@ -59,7 +53,7 @@ PRIM(fork) {
 	int pid, status;
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
-		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
 	SIGCHK();
 	printstatus(0, status);
@@ -81,7 +75,7 @@ PRIM(umask) {
 		int mask = umask(0);
 		umask(mask);
 		print("%04o\n", mask);
-		return true;
+		return ltrue;
 	}
 	if (list->next == NULL) {
 		int mask;
@@ -91,7 +85,7 @@ PRIM(umask) {
 		if ((t != NULL && *t != '\0') || ((unsigned) mask) > 07777)
 			fail("$&umask", "bad umask: %s", s);
 		umask(mask);
-		return true;
+		return ltrue;
 	}
 	fail("$&umask", "usage: umask [mask]");
 	NOTREACHED;
@@ -104,7 +98,7 @@ PRIM(cd) {
 	dir = getstr(list->term);
 	if (chdir(dir) == -1)
 		fail("$&cd", "chdir %s: %s", dir, esstrerror(errno));
-	return true;
+	return ltrue;
 }
 
 PRIM(setsignals) {
@@ -290,43 +284,60 @@ PRIM(limit) {
 		}
 	}
 	RefEnd(lp);
-	return true;
+	return ltrue;
 }
 #endif	/* BSD_LIMITS */
 
 #if BUILTIN_TIME
-PRIM(time) {
+#if HAVE_GETRUSAGE
+/* This function is provided as timersub(3) on some systems, but it's simple enough
+ * to do ourselves. */
+static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
+	res->tv_sec = a->tv_sec - b->tv_sec;
+	res->tv_usec = a->tv_usec - b->tv_usec;
+	if (res->tv_usec < 0) {
+		res->tv_sec -= 1;
+		res->tv_usec += 1000000;
+	}
+}
+#endif
 
-#if HAVE_WAIT3
+PRIM(time) {
+#if HAVE_GETRUSAGE
 
 	int pid, status;
 	time_t t0, t1;
-	struct rusage r;
+	struct rusage ru_prev, ru_new, ru_diff;
 
 	Ref(List *, lp, list);
 
+	getrusage(RUSAGE_CHILDREN, &ru_prev);
 	gc();	/* do a garbage collection first to ensure reproducible results */
 	t0 = time(NULL);
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
-		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewait(pid, FALSE, &r);
+		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+	status = ewait(pid, FALSE);
 	t1 = time(NULL);
 	SIGCHK();
 	printstatus(0, status);
 
+	getrusage(RUSAGE_CHILDREN, &ru_new);
+	timesub(&ru_new.ru_utime, &ru_prev.ru_utime, &ru_diff.ru_utime);
+	timesub(&ru_new.ru_stime, &ru_prev.ru_stime, &ru_diff.ru_stime);
+
 	eprint(
 		"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
 		t1 - t0,
-		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 100000),
-		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 100000),
+		ru_diff.ru_utime.tv_sec, (long) (ru_diff.ru_utime.tv_usec / 100000),
+		ru_diff.ru_stime.tv_sec, (long) (ru_diff.ru_stime.tv_usec / 100000),
 		lp, " "
 	);
 
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
 
-#else	/* !HAVE_WAIT3 */
+#else	/* !HAVE_GETRUSAGE */
 
 	int pid, status;
 	Ref(List *, lp, list);
@@ -344,7 +355,7 @@ PRIM(time) {
 		t0 = times(&tms);
 		pid = efork(TRUE, FALSE);
 		if (pid == 0)
-			exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+			esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 
 		status = ewaitfor(pid);
 		t1 = times(&tms);
@@ -361,7 +372,7 @@ PRIM(time) {
 			tms.tms_cstime / ticks, ((tms.tms_cstime * 10) / ticks) % 10,
 			lp, " "
 		);
-		exit(status);
+		esexit(status);
 	}
 	status = ewaitfor(pid);
 	SIGCHK();
@@ -370,8 +381,7 @@ PRIM(time) {
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
 
-#endif	/* !HAVE_WAIT3 */
-
+#endif	/* !HAVE_GETRUSAGE */
 }
 #endif	/* BUILTIN_TIME */
 

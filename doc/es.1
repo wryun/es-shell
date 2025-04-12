@@ -179,7 +179,7 @@
 .nr )P +.5v
 .sp .4v \}
 ..
-.TH ES 1 "5 March 1992"
+.TH ES 1 "29 August 2024"
 .SH NAME
 es \- extensible shell
 .SH SYNOPSIS
@@ -251,27 +251,27 @@ gives several characters special meaning;
 special characters automatically terminate words.
 The following characters, along with space, tab, and newline, are special:
 .Ds
-.Cr "# $ & \' ( ) ; < = > \e ^ \` { | }"
+.Cr "# $ & \(aq ( ) ; < = > \e \(ha \(ga { | }"
 .De
 .PP
 The single quote
-.Rc ( ' )
+.Rc ( \(aq )
 prevents special treatment of any character other than itself.
 Any characters between single quotes, including newlines, backslashes,
 and control characters, are treated as an uninterpreted string.
 A quote character itself may be quoted by placing two quotes in a row.
 A single quote character is therefore represented by the sequence
-.Cr '''' .
+.Cr \(aq\(aq\(aq\(aq .
 The empty string is represented by
-.Cr '' .
+.Cr \(aq\(aq .
 Thus:
 .Ds
-.Cr "echo 'What''s the plan, Stan?'"
+.Cr "echo \(aqWhat\(aq\(aqs the plan, Stan?\(aq"
 .De
 .PP
 prints out
 .Ds
-.Cr "What's the plan, Stan?"
+.Cr "What\(aqs the plan, Stan?"
 .De
 .PP
 The backslash
@@ -318,7 +318,7 @@ The number sign
 begins a comment in
 .IR es .
 All characters up to but not including the next newline are ignored.
-.SS "Line continuation"
+.SS "Line Continuation"
 A long logical line may be continued over several physical lines by
 terminating each line (except the last) with a backslash
 .Rc ( \e ).
@@ -344,7 +344,7 @@ Thus, the following are all equivalent:
 .De
 .PP
 Note that the null string,
-.Cr "''" ,
+.Cr "\(aq\(aq" ,
 and the empty list,
 .Cr "()" ,
 are two very
@@ -353,10 +353,10 @@ Assigning the null string to variable is a valid
 operation, but it does not remove its definition.
 .SS Concatenation
 Two lists may be joined by the concatenation operator
-.Rc ( ^ ).
+.Rc ( \(ha ).
 A single word is a list of length one, so
 .Ds
-.Cr "echo foo^bar"
+.Cr "echo foo\(habar"
 .De
 .PP
 produces the output
@@ -368,7 +368,7 @@ For lists of more than one element,
 concatenation produces the cross (Cartesian) product of
 the elements in both lists:
 .Ds
-.Cr "echo (a\- b\- c\-)^(1 2)"
+.Cr "echo (a\- b\- c\-)\(ha(1 2)"
 .De
 .PP
 produces the output
@@ -446,7 +446,7 @@ is the same as
 Note that when assigning values to more than one variable,
 the list of variables must be enclosed in parentheses.
 .PP
-For ``free careting'' (see below) to work correctly,
+For \(lqfree careting\(rq (see below) to work correctly,
 .I es
 must make certain assumptions
 about what characters may appear in a variable name.
@@ -464,7 +464,7 @@ To reference a variable with other
 characters in its name, quote the variable name.
 Thus:
 .Ds
-.Cr "echo $'we$Ird\Variab!le'"
+.Cr "echo $\(aqwe$Ird\Variab!le\(aq"
 .De
 .PP
 A variable name produced by some complex operation,
@@ -478,7 +478,7 @@ Thus:
 .Cr "Good\-Morning = Bonjour"
 .Cr "Guten = Good"
 .Cr "Morgen = Morning"
-.Cr "echo $($Guten^\-^$Morgen)"
+.Cr "echo $($Guten\(ha\-\(ha$Morgen)"
 .De
 .PP
 prints
@@ -544,7 +544,7 @@ prints
 .De
 .PP
 Subscript ranges are of the form
-.Ic lo ... hi
+.Ic lo " ... " hi
 and refer to all the elements between
 .I lo
 and
@@ -587,7 +587,7 @@ Note that the list of subscripts may be given by any
 .IR es
 expression, so
 .Ds
-.Cr "$var(\`{awk 'BEGIN{for(i=1;i<=10;i++)print i;exit }'})"
+.Cr "$var(\(ga{awk \(aqBEGIN{for(i=1;i<=10;i++)print i;exit }\(aq})"
 .De
 .PP
 returns the first 10 elements of
@@ -599,13 +599,13 @@ in order to save some typing on the user's behalf.
 For example, the following are all equivalent:
 .Ds
 .Cr "cc \-O \-g \-c malloc.c alloca.c"
-.Cr "cc \-^(O g c) (malloc alloca)^.c"
+.Cr "cc \-\(ha(O g c) (malloc alloca)\(ha.c"
 .Cr "opts=O g c; files=malloc alloca; cc \-$opts $files.c"
 .De
 .PP
 .I Es
 inserts a free-caret between the
-.Rc `` \- ''
+.Rc \(lq \- \(rq
 and
 .Cr "$opts" ,
 as well
@@ -623,7 +623,7 @@ inserts a caret between them.
 To create a single-element list from a multi-element list,
 with the components space-separated, use
 .Ds
-.Ci $^ var
+.Ci $\(ha var
 .De
 .PP
 Flattening is useful when the normal list concatenation rules need to be
@@ -632,18 +632,9 @@ For example, to append a single period at the end of
 .Cr $path ,
 use:
 .Ds
-.Cr "echo $^path."
+.Cr "echo $\(hapath."
 .De
 .PP
-To flatten the output of a command, use
-.Ds
-.Ci `\^{cmd args}
-.De
-.PP
-See the section entitled
-.B "Command Substitution"
-for more information.
-
 .SS "Wildcard Expansion"
 .I Es
 expands wildcards in filenames if possible.
@@ -662,7 +653,7 @@ will only perform pattern matching if a metacharacter occurs unquoted and
 literally in the input.
 Thus,
 .Ds
-.Cr "foo = '*'"
+.Cr "foo = \(aq*\(aq"
 .Cr "echo $foo"
 .De
 .PP
@@ -688,9 +679,9 @@ The rules for character class matching are the same as those for
 .IR ed (1),
 with the exception that character class negation is achieved
 with the tilde
-.Rc ( ~ ),
+.Rc ( \(ti ),
 not the caret
-.Rc ( ^ ),
+.Rc ( \(ha ),
 since the caret already means
 something else in
 .IR es .
@@ -705,7 +696,7 @@ do not match a dot character
 at the beginning of a filename component.
 .PP
 A tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 as the first character of an argument is used to refer to home directories.
 A tilde alone or followed by a slash
 .Rc ( / )
@@ -717,13 +708,13 @@ of that user, according to
 .IR getpwent (3).
 .SS "Pattern Matching"
 The tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 operator is used in
 .I es
 for matching strings against wildcard patterns.
 The command
 .Ds
-.Cr "~ \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
+.Cr "\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
 .De
 .PP
 returns a true value if and only if the subject matches any of the patterns.
@@ -735,18 +726,18 @@ do not have to be matched explicitly,
 and home directory expansion does not occur.
 Thus
 .Ds
-.Cr "~ foo f*"
+.Cr "\(ti foo f*"
 .De
 .PP
 returns zero (true), while
 .Ds
-.Cr "~ (bar baz) f*"
+.Cr "\(ti (bar baz) f*"
 .De
 .PP
 returns one (false).
 The null list is matched by the null list, so
 .Ds
-.Cr "~ $foo ()"
+.Cr "\(ti $foo ()"
 .De
 .PP
 checks to see whether
@@ -755,11 +746,11 @@ is empty or not.
 This may also be achieved
 by the test
 .Ds
-.Cr "~ $#foo 0"
+.Cr "\(ti $#foo 0"
 .De
 .PP
 Note that inside a
-.Cr ~
+.Cr \(ti
 command
 .I es
 does not match patterns against file
@@ -774,78 +765,101 @@ does expand the subject against filenames if it contains
 metacharacters.
 Thus, the command
 .Ds
-.Cr "~ * ?"
+.Cr "\(ti * ?"
 .De
 .PP
 returns true if any of the files in the current directory have a
 single-character name.
 Note that if the
-.Cr ~
+.Cr \(ti
 command is given a list as its first
 argument, then a successful match against any of the elements of that
 list will cause
-.Cr ~
+.Cr \(ti
 to return true.
 For example:
 .Ds
-.Cr "~ (foo goo zoo) z*"
+.Cr "\(ti (foo goo zoo) z*"
 .De
 .PP
 is true.
-.SS "Matching multiple patterns"
-While pattern matching using the tilde
-.Cr ( ~ )
-operator is powerful, it can feel limiting when you need to perform one of
-several possible actions depending on which patterns match the same subject
-every time.
-For this situation,
-.I es
-has a
+.SS "Matching Multiple Patterns"
+.I Es
+provides a
 .Cr match
-command that can simplify things:
+command for cases where repeated pattern matching with the tilde
+.Rc ( \(ti )
+operator is inconvenient.
+.PP
+This invocation compares the
+.I subject
+against the given patterns and executes the first action corresponding
+with a matched pattern, or throws an
+.Cr error
+exception if no matches for the
+.I subject
+exist:
+.ta 2.5i
 .Ds
 .Cr "match \fIsubject\fP ("
-.Cr "  \fIpattern1\fP            {action1}"
-.Cr "  (\fIpattern2 pattern3\fP) {action2}"
-.Cr "  (\fIpattern4 pattern5 pattern6\fP) {"
-.Cr "    action3"
-.Cr "  }"
-.Cr "  ..."
-.Cr "  * {"
-.Cr "    throw error example no matching patterns"
-.Cr "  }"
+.Cr "    \fIpattern1\fP	{\fIaction1\fP}"
+.Cr "    (\fIpattern2 pattern3\fP)	{\fIaction2\fP}"
+.Cr "    * {"
+.Cr "        echo no matching patterns"
+.Cr "    }"
 .Cr ")"
 .De
 .PP
-The behavior is the same as an
+The body of a
+.Cr match
+must be wrapped in parentheses.
+Each
+.I pattern
+must be on the same line as its corresponding
+.IR action ,
+and separate
+.IR pattern - action
+pairs must be separated by newlines or semicolons.
+.PP
+The matching behavior is equivalent to an
 .Cr if
 command with multiple
-.Cr ~
-commands and command blocks as arguments, and each list of patterns is
-evaluated in the order presented.
-For example, the match command and the if command below are equivalent:
+.Cr \(ti
+comparisons.
+For example, the
+.Cr match
+command and the
+.Cr if
+command below are equivalent:
 .Ds
 .Cr "               bc = bang crack"
 .Cr "               bp = biff plop"
 .Cr "               bw = bam boom wham"
 
-.Cr "match $sound (          if {~ $sound $bc} {"
+.Cr "match $sound (          if {\(ti $sound $bc} {"
 .Cr "  $bc {result 3}          result 3"
-.Cr "  ($bp $bw *ow) {}      } {~ $sound $bp $bw *ow} {"
+.Cr "  ($bp $bw *ow) {}      } {\(ti $sound $bp $bw *ow} {"
 .Cr "  * {                   } {"
 .Cr "    false                 false"
 .Cr "  }                     }"
 .Cr ")"
 .De
+.PP
+The value of the
+.I subject
+being matched is dynamically bound to the variable
+.Cr $matchexpr
+within the body of the
+.Cr match .
 .SS "Pattern Extraction"
 The double-tilde
-.Rc ( ~~ )
+.Rc ( \(ti\(ti )
 operator is used in
 .I es
 for extracting the parts of strings that match patterns.
 The command
 .Ds
-.Cr "~~ \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
+.Cr "\(ti\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
 .De
 .PP
 returns the parts of each matching subject which correspond to the
@@ -862,7 +876,7 @@ subject.  If the subject does not match, the next pattern is tried.
 .PP
 For example, the result of the extraction operation
 .Ds
-.Cr "~~ (foo.c foo.x bar.h) *.[ch]"
+.Cr "\(ti\(ti (foo.c foo.x bar.h) *.[ch]"
 .De
 .PP
 is the list
@@ -871,24 +885,25 @@ is the list
 A list may be formed from the output of a command by using backquote
 substitution:
 .Ds
-.Ci "\`{" " command " }
+.Ci "\(ga{" " command " }
 .De
 .PP
 returns a list formed from the standard output of the command in braces.
-Its return value is stored in the variable $bqstatus.
+Its return value is stored in the variable
+.Cr $bqstatus .
 .PP
 The characters in the variable
 .Cr $ifs
-(for ``input field separator'')
+(for \(lqinput field separator\(rq)
 are used to split the output into list elements.
 By default,
 .Cr $ifs
 has the value space-tab-newline.
 The braces may be omitted if the command is a single word.
 Thus
-.Cr \`ls
+.Cr \(gals
 may be used instead of
-.Cr "\`{ls}" .
+.Cr "\(ga{ls}" .
 This last feature is useful when defining functions that expand
 to useful argument lists.
 A frequent use is:
@@ -898,7 +913,7 @@ A frequent use is:
 .PP
 followed by
 .Ds
-.Cr "wc \`src"
+.Cr "wc \(gasrc"
 .De
 .PP
 (This will print out a word-count of all C and Yacc source files in the current
@@ -908,7 +923,7 @@ In order to override the value of
 .Cr $ifs
 for a single command substitution, use:
 .Ds
-.Ci "\`\`" " ifs-list " { " command " }
+.Ci "\(ga\(ga" " ifs-list " { " command " }
 .De
 .PP
 .Cr $ifs
@@ -916,7 +931,7 @@ will be temporarily ignored and the command's output will be split as specified 
 the list following the double backquote.
 For example:
 .Ds
-.Cr "\`\` :\en {cat /etc/passwd}"
+.Cr "\(ga\(ga :\en {cat /etc/passwd}"
 .De
 .PP
 splits up
@@ -924,9 +939,20 @@ splits up
 into fields.
 .PP
 A caret
-.Rc ( ^ )
+.Rc ( \(ha )
 can be added after the backquote to flatten the list output back into a single
-element (using space as the separator).
+element (using space as the separator) as follows:
+.Ds
+.Ci "\(ga\(ha{" " command " "}"
+.De
+.PP
+Or, to flatten the output of a command substitution but still specify
+.Cr ifs ,
+this can be used:
+.Ds
+.Ci "\(ga\(ga\(ha" " ifs " "{" " command " "}"
+.De
+.PP
 .SS "Return Values"
 The return value of a command is obtained with the construct
 .Ds
@@ -952,13 +978,13 @@ might produce the output
 along with any output or error messages from the programs.
 .PP
 .I Es
-functions and primitives can produce ``rich return values,''
+functions and primitives can produce \(lqrich return values,\(rq
 that is, arbitrary lists as return values.
 .PP
 When return values are interpreted as truth values,
 an extension of the normal shell conventions apply.
 If any element of a list is not equal to
-.Rc `` 0 ''
+.Rc \(lq 0 \(rq
 (or the empty string), that list is considered false.
 .PP
 The return value of an assignment operation is the assigned value.
@@ -971,33 +997,33 @@ which depend on the exit status of a command.
 .De
 .PP
 executes the first command and then executes the second command if and only if
-the first command has a ``true'' return value.
+the first command has a \(lqtrue\(rq return value.
 .Ds
 .Ic command1 " || " command2
 .De
 .PP
 executes the first command and then executes the second command if and only if
-the first command has a ``false'' return value.
+the first command has a \(lqfalse\(rq return value.
 .Ds
 .Ci ! " command"
 .De
 .PP
 inverts the truth value of the exit status of a command.
-.SS "Input and output"
+.SS "Input and Output"
 The standard output of a command may be redirected to a file with
 .Ds
-.Cr "command > file"
+.Ic command " > " file
 .De
 .PP
 and the standard input may be taken from a file with
 .Ds
-.Cr "command < file"
+.Ic command " < " file
 .De
 .PP
 File descriptors other than 0 and 1 may be specified also.
 For example, to redirect standard error to a file, use:
 .Ds
-.Cr "command >[2] file"
+.Ic command " >[2] " file
 .De
 .PP
 In order to duplicate a file descriptor, use
@@ -1005,7 +1031,7 @@ In order to duplicate a file descriptor, use
 Thus to redirect both standard output and standard error
 to the same file, use
 .Ds
-.Cr "command > file >[2=1]"
+.Ic command " > " file " >[2=1]"
 .De
 .PP
 To close a file descriptor that may be open, use
@@ -1013,13 +1039,13 @@ To close a file descriptor that may be open, use
 For example, to
 close file descriptor 7:
 .Ds
-.Cr "command >[7=]"
+.Ic command " >[7=]"
 .De
 .PP
 In order to place the output of a command at the end of an already
 existing file, use:
 .Ds
-.Cr "command >> file"
+.Ic command " >> " file
 .De
 .PP
 If the file does not exist, then it is created.
@@ -1038,25 +1064,23 @@ truncates a file and opens it for reading and writing, and
 opens a file for reading and appending;
 these operators use file descriptor 1 by default.
 .PP
-``Here documents'' are supported as in
+\(lqHere documents\(rq are supported as in
 .IR sh (1)
 with the use of
 .Ds
-.Cr "command << 'eof-marker'"
+.Ic command " << \(aq" eof-marker "\(aq"
 .De
 .PP
 If the end-of-file marker is quoted,
 then no variable substitution occurs inside the here document.
 Otherwise, every variable is substituted
-by its space-separated-list value (see
-.BR "Flat Lists" ,
-below),
+by its space-separated-list value
 and if a
-.Cr ^
+.Cr \(ha
 character follows a variable name, it is deleted.
 This allows the unambiguous use of variables adjacent to text, as in
 .Ds
-.Cr $variable^follow
+.Cr $variable\(hafollow
 .De
 .PP
 To include a literal
@@ -1066,11 +1090,11 @@ in a here document created with an unquoted end-of-file marker, use
 .PP
 Additionally,
 .I es
-supports ``here strings'', which are like here documents,
+supports \(lqhere strings\(rq, which are like here documents,
 except that input is taken directly from a string on the command line.
 Its use is illustrated here:
 .Ds
-.Cr "cat <<< 'this is a here string' | wc"
+.Cr "cat <<< \(aqthis is a here string\(aq | wc"
 .De
 .PP
 (This feature enables
@@ -1099,11 +1123,12 @@ As an example, to pipe the standard error of a command to
 .IR wc (1),
 use:
 .Ds
-.Cr "command |[2] wc"
+.Ic command " |[2] wc"
 .De
 .PP
-The exit status of a pipeline is considered true if and only if every
-command in the pipeline exits true.
+A pipeline returns a list containing each element's exit status, which
+means that the exit status of a pipeline is considered true if and
+only if every command in the pipeline exits true.
 .SS "Input/Output Substitution"
 Some commands, like
 .IR cmp (1)
@@ -1118,7 +1143,7 @@ can read the output of two commands at once.
 .I Es
 does it like this:
 .Ds
-.Cr "cmp <{command1} <{command2}"
+.Ci "cmp <{" command1 "} <{" command2 "}"
 .De
 .PP
 compares the output of the two commands.
@@ -1137,7 +1162,7 @@ Data can be sent down a pipe to several commands using
 .IR tee (1)
 and the output version of this notation:
 .Ds
-.Cr "echo hi there | tee >{sed 's/^/p1 /'} >{sed 's/^/p2 /'}"
+.Cr "echo hi there | tee >{sed \(aqs/\(ha/p1 /\(aq} >{sed \(aqs/\(ha/p2 /\(aq}"
 .De
 .SS "Program Fragments"
 .I Es
@@ -1317,7 +1342,7 @@ and will invoke appropriately named settor functions (see below).
 In addition to local variables,
 .I es
 supports a different form of temporary variable binding,
-using let-bound, or ``lexically scoped,'' variables.
+using let-bound, or \(lqlexically scoped,\(rq variables.
 (Lexical scoping is the form of binding used by most compiled
 programming languages, such as C or Scheme.)
 A lexically scoped variable is introduced with a
@@ -1343,8 +1368,8 @@ An example best shows the difference between
 .Cr let
 and
 .Cr local
-(also known as ``dynamic'') binding: (note that
-.Rc `` "; " ''
+(also known as \(lqdynamic\(rq) binding: (note that
+.Rc \(lq "; " \(rq
 is
 .IR es 's
 default prompt.)
@@ -1370,7 +1395,7 @@ default prompt.)
 Lexically bound variables are not exported into the environment,
 and never cause the invocation of settor functions.
 Function (lambda) parameters are lexically bound to their values.
-.SS "For loops"
+.SS "For Loops"
 The command
 .Ds
 .Cr "for (\fIvar\fP = \fIlist\fP) \fIcommand\fP"
@@ -1502,7 +1527,7 @@ is the name of the routine (typically a primitive) which
 raised the error.
 .TP
 .Cr retry
-When raised from a signal catcher,
+When raised from an exception catcher,
 causes the body of the
 .Cr catch
 clause to be run again.
@@ -1579,7 +1604,7 @@ does not append commands to any file.
 .TP
 .Cr home
 The current user's home directory, used in tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 expansion, as the default directory for the builtin
 .Cr cd
 command, and as the directory in which
@@ -1605,12 +1630,34 @@ The initial value of
 .Cr ifs
 is space-tab-newline.
 .TP
-.Cr matchexpr
-The result of the expression being matched in a
-.Cr match
-command.  Outside of a
-.Cr match
-command, this variable is normally unset.
+.Cr max-eval-depth
+Limits the maximum depth of the internal
+.I es
+call stack.
+If that maximum depth is reached, an error exception is thrown.
+This protects the shell (and the user) from crashes when unbounded
+recursion happens.
+If
+.Cr max-eval-depth
+is set to
+.Cr 0
+or the empty list, the limit is disabled.
+.TP
+.Cr max-history-length
+(If readline support is compiled in) limits the number of entries in
+readline's in-memory history.
+Reducing this value speeds up shell startup and certain other
+operations.
+If
+.Cr max-history-length
+is set to
+.Cr 0 ,
+then in-memory history is disabled (though if
+.Cr $history
+is set, lines will still be logged to the history file.)
+If
+.Cr max-history-length
+is set to the empty list, the length limit is removed.
 .TP
 .Cr noexport
 A list of variables which
@@ -1635,11 +1682,13 @@ are set at startup time,
 .Cr path
 assumes a default value suitable for your system.
 This is typically
-.Cr "/usr/ucb /usr/bin /bin ''" .
+.Cr "/usr/ucb /usr/bin /bin \(aq\(aq" .
 .TP
 .Cr pid
 The process ID of the currently running
 .IR es .
+This value does not change in subshells started by constructs like
+.Cr fork .
 .TP
 .Cr prompt
 This variable holds the two prompts (in list form) that
@@ -1656,7 +1705,7 @@ for details.)
 sets
 .Cr $prompt
 to
-.Cr "('; ' '')"
+.Cr "(\(aq; \(aq \(aq\(aq)"
 by default.
 The reason for this is that it enables an
 .I es
@@ -1773,7 +1822,6 @@ when invoked in this way, the shell prints the internal form of its commands
 rather than executing them.
 .ta 2.3i
 .SS "Control Flow"
-\&
 .Ds
 .ft \*(Cf
 ! \fIcmd\fP	%not {\fIcmd\fP}
@@ -1781,11 +1829,10 @@ rather than executing them.
 \fIcmd1\fP ; \fIcmd2\fP	%seq {\fIcmd1\fP} {\fIcmd2\fP}
 \fIcmd1\fP && \fIcmd2\fP	%and {\fIcmd1\fP} {\fIcmd2\fP}
 \fIcmd1\fP || \fIcmd2\fP	%or {\fIcmd1\fP} {\fIcmd2\fP}
-fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
+fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-\(ha\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Input/Output Commands"
-\&
 .Ds
 .ft \*(Cf
 \fIcmd\fP < \fIfile\fP	%open 0 \fIfile\fP {\fIcmd\fP}
@@ -1807,13 +1854,16 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
 .De
 .SS "Expressions"
-\&
 .Ds
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
-$^\fIvar\fP	<={%flatten ' ' $\fIvar\fP}
-\`{\fIcmd args\fP}	<={%backquote <={%flatten '' $ifs} {\fIcmd args\fP}}
-\`\`\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
+$\(ha\fIvar\fP	<={%flatten \(aq \(aq $\fIvar\fP}
+\(ga{\fIcmd args\fP}	<={%backquote <={%flatten \(aq\(aq $ifs} {\fIcmd args\fP}}
+\(ga\(ga \fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten \(aq\(aq \fIifs\fP} {\fIcmd args\fP}}
+\(ga\(ha{\fIcmd args\fP}
+        <={%flatten \(aq \(aq <={%backquote <={%flatten \(aq\(aq $ifs} {\fIcmd args\fP}}}
+\(ga\(ga\(ha \fIifs\fP {\fIcmd args\fP}
+        <={%flatten \(aq \(aq <={%backquote <={%flatten \(aq\(aq \fIifs\fP} {\fIcmd args\fP}}}
 .ft R
 .De
 .SH BUILTINS
@@ -1881,7 +1931,6 @@ Is the file writable?
 .TP
 .Cr \-x
 Is the file executable?
-.sp .7v
 .TP
 .Cr \-f
 Is the file a plain file?
@@ -2059,7 +2108,7 @@ disables core dumps.
 .TP
 \&
 The limit values must either be the word
-.Rc `` unlimited ''
+.Rc \(lq unlimited \(rq
 or a number with an optional suffix indicating units.
 For size limits, the suffixes
 .Cr k
@@ -2093,8 +2142,6 @@ This builtin is useful for making
 behave like a job-control shell in a hostile environment.
 One example is the NeXT Terminal program, which implicitly assumes
 that each shell it forks will put itself into a new process group.
-Note that the controlling tty for the process must be on standard error
-(file descriptor 2) when this operation is run.
 .TP
 .Cr "result \fIvalue ...\fP"
 Returns its arguments.
@@ -2151,7 +2198,6 @@ functions
 .TP
 .Cr \-s
 settor functions
-.sp .7v
 .TP
 .Cr \-e
 exported values
@@ -2161,7 +2207,6 @@ private (not exported) values
 .TP
 .Cr \-i
 internal (predefined and builtin) values
-.sp .7v
 .TP
 .Cr \-a
 all of the above
@@ -2215,7 +2260,7 @@ the returned string.
 .SS "Hook Functions"
 A subset of the
 .Cr % -named
-functions are known as ``hook functions.''
+functions are known as \(lqhook functions.\(rq
 The hook functions are called to implement some internal
 shell operations, and are available as functions in order
 that their values can be changed.
@@ -2251,7 +2296,7 @@ into elements according to
 .Cr %batch-loop
 Parses commands from the current input source and
 passes the commands to the function
-.IR %dispatch ,
+.Cr %dispatch ,
 which is usually a dynamically bound identifier.
 This function catches the exception
 .Cr eof
@@ -2286,20 +2331,17 @@ to file descriptor
 .TP
 .Cr "%eval-noprint \fIcmd\fP"
 Run the command.
-(Passed as the argument to
-.Cr %batch-loop
-and
-.Cr %interactive-loop .)
+Used as the value of
+.Cr %dispatch
+by default.
 .TP
 .Cr "%eval-print \fIcmd\fP"
 Print and run the command.
-(Passed as the argument to
-.Cr %batch-loop
-and
-.Cr %interactive-loop
+Used as the value of
+.Cr %dispatch
 when the
 .Cr \-x
-option is used.)
+option is used.
 .TP
 .Cr "%exec-failure \fIfile argv0 args ...\fP"
 This function, if it exists, is called in the context of a
@@ -2328,10 +2370,8 @@ shell scripts if the kernel does not.
 Runs the command, and exits if any command
 (except those executing as the tests of conditional statements)
 returns a non-zero status.
-(This function is used as an argument to
-.Cr %batch-loop
-and
-.Cr %interactive-loop
+(This function is used in the definition of
+.Cr %dispatch
 when the shell is invoked with the
 .Cr \-e
 option.)
@@ -2358,7 +2398,7 @@ if there are no arguments.
 Prompts,
 parses commands from the current input source and
 passes the commands to the function
-.IR %dispatch ,
+.Cr %dispatch ,
 which is usually a dynamically bound identifier.
 This function catches the exception
 .Cr eof
@@ -2371,25 +2411,21 @@ commands, when the input source is interactive.
 .TP
 .Cr "%noeval-noprint \fIcmd\fP"
 Do nothing.
-(Passed as the argument to
-.Cr %batch-loop
-and
-.Cr %interactive-loop
+Used as the value of
+.Cr %dispatch
 when the
 .Cr \-n
-option is used.)
+option is used.
 .TP
 .Cr "%noeval-print \fIcmd\fP"
 Print but don't run the command.
-(Passed as the argument to
-.Cr %batch-loop
-and
-.Cr %interactive-loop
+Used as the value of
+.Cr %dispatch
 when the
 .Cr \-x
 and
 .Cr \-n
-options are used.)
+options are used.
 .TP
 .Cr "%not \fIcmd\fP"
 Runs the command and returns false if its exit status was true,
@@ -2523,6 +2559,22 @@ For each named
 returns the pathname, primitive, lambda, or code fragment which
 would be run if the program appeared as the first word of a command.
 .TP
+.Cr "%write-history \fIinput\fP"
+Called at the end of
+.Cr %parse
+to write the
+.I input
+to the file given in
+.Cr $history ,
+if such a file exists and can be written.
+Also appends the
+.I input
+to the in-memory history log if
+.I readline
+support is compiled in.
+(For more on this, see
+.Cr max-history-length .)
+.TP
 .Cr "%writeto \fIvar output cmd\fP"
 Runs
 .I cmd
@@ -2599,15 +2651,15 @@ Primitives are referenced with the
 .PP
 notation.
 In this section, the
-.Rc `` $& ''
+.Rc \(lq $& \(rq
 prefixes will be omitted when primitive names are mentioned.
 Note that, by convention, primitive names follow C identifier
 names where
 .I es
 variable and function names often contain
-.Rc `` % ''
+.Rc \(lq % \(rq
 and
-.Rc `` - ''
+.Rc \(lq - \(rq
 characters.
 .PP
 The following primitives directly implement the
@@ -2626,7 +2678,7 @@ exit	result
 In addition, the primitive
 .Cr dot
 implements the
-.Rc `` . ''
+.Rc \(lq . \(rq
 builtin function.
 .PP
 The
@@ -2645,7 +2697,7 @@ builtin.
 .PP
 The following primitives implement the hook functions
 of the same names, with
-.Rc `` % ''
+.Rc \(lq % \(rq
 prefixes:
 .ta 1.75i 3.5i
 .Ds
@@ -2654,14 +2706,14 @@ apids	here	read
 close	home	run
 count	newfd	seq
 dup	openfile	split
-flatten	parse	var
-fsplit	pipe	whatis
+flatten	var	fsplit
+pipe	whatis
 .ft R
 .De
 .PP
 The following primitives implement the similar named hook functions,
 with
-.Rc `` % ''
+.Rc \(lq % \(rq
 prefixes and internal hyphens:
 .ta 1.75i 3.5i
 .Ds
@@ -2671,12 +2723,19 @@ batchloop	exitonfalse	isinteractive
 .De
 .PP
 The
+.Cr parse
+primitive is used to implement the
+.Cr %parse
+hook function.
+.PP
+The
 .Cr background
 primitive is used to implement the
 .Cr %background
 hook function, but does not print the process ID of the
 background process or set
 .Cr $apid .
+.PP
 The
 .Cr backquote
 primitive is used to implement the
@@ -2690,7 +2749,7 @@ The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-sethistory	setnoexport	setsignals
+setnoexport	setsignals
 .ft R
 .De
 .PP
@@ -2709,21 +2768,37 @@ writeto	%writeto
 .ft R
 .De
 .PP
-The primitive
-.Cr resetterminal
-is if
+The following primitives in particular are included if
 .I es
 is compiled with support for the
 .I readline
-or
-.I editline
-libraries.
-It is used in the implementation of settor functions of the
+library:
+.ta 2i
+.Ds
+.ft \*(Cf
+resetterminal	sethistory
+setmaxhistorylength	writehistory
+.ft R
+.De
+.PP
+.Cr sethistory
+and
+.Cr setmaxhistorylength
+are used as settor functions for the
+.Cr history
+and
+.Cr max-history-length
+variables.
+.Cr resetterminal
+is used in the settor functions for the
 .Cr TERM
 and
 .Cr TERMCAP
-variables to notify the line editing packages that the terminal
-configuration has changed.
+variables.
+.Cr writehistory
+is used as the initial implementation of the
+.Cr %write-history
+function.
 .PP
 Several primitives are not directly associated with other function.
 They are:
@@ -2831,8 +2906,99 @@ Don't trap
 or
 .Cr SIGTERM .
 This is used for debugging.
+.SH CANONICAL EXTENSIONS
+.I Es
+is distributed with a directory of \(lqcanonical extension\(rq scripts, which
+implement a number of features commonly desired by users but not built into
+the shell itself.
+They are typically installed into either
+.Cr /usr/share/es
+or
+.Cr /usr/local/share/es ,
+corresponding with wherever the
+.I es
+binary itself is installed.
+.PP
+In general, these scripts work by spoofing hook functions within
+.I es
+and can be read as a demonstration of how these spoofs and hooks work.
+They are intended to be invoked as
+.Ds
+.Ci ". " /path/to/script.es
+.De
+.PP
+in
+.Cr $home/.esrc .
+They can also be invoked at the interactive command line or even within other
+scripts, though they may not be particularly useful when invoked in those
+contexts.
+.PP
+Features currently distributed as canonical extensions include:
+.TP
+.Cr autoload.es
+Adds behavior to
+.I es
+to search the directory given by
+.Cr $es-autoload
+(by default
+.Cr $XDG_DATA_HOME/es/autoload
+or, if
+.Cr $XDG_DATA_HOME
+is not set,
+.Cr \(ti/.local/share/es/autoload ,)
+containing function definitions which are then defined on-demand.
+.TP
+.Cr cdpath.es
+Implements
+.IR rc (1)-style
+.Cr $cdpath
+searching to the
+.Cr cd
+builtin.
+.TP
+.Cr interactive-init.es
+Adds a hook for a function
+.Cr %interactive-init
+to be called at the beginning of
+.Cr %interactive-loop .
+By invoking
+.Ci ". " /path/to/ interactive-init.es
+and defining
+.Ds
+.Ci "fn %interactive-init {"
+.Ci "  . " startup-script.es
+.Cr "}"
+.De
+.sp .7v
+in
+.Cr .esrc ,
+this function also enables interactive-shell startup scripts.
+.TP
+.Cr path-cache.es
+Adds behavior to
+.Cr %pathsearch
+to \(lqcache\(rq the location of external commands by automatically defining
+.Ds
+.Ci fn- command " = " /path/to/command
+.De
+.sp .7v
+when paths to external commands are found.
+This can be helpful to performance when path searching is slow, and
+corresponds with the \(lqhashing\(rq behavior found in some other shells.
+.TP
+.Cr status.es
+Adds a variable
+.Cr $status
+which contains the return value of commands run at the interactive command
+line, somewhat like that of
+.IR rc (1).
+.PP
+These are only short descriptions; users interested in these features
+should peruse the scripts themselves for more precise information on
+their use.
 .SH FILES
 .Cr $home/.esrc ,
+.Cr /usr/share/es ,
 .Cr /dev/null
 .SH BUGS
 Lexical scope which is shared by two variables (or closures) in a parent shell

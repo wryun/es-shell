@@ -43,7 +43,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 		yyerror("here document eof-marker contains a newline");
 		return NULL;
 	}
-	disablehistory = TRUE;
+	ignoreeof = TRUE;
 
 	for (tree = NULL, tailp = &tree, buf = openbuffer(0);;) {
 		int c;
@@ -63,7 +63,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 			if (c == EOF) {
 				yyerror("incomplete here document");
 				freebuffer(buf);
-				disablehistory = FALSE;
+				ignoreeof = FALSE;
 				return NULL;
 			}
 			if (c == '$' && !quoted && (c = GETC()) != '$') {
@@ -78,7 +78,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 				var = getherevar();
 				if (var == NULL) {
 					freebuffer(buf);
-					disablehistory = FALSE;
+					ignoreeof = FALSE;
 					return NULL;
 				}
 				*tailp = treecons(var, NULL);
@@ -92,7 +92,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 		}
 	}
 
-	disablehistory = FALSE;
+	ignoreeof = FALSE;
 	return tree->CDR == NULL ? tree->CAR : tree;
 }
 
@@ -142,5 +142,4 @@ extern Boolean queueheredoc(Tree *t) {
 
 extern void emptyherequeue(void) {
 	hereq = NULL;
-	disablehistory = FALSE;
 }

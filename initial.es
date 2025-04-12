@@ -83,14 +83,14 @@ fn-%read	= $&read
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.
 
-fn eval { '{' ^ $^* ^ '}' }
+fn-eval = $&noreturn @ { '{' ^ $^* ^ '}' }
 
 #	Through version 0.84 of es, true and false were primitives,
 #	but, as many pointed out, they don't need to be.  These
 #	values are not very clear, but unix demands them.
 
-fn-true		= result 0
-fn-false	= result 1
+fn-true		= { result 0 }
+fn-false	= { result 1 }
 
 #	These functions just generate exceptions for control-flow
 #	constructions.  The for command and the while builtin both
@@ -385,10 +385,10 @@ fn-%or = $&noreturn @ first rest {
 
 fn %background cmd {
 	let (pid = <={$&background $cmd}) {
+		apid = $pid
 		if {%is-interactive} {
 			echo >[1=2] $pid
 		}
-		apid = $pid
 	}
 }
 
@@ -495,7 +495,7 @@ fn-%pipe	= $&pipe
 if {~ <=$&primitives readfrom} {
 	fn-%readfrom = $&readfrom
 } {
-	fn %readfrom var input cmd {
+	fn-%readfrom = $&noreturn @ var input cmd {
 		local ($var = /tmp/es.$var.$pid) {
 			unwind-protect {
 				$input > $$var
@@ -511,7 +511,7 @@ if {~ <=$&primitives readfrom} {
 if {~ <=$&primitives writeto} {
 	fn-%writeto = $&writeto
 } {
-	fn %writeto var output cmd {
+	fn-%writeto = $&noreturn @ var output cmd {
 		local ($var = /tmp/es.$var.$pid) {
 			unwind-protect {
 				> $$var
@@ -579,6 +579,28 @@ fn %pathsearch name { access -n $name -1e -xf $path }
 
 if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
+#	The %write-history hook is used in interactive contexts to write
+#	command input to the history file (and/or readline's in-memory
+#	history log).  By default, $&writehistory (which is available if
+#	readline is compiled in) will write to readline's history log if
+#	$max-history-length allows, and will write to the file designated
+#	by $history if that variable is set and the file it points to
+#	exists and is writeable.
+
+if {~ <=$&primitives writehistory} {
+	fn-%write-history = $&writehistory
+} {
+	fn %write-history input {
+		if {!~ $history ()} {
+			if {access -w $history} {
+				echo $input >> $history
+			} {
+				history = ()
+			}
+		}
+	}
+}
+
 
 #
 # Read-eval-print loops
@@ -599,12 +621,11 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	%batch-loop is used.
 #
 #	The function %parse can be used to call the parser, which returns
-#	an es command.  %parse takes two arguments, which are used as the
-#	main and secondary prompts, respectively.  %parse typically returns
-#	one line of input, but es allows commands (notably those with braces
-#	or backslash continuations) to continue across multiple lines; in
-#	that case, the complete command and not just one physical line is
-#	returned.
+#	an es command.  %parse takes two arguments, which are used as the main
+#	and secondary prompts, respectively.  %parse typically returns one line
+#	of input, but es allows commands (notably those with braces or backslash
+#	continuations) to continue across multiple lines; in that case, the
+#	complete command and not just one physical line is returned.
 #
 #	By convention, the REPL must pass commands to the fn %dispatch,
 #	which has the actual responsibility for executing the command.
@@ -626,9 +647,9 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%parse	= $&parse
-fn-%batch-loop	= $&batchloop
-fn-%is-interactive = $&isinteractive
+fn-%parse		= $&parse
+fn-%batch-loop		= $&batchloop
+fn-%is-interactive	= $&isinteractive
 
 fn %interactive-loop {
 	let (result = <=true) {
@@ -667,11 +688,11 @@ fn %interactive-loop {
 #	function.  (For %eval-noprint, note that an empty list prepended
 #	to a command just causes the command to be executed.)
 
-fn %eval-noprint				# <default>
-fn %eval-print		{ echo $* >[1=2]; $* }	# -x
-fn %noeval-noprint	{ }			# -n
-fn %noeval-print	{ echo $* >[1=2] }	# -n -x
-fn-%exit-on-false = $&exitonfalse		# -e
+fn-%eval-noprint	=					# <default>
+fn-%eval-print		= $&noreturn @ { echo $* >[1=2]; $* }	# -x
+fn-%noeval-noprint	= { }					# -n
+fn-%noeval-print	= @ { echo $* >[1=2] }			# -n -x
+fn-%exit-on-false	= $&exitonfalse				# -e
 
 
 #
@@ -706,19 +727,34 @@ set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
-#	If the primitive $&resetterminal is defined (meaning that readline
-#	or editline is being used), setting the variables $TERM or $TERMCAP
-#	should notify the line editor library.
+#	If the primitives $&sethistory or $&resetterminal are defined (meaning
+#	that readline or editline is being used), setting the variables $TERM,
+#	$TERMCAP, or $history should notify the line editor library.
+
+if {~ <=$&primitives sethistory} {
+	set-history = $&sethistory
+}
 
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }
 	set-TERMCAP	= @ { $&resetterminal; result $* }
 }
+
+#	The primitive $&setmaxhistorylength is another readline-only primitive
+#	which limits the length of the in-memory history list, to reduce memory
+#	size implications of a large history file.  Setting max-history-length
+#	to 0 clears the history list and disables adding anything more to it.
+#	Unsetting max-history-length allows the history list to grow unbounded.
+
+if {~ <=$&primitives setmaxhistorylength} {
+	set-max-history-length = $&setmaxhistorylength
+	max-history-length = 5000
+}
+
 
 #
 # Variables
