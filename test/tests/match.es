@@ -86,7 +86,7 @@ test 'subjects' {
 # The following ensures that the body of a case does not require
 # braces and that 'match' has no special handling for 'break'.
 test 'error handling' {
-	let (stderr = `mktemp)
+	let (stderr = `{mktemp match-stderr.XXXXXX})
 	unwind-protect {
 		$es -c 'match () (* break)' >[2] $stderr
 		assert {~ `^{cat $stderr} *'uncaught exception'*}

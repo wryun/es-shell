@@ -1,7 +1,7 @@
 # tests/glob.es -- verify basic filesystem globbing works
 
 test 'file globbing' {
-	let (dir = `{mktemp -d test-glob-dir.XXX})
+	let (dir = `{mktemp -d glob-dir.XXXXXX})
 	let (files = $dir^/^(aa bb cc)) {
 		touch $files $dir/.hidden
 		unwind-protect {
