@@ -294,7 +294,6 @@ extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
 extern Boolean isinteractive(void);
 extern Boolean isfromfd(void);
-extern void initgetenv(void);
 extern void initinput(void);
 extern void resetparser(void);
 
