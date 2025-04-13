@@ -38,12 +38,13 @@ int gcblocked = 0;
 Tag StringTag;
 
 /* own variables */
-static Space *new, *old;
+static Space *new, *old, *pspace;
 #if GCPROTECT
 static Space *spaces;
 #endif
 static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
+static size_t minpspace = MIN_minspace;	/* minimum number of bytes in a new pspace */
 
 
 /*
@@ -192,6 +193,18 @@ static Space *newspace(Space *next) {
 
 #endif	/* !GCPROTECT */
 
+/* newpspace -- create a new ``half'' space for parse tree building */
+/* TODO: merge this in with newspace/mkspace for GCPROTECT support */
+static Space *newpspace(Space *next) {
+	size_t n = ALIGN(minpspace);
+	Space *space = ealloc(sizeof (Space) + n);
+	space->bot = (void *) &space[1];
+	space->top = (void *) (((char *) space->bot) + n);
+	space->current = space->bot;
+	space->next = next;
+	return space;
+}
+
 /* deprecate -- take a space and invalidate it */
 static void deprecate(Space *space) {
 #if GCPROTECT
@@ -273,12 +286,20 @@ extern void exceptionunroot(void) {
 #define	FOLLOWTO(p)	((Tag *) (((char *) p) + 1))
 #define	FOLLOW(tagp)	((void *) (((char *) tagp) - 1))
 
+/* TODO: remove pmode: it's the Wrong Thing */
+static Boolean pmode = FALSE;
+
 /* forward -- forward an individual pointer from old space */
 extern void *forward(void *p) {
 	Tag *tag;
 	void *np;
 
-	if (!isinspace(old, p)) {
+	if (pmode && !isinspace(pspace, p)) {
+		VERBOSE(("GC %8ux : <<not in pspace>>\n", p));
+		return p;
+	}
+
+	if (!pmode && !isinspace(old, p)) {
 		VERBOSE(("GC %8ux : <<not in old space>>\n", p));
 		return p;
 	}
@@ -297,6 +318,12 @@ extern void *forward(void *p) {
 		VERBOSE(("%s	-> %8ux (forwarded)\n", tag->typename, np));
 		TAG(p) = FOLLOWTO(np);
 	}
+
+	if (pmode) {
+		tag = TAG(np);
+		(*tag->scan)(np);
+	}
+
 	return np;
 }
 
@@ -439,6 +466,49 @@ extern void gc(void) {
 	} while (new->next != NULL);
 }
 
+/* pseal -- collect pspace to new with p as its only root, and return the collected p */
+/* TODO: support GCINFO, GCPROTECT */
+extern void *pseal(void *p) {
+	size_t psize = 0;
+	Space *sp;
+
+	for (sp = pspace; sp != NULL; sp = sp->next)
+		psize += SPACEUSED(sp);
+
+	if (psize == 0)
+		return p;
+
+	/* TODO: this is an overestimate since it counts garbage */
+	gcreserve(psize);
+	VERBOSE(("Reserved %d for pspace copy\n", psize));
+
+	assert (gcblocked >= 0);
+	++gcblocked;
+
+#if GCVERBOSE
+	for (sp = pspace; sp != NULL; sp = sp->next)
+		VERBOSE(("GC pspace = %ux ... %ux\n", sp->bot, sp->current));
+#endif
+	if (p != NULL) {
+		VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
+
+		pmode = TRUE;
+		p = forward(p);
+		(*(TAG(p))->scan)(p);
+		pmode = FALSE;
+	}
+
+	for (sp = pspace; sp != NULL;) {
+		Space *old = sp;
+		sp = sp->next;
+		efree(old);
+	}
+	pspace = newpspace(NULL);
+
+	--gcblocked;
+	return p;
+}
+
 /* initgc -- initialize the garbage collector */
 extern void initgc(void) {
 #if GCPROTECT
@@ -449,6 +519,7 @@ extern void initgc(void) {
 #else
 	new = newspace(NULL);
 #endif
+	pspace = newpspace(NULL);
 	old = NULL;
 }
 
@@ -481,6 +552,24 @@ extern void *gcalloc(size_t nbytes, Tag *tag) {
 	}
 }
 
+/* palloc -- allocate an object in pspace */
+extern void *palloc(size_t nbytes, Tag *tag) {
+	size_t n = ALIGN(nbytes + sizeof (Tag *));
+	assert(tag == NULL || tag->magic == TAGMAGIC);
+	for (;;) {
+		Tag **p = (void *) pspace->current;
+		char *q = ((char *) p) + n;
+		if (q <= pspace->top) {
+			pspace->current = q;
+			*p++ = tag;
+			return p;
+		}
+		if (minpspace < nbytes)
+			minpspace = nbytes + sizeof (Tag *);
+		pspace = newpspace(pspace);
+	}
+}
+
 
 /*
  * strings
@@ -503,8 +592,23 @@ extern char *gcndup(const char *s, size_t n) {
 	RefReturn(result);
 }
 
+extern char *pndup(const char *s, size_t n) {
+	char *ns;
+
+	ns = palloc((n + 1) * sizeof (char), &StringTag);
+	memcpy(ns, s, n);
+	ns[n] = '\0';
+	assert(strlen(ns) == n);
+
+	return ns;
+}
+
 extern char *gcdup(const char *s) {
 	return gcndup(s, strlen(s));
+}
+
+extern char *pdup(const char *s) {
+	return pndup(s, strlen(s));
 }
 
 static void *StringCopy(void *op) {
@@ -547,8 +651,20 @@ extern char *sealbuffer(Buffer *buf) {
 	return s;
 }
 
+extern char *psealbuffer(Buffer *buf) {
+	char *s = pdup(buf->str);
+	efree(buf);
+	return s;
+}
+
 extern char *sealcountedbuffer(Buffer *buf) {
 	char *s = gcndup(buf->str, buf->current);
+	efree(buf);
+	return s;
+}
+
+extern char *psealcountedbuffer(Buffer *buf) {
+	char *s = pndup(buf->str, buf->current);
 	efree(buf);
 	return s;
 }
