@@ -340,16 +340,22 @@ static void scanroots(Root *rootlist) {
 
 /* scanspace -- scan new space until it is up to date */
 static void scanspace(void) {
-	Space *sp;
-	for (sp = new; sp != NULL; sp = sp->next) {
-		char *scan = sp->bot;
-		while (scan < sp->current) {
-			Tag *tag = *(Tag **) scan;
-			assert(tag->magic == TAGMAGIC);
-			scan += sizeof (Tag *);
-			VERBOSE(("GC %8ux : %s	scan\n", scan, tag->typename));
-			scan += ALIGN((*tag->scan)(scan));
+	Space *sp, *scanned;
+	for (scanned = NULL;;) {
+		Space *front = new;
+		for (sp = new; sp != scanned; sp = sp->next) {
+			char *scan = sp->bot;
+			while (scan < sp->current) {
+				Tag *tag = *(Tag **) scan;
+				assert(tag->magic == TAGMAGIC);
+				scan += sizeof (Tag *);
+				VERBOSE(("GC %8ux : %s	scan\n", scan, tag->typename));
+				scan += ALIGN((*tag->scan)(scan));
+			}
 		}
+		if (new == front)
+			break;
+		scanned = front;
 	}
 }
 
