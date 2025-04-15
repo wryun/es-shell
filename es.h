@@ -385,7 +385,7 @@ extern int opentty(void);
 
 /* version.c */
 
-extern const char * const version;
+extern const List * const version;
 
 
 /* gc.c -- see gc.h for more */

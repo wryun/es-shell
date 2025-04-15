@@ -1,0 +1,7 @@
+#!/bin/sh
+
+v=$(git describe --tags 2>/dev/null)
+d=$(git show --no-patch --format=%ci | cut -f1 -d' ')
+
+echo "#define VERSION \"$v\""
+echo "#define VERSION_DATE \"$d\""
