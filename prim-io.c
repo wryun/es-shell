@@ -363,9 +363,9 @@ static List *bqinput(const char *sep, int fd) {
 	startsplit(sep, TRUE);
 
 restart:
+	/* avoid SIGCHK()ing in here so we don't abandon our child process */
 	while ((n = eread(fd, in, sizeof in)) > 0)
 		splitstring(in, n, FALSE);
-	SIGCHK();
 	if (n == -1) {
 		if (errno == EINTR)
 			goto restart;
@@ -377,7 +377,7 @@ restart:
 
 PRIM(backquote) {
 	int pid, p[2], status;
-	
+
 	caller = "$&backquote";
 	if (list == NULL)
 		fail(caller, "usage: backquote separator command [args ...]");
