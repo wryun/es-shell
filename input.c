@@ -37,16 +37,16 @@ Boolean resetterminal = FALSE;
  */
 
 /* locate -- identify where an error came from */
-static char *locate(Input *in, char *s) {
+static const char *locate(Input *in, const char *s) {
 	return (in->runflags & run_interactive)
 		? s
 		: str("%s:%d: %s", in->name, in->lineno, s);
 }
 
-static char *error = NULL;
+static const char *error = NULL;
 
 /* yyerror -- yacc error entry point */
-extern void yyerror(char *s) {
+extern void yyerror(const char *s) {
 #if sgi
 	/* this is so that trip.es works */
 	if (streq(s, "Syntax error"))
@@ -246,7 +246,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 	gcenable();
 
 	if (result || error != NULL) {
-		char *e;
+		const char *e;
 		assert(error != NULL);
 		e = error;
 		error = NULL;
