@@ -18,6 +18,14 @@ rm -f conftest*
 
 AC_CANONICAL_HOST
 
+dnl Build configuration.
+
+AC_ARG_ENABLE(strict, AS_HELP_STRING([--enable-strict], [enable strict compiler flags for testing and debugging; not all compilers support these]), opt_strict_mode=$enableval)
+
+if test $opt_strict_mode = yes; then
+	CFLAGS="-ansi -pedantic -DGCDEBUG=1 -D_POSIX_C_SOURCE=200112L -DREF_ASSERTIONS=1"
+fi
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
@@ -49,7 +57,6 @@ ES_WITH_READLINE
 
 dnl Checks for header files.
 AC_HEADER_DIRENT
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h unistd.h memory.h stdarg.h sys/cdefs.h)
 
