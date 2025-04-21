@@ -540,8 +540,9 @@ extern int putenv(char *envstr) {
 		errno = EINVAL;
 		return -1;
 	}
-	envname = ealloc(n);
+	envname = ealloc(n+1);
 	memcpy(envname, envstr, n);
+	envname[n] = '\0';
 	status = setenv(envname, envstr + n + 1, 1);
 	efree(envname);
 	return status;
