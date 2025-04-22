@@ -321,6 +321,21 @@ extern void rlsetup(void);
 #endif
 
 
+/* history.c */
+#if HAVE_READLINE
+extern void inithistory(void);
+
+extern void sethistory(char *file);
+extern void loghistory(char *cmd);
+extern void setmaxhistorylength(int length);
+extern void checkreloadhistory(void);
+#endif
+
+extern void newhistbuffer(void);
+extern void addhistbuffer(char c);
+extern char *dumphistbuffer(void);
+
+
 /* opt.c */
 
 extern void esoptbegin(List *list, const char *caller, const char *usage, Boolean throws);
@@ -364,6 +379,7 @@ extern jmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);
 extern Boolean issilentsignal(List *e);
+extern void exitonsignal(List *e);
 extern void setsigdefaults(void);
 extern void blocksignals(void);
 extern void unblocksignals(void);

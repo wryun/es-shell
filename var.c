@@ -399,9 +399,6 @@ extern void initvars(void) {
 	vars = mkdict();
 	noexport = NULL;
 	env = mkvector(ENVSIZE);
-#if LOCAL_GETENV
-	initgetenv();
-#endif
 }
 
 /* importvar -- import a single environment variable */
@@ -549,8 +546,9 @@ extern int putenv(char *envstr) {
 		errno = EINVAL;
 		return -1;
 	}
-	envname = ealloc(n);
+	envname = ealloc(n+1);
 	memcpy(envname, envstr, n);
+	envname[n] = '\0';
 	status = setenv(envname, envstr + n + 1, 1);
 	efree(envname);
 	return status;
@@ -601,4 +599,8 @@ extern void initenv(char **envp, Boolean protected) {
 	RefEnd2(var, imported);
 	envmin = env->count;
 	efree(buf);
+
+#if LOCAL_GETENV
+	realgetenv = esgetenv;
+#endif
 }

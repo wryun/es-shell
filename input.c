@@ -30,18 +30,18 @@ Boolean ignoreeof = FALSE;
  */
 
 /* locate -- identify where an error came from */
-static char *locate(Input *in, char *s) {
+static const char *locate(Input *in, const char *s) {
 	return (in->runflags & run_interactive)
 		? s
 		: str("%s:%d: %s", in->name, in->lineno, s);
 }
 
-static char *error = NULL;
+static const char *error = NULL;
 
 static int eoffill(Input UNUSED *in);
 
 /* yyerror -- yacc error entry point */
-extern void yyerror(char *s) {
+extern void yyerror(const char *s) {
 	/* TODO: more graceful handling for memory exhaustion?
 	 * if we're here, then we're probably hopelessly lost */
 	if (streq(s, "memory exhausted")) {
@@ -255,7 +255,7 @@ extern Tree *parse(List *fc) {
 
 	if (result || error != NULL) {
 		assert(error != NULL);
-		Ref(char *, e, error);
+		Ref(const char *, e, error);
 		error = NULL;
 		pseal(NULL);
 		fail("$&parse", "%s", e);

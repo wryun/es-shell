@@ -66,7 +66,7 @@ test 'parser' {
 	assert {~ <={$&parse {result 'echo >[1=2]'}} '{%dup 1 2 {echo}}'}
 
 	# force GCs during parsing
-	assert {~ <={$&parse {$&collect; $&read}} '{fn-^zoom=@ * {%seq {this is one} {let(z=a a a){this is three}}}}'} << EOF
+	assert {~ <={$&parse {$&collect; $&read}} '{fn-^zoom=@ *{%seq {this is one} {let(z=a a a){this is three}}}}'} << EOF
 fn zoom {
 	this is one
 	let (z = a a a) {

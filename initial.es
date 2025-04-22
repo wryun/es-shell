@@ -621,12 +621,11 @@ if {~ <=$&primitives writehistory} {
 #	%batch-loop is used.
 #
 #	The function %parse can be used to call the parser, which returns
-#	an es command.  %parse takes two arguments, which are used as the
-#	main and secondary prompts, respectively.  %parse typically returns
-#	one line of input, but es allows commands (notably those with braces
-#	or backslash continuations) to continue across multiple lines; in
-#	that case, the complete command and not just one physical line is
-#	returned.
+#	an es command.  %parse takes two arguments, which are used as the main
+#	and secondary prompts, respectively.  %parse typically returns one line
+#	of input, but es allows commands (notably those with braces or backslash
+#	continuations) to continue across multiple lines; in that case, the
+#	complete command and not just one physical line is returned.
 #
 #	By convention, the REPL must pass commands to the fn %dispatch,
 #	which has the actual responsibility for executing the command.
@@ -648,8 +647,8 @@ if {~ <=$&primitives writehistory} {
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%batch-loop	= $&batchloop
-fn-%is-interactive = $&isinteractive
+fn-%batch-loop		= $&batchloop
+fn-%is-interactive	= $&isinteractive
 
 fn %parse {
 	if %is-interactive {

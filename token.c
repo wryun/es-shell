@@ -71,7 +71,7 @@ extern void increment_line(void) {
 }
 
 /* scanerror -- called for lexical errors */
-static void scanerror(char c, char *s) {
+static void scanerror(int c, char *s) {
 	while (c != '\n' && c != EOF)
 		c = GETC();
 	goterror = TRUE;

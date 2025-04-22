@@ -31,7 +31,7 @@ static void checkfd(int fd, OpenKind r) {
 static void initpath(void) {
 	int i;
 	static const char * const path[] = { INITIAL_PATH };
-	
+
 	Ref(List *, list, NULL);
 	for (i = arraysize(path); i-- > 0;) {
 		Term *t = mkstr((char *) path[i]);
@@ -56,11 +56,13 @@ static void runesrc(void) {
 		CatchException (e)
 			if (termeq(e->term, "exit"))
 				exit(exitstatus(e->next));
-			else if (termeq(e->term, "error"))
+			else if (termeq(e->term, "error")) {
 				eprint("%L\n",
 				       e->next == NULL ? NULL : e->next->next,
 				       " ");
-			else if (!issilentsignal(e))
+				return;
+			}
+			if (!issilentsignal(e))
 				eprint("uncaught exception: %L\n", e, " ");
 			return;
 		EndExceptionHandler
@@ -182,19 +184,19 @@ getopt_done:
 #endif
 		initprims();
 		initvars();
-	
+
 		runinitial();
-	
+
 		initpath();
 		initpid();
 		initsignals(runflags & run_interactive, allowquit);
 		initpgrp();
 		hidevariables();
 		initenv(environ, protected);
-	
+
 		if (loginshell)
 			runesrc();
-	
+
 		if (cmd == NULL && !cmd_stdin && argp != NULL) {
 			int fd;
 			char *file = getstr(argp->term);
@@ -209,7 +211,7 @@ getopt_done:
 			status = exitstatus(runfd(fd, file, runflags));
 			goto return_main;
 		}
-	
+
 		vardef("*", NULL, argp);
 		vardef("0", NULL, mklist(mkstr(argv[0]), NULL));
 		if (cmd != NULL)
@@ -222,11 +224,19 @@ getopt_done:
 		if (termeq(e->term, "exit")) {
 			status = exitstatus(e->next);
 			goto return_main;
-		} else if (termeq(e->term, "error"))
+		} else if (termeq(e->term, "error")) {
 			eprint("%L\n",
 			       e->next == NULL ? NULL : e->next->next,
 			       " ");
-		else if (!issilentsignal(e))
+			status = 1;
+			goto return_main;
+		} else {
+#if JOB_PROTECT
+			tcreturnpgrp();
+#endif
+			exitonsignal(e);
+		}
+		if (!issilentsignal(e))
 			eprint("uncaught exception: %L\n", e, " ");
 		status = 1;
 
