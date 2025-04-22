@@ -4,6 +4,7 @@
 
 #include "es.h"
 #include "prim.h"
+#include "version.h"
 
 PRIM(result) {
 	return list;
@@ -33,7 +34,7 @@ PRIM(setnoexport) {
 }
 
 PRIM(version) {
-	return mklist(mkstr((char *) version), NULL);
+	return (List *)version;
 }
 
 PRIM(exec) {
