@@ -86,6 +86,9 @@ EOF
 	# this one actually would hang before the fix on systems with
 	# unsigned chars
 	assert {!$es -c 'echo hi |[2' >[2] /dev/null}
+
+	# https://github.com/wryun/es-shell/issues/199
+	assert {~ `` \n {echo 'fn-%write-history = $&collect'^\n^'cat << eof' | $es -i >[2=1]} *'incomplete here document'*}
 }
 
 # These tests are based on notes in the CHANGES file from the pre-git days.
