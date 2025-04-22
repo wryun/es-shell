@@ -235,3 +235,13 @@ test 'exit with signal codes' {
 	assert {~ <={$es -c 'signals = -sigterm; throw signal sigterm' >[2] /dev/null} sigterm} \
 		'die from a thrown signal even if we would ignore it externally'
 }
+
+test 'backslash' {
+	assert {~ `` \n {echo h\
+i} 'h i'}
+	assert {~ `` \n {echo $es\es} $es^\es}
+	assert {~ `` \n {echo $es\
+es} $es^' es'}
+	assert {~ `` \n {echo h\\i} 'h\i'}
+	assert {~ `` \n {echo h \\ i} 'h \ i'}
+}
