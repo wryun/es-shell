@@ -220,9 +220,7 @@ fn cd dir {
 }
 
 #	The vars function is provided for cultural compatibility with
-#	rc's whatis when used without arguments.  The option parsing
-#	is very primitive;  perhaps es should provide a getopt-like
-#	builtin.
+#	rc's whatis when used without arguments.
 #
 #	The options to vars can be partitioned into two categories:
 #	those which pick variables based on their source (-e for
@@ -237,18 +235,15 @@ fn cd dir {
 #	unless it is on the noexport list.
 
 fn vars {
-	# choose default options
-	if {~ $* -a} {
-		* = -v -f -s -e -p -i
-	} {
-		if {!~ $* -[vfs]}	{ * = $* -v }
-		if {!~ $* -[epi]}	{ * = $* -e }
-	}
 	# check args
 	for (i = $*)
-		if {!~ $i -[vfsepi]} {
-			throw error vars illegal option: $i -- usage: vars '-[vfsepia]'
+		if {!~ $i -*} {
+			throw error vars illegal option: $i -- usage: vars -[vfsepia]
 		}
+	# choose default options
+	if {~ $* -a} {
+		* = -vfsepi
+	}
 	let (
 		vars	= false
 		fns	= false
@@ -257,17 +252,25 @@ fn vars {
 		priv	= false
 		intern	= false
 	) {
-		for (i = $*) if (
-			{~ $i -v}	{vars	= true}
-			{~ $i -f}	{fns	= true}
-			{~ $i -s}	{sets	= true}
-			{~ $i -e}	{export	= true}
-			{~ $i -p}	{priv	= true}
-			{~ $i -i}	{intern = true}
+		for (a = $*)
+		for (i = <={%fsplit '' <={~~ $a -*}})
+		if (
+			{~ $i v}	{vars	= true}
+			{~ $i f}	{fns	= true}
+			{~ $i s}	{sets	= true}
+			{~ $i e}	{export	= true}
+			{~ $i p}	{priv	= true}
+			{~ $i i}	{intern = true}
 			{throw error vars vars: bad option: $i}
 		)
+		if {!{$vars || $fns || $sets}} {
+			vars = true
+		}
+		if {!{$export || $priv || $intern}} {
+			export = true
+		}
 		let (
-			dovar = @ var {
+			fn dovar var {
 				# print functions and/or settor vars
 				if {if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
 					echo <={%var $var}
@@ -275,15 +278,15 @@ fn vars {
 			}
 		) {
 			if {$export || $priv} {
-				for (var = <= $&vars)
+				for (var = <=$&vars)
 					# if not exported but in priv
 					if {if {~ $var $noexport} $priv $export} {
-						$dovar $var
+						dovar $var
 					}
 			}
 			if {$intern} {
-				for (var = <= $&internals)
-					$dovar $var
+				for (var = <=$&internals)
+					dovar $var
 			}
 		}
 	}
