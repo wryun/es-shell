@@ -20,10 +20,10 @@ AC_CANONICAL_HOST
 
 dnl Build configuration.
 
-AC_ARG_ENABLE(strict, AS_HELP_STRING([--enable-strict], [enable strict compiler flags for testing and debugging; not all compilers support these]), opt_strict_mode=$enableval)
+AC_ARG_ENABLE(strict, AS_HELP_STRING([--enable-strict], [enable strict compiler flags for testing and debugging; not all compilers support these]), opt_strict_mode=$enableval, opt_strict_mode=no)
 
 if test $opt_strict_mode = yes; then
-	CFLAGS="-ansi -pedantic -DGCDEBUG=1 -D_POSIX_C_SOURCE=200112L -DREF_ASSERTIONS=1"
+	AC_SUBST([STRICT_CFLAGS], ["-ansi -pedantic -DGCDEBUG=1 -D_POSIX_C_SOURCE=200112L -DREF_ASSERTIONS=1"])
 fi
 
 dnl Checks for programs.
