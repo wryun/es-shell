@@ -77,13 +77,13 @@ test 'umask' {
 		umask 0
 		> $tmp
 		let (x = `{ls -l $tmp})
-			assert {~ $x(1) '-rw-rw-rw-'} umask 0 produces correct result
+			assert {~ $x(1) '-rw-rw-rw-'*} umask 0 produces correct result
 
 		rm -f $tmp
 		umask 027
 		> $tmp
 		let (y = `{ls -l $tmp})
-			assert {~ $y(1) '-rw-r-----'} umask 027 produces correct file
+			assert {~ $y(1) '-rw-r-----'*} umask 027 produces correct file
 
 		assert {~ `umask 027 0027} fail umask reports correct value
 	} {
@@ -234,4 +234,14 @@ test 'exit with signal codes' {
 		'die normally with an ignored signal'
 	assert {~ <={$es -c 'signals = -sigterm; throw signal sigterm' >[2] /dev/null} sigterm} \
 		'die from a thrown signal even if we would ignore it externally'
+}
+
+test 'backslash' {
+	assert {~ `` \n {echo h\
+i} 'h i'}
+	assert {~ `` \n {echo $es\es} $es^\es}
+	assert {~ `` \n {echo $es\
+es} $es^' es'}
+	assert {~ `` \n {echo h\\i} 'h\i'}
+	assert {~ `` \n {echo h \\ i} 'h \ i'}
 }

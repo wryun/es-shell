@@ -1,5 +1,16 @@
 # tests/syntax.es -- verify that basic syntax handling is correct
 
+# Note the awkward-looking '{' and '}' around commands here.  This prevents
+# capturing lexical bindings, so that
+#
+#     {want}
+#
+# doesn't turn into
+#
+#     %closure(have='garbage text';want='essentially line noise'){want}
+#
+# which would make tests unnecessarily annoying to write.
+
 test 'syntactic sugar' {
 	for (	(have 			want) = (
 		# Control Flow
@@ -10,6 +21,8 @@ test 'syntactic sugar' {
 		'cmd1 || cmd2'		'%or {cmd1} {cmd2}'
 		# NOTE: different whitespace from the man page
 		'fn name args { cmd }'	'fn-^name=@ args{cmd}'
+		# added case for * which is handled separately
+		'fn name { cmd }'	'fn-^name=@ *{cmd}'
 
 		# Input/Output Commands
 		# NOTE: the <={%one file} part of these is not mentioned in the man page
@@ -26,6 +39,7 @@ test 'syntactic sugar' {
 		'cmd <<< string'	'%here 0 string {cmd}'
 		'cmd1 | cmd2'		'%pipe {cmd1} 1 0 {cmd2}'
 		'cmd1 |[10=11] cmd2'	'%pipe {cmd1} 10 11 {cmd2}'
+		# readfrom/writeto handled specially below
 
 		# Expressions
 		'$#var'			'<={%count $var}'
@@ -36,12 +50,19 @@ test 'syntactic sugar' {
 		'`^{cmd args}'		'<={%flatten '' '' <={%backquote <={%flatten '''' $ifs} {cmd args}}}'
 		'``^ifs {cmd args}'	'<={%flatten '' '' <={%backquote <={%flatten '''' ifs} {cmd args}}}'
 	)) {
-		# Awkward-looking quotes around braces avoid capturing lexical bindings
 		assert {~ `` \n {eval echo '{'$have'}'} '{'$want'}'} $have 'is rewritten to' $want
 	}
 }
 
-# TODO: readfrom/writeto sugar
+test 'readfrom/writeto sugar' {
+	for ((have want) = (
+		'cmd1 >{ cmd2 }' '%writeto _devfd0 {cmd2} {cmd1 $_devfd0}'
+		'cmd1 <{ cmd2 }' '%readfrom _devfd0 {cmd2} {cmd1 $_devfd0}'
+	)) {
+		# using a totally new es forces _devfd0 specifically
+		assert {~ `` \n {$es -c 'echo {'$have'}'} '{'$want'}'}
+	}
+}
 
 test 'heredoc sugar' {
 	let (
@@ -77,7 +98,7 @@ test 'match sugar' {
 	}
 }
 
-test 'odd var formatting' {
+test 'complex variables' {
 	for (syntax = (
 		'$()'
 		'$foo'
@@ -86,5 +107,25 @@ test 'odd var formatting' {
 		'$(<={foo})'
 	)) {
 		assert {~ `` \n {eval echo '{'$syntax'}'} '{'^$syntax^'}'}
+	}
+}
+
+test 'precedence' {
+	for ((have want) = (
+		'a || b | c'		'%or {a} {%pipe {b} 1 0 {c}}'
+		'a | b || c'		'%or {%pipe {a} 1 0 {b}} {c}'
+		'!a && b'		'%and {%not {a}} {b}'
+		'!a || b'		'%or {%not {a}} {b}'
+		'!a & b'		'%seq {%background {%not {a}}} {b}'
+		'!a | b'		'%not {%pipe {a} 1 0 {b}}'
+		'let (a=b) x && y'	'let(a=b)%and {x} {y}'
+		'let (a=b) x || y'	'let(a=b)%or {x} {y}'
+		'let (a=b) x & y'	'%seq {%background {let(a=b)x}} {y}'
+		'let (a=b) x | y'	'let(a=b)%pipe {x} 1 0 {y}'
+		'a && b > c'		'%and {a} {%create 1 <={%one c} {b}}'
+		'a | b > c'		'%pipe {a} 1 0 {%create 1 <={%one c} {b}}'
+		'let (a=b) c > d'	'let(a=b)%create 1 <={%one d} {c}'
+	)) {
+		assert {~ `` \n {eval echo '{'$have'}'} '{'$want'}'}
 	}
 }
