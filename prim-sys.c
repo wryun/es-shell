@@ -289,7 +289,6 @@ PRIM(limit) {
 #endif	/* BSD_LIMITS */
 
 #if BUILTIN_TIME
-#if HAVE_GETRUSAGE
 /* This function is provided as timersub(3) on some systems, but it's simple enough
  * to do ourselves. */
 static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
@@ -300,88 +299,60 @@ static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
 		res->tv_usec += 1000000;
 	}
 }
-#endif
+
+static void timeadd(struct timeval *a, struct timeval *b, struct timeval *res) {
+	res->tv_sec = a->tv_sec + b->tv_sec;
+	res->tv_usec = a->tv_usec + b->tv_usec;
+	if (res->tv_usec >= 1000000) {
+		res->tv_sec += 1;
+		res->tv_usec -= 1000000;
+	}
+}
 
 PRIM(time) {
-#if HAVE_GETRUSAGE
+	time_t rt;
+	struct rusage ru;
 
-	int pid, status;
-	time_t t0, t1;
-	struct rusage ru_prev, ru_new, ru_diff;
-
-	Ref(List *, lp, list);
-
-	getrusage(RUSAGE_CHILDREN, &ru_prev);
-	gc();	/* do a garbage collection first to ensure reproducible results */
-	t0 = time(NULL);
-	pid = efork(TRUE, FALSE);
-	if (pid == 0)
-		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewait(pid, FALSE);
-	t1 = time(NULL);
-	SIGCHK();
-	printstatus(0, status);
-
-	getrusage(RUSAGE_CHILDREN, &ru_new);
-	timesub(&ru_new.ru_utime, &ru_prev.ru_utime, &ru_diff.ru_utime);
-	timesub(&ru_new.ru_stime, &ru_prev.ru_stime, &ru_diff.ru_stime);
-
-	eprint(
-		"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
-		t1 - t0,
-		ru_diff.ru_utime.tv_sec, (long) (ru_diff.ru_utime.tv_usec / 100000),
-		ru_diff.ru_stime.tv_sec, (long) (ru_diff.ru_stime.tv_usec / 100000),
-		lp, " "
-	);
-
-	RefEnd(lp);
-	return mklist(mkstr(mkstatus(status)), NULL);
-
-#else	/* !HAVE_GETRUSAGE */
-
-	int pid, status;
-	Ref(List *, lp, list);
-
-	gc();	/* do a garbage collection first to ensure reproducible results */
-	pid = efork(TRUE, FALSE);
-	if (pid == 0) {
-		clock_t t0, t1;
-		struct tms tms;
-		static clock_t ticks = 0;
-
-		if (ticks == 0)
-			ticks = sysconf(_SC_CLK_TCK);
-
-		t0 = times(&tms);
-		pid = efork(TRUE, FALSE);
-		if (pid == 0)
-			esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-
-		status = ewaitfor(pid);
-		t1 = times(&tms);
-		SIGCHK();
-		printstatus(0, status);
-
-		tms.tms_cutime += ticks / 20;
-		tms.tms_cstime += ticks / 20;
-
-		eprint(
-			"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
-			(t1 - t0 + ticks / 2) / ticks,
-			tms.tms_cutime / ticks, ((tms.tms_cutime * 10) / ticks) % 10,
-			tms.tms_cstime / ticks, ((tms.tms_cstime * 10) / ticks) % 10,
-			lp, " "
-		);
-		esexit(status);
+	rt = time(NULL);
+	{
+		struct rusage ru_self, ru_chld;
+		getrusage(RUSAGE_SELF, &ru_self);
+		getrusage(RUSAGE_CHILDREN, &ru_chld);
+		timeadd(&ru_self.ru_utime, &ru_chld.ru_utime, &ru.ru_utime);
+		timeadd(&ru_self.ru_stime, &ru_chld.ru_stime, &ru.ru_stime);
 	}
-	status = ewaitfor(pid);
-	SIGCHK();
-	printstatus(0, status);
 
-	RefEnd(lp);
-	return mklist(mkstr(mkstatus(status)), NULL);
+	if (list != NULL) {
+		char *suffix;
+		long outime, ostime;
+		struct timeval ut, st;
+		if (length(list) != 3)
+			fail("$&time", "ya goofed");
 
-#endif	/* !HAVE_GETRUSAGE */
+		/* FIXME: error checking on all this! */
+		rt -= (time_t)strtol(getstr(list->term), &suffix, 10);
+		outime = strtol(getstr(list->next->term), &suffix, 10);
+		ostime = strtol(getstr(list->next->next->term), &suffix, 10);
+		ut.tv_sec  = outime / 1000000;
+		ut.tv_usec = outime % 1000000;
+		st.tv_sec  = ostime / 1000000;
+		st.tv_usec = ostime % 1000000;
+		timesub(&ru.ru_utime, &ut, &ru.ru_utime);
+		timesub(&ru.ru_stime, &st, &ru.ru_stime);
+	}
+
+	gcdisable();
+	list = mklist(mkstr(str(
+		"%6ldr %5ld.%ldu %5ld.%lds",
+		rt,
+		ru.ru_utime.tv_sec, (long) (ru.ru_utime.tv_usec / 100000),
+		ru.ru_stime.tv_sec, (long) (ru.ru_stime.tv_usec / 100000)
+	)),
+		mklist(mkstr(str("%ld", rt)),
+		mklist(mkstr(str("%ld", ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec)),
+		mklist(mkstr(str("%ld", ru.ru_stime.tv_sec * 1000000 + ru.ru_stime.tv_usec)), NULL))));
+	gcenable();
+	return list;
 }
 #endif	/* BUILTIN_TIME */
 
