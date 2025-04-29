@@ -291,12 +291,21 @@ PRIM(limit) {
 #if BUILTIN_TIME
 /* This function is provided as timersub(3) on some systems, but it's simple enough
  * to do ourselves. */
-static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
+static void timevsub(struct timeval *a, struct timeval *b, struct timeval *res) {
 	res->tv_sec = a->tv_sec - b->tv_sec;
 	res->tv_usec = a->tv_usec - b->tv_usec;
 	if (res->tv_usec < 0) {
 		res->tv_sec -= 1;
 		res->tv_usec += 1000000;
+	}
+}
+
+static void timessub(struct timespec *a, struct timespec *b, struct timespec *res) {
+	res->tv_sec = a->tv_sec - b->tv_sec;
+	res->tv_nsec = a->tv_nsec - b->tv_nsec;
+	if (res->tv_nsec < 0) {
+		res->tv_sec -= 1;
+		res->tv_nsec += 1000000000;
 	}
 }
 
@@ -310,10 +319,11 @@ static void timeadd(struct timeval *a, struct timeval *b, struct timeval *res) {
 }
 
 PRIM(time) {
-	time_t rt;
+	struct timespec rt;
 	struct rusage ru;
 
-	rt = time(NULL);
+	/* FIXME: we skip error checking here */
+	clock_gettime(CLOCK_MONOTONIC, &rt);
 	{
 		struct rusage ru_self, ru_chld;
 		getrusage(RUSAGE_SELF, &ru_self);
@@ -324,31 +334,35 @@ PRIM(time) {
 
 	if (list != NULL) {
 		char *suffix;
-		long outime, ostime;
-		struct timeval ut, st;
+		long ortime, outime, ostime;
+		struct timespec ort;
+		struct timeval out, ost;
 		if (length(list) != 3)
 			fail("$&time", "ya goofed");
 
 		/* FIXME: error checking on all this! */
-		rt -= (time_t)strtol(getstr(list->term), &suffix, 10);
+		ortime = strtol(getstr(list->term), &suffix, 10);
 		outime = strtol(getstr(list->next->term), &suffix, 10);
 		ostime = strtol(getstr(list->next->next->term), &suffix, 10);
-		ut.tv_sec  = outime / 1000000;
-		ut.tv_usec = outime % 1000000;
-		st.tv_sec  = ostime / 1000000;
-		st.tv_usec = ostime % 1000000;
-		timesub(&ru.ru_utime, &ut, &ru.ru_utime);
-		timesub(&ru.ru_stime, &st, &ru.ru_stime);
+		ort.tv_sec  = ortime / 1000000;
+		ort.tv_nsec = (ortime % 1000000) * 1000;
+		out.tv_sec  = outime / 1000000;
+		out.tv_usec = outime % 1000000;
+		ost.tv_sec  = ostime / 1000000;
+		ost.tv_usec = ostime % 1000000;
+		timessub(&rt, &ort, &rt);
+		timevsub(&ru.ru_utime, &out, &ru.ru_utime);
+		timevsub(&ru.ru_stime, &ost, &ru.ru_stime);
 	}
 
 	gcdisable();
 	list = mklist(mkstr(str(
-		"%6ldr %5ld.%ldu %5ld.%lds",
-		rt,
-		ru.ru_utime.tv_sec, (long) (ru.ru_utime.tv_usec / 100000),
-		ru.ru_stime.tv_sec, (long) (ru.ru_stime.tv_usec / 100000)
+		"%6ld.%03ldr %5ld.%03ldu %5ld.%03lds",
+		rt.tv_sec, rt.tv_nsec / 1000000,
+		ru.ru_utime.tv_sec, ru.ru_utime.tv_usec / 1000,
+		ru.ru_stime.tv_sec, ru.ru_stime.tv_usec / 1000
 	)),
-		mklist(mkstr(str("%ld", rt)),
+		mklist(mkstr(str("%ld", rt.tv_sec * 1000000 + rt.tv_nsec / 1000)),
 		mklist(mkstr(str("%ld", ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec)),
 		mklist(mkstr(str("%ld", ru.ru_stime.tv_sec * 1000000 + ru.ru_stime.tv_usec)), NULL))));
 	gcenable();
