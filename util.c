@@ -34,7 +34,7 @@ extern void uerror(char *s) {
 }
 
 /* isabsolute -- test to see if pathname begins with "/", "./", or "../" */
-extern Boolean isabsolute(char *path) {
+extern Boolean isabsolute(const char *path) {
 	return path[0] == '/'
 	       || (path[0] == '.' && (path[1] == '/'
 				      || (path[1] == '.' && path[2] == '/')));

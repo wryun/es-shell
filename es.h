@@ -198,6 +198,7 @@ extern void setnoexport(List *list);
 extern void addtolist(void *arg, char *key, void *value);
 extern List *listvars(Boolean internal);
 extern List *varswithprefix(char *prefix);
+extern List *fnswithprefix(char *prefix);
 
 typedef struct Push Push;
 extern Push *pushlist;
@@ -216,6 +217,7 @@ extern void printstatus(int pid, int status);
 
 /* access.c */
 
+extern int testperm(struct stat *stat, unsigned int perm);
 extern char *checkexecutable(char *file);
 
 
@@ -283,7 +285,7 @@ extern void *erealloc(void *p, size_t n);
 extern void efree(void *p);
 extern void ewrite(int fd, const char *s, size_t n);
 extern long eread(int fd, char *buf, size_t n);
-extern Boolean isabsolute(char *path);
+extern Boolean isabsolute(const char *path);
 extern Boolean streq2(const char *s, const char *t1, const char *t2);
 
 

@@ -529,9 +529,68 @@ static char *list_completion_function(const char *text, int state) {
 	return result;
 }
 
-char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
-	char **matches = NULL;
+/* detect if we're currently at the start of a line. works ~80% well */
+static Boolean cmdstart(int point) {
+	int i;
+	Boolean quote = FALSE, start = TRUE;
+	for (i = 0; i < point; i++) {
+		char c = rl_line_buffer[i];
+		switch (c) {
+		case '\'':
+			quote = !quote;
+			break;
+		case '&': case '|': case '{': case '`':
+			if (!quote) start = TRUE;
+			break;
+		/* \n doesn't work right :( */
+		case ' ': case '\t': case '\n': case '!':
+			break;
+		default:
+			if (!quote) start = FALSE;
+		}
+	}
+	return start;
+}
 
+/* first-position completion.  includes
+ *  - built-ins: local let for fn %closure match
+ *  - functions
+ *  - if absolute (including home), absolute executable files
+ */
+static List *listexecutables(char *text) {
+	int i = 0;
+	char *s;
+	List *compl = NULL;
+	static char *builtins[] = {"local", "let", "for", "fn", "%closure", "match"};
+	for (i = 0; i < 6; i++)
+		if (strneq(text, builtins[i], strlen(text)))
+			compl = mklist(mkstr(builtins[i]), compl);
+
+	compl = append(fnswithprefix(text), compl);
+
+	if (isabsolute(text) || *text == '~') {
+		i = 0;
+		/* goofy hack :) */
+		while ((s = rl_filename_completion_function(text, i)) != NULL) {
+			struct stat st;
+			i = 1;
+			/* TODO: ~/foo doesn't stat(), so don't try */
+			if (*s != '~') {
+				if (stat(s, &st) == -1)
+					continue;
+				/* 1 == EXEC */
+				if (testperm(&st, 1) != 0)
+					continue;
+			}
+			/* TODO: recurse in directories? */
+			compl = mklist(mkstr(s), compl);
+		}
+	}
+	return compl;
+}
+
+char **builtin_completion(const char *text, int start, int UNUSED end) {
+	/* variable or primitive completion */
 	if (*text == '$') {
 		wordslistgen = varswithprefix;
 		complprefix = "$";
@@ -543,14 +602,22 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 		case '^': complprefix = "$^"; break;
 		case '#': complprefix = "$#"; break;
 		}
-		matches = rl_completion_matches(text, list_completion_function);
+		return rl_completion_matches(text, list_completion_function);
 	}
 
 	/* ~foo => username.  ~foo/bar already gets completed as filename. */
-	if (!matches && *text == '~' && !strchr(text, '/'))
-		matches = rl_completion_matches(text, rl_username_completion_function);
+	if (*text == '~' && !strchr(text, '/'))
+		return rl_completion_matches(text, rl_username_completion_function);
 
-	return matches;
+	/* first-word completion, which is ~special~ */
+	if (cmdstart(start)) {
+		wordslistgen = listexecutables;
+		complprefix = "";
+		rl_attempted_completion_over = 1;
+		return rl_completion_matches(text, list_completion_function);
+	}
+
+	return NULL;	/* fall back to normal filename completion */
 }
 #endif /* HAVE_READLINE */
 
