@@ -264,6 +264,7 @@ extern Tree *parse(List *fc) {
 
 	Ref(Tree *, pt, pseal(parsetree));
 #if LISPTREES
+	Ref(Tree *, pt, pseal(parsetree));
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", pt);
 #endif

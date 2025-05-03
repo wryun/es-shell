@@ -14,7 +14,7 @@ static int str_grow(Format *f, size_t more) {
 	return 0;
 }
 
-static char *sstrv(char *(*seal)(Buffer *buf), const char *fmt, va_list args) {
+static char *sstrv(char *(*seal)(Buffer *), const char *fmt, va_list args) {
 	Buffer *buf;
 	Format format;
 

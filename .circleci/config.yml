@@ -21,11 +21,11 @@ jobs:
 
       - run:
           name: Configure
-          command: ./configure --with-readline
+          command: ./configure --enable-strict --with-readline
 
       - run:
           name: Build
-          command: make 'ADDCFLAGS=-DGCDEBUG=1 -DREF_ASSERTIONS=1'
+          command: make
 
       - run:
           name: Build test helper

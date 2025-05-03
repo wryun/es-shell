@@ -15,27 +15,27 @@ static Tree *gmk(void *(*alloc)(size_t, Tag *), NodeKind t, va_list ap) {
 	    default:
 		panic("mk: bad node kind %d", t);
 	    case nWord: case nQword: case nPrim:
-		n = (*alloc)(offsetof(Tree, u[1]), &Tree1Tag);
+		n = alloc(offsetof(Tree, u[1]), &Tree1Tag);
 		n->u[0].s = va_arg(ap, char *);
 		break;
 	    case nCall: case nThunk: case nVar:
-		n = (*alloc)(offsetof(Tree, u[1]), &Tree1Tag);
+		n = alloc(offsetof(Tree, u[1]), &Tree1Tag);
 		n->u[0].p = va_arg(ap, Tree *);
 		break;
 	    case nAssign:  case nConcat: case nClosure: case nFor:
 	    case nLambda: case nLet: case nList:  case nLocal:
 	    case nVarsub: case nMatch: case nExtract:
-		n = (*alloc)(offsetof(Tree, u[2]), &Tree2Tag);
+		n = alloc(offsetof(Tree, u[2]), &Tree2Tag);
 		n->u[0].p = va_arg(ap, Tree *);
 		n->u[1].p = va_arg(ap, Tree *);
 		break;
 	    case nRedir:
-		n = (*alloc)(offsetof(Tree, u[2]), &Tree2Tag);
+		n = alloc(offsetof(Tree, u[2]), NULL);
 		n->u[0].p = va_arg(ap, Tree *);
 		n->u[1].p = va_arg(ap, Tree *);
 		break;
 	    case nPipe:
-		n = (*alloc)(offsetof(Tree, u[2]), &Tree2Tag);
+		n = alloc(offsetof(Tree, u[2]), NULL);
 		n->u[0].i = va_arg(ap, int);
 		n->u[1].i = va_arg(ap, int);
 		break;
@@ -49,11 +49,11 @@ static Tree *gmk(void *(*alloc)(size_t, Tag *), NodeKind t, va_list ap) {
 
 extern Tree *mk VARARGS1(NodeKind, t) {
 	va_list ap;
-	Ref(Tree *, tree, NULL);
+	Tree *tree = NULL;
 	VA_START(ap, t);
 	tree = gmk(palloc, t, ap);
 	va_end(ap);
-	RefReturn(tree);
+	return tree;
 }
 
 extern Tree *gcmk VARARGS1(NodeKind, t) {

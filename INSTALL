@@ -69,6 +69,8 @@ use the more up-to-date readline library available, the following is
 required:
 
    % doas pkg_add readline  # your exact command may differ
-   % ./configure --with-readline \
+   % ./configure \
+        --mandir=/usr/local/man \
+        --with-readline \
         READLINE_CFLAGS=-I/usr/local/include/ereadline \
         READLINE_LIBS='-L/usr/local/lib -lereadline'

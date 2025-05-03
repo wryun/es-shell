@@ -34,12 +34,6 @@ static int envmin;
 static Boolean isdirty = TRUE;
 static Boolean rebound = TRUE;
 
-#if LOCAL_GETENV
-static char *stdgetenv(const char *);
-static char *esgetenv(const char *);
-static char *(*realgetenv)(const char *) = stdgetenv;
-#endif
-
 DefineTag(Var, static);
 
 static Boolean specialvar(const char *name) {
@@ -455,6 +449,10 @@ static void importvar(char *name0, char *value) {
 }
 
 #if LOCAL_GETENV
+static char *stdgetenv(const char *);
+static char *esgetenv(const char *);
+static char *(*realgetenv)(const char *) = stdgetenv;
+
 /* esgetenv -- fake version of getenv for readline (or other libraries) */
 static char *esgetenv(const char *name) {
 	List *value = varlookup(name, NULL);

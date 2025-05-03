@@ -6,7 +6,7 @@
 
 /* tree.c */
 
-extern Tree *mk(NodeKind VARARGS);
+extern Tree *mk(NodeKind VARARGS);	/* palloc a tree node */
 
 
 /* syntax.c */
