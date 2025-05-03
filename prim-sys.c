@@ -288,83 +288,129 @@ PRIM(limit) {
 }
 #endif	/* BSD_LIMITS */
 
+/*
+ * time builtin -- this is nearly as bad as limit
+ */
+
 #if BUILTIN_TIME
-/* This function is provided as timersub(3) on some systems, but it's simple enough
- * to do ourselves. */
-static void timevsub(struct timeval *a, struct timeval *b, struct timeval *res) {
-	res->tv_sec = a->tv_sec - b->tv_sec;
-	res->tv_usec = a->tv_usec - b->tv_usec;
-	if (res->tv_usec < 0) {
-		res->tv_sec -= 1;
-		res->tv_usec += 1000000;
-	}
+struct times {
+	intmax_t real_usec;
+	intmax_t user_usec;
+	intmax_t sys_usec;
+};
+
+static void tmerrchk(int result, Boolean throws, char *str) {
+	if (result != -1)
+		return;
+	if (throws)
+		fail("$&time", "%s: %s", str, esstrerror(errno));
+	eprint("%s: %s\n", str, esstrerror(errno));
+	eprint("Calls to `$&time` or `time` in this shell may produce bad values.\n");
 }
 
-static void timessub(struct timespec *a, struct timespec *b, struct timespec *res) {
-	res->tv_sec = a->tv_sec - b->tv_sec;
-	res->tv_nsec = a->tv_nsec - b->tv_nsec;
-	if (res->tv_nsec < 0) {
-		res->tv_sec -= 1;
-		res->tv_nsec += 1000000000;
-	}
+static void getrealtime(struct times *ret, Boolean throws) {
+#if HAVE_GETTIMEOFDAY
+#define PRECISE_REALTIME	1
+	struct timeval tv;
+	tmerrchk(gettimeofday(&tv, NULL), throws, "getrealtime()");
+	ret->real_usec = (tv.tv_sec * 1000000) + tv.tv_usec;
+#else	/* use time(3p) */
+#define PRECISE_REALTIME	0
+	time_t t = time(NULL);
+	tmerrchk(t, throws, "getrealtime()");
+	ret->real_usec = t * 1000000;
+#endif
 }
 
-static void timeadd(struct timeval *a, struct timeval *b, struct timeval *res) {
-	res->tv_sec = a->tv_sec + b->tv_sec;
-	res->tv_usec = a->tv_usec + b->tv_usec;
-	if (res->tv_usec >= 1000000) {
-		res->tv_sec += 1;
-		res->tv_usec -= 1000000;
-	}
+static void getusagetimes(struct times *ret, Boolean throws) {
+#if HAVE_GETRUSAGE
+	struct rusage ru_self, ru_child;
+	tmerrchk(getrusage(RUSAGE_SELF, &ru_self), throws, "getrusage(RUSAGE_SELF)");
+	tmerrchk(getrusage(RUSAGE_CHILDREN, &ru_child), throws, "getrusage(RUSAGE_CHILDREN)");
+	ret->user_usec = (ru_self.ru_utime.tv_sec * 1000000)
+		+ ru_self.ru_utime.tv_usec
+		+ (ru_child.ru_utime.tv_sec * 1000000)
+		+ ru_child.ru_utime.tv_usec;
+	ret->sys_usec  = (ru_self.ru_stime.tv_sec * 1000000)
+		+ ru_self.ru_stime.tv_usec
+		+ (ru_child.ru_stime.tv_sec * 1000000)
+		+ ru_child.ru_stime.tv_usec;
+#else
+	struct tms tms;
+	static long mul = -1;
+	if (mul == -1)
+		mul = 1000000 / sysconf(_SC_CLK_TCK);
+	tmerrchk(times(&tms), throws, "getusagetimes()");
+	ret->user_usec = (tms.tms_utime + tms.tms_cutime) * mul;
+	ret->sys_usec = (tms.tms_stime + tms.tms_cstime) * mul;
+#endif
+}
+
+static void gettimes(struct times *ret, Boolean throws) {
+	getrealtime(ret, throws);
+	getusagetimes(ret, throws);
+}
+
+static void parsetimes(List *list, struct times *ret) {
+	char *suffix;
+	if (length(list) != 3)
+		fail("$&time", "usage: $&time [r u s]");
+
+	ret->real_usec = strtoimax(getstr(list->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "real-time argument not an int", list->term);
+	ret->user_usec = strtoimax(getstr(list->next->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "user-time argument not an int", list->next->term);
+	ret->sys_usec = strtoimax(getstr(list->next->next->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "sys-time argument not an int", list->next->next->term);
+}
+
+static void subtimes(struct times a, struct times b, struct times *ret) {
+	ret->real_usec = a.real_usec - b.real_usec;
+	ret->user_usec = a.user_usec - b.user_usec;
+	ret->sys_usec = a.sys_usec - b.sys_usec;
+}
+
+/* FIXME: numbers are allowed to be negative */
+static char *strtimes(struct times time) {
+	return str(
+		"%6ld"
+#if PRECISE_REALTIME
+		".%03ld"
+#endif
+		"r %5ld.%03ldu %5ld.%03lds",
+		time.real_usec / 1000000,
+#if PRECISE_REALTIME
+		(time.real_usec % 1000000) / 1000,
+#endif
+		time.user_usec / 1000000, (time.user_usec % 1000000) / 1000,
+		time.sys_usec / 1000000, (time.sys_usec % 1000000) / 1000
+	);
+}
+
+static struct times first;
+extern void inittime(void) {
+	gettimes(&first, FALSE);
 }
 
 PRIM(time) {
-	struct timespec rt;
-	struct rusage ru;
+	struct times prev, time;
 
-	/* FIXME: we skip error checking here */
-	clock_gettime(CLOCK_MONOTONIC, &rt);
-	{
-		struct rusage ru_self, ru_chld;
-		getrusage(RUSAGE_SELF, &ru_self);
-		getrusage(RUSAGE_CHILDREN, &ru_chld);
-		timeadd(&ru_self.ru_utime, &ru_chld.ru_utime, &ru.ru_utime);
-		timeadd(&ru_self.ru_stime, &ru_chld.ru_stime, &ru.ru_stime);
-	}
+	gettimes(&time, TRUE);
+	subtimes(time, first, &time);
 
 	if (list != NULL) {
-		char *suffix;
-		long ortime, outime, ostime;
-		struct timespec ort;
-		struct timeval out, ost;
-		if (length(list) != 3)
-			fail("$&time", "ya goofed");
-
-		/* FIXME: error checking on all this! */
-		ortime = strtol(getstr(list->term), &suffix, 10);
-		outime = strtol(getstr(list->next->term), &suffix, 10);
-		ostime = strtol(getstr(list->next->next->term), &suffix, 10);
-		ort.tv_sec  = ortime / 1000000;
-		ort.tv_nsec = (ortime % 1000000) * 1000;
-		out.tv_sec  = outime / 1000000;
-		out.tv_usec = outime % 1000000;
-		ost.tv_sec  = ostime / 1000000;
-		ost.tv_usec = ostime % 1000000;
-		timessub(&rt, &ort, &rt);
-		timevsub(&ru.ru_utime, &out, &ru.ru_utime);
-		timevsub(&ru.ru_stime, &ost, &ru.ru_stime);
+		parsetimes(list, &prev);
+		subtimes(time, prev, &time);
 	}
 
 	gcdisable();
-	list = mklist(mkstr(str(
-		"%6ld.%03ldr %5ld.%03ldu %5ld.%03lds",
-		rt.tv_sec, rt.tv_nsec / 1000000,
-		ru.ru_utime.tv_sec, ru.ru_utime.tv_usec / 1000,
-		ru.ru_stime.tv_sec, ru.ru_stime.tv_usec / 1000
-	)),
-		mklist(mkstr(str("%ld", rt.tv_sec * 1000000 + rt.tv_nsec / 1000)),
-		mklist(mkstr(str("%ld", ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec)),
-		mklist(mkstr(str("%ld", ru.ru_stime.tv_sec * 1000000 + ru.ru_stime.tv_usec)), NULL))));
+	list = mklist(mkstr(strtimes(time)),
+		mklist(mkstr(str("%ld", time.real_usec)),
+		mklist(mkstr(str("%ld", time.user_usec)),
+		mklist(mkstr(str("%ld", time.sys_usec)), NULL))));
 	gcenable();
 	return list;
 }

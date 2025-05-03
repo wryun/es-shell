@@ -115,6 +115,9 @@ int main(int argc, char **argv0) {
 
 	initconv();
 	initgc();
+#if BUILTIN_TIME
+	inittime();
+#endif
 
 	if (argc == 0) {
 		argc = 1;
