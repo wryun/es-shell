@@ -240,10 +240,6 @@ fn vars {
 		if {!~ $i -*} {
 			throw error vars illegal option: $i -- usage: vars -[vfsepia]
 		}
-	# choose default options
-	if {~ $* -a} {
-		* = -vfsepi
-	}
 	let (
 		vars	= false
 		fns	= false
@@ -251,6 +247,7 @@ fn vars {
 		export	= false
 		priv	= false
 		intern	= false
+		all	= false
 	) {
 		for (a = $*)
 		for (i = <={%fsplit '' <={~~ $a -*}})
@@ -261,6 +258,7 @@ fn vars {
 			{~ $i e}	{export	= true}
 			{~ $i p}	{priv	= true}
 			{~ $i i}	{intern = true}
+			{~ $i a}	{all	= true}
 			{throw error vars vars: bad option: $i}
 		)
 		if {!{$vars || $fns || $sets}} {
@@ -272,19 +270,19 @@ fn vars {
 		let (
 			fn dovar var {
 				# print functions and/or settor vars
-				if {if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
+				if {$all || if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
 					echo <={%var $var}
 				}
 			}
 		) {
-			if {$export || $priv} {
+			if {$all || $export || $priv} {
 				for (var = <=$&vars)
 					# if not exported but in priv
-					if {if {~ $var $noexport} $priv $export} {
+					if {$all || if {~ $var $noexport} $priv $export} {
 						dovar $var
 					}
 			}
-			if {$intern} {
+			if {$all || $intern} {
 				for (var = <=$&internals)
 					dovar $var
 			}
