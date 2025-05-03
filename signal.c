@@ -184,18 +184,10 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 			sigeffect[sig] = sig_ignore;
 		}
 #endif /* !HAVE_SIGACTION */
-		else if (h == SIG_DFL || h == SIG_ERR)
-			sigeffect[sig] = sig_default;
 		else {
-#if TRUST_INCOMING_SIGNAL_HANDLERS
 			sigeffect[sig] = sig_default;
-			handler_in[sig] = h;
-#else
-			panic(
-				"initsignals: bad incoming signal value for %s: %x",
-				signame(sig), h
-			);
-#endif
+			if (h != SIG_ERR)
+				handler_in[sig] = h;
 		}
 	}
 
