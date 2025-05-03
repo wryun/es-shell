@@ -21,11 +21,11 @@ jobs:
 
       - run:
           name: Configure
-          command: ./configure --with-readline
+          command: ./configure --enable-strict --with-readline
 
       - run:
           name: Build
-          command: make 'ADDCFLAGS=-DGCDEBUG=1 -DREF_ASSERTIONS=1'
+          command: make
 
       - run:
           name: Build test helper
@@ -51,7 +51,7 @@ jobs:
           name: Test
           command: |
             mkdir -p ./test/results
-            ./es -s < ./test/test.es --junit ./test/tests/* > ./test/results/results.xml
+            ./es -ps < ./test/test.es --junit ./test/tests/* > ./test/results/results.xml
 
       - store_artifacts:
           path: ./test/results/

@@ -183,9 +183,11 @@ PRIM(parse) {
 	Ref(Tree *, tree, NULL);
 	ExceptionHandler
 		tree = parse(prompt1, prompt2);
-	CatchException (e)
+	CatchException (ex)
+		Ref(List *, e, ex);
 		loginput(dumphistbuffer());
 		throw(e);
+		RefEnd(e);
 	EndExceptionHandler
 
 	loginput(dumphistbuffer());

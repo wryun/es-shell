@@ -244,3 +244,13 @@ test '$0 assignment' {
 	let (fn-testrun = ./testrun)
 		assert {~ `{testrun a} 'testrun'} '$0 from function is ok'
 }
+
+test 'backslash' {
+	assert {~ `` \n {echo h\
+i} 'h i'}
+	assert {~ `` \n {echo $es\es} $es^\es}
+	assert {~ `` \n {echo $es\
+es} $es^' es'}
+	assert {~ `` \n {echo h\\i} 'h\i'}
+	assert {~ `` \n {echo h \\ i} 'h \ i'}
+}
