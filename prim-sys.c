@@ -313,7 +313,7 @@ static void getrealtime(struct times *ret, Boolean throws) {
 #define PRECISE_REALTIME	1
 	struct timeval tv;
 	tmerrchk(gettimeofday(&tv, NULL), throws, "getrealtime()");
-	ret->real_usec = (tv.tv_sec * 1000000) + tv.tv_usec;
+	ret->real_usec = (tv.tv_sec * INTMAX_C(1000000)) + tv.tv_usec;
 #else	/* use time(3p) */
 #define PRECISE_REALTIME	0
 	time_t t = time(NULL);
@@ -341,8 +341,8 @@ static void getusagetimes(struct times *ret, Boolean throws) {
 	if (mul == -1)
 		mul = 1000000 / sysconf(_SC_CLK_TCK);
 	tmerrchk(times(&tms), throws, "getusagetimes()");
-	ret->user_usec = (tms.tms_utime + tms.tms_cutime) * mul;
-	ret->sys_usec = (tms.tms_stime + tms.tms_cstime) * mul;
+	ret->user_usec = ((intmax_t)tms.tms_utime + tms.tms_cutime) * mul;
+	ret->sys_usec  = ((intmax_t)tms.tms_stime + tms.tms_cstime) * mul;
 #endif
 }
 
@@ -376,11 +376,11 @@ static void subtimes(struct times a, struct times b, struct times *ret) {
 /* FIXME: numbers are allowed to be negative */
 static char *strtimes(struct times time) {
 	return str(
-		"%6ld"
+		"%6jd"
 #if PRECISE_REALTIME
-		".%03ld"
+		".%03jd"
 #endif
-		"r %5ld.%03ldu %5ld.%03lds",
+		"r %5jd.%03jdu %5jd.%03jds",
 		time.real_usec / 1000000,
 #if PRECISE_REALTIME
 		(time.real_usec % 1000000) / 1000,
@@ -390,16 +390,16 @@ static char *strtimes(struct times time) {
 	);
 }
 
-static struct times first;
-extern void inittime(void) {
-	gettimes(&first, FALSE);
+static struct times base;
+extern void setbasetime(void) {
+	gettimes(&base, FALSE);
 }
 
 PRIM(time) {
 	struct times prev, time;
 
 	gettimes(&time, TRUE);
-	subtimes(time, first, &time);
+	subtimes(time, base, &time);
 
 	if (list != NULL) {
 		parsetimes(list, &prev);
@@ -408,9 +408,9 @@ PRIM(time) {
 
 	gcdisable();
 	list = mklist(mkstr(strtimes(time)),
-		mklist(mkstr(str("%ld", time.real_usec)),
-		mklist(mkstr(str("%ld", time.user_usec)),
-		mklist(mkstr(str("%ld", time.sys_usec)), NULL))));
+		mklist(mkstr(str("%jd", time.real_usec)),
+		mklist(mkstr(str("%jd", time.user_usec)),
+		mklist(mkstr(str("%jd", time.sys_usec)), NULL))));
 	gcenable();
 	return list;
 }

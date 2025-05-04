@@ -116,7 +116,7 @@ int main(int argc, char **argv0) {
 	initconv();
 	initgc();
 #if BUILTIN_TIME
-	inittime();
+	setbasetime();
 #endif
 
 	if (argc == 0) {

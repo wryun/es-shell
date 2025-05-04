@@ -19,6 +19,7 @@ static Boolean name(Format *format) { \
 Flag(uconv,	FMT_unsigned)
 Flag(hconv,	FMT_short)
 Flag(longconv,	FMT_long)
+Flag(maxconv,	FMT_max)
 Flag(altconv,	FMT_altform)
 Flag(leftconv,	FMT_leftside)
 Flag(dotconv,	FMT_f2set)
@@ -79,15 +80,18 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 	};
 	char padchar;
 	size_t len, pre, zeroes, padding, width;
-	long n, flags;
-	unsigned long u;
+	long flags;
+	intmax_t n;
+	uintmax_t u;
 	char number[64], prefix[20];
 
 	if (radix > 36)
 		return;
 
 	flags = format->flags;
-	if (flags & FMT_long)
+	if (flags & FMT_max)
+		n = va_arg(format->args, intmax_t);
+	else if (flags & FMT_long)
 		n = va_arg(format->args, long);
 	else
 		n = va_arg(format->args, int);
@@ -188,6 +192,7 @@ static void inittab(void) {
 	fmttab['u'] = uconv;
 	fmttab['h'] = hconv;
 	fmttab['l'] = longconv;
+	fmttab['j'] = maxconv;
 	fmttab['#'] = altconv;
 	fmttab['-'] = leftconv;
 	fmttab['.'] = dotconv;

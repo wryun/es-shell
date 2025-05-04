@@ -379,7 +379,7 @@ extern void unblocksignals(void);
 /* prim-sys.c */
 
 #if BUILTIN_TIME
-extern void inittime(void);
+extern void setbasetime(void);
 #endif
 
 
