@@ -369,9 +369,10 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 				cmd = "%here";
 			} else
 				cmd = "%heredoc";
-		else if (c == '=')
+		else if (c == '=') {
+			w = NW;
 			return CALL;
-		else
+		} else
 			cmd = "%open";
 		goto redirection;
 	case '>':
