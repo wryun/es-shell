@@ -288,100 +288,131 @@ PRIM(limit) {
 }
 #endif	/* BSD_LIMITS */
 
+/*
+ * time builtin -- this is nearly as bad as limit
+ */
+
 #if BUILTIN_TIME
-#if HAVE_GETRUSAGE
-/* This function is provided as timersub(3) on some systems, but it's simple enough
- * to do ourselves. */
-static void timesub(struct timeval *a, struct timeval *b, struct timeval *res) {
-	res->tv_sec = a->tv_sec - b->tv_sec;
-	res->tv_usec = a->tv_usec - b->tv_usec;
-	if (res->tv_usec < 0) {
-		res->tv_sec -= 1;
-		res->tv_usec += 1000000;
-	}
+struct times {
+	intmax_t real_usec;
+	intmax_t user_usec;
+	intmax_t sys_usec;
+};
+
+static void tmerrchk(int result, Boolean throws, char *str) {
+	if (result != -1)
+		return;
+	if (throws)
+		fail("$&time", "%s: %s", str, esstrerror(errno));
+	eprint("%s: %s\n", str, esstrerror(errno));
+	eprint("Calls to `$&time` or `time` in this shell may produce bad values.\n");
 }
+
+static void getrealtime(struct times *ret, Boolean throws) {
+#if HAVE_GETTIMEOFDAY
+#define PRECISE_REALTIME	1
+	struct timeval tv;
+	tmerrchk(gettimeofday(&tv, NULL), throws, "getrealtime()");
+	ret->real_usec = (tv.tv_sec * INTMAX_C(1000000)) + tv.tv_usec;
+#else	/* use time(3p) */
+#define PRECISE_REALTIME	0
+	time_t t = time(NULL);
+	tmerrchk(t, throws, "getrealtime()");
+	ret->real_usec = t * 1000000;
 #endif
+}
+
+static void getusagetimes(struct times *ret, Boolean throws) {
+#if HAVE_GETRUSAGE
+	struct rusage ru_self, ru_child;
+	tmerrchk(getrusage(RUSAGE_SELF, &ru_self), throws, "getrusage(RUSAGE_SELF)");
+	tmerrchk(getrusage(RUSAGE_CHILDREN, &ru_child), throws, "getrusage(RUSAGE_CHILDREN)");
+	ret->user_usec = (ru_self.ru_utime.tv_sec * 1000000)
+		+ ru_self.ru_utime.tv_usec
+		+ (ru_child.ru_utime.tv_sec * 1000000)
+		+ ru_child.ru_utime.tv_usec;
+	ret->sys_usec  = (ru_self.ru_stime.tv_sec * 1000000)
+		+ ru_self.ru_stime.tv_usec
+		+ (ru_child.ru_stime.tv_sec * 1000000)
+		+ ru_child.ru_stime.tv_usec;
+#else
+	struct tms tms;
+	static long mul = -1;
+	if (mul == -1)
+		mul = 1000000 / sysconf(_SC_CLK_TCK);
+	tmerrchk(times(&tms), throws, "getusagetimes()");
+	ret->user_usec = ((intmax_t)tms.tms_utime + tms.tms_cutime) * mul;
+	ret->sys_usec  = ((intmax_t)tms.tms_stime + tms.tms_cstime) * mul;
+#endif
+}
+
+static void gettimes(struct times *ret, Boolean throws) {
+	getrealtime(ret, throws);
+	getusagetimes(ret, throws);
+}
+
+static void parsetimes(List *list, struct times *ret) {
+	char *suffix;
+	if (length(list) != 3)
+		fail("$&time", "usage: $&time [r u s]");
+
+	ret->real_usec = strtoimax(getstr(list->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "real-time argument not an int", list->term);
+	ret->user_usec = strtoimax(getstr(list->next->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "user-time argument not an int", list->next->term);
+	ret->sys_usec = strtoimax(getstr(list->next->next->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "sys-time argument not an int", list->next->next->term);
+}
+
+static void subtimes(struct times a, struct times b, struct times *ret) {
+	ret->real_usec = a.real_usec - b.real_usec;
+	ret->user_usec = a.user_usec - b.user_usec;
+	ret->sys_usec = a.sys_usec - b.sys_usec;
+}
+
+/* FIXME: numbers are allowed to be negative */
+static char *strtimes(struct times time) {
+	return str(
+		"%6jd"
+#if PRECISE_REALTIME
+		".%03jd"
+#endif
+		"r %5jd.%03jdu %5jd.%03jds",
+		time.real_usec / 1000000,
+#if PRECISE_REALTIME
+		(time.real_usec % 1000000) / 1000,
+#endif
+		time.user_usec / 1000000, (time.user_usec % 1000000) / 1000,
+		time.sys_usec / 1000000, (time.sys_usec % 1000000) / 1000
+	);
+}
+
+static struct times base;
+extern void setbasetime(void) {
+	gettimes(&base, FALSE);
+}
 
 PRIM(time) {
-#if HAVE_GETRUSAGE
+	struct times prev, time;
 
-	int pid, status;
-	time_t t0, t1;
-	struct rusage ru_prev, ru_new, ru_diff;
+	gettimes(&time, TRUE);
+	subtimes(time, base, &time);
 
-	Ref(List *, lp, list);
-
-	getrusage(RUSAGE_CHILDREN, &ru_prev);
-	gc();	/* do a garbage collection first to ensure reproducible results */
-	t0 = time(NULL);
-	pid = efork(TRUE, FALSE);
-	if (pid == 0)
-		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewait(pid, FALSE);
-	t1 = time(NULL);
-	SIGCHK();
-	printstatus(0, status);
-
-	getrusage(RUSAGE_CHILDREN, &ru_new);
-	timesub(&ru_new.ru_utime, &ru_prev.ru_utime, &ru_diff.ru_utime);
-	timesub(&ru_new.ru_stime, &ru_prev.ru_stime, &ru_diff.ru_stime);
-
-	eprint(
-		"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
-		t1 - t0,
-		ru_diff.ru_utime.tv_sec, (long) (ru_diff.ru_utime.tv_usec / 100000),
-		ru_diff.ru_stime.tv_sec, (long) (ru_diff.ru_stime.tv_usec / 100000),
-		lp, " "
-	);
-
-	RefEnd(lp);
-	return mklist(mkstr(mkstatus(status)), NULL);
-
-#else	/* !HAVE_GETRUSAGE */
-
-	int pid, status;
-	Ref(List *, lp, list);
-
-	gc();	/* do a garbage collection first to ensure reproducible results */
-	pid = efork(TRUE, FALSE);
-	if (pid == 0) {
-		clock_t t0, t1;
-		struct tms tms;
-		static clock_t ticks = 0;
-
-		if (ticks == 0)
-			ticks = sysconf(_SC_CLK_TCK);
-
-		t0 = times(&tms);
-		pid = efork(TRUE, FALSE);
-		if (pid == 0)
-			esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-
-		status = ewaitfor(pid);
-		t1 = times(&tms);
-		SIGCHK();
-		printstatus(0, status);
-
-		tms.tms_cutime += ticks / 20;
-		tms.tms_cstime += ticks / 20;
-
-		eprint(
-			"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
-			(t1 - t0 + ticks / 2) / ticks,
-			tms.tms_cutime / ticks, ((tms.tms_cutime * 10) / ticks) % 10,
-			tms.tms_cstime / ticks, ((tms.tms_cstime * 10) / ticks) % 10,
-			lp, " "
-		);
-		esexit(status);
+	if (list != NULL) {
+		parsetimes(list, &prev);
+		subtimes(time, prev, &time);
 	}
-	status = ewaitfor(pid);
-	SIGCHK();
-	printstatus(0, status);
 
-	RefEnd(lp);
-	return mklist(mkstr(mkstatus(status)), NULL);
-
-#endif	/* !HAVE_GETRUSAGE */
+	gcdisable();
+	list = mklist(mkstr(strtimes(time)),
+		mklist(mkstr(str("%jd", time.real_usec)),
+		mklist(mkstr(str("%jd", time.user_usec)),
+		mklist(mkstr(str("%jd", time.sys_usec)), NULL))));
+	gcenable();
+	return list;
 }
 #endif	/* BUILTIN_TIME */
 
