@@ -236,6 +236,15 @@ test 'exit with signal codes' {
 		'die from a thrown signal even if we would ignore it externally'
 }
 
+test '$0 assignment' {
+	local (path = .)
+		assert {~ `{testrun a} 'testrun'} '$0 from hacked path is ok'
+	local (fn %pathsearch bin {result ./testrun a})
+		assert {~ `testrun 'testrun'} '$0 from hacked pathsearch is ok'
+	let (fn-testrun = ./testrun)
+		assert {~ `{testrun a} 'testrun'} '$0 from function is ok'
+}
+
 test 'backslash' {
 	assert {~ `` \n {echo h\
 i} 'h i'}
