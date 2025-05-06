@@ -65,15 +65,9 @@ const char dnw[] = {
 };
 
 
-/* print_prompt2 -- called before all continuation lines */
-extern void print_prompt2(void) {
+/* increment_line -- called before all continuation lines */
+extern void increment_line(void) {
 	input->lineno++;
-#if HAVE_READLINE
-	prompt = prompt2;
-#else
-	if ((input->runflags & run_interactive) && prompt2 != NULL)
-		eprint("%s", prompt2);
-#endif
 }
 
 /* scanerror -- called for lexical errors */
@@ -141,13 +135,12 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	return TRUE;
 }
 
-extern int yylex(void) {
+extern int yylex(YYSTYPE *y) {
 	static Boolean dollar = FALSE;
 	int c;
 	size_t i;			/* The purpose of all these local assignments is to	*/
 	const char *meta;		/* allow optimizing compilers like gcc to load these	*/
 	char *buf = tokenbuf;		/* values into registers. On a sparc this is a		*/
-	YYSTYPE *y = &yylval;		/* win, in code size *and* execution time		*/
 
 	if (goterror) {
 		goterror = FALSE;
@@ -158,8 +151,8 @@ extern int yylex(void) {
 	meta = (dollar ? dnw : nw);
 	dollar = FALSE;
 	if (newline) {
-		--input->lineno; /* slight space optimization; print_prompt2() always increments lineno */
-		print_prompt2();
+		--input->lineno;
+		increment_line();
 		newline = FALSE;
 	}
 top:	while ((c = GETC()) == ' ' || c == '\t')
@@ -233,7 +226,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		while ((c = GETC()) != '\'' || (c = GETC()) == '\'') {
 			buf[i++] = c;
 			if (c == '\n')
-				print_prompt2();
+				increment_line();
 			if (c == EOF) {
 				w = NW;
 				scanerror(c, "eof in quoted string");
@@ -248,7 +241,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		return QWORD;
 	case '\\':
 		if ((c = GETC()) == '\n') {
-			print_prompt2();
+			increment_line();
 			UNGETC(' ');
 			goto top; /* Pretend it was just another space. */
 		}

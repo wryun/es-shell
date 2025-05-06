@@ -14,7 +14,6 @@ static int str_grow(Format *f, size_t more) {
 	return 0;
 }
 
-/* strv -- print a formatted string into gc space */
 static char *sstrv(char *(*seal)(Buffer *), const char *fmt, va_list args) {
 	Buffer *buf;
 	Format format;
@@ -40,6 +39,7 @@ static char *sstrv(char *(*seal)(Buffer *), const char *fmt, va_list args) {
 	return seal(format.u.p);
 }
 
+/* strv -- print a formatted string into gc space */
 extern char *strv(const char *fmt, va_list args) {
 	return sstrv(sealbuffer, fmt, args);
 }

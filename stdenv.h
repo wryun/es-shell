@@ -109,10 +109,6 @@ extern void *qsort(
 );
 #endif /* !STDC_HEADERS */
 
-#if HAVE_READLINE
-# include <stdio.h>
-#endif
-
 #include <sys/wait.h>
 #include <time.h>
 

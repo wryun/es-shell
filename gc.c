@@ -46,7 +46,7 @@ static Space *spaces;
 #endif
 static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
-static size_t minpspace = MIN_minpspace;
+static size_t minpspace = MIN_minpspace;	/* minimum number of bytes in a new pspace */
 
 
 /*
@@ -303,6 +303,7 @@ extern void *forward(void *p) {
 
 	tag = TAG(p);
 	assert(tag != NULL);
+
 	if (FORWARDED(tag)) {
 		np = FOLLOW(tag);
 		assert(TAG(np)->magic == TAGMAGIC);

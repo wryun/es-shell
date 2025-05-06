@@ -31,6 +31,7 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
+dnl TODO: `bison -y` => `bison`
 AC_PROG_YACC
 
 dnl ----------------------------
