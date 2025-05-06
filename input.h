@@ -33,8 +33,11 @@ extern void yyerror(const char *s);
 
 /* token.c */
 
+/* this is very awkward.  how to otherwise get YYSTYPE? */
+#include "token.h"
+
 extern const char dnw[];
-extern int yylex(void);
+extern int yylex(YYSTYPE *y);
 extern void inityy(void);
 extern void increment_line(void);
 

@@ -105,7 +105,7 @@ src	:
 	@echo $(OTHER) $(CFILES) $(HFILES)
 
 y.tab.h	: parse.y
-	$(YACC) -vd $(srcdir)/parse.y
+	$(YACC) -vd -b y $(srcdir)/parse.y
 
 y.tab.c	: y.tab.h
 
@@ -134,8 +134,8 @@ fd.o : fd.c es.h config.h stdenv.h
 gc.o : gc.c es.h config.h stdenv.h gc.h
 glob.o : glob.c es.h config.h stdenv.h gc.h
 glom.o : glom.c es.h config.h stdenv.h gc.h
-input.o : input.c es.h config.h stdenv.h input.h
-heredoc.o : heredoc.c es.h config.h stdenv.h gc.h input.h syntax.h
+input.o : input.c es.h config.h stdenv.h input.h token.h
+heredoc.o : heredoc.c es.h config.h stdenv.h gc.h input.h syntax.h token.h
 list.o : list.c es.h config.h stdenv.h gc.h
 main.o : main.c es.h config.h stdenv.h
 match.o : match.c es.h config.h stdenv.h
