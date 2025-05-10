@@ -40,8 +40,8 @@
 
 %%
 
-es	: line end		{ parsetree = $1; YYACCEPT; }
-	| error end		{ yyerrok; parsetree = NULL; YYABORT; }
+es	: line end		{ input->parsetree = $1; YYACCEPT; }
+	| error end		{ yyerrok; input->parsetree = NULL; YYABORT; }
 
 end	: NL			{ if (!readheredocs(FALSE)) YYABORT; }
 	| ENDFILE		{ if (!readheredocs(TRUE)) YYABORT; }

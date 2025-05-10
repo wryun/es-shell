@@ -53,13 +53,13 @@ test 'parser' {
 	}
 
 	# bogus 'nested parsing' exception.  TODO: fix this
-	let ((e type msg) = ()) {
+	let (e = ()) {
 		catch @ exc {
-			(e type msg) = $exc
+			e = $exc
 		} {
 			$&parse {eval result true}
 		}
-		assert {~ $e error && ~ $msg *'nested parsing'*}
+		assert {~ $e ()}
 	}
 
 	# do normal cases last to see if previous ones broke anything

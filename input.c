@@ -22,7 +22,6 @@
  */
 
 Input *input;
-Boolean ignoreeof = FALSE;
 
 
 /*
@@ -33,10 +32,8 @@ Boolean ignoreeof = FALSE;
 static const char *locate(Input *in, const char *s) {
 	return (in->runflags & run_interactive)
 		? s
-		: str("%s:%d: %s", in->name, in->lineno, s);
+		: mprint("%s:%d: %s", in->name, in->lineno, s);
 }
-
-static const char *error = NULL;
 
 static int eoffill(Input UNUSED *in);
 
@@ -48,9 +45,9 @@ extern void yyerror(const char *s) {
 		input->fd = -1;
 		input->fill = eoffill;
 		input->runflags &= ~run_interactive;
-		error = s;
-	} else if (error == NULL)	/* first error is generally the most informative */
-		error = locate(input, s);
+		input->error = s;
+	} else if (input->error == NULL)	/* first error is generally the most informative */
+		input->error = locate(input, s);
 }
 
 /* warn -- print a warning */
@@ -142,7 +139,7 @@ static int fdfill(Input *in) {
 	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
-		if (!ignoreeof) {
+		if (!in->ignoreeof) {
 			close(in->fd);
 			in->fd = -1;
 			in->fill = eoffill;
@@ -192,7 +189,7 @@ static int cmdfill(Input *in) {
 	mvfd(oldf, 0);
 
 	if (result == NULL) { /* eof */
-		if (!ignoreeof) {
+		if (!in->ignoreeof) {
 			close(in->fd);
 			in->fd = -1;
 			in->fill = eoffill;
@@ -218,24 +215,23 @@ static int cmdfill(Input *in) {
  * the input loop
  */
 
-static Boolean parsing = FALSE;
-
 /* parse -- call yyparse() and catch errors */
 extern Tree *parse(List *fc) {
 	int result;
-	assert(error == NULL);
 
-	inityy();
-	emptyherequeue();
+	/* TODO: change this error message */
+	if (input->parsing)
+		fail("$&parse", "cannot perform nested parsing");
+
+	assert(input->error == NULL);
+	fillcmd = fc;
+	input->parsing = TRUE;
 
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
-	if (parsing)
-		fail("$&parse", "cannot perform nested parsing");
-
-	fillcmd = fc;
-	parsing = TRUE;
+	inityy(input);
+	emptyherequeue();
 
 	ExceptionHandler
 
@@ -243,28 +239,27 @@ extern Tree *parse(List *fc) {
 
 	CatchException (e)
 
-		parsing = FALSE;
+		input->parsing = FALSE;
 		fillcmd = NULL;
 		pseal(NULL);
 		throw(e);
 
 	EndExceptionHandler
 
-	parsing = FALSE;
+	input->parsing = FALSE;
 	fillcmd = NULL;
 
-	if (result || error != NULL) {
-		assert(error != NULL);
-		Ref(const char *, e, error);
-		error = NULL;
+	if (result || input->error != NULL) {
+		const char *e = input->error;
+		assert(e != NULL);
+		input->error = NULL;
 		pseal(NULL);
 		fail("$&parse", "%s", e);
-		RefEnd(e);
 	}
 
-	Ref(Tree *, pt, pseal(parsetree));
+	Ref(Tree *, pt, pseal(input->parsetree));
 #if LISPTREES
-	Ref(Tree *, pt, pseal(parsetree));
+	Ref(Tree *, pt, pseal(input->parsetree));
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", pt);
 #endif
@@ -273,7 +268,7 @@ extern Tree *parse(List *fc) {
 
 /* resetparser -- clear parser errors in the signal handler */
 extern void resetparser(void) {
-	error = NULL;
+	input->error = NULL;
 }
 
 /* runinput -- run from an input source */
@@ -475,5 +470,4 @@ extern void initinput(void) {
 
 	/* declare the global roots */
 	globalroot(&fillcmd);
-	globalroot(&error);		/* parse errors */
 }
