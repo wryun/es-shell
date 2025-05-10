@@ -180,7 +180,8 @@ PRIM(here) {
 	Ref(List *, cmd, tail);
 #ifdef PIPE_BUF
 	if (doclen <= PIPE_BUF) {
-		pipe(p);
+		if (pipe(p) == -1)
+			fail("$&here", "pipe: %s", esstrerror(errno));
 		ewrite(p[1], doc, doclen);
 	} else
 #endif
