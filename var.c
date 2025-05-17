@@ -357,12 +357,27 @@ static void listwithprefix(void *arg, char *key, void *value) {
 		addtolist(arg, key, value);
 }
 
+static void fnwithprefix(void *arg, char *key, void *value) {
+	if (strneq(key, "fn-", 3) &&
+			strneq(key + 3, list_prefix, strlen(list_prefix)))
+		addtolist(arg, key + 3, value);
+}
+
 /* listvars -- return a list of all the (dynamic) variables */
 extern List *listvars(Boolean internal) {
 	Ref(List *, varlist, NULL);
 	dictforall(vars, internal ? listinternal : listexternal, &varlist);
 	varlist = sortlist(varlist);
 	RefReturn(varlist);
+}
+
+/* fnswithprefix -- return a list of all the (dynamic) functions
+ * matching the given prefix */
+extern List *fnswithprefix(char *prefix) {
+	Ref(List *, fnlist, NULL);
+	list_prefix = prefix;
+	dictforall(vars, fnwithprefix, &fnlist);
+	RefReturn(fnlist);
 }
 
 /* varswithprefix -- return a list of all the (dynamic) variables

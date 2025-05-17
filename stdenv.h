@@ -44,9 +44,7 @@
 #include <sys/ioctl.h>
 #endif
 
-#if REQUIRE_STAT
 #include <sys/stat.h>
-#endif
 
 #if REQUIRE_DIRENT
 #if HAVE_DIRENT_H
