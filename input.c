@@ -529,27 +529,70 @@ static char *list_completion_function(const char *text, int state) {
 	return result;
 }
 
-/* detect if we're currently at the start of a line. works ~80% well */
+enum st {
+	NORMAL,
+	START,			/* start of a command */
+	PIPESTART,		/* just after a '|' */
+	PIPESTARTBRACKET,	/* the '|[' in 'a |[2] b' */
+	LT			/* the '<' in '<=word' */
+};
+
+/* detect if we're currently at the start of a line. works ~90% well */
 static Boolean cmdstart(int point) {
 	int i;
-	Boolean quote = FALSE, start = TRUE;
+	Boolean quote = FALSE;
+	enum st state = START;
 	for (i = 0; i < point; i++) {
 		char c = rl_line_buffer[i];
-		switch (c) {
-		case '\'':
+		if (c == '\'') {
 			quote = !quote;
+			continue;
+		}
+		if (quote) continue;
+
+		switch (state) {
+		case PIPESTARTBRACKET:
+			if (c == ']')
+				state = START;
 			break;
-		case '&': case '|': case '{': case '`':
-			if (!quote) start = TRUE;
+		case LT:
+			if (c == '=')
+				state = START;
+			else
+				state = NORMAL;
 			break;
-		/* \n doesn't work right :( */
-		case ' ': case '\t': case '\n': case '!':
+		case PIPESTART:
+			if (c == '[') {
+				state = PIPESTARTBRACKET;
+				break;
+			}
+			state = START; /* || correct? */
+			/* fallthrough */
+		case START:
+			switch (c) {
+			case ' ': case '\t': case '\n': case '!':
+				break;
+			default:
+				state = NORMAL;
+			}
 			break;
-		default:
-			if (!quote) start = FALSE;
+		case NORMAL:
+			switch (c) {
+			case '&': case '{': case '`':
+				state = START;
+				break;
+			case '|':
+				state = PIPESTART;
+				break;
+			case '<':
+				state = LT;
+				break;
+			default:
+				break; /* nothing to do */
+			}
 		}
 	}
-	return start;
+	return state == START || state == PIPESTART;
 }
 
 /* first-position completion.  includes
