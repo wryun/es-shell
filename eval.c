@@ -449,6 +449,10 @@ restart:
 		char *error = checkexecutable(name);
 		if (error != NULL)
 			fail("$&whatis", "%s: %s", name, error);
+		if (funcname != NULL) {
+			Term *fn = mkstr(funcname);
+			list = mklist(fn, list->next);
+		}
 		list = forkexec(name, list, flags & eval_inchild);
 		RefPop(name);
 		goto done;
@@ -463,6 +467,8 @@ restart:
 		goto done;
 	}
 
+	if (fn != NULL)
+		funcname = getstr(list->term);
 	list = append(fn, list->next);
 	goto restart;
 
