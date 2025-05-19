@@ -218,17 +218,19 @@ static int cmdfill(Input *in) {
 /* parse -- call yyparse() and catch errors */
 extern Tree *parse(List *fc) {
 	int result;
+	void *oldpspace;
 
 	/* TODO: change this error message */
 	if (input->parsing)
 		fail("$&parse", "cannot perform nested parsing");
 
 	assert(input->error == NULL);
-	fillcmd = fc;
-	input->parsing = TRUE;
-
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
+
+	fillcmd = fc;
+	input->parsing = TRUE;
+	oldpspace = setpspace(input->pspace);
 
 	inityy(input);
 	emptyherequeue();
@@ -242,10 +244,12 @@ extern Tree *parse(List *fc) {
 		input->parsing = FALSE;
 		fillcmd = NULL;
 		pseal(NULL);
+		setpspace(oldpspace);
 		throw(e);
 
 	EndExceptionHandler
 
+	setpspace(oldpspace);
 	input->parsing = FALSE;
 	fillcmd = NULL;
 
@@ -353,6 +357,7 @@ extern List *runfd(int fd, const char *name, int flags) {
 	in.bufbegin = in.buf = ealloc(in.buflen);
 	in.bufend = in.bufbegin;
 	in.name = (name == NULL) ? str("fd %d", fd) : name;
+	in.pspace = createpspace();
 
 	RefAdd(in.name);
 	result = runinput(&in, flags);
@@ -391,6 +396,7 @@ extern List *runstring(const char *str, const char *name, int flags) {
 	in.bufbegin = in.buf = buf;
 	in.bufend = in.buf + in.buflen;
 	in.cleanup = stringcleanup;
+	in.pspace = createpspace();	/* TODO: use special string-input pspace? */
 
 	RefAdd(in.name);
 	result = runinput(&in, flags);
@@ -443,6 +449,7 @@ extern Tree *parsestring(const char *str) {
 	in.bufbegin = in.buf = buf;
 	in.bufend = in.buf + in.buflen;
 	in.cleanup = stringcleanup;
+	in.pspace = createpspace();	/* TODO: use special string-input pspace? */
 
 	RefAdd(in.name);
 	result = parseinput(&in);

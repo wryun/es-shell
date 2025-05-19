@@ -22,8 +22,7 @@ struct Space {
 #define	MIN_minpspace	1000
 
 #if GCPROTECT
-#define	NSPACES		12
-#define FIRSTSPACE	1
+#define	NSPACES		10
 #endif
 
 #if HAVE_SYSCONF
@@ -43,6 +42,7 @@ Tag StringTag;
 static Space *new, *old, *pspace;
 #if GCPROTECT
 static Space *spaces;
+/* FIXME: static Space *pspaces; */
 #endif
 static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
@@ -418,7 +418,7 @@ extern void gc(void) {
 		for (; new->next != NULL; new = new->next)
 			;
 		if (++new >= &spaces[NSPACES])
-			new = &spaces[FIRSTSPACE];
+			new = &spaces[0];
 		new = mkspace(new, NULL, minspace);
 #else
 		new = newspace(NULL);
@@ -542,13 +542,21 @@ extern void initgc(void) {
 	initmmu();
 	spaces = ealloc(NSPACES * sizeof (Space));
 	memzero(spaces, NSPACES * sizeof (Space));
-	new = mkspace(&spaces[FIRSTSPACE], NULL, minspace);
-	pspace = mkspace(&spaces[0], NULL, minpspace);
+	new = mkspace(&spaces[0], NULL, minspace);
 #else
 	new = newspace(NULL);
-	pspace = newpspace(NULL);
 #endif
 	old = NULL;
+}
+
+extern void *createpspace(void) {
+	return (void *)newpspace(NULL);
+}
+
+extern void *setpspace(void *new) {
+	void *old = (void *)pspace;
+	pspace = (Space *)new;
+	return old;
 }
 
 

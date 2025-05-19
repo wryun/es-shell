@@ -414,6 +414,9 @@ extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
 
 /* operations with pspace, the explicitly-collected gc space for parse tree building */
+extern void *createpspace(void);
+extern void *setpspace(void *);
+
 extern void *palloc(size_t n, Tag *t);		/* allocate n with collection tag t, but in pspace */
 extern void *pseal(void *p);			/* collect pspace into gcspace with root p */
 extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */

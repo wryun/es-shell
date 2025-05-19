@@ -52,7 +52,7 @@ test 'parser' {
 		assert {~ $e error && ~ $msg *'nested parsing'*}
 	}
 
-	# bogus 'nested parsing' exception.  TODO: fix this
+	# test parsing from string while parsing from input
 	let (e = ()) {
 		catch @ exc {
 			e = $exc

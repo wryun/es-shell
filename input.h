@@ -22,6 +22,7 @@ struct Input {
 	Boolean ignoreeof;
 
 	/* parsing state */
+	void *pspace;
 	Boolean parsing;
 	Tree *parsetree;
 	const char *error;
