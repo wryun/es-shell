@@ -71,7 +71,7 @@ dnl Checks for library functions.
 AC_TYPE_GETGROUPS
 AC_FUNC_MMAP
 
-AC_CHECK_FUNCS(strerror strtol lseek lstat setrlimit sigrelse sighold
+AC_CHECK_FUNCS(strerror strtol lseek lstat setrlimit sigrelse sighold \
 sigaction sysconf sigsetjmp getrusage mmap mprotect)
 
 AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
