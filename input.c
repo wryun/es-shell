@@ -244,12 +244,11 @@ extern Tree *parse(List *fc) {
 		input->parsing = FALSE;
 		fillcmd = NULL;
 		pseal(NULL);
-		setpspace(oldpspace);
+		input->pspace = setpspace(oldpspace);
 		throw(e);
 
 	EndExceptionHandler
 
-	setpspace(oldpspace);
 	input->parsing = FALSE;
 	fillcmd = NULL;
 
@@ -258,12 +257,13 @@ extern Tree *parse(List *fc) {
 		assert(e != NULL);
 		input->error = NULL;
 		pseal(NULL);
+		input->pspace = setpspace(oldpspace);
 		fail("$&parse", "%s", e);
 	}
 
 	Ref(Tree *, pt, pseal(input->parsetree));
+	input->pspace = setpspace(oldpspace);
 #if LISPTREES
-	Ref(Tree *, pt, pseal(input->parsetree));
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", pt);
 #endif
