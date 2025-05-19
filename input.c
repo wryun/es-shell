@@ -566,16 +566,12 @@ static Boolean cmdstart(int point) {
 				state = PIPESTARTBRACKET;
 				break;
 			}
-			state = START; /* || correct? */
+			state = START; /* does this handle || correctly? */
 			/* fallthrough */
 		case START:
-			switch (c) {
-			case ' ': case '\t': case '\n': case '!':
-				break;
-			default:
-				state = NORMAL;
-			}
-			break;
+			if (c == ' ' || c == '\t' || c == '\n' || c == '!')
+				continue;
+			/* fallthrough */
 		case NORMAL:
 			switch (c) {
 			case '&': case '{': case '`':
@@ -588,7 +584,9 @@ static Boolean cmdstart(int point) {
 				state = LT;
 				break;
 			default:
-				break; /* nothing to do */
+				/* fallthroughs make this useful */
+				state = NORMAL;
+				break;
 			}
 		}
 	}
