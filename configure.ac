@@ -31,6 +31,7 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
+dnl TODO: `bison -y` => `bison`
 AC_PROG_YACC
 
 dnl ----------------------------
@@ -70,8 +71,8 @@ dnl Checks for library functions.
 AC_TYPE_GETGROUPS
 AC_FUNC_MMAP
 
-AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
-sysconf sigsetjmp getrusage mmap mprotect)
+AC_CHECK_FUNCS(strerror strtol lseek lstat setrlimit sigrelse sighold \
+sigaction sysconf sigsetjmp getrusage mmap mprotect)
 
 AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
 [if test "$ac_cv_header_stdlib_h" = no || test "$ac_cv_header_stdc" = no; then

@@ -2,8 +2,11 @@
 
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 
+typedef enum { NW, RW, KW } WordState;
+
 typedef struct Input Input;
 struct Input {
+	/* reading state */
 	int (*get)(Input *self);
 	int (*fill)(Input *self), (*rfill)(Input *self);
 	void (*cleanup)(Input *self);
@@ -16,6 +19,19 @@ struct Input {
 	int lineno;
 	int fd;
 	int runflags;
+	Boolean ignoreeof;
+
+	/* parsing state */
+	void *pspace;
+	Boolean parsing;
+	Tree *parsetree;
+	const char *error;
+
+	/* lexing state */
+	WordState ws;
+	Boolean goterror, dollar;
+	size_t bufsize;
+	char *tokenbuf;
 };
 
 
@@ -33,15 +49,17 @@ extern void yyerror(const char *s);
 
 /* token.c */
 
+/* this is very awkward.  how to otherwise get YYSTYPE? */
+#include "token.h"
+
 extern const char dnw[];
-extern int yylex(void);
-extern void inityy(void);
-extern void print_prompt2(void);
+extern int yylex(YYSTYPE *y);
+extern void inityy(Input *in);
+extern void increment_line(void);
 
 
 /* parse.y */
 
-extern Tree *parsetree;
 extern int yyparse(void);
 
 

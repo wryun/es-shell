@@ -507,6 +507,10 @@ char *getenv(const char *name) {
 	return realgetenv(name);
 }
 
+extern void initgetenv(void) {
+	realgetenv = esgetenv;
+}
+
 extern int setenv(const char *name, const char *value, int overwrite) {
 	assert(vars != NULL);
 	if (name == NULL || name[0] == '\0' || strchr(name, '=') != NULL) {
