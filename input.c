@@ -219,12 +219,20 @@ static int cmdfill(Input *in) {
 extern Tree *parse(List *fc) {
 	int result;
 	void *oldpspace;
+	Ref(List *, oldfillcmd, fillcmd);
 
 	/* TODO: change this error message */
 	if (input->parsing)
 		fail("$&parse", "cannot perform nested parsing");
 
 	assert(input->error == NULL);
+
+	/* TODO: update this check --
+	 *
+	 *   $ es -c '<={$&parse {result echo hello world}}'
+	 *
+	 * should work.  also, ignoreeof
+	 */
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
@@ -250,7 +258,8 @@ extern Tree *parse(List *fc) {
 	EndExceptionHandler
 
 	input->parsing = FALSE;
-	fillcmd = NULL;
+	fillcmd = oldfillcmd;
+	RefEnd(oldfillcmd);
 
 	if (result || input->error != NULL) {
 		const char *e = input->error;

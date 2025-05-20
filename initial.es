@@ -651,11 +651,15 @@ if {~ <=$&primitives writehistory} {
 fn-%batch-loop		= $&batchloop
 fn-%is-interactive	= $&isinteractive
 
+#	NOTE: $&readline might not actually exist.  we just assume it does for this
+#	proof-of-concept.
+fn-%readline	= $&readline
+
 fn %parse {
 	if %is-interactive {
 		let (in = (); p = $*(1))
 		let (code = <={$&parse {
-			let (r = <={$&readline $p}) {
+			let (r = <={%readline $p}) {
 				in = $in $r
 				p = $*(2)
 				result $r
