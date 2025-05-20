@@ -347,9 +347,10 @@ extern int yylex(YYSTYPE *y) {
 				cmd = "%here";
 			} else
 				cmd = "%heredoc";
-		else if (c == '=')
+		else if (c == '=') {
+			input->ws = NW;
 			return CALL;
-		else
+		} else
 			cmd = "%open";
 		goto redirection;
 	case '>':
