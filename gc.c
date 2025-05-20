@@ -42,7 +42,6 @@ Tag StringTag;
 static Space *new, *old, *pspace;
 #if GCPROTECT
 static Space *spaces;
-/* FIXME: static Space *pspaces; */
 #endif
 static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
@@ -207,7 +206,7 @@ static void deprecate(Space *space) {
 	assert(space != NULL);
 	for (base = space; base->next != NULL; base = base->next)
 		;
-	assert(&spaces[0] <= base && base < &spaces[NSPACES]);
+	assert(space == pspace || (&spaces[0] <= base && base < &spaces[NSPACES]));
 	for (;;) {
 		invalidate(space->bot, SPACESIZE(space));
 		if (space == base)
@@ -527,7 +526,9 @@ extern void *pseal(void *p) {
 #endif
 	deprecate(pspace);
 #if GCPROTECT
-	pspace = mkspace(base, NULL, minpspace);
+	/* TODO: integrate pspace with GCPROTECT better? */
+	/* pspace = mkspace(base, NULL, minpspace); */
+	pspace = newpspace(NULL);
 #else
 	pspace = newpspace(NULL);
 #endif
