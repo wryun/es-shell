@@ -112,21 +112,27 @@ static char *unquote(char *text, int quote_char) {
 	return r;
 }
 
-static char *complprefix;
-static List *(*wordslistgen)(char *);
+static List *cmdcomplete(char *prefix) {
+	List *fn = varlookup("fn-%complete", NULL);
+	if (fn == NULL)
+		return NULL;
+	Ref(char *, line, gcndup(rl_line_buffer, rl_point - strlen(prefix)));
+	gcdisable();
+	fn = append(fn, mklist(mkstr(line),
+				mklist(mkstr(str("%s", prefix)), NULL)));
+	gcenable();
+	RefEnd(line);
+	return eval(fn, NULL, 0);
+}
 
 static char *list_completion_function(const char *text, int state) {
 	static char **matches = NULL;
 	static int matches_idx, matches_len;
-	int i, rlen;
+	int rlen;
 	char *result;
 
-	const int pfx_len = strlen(complprefix);
-
 	if (!state) {
-		const char *name = &text[pfx_len];
-
-		Vector *vm = vectorize(wordslistgen((char *)name));
+		Vector *vm = vectorize(cmdcomplete((char *)text));
 		matches = vm->vector;
 		matches_len = vm->count;
 		matches_idx = 0;
@@ -136,55 +142,16 @@ static char *list_completion_function(const char *text, int state) {
 		return NULL;
 
 	rlen = strlen(matches[matches_idx]);
-	result = ealloc(rlen + pfx_len + 1);
-	for (i = 0; i < pfx_len; i++)
-		result[i] = complprefix[i];
-	strcpy(&result[pfx_len], matches[matches_idx]);
-	result[rlen + pfx_len] = '\0';
+	result = ealloc(rlen + 1);
+	strcpy(result, matches[matches_idx]);
+	result[rlen] = '\0';
 
 	matches_idx++;
 	return result;
 }
 
-char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
-	char **matches = NULL;
-
-	if (*text == '$') {
-		wordslistgen = varswithprefix;
-		complprefix = "$";
-		switch (text[1]) {
-		case '&':
-			wordslistgen = primswithprefix;
-			complprefix = "$&";
-			break;
-		case '^': complprefix = "$^"; break;
-		case '#': complprefix = "$#"; break;
-		}
-		matches = rl_completion_matches(text, list_completion_function);
-	}
-
-	/* ~foo => username.  ~foo/bar already gets completed as filename. */
-	if (!matches && *text == '~' && !strchr(text, '/'))
-		matches = rl_completion_matches(text, rl_username_completion_function);
-
-	return matches;
-}
-
-static List *cmdcomplete(char *prefix) {
-	List *fn = varlookup("fn-%complete", NULL);
-	if (fn == NULL)
-		return NULL;
-	gcdisable();
-	fn = append(fn, mklist(mkstr(str("%s", prefix)), NULL));
-	gcenable();
-	return eval(fn, NULL, 0);
-}
-
 char **es_completion(UNUSED const char *text, UNUSED int start, UNUSED int end) {
 	char **matches;
-
-	complprefix = "";
-	wordslistgen = cmdcomplete;
 
 	matches = rl_completion_matches(text, list_completion_function);
 
@@ -214,8 +181,7 @@ extern void rlsetup(void) {
 		initialized = TRUE;
 	}
 
-	rl_attempted_completion_function = builtin_completion;
-	/* rl_attempted_completion_function = es_completion; */
+	rl_attempted_completion_function = es_completion;
 
 	if (reloadhistory)
 		reload_history();
