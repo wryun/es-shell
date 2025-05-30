@@ -350,27 +350,11 @@ static void listinternal(void *arg, char *key, void *value) {
 		addtolist(arg, key, value);
 }
 
-static char *list_prefix;
-
-static void listwithprefix(void *arg, char *key, void *value) {
-	if (strneq(key, list_prefix, strlen(list_prefix)))
-		addtolist(arg, key, value);
-}
-
 /* listvars -- return a list of all the (dynamic) variables */
 extern List *listvars(Boolean internal) {
 	Ref(List *, varlist, NULL);
 	dictforall(vars, internal ? listinternal : listexternal, &varlist);
 	varlist = sortlist(varlist);
-	RefReturn(varlist);
-}
-
-/* varswithprefix -- return a list of all the (dynamic) variables
- * matching the given prefix */
-extern List *varswithprefix(char *prefix) {
-	Ref(List *, varlist, NULL);
-	list_prefix = prefix;
-	dictforall(vars, listwithprefix, &varlist);
 	RefReturn(varlist);
 }
 
@@ -505,6 +489,10 @@ static char *stdgetenv(const char *name) {
 
 char *getenv(const char *name) {
 	return realgetenv(name);
+}
+
+extern void initgetenv(void) {
+	realgetenv = esgetenv;
 }
 
 extern int setenv(const char *name, const char *value, int overwrite) {

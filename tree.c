@@ -95,7 +95,7 @@ static size_t Tree1Scan(void *p) {
 	    case nCall: case nThunk: case nVar:
 		n->u[0].p = forward(n->u[0].p);
 		break;
-	} 
+	}
 	return offsetof(Tree, u[1]);
 }
 
@@ -104,12 +104,12 @@ static size_t Tree2Scan(void *p) {
 	switch (n->kind) {
 	    case nAssign:  case nConcat: case nClosure: case nFor:
 	    case nLambda: case nLet: case nList:  case nLocal:
-	    case nVarsub: case nMatch: case nExtract:
+	    case nVarsub: case nMatch: case nExtract: case nRedir:
 		n->u[0].p = forward(n->u[0].p);
 		n->u[1].p = forward(n->u[1].p);
 		break;
 	    default:
 		panic("Tree2Scan: bad node kind %d", n->kind);
-	} 
+	}
 	return offsetof(Tree, u[2]);
 }

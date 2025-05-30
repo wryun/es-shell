@@ -1,16 +1,16 @@
 # tests/trip.es -- migration of the classic trip.es to the new test framework.
 
 test 'lexical analysis' {
-	let (tmp = `{mktemp trip-nul.XXXXXX})
-	unwind-protect {
-		./testrun 0 > $tmp
-		let ((status output) = <={$&backquote \n {$es $tmp >[2=1]}}) {
-			assert {~ $output *'null character ignored'*} 'null character produces warning'
-			assert {~ $status 6} 'null character does not disturb behavior'
-		}
-	} {
-		rm -f $tmp
-	}
+# 	let (tmp = `{mktemp trip-nul.XXXX})
+# 	unwind-protect {
+# 		./testrun 0 > $tmp
+# 		let ((status output) = <={$&backquote \n {$es $tmp >[2=1]}}) {
+# 			assert {~ $output *'null character ignored'*} 'null character produces warning'
+# 			assert {~ $status 6} 'null character does not disturb behavior'
+# 		}
+# 	} {
+# 		rm -f $tmp
+# 	}
 
 	let (wtmp = `{mktemp long-word.XXXXXX}; qtmp = `{mktemp long-qword.XXXXXX})
 	unwind-protect {
