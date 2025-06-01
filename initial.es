@@ -651,15 +651,22 @@ if {~ <=$&primitives writehistory} {
 fn-%batch-loop		= $&batchloop
 fn-%is-interactive	= $&isinteractive
 
-#	NOTE: $&readline might not actually exist.  we just assume it does for this
-#	proof-of-concept.
-fn-%readline	= $&readline
+if {~ <=$&primitives readline} {
+	fn-%read-line = $&readline
+	# add completion logic
+	. completion.es
+} {
+	fn %read-line prompt {
+		echo -n $prompt
+		%read
+	}
+}
 
 fn %parse {
 	if %is-interactive {
 		let (in = (); p = $*(1))
 		let (code = <={$&parse {
-			let (r = <={%readline $p}) {
+			let (r = <={%read-line $p}) {
 				in = $in $r
 				p = $*(2)
 				result $r

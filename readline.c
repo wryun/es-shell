@@ -125,6 +125,7 @@ static List *cmdcomplete(char *prefix) {
 	return eval(fn, NULL, 0);
 }
 
+/* TODO: rename this */
 static char *list_completion_function(const char *text, int state) {
 	static char **matches = NULL;
 	static int matches_idx, matches_len;
@@ -155,7 +156,11 @@ char **es_completion(UNUSED const char *text, UNUSED int start, UNUSED int end) 
 
 	matches = rl_completion_matches(text, list_completion_function);
 
+	/* TODO: present ../[TAB] => (../a ../b ../c) as (a b c) */
 	rl_attempted_completion_over = 1;	/* suppress "default" completions */
+
+	/* ugly hack ... whether to treat 'em as filenames */
+	rl_filename_completion_desired = istrue(varlookup("completions-are-filenames", NULL));
 	return matches;
 }
 
