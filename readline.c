@@ -153,14 +153,18 @@ static char *list_completion_function(const char *text, int state) {
 
 char **es_completion(UNUSED const char *text, UNUSED int start, UNUSED int end) {
 	char **matches;
+	Push caf;
+	varpush(&caf, "completions-are-filenames", NULL);
 
 	matches = rl_completion_matches(text, list_completion_function);
 
-	/* TODO: present ../[TAB] => (../a ../b ../c) as (a b c) */
-	rl_attempted_completion_over = 1;	/* suppress "default" completions */
-
+	/* mechanisms to control how the results are presented */
+	/* TODO: use rl_filename_stat_hook for command completion */
 	/* ugly hack ... whether to treat 'em as filenames */
 	rl_filename_completion_desired = istrue(varlookup("completions-are-filenames", NULL));
+	rl_attempted_completion_over = 1;	/* suppress "default" completions */
+
+	varpop(&caf);
 	return matches;
 }
 
