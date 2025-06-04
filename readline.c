@@ -21,8 +21,9 @@ static int history_write_timestamps = 1;
 static char history_comment_char = '#';
 #endif
 
+
 /*
- * history management
+ * history
  */
 
 extern void setmaxhistorylength(int len) {
@@ -72,6 +73,7 @@ extern void sethistory(char *file) {
 	history = file;
 }
 
+
 /*
  * readey liney
  */
@@ -98,8 +100,8 @@ static char *quote(char *text, int type, char *qp) {
 	return r;
 }
 
-/* unquote -- teach es how to unquote a word */
-static char *unquote(char *text, int quote_char) {
+/* dequote -- teach es how to dequote a word */
+static char *dequote(char *text, int quote_char) {
 	char *p, *r;
 
 	p = r = ealloc(strlen(text) + 1);
@@ -112,28 +114,181 @@ static char *unquote(char *text, int quote_char) {
 	return r;
 }
 
-static List *cmdcomplete(char *prefix) {
-	List *fn = varlookup("fn-%complete", NULL);
-	if (fn == NULL)
-		return NULL;
-	Ref(char *, line, gcndup(rl_line_buffer, rl_point - strlen(prefix)));
-	gcdisable();
-	fn = append(fn, mklist(mkstr(line),
-				mklist(mkstr(str("%s", prefix)), NULL)));
-	gcenable();
-	RefEnd(line);
-	return eval(fn, NULL, 0);
+typedef enum {
+	NORMAL,
+	SYNTAX_ERROR,
+	FDBRACES
+} CompletionType;
+
+/* hmm. */
+extern const char nw[];
+
+/* Scan line back to its start. */
+/* This is a lot of code, and a poor reimplementation of the parser. :( */
+CompletionType boundcmd(char **start) {
+	char *line = rl_line_buffer;
+	char syntax[128] = { 0 };
+	int lp, sp = 0;
+	Boolean quote = FALSE, first_word = TRUE;
+
+	for (lp = rl_point; lp > 0; lp--) {
+		if (quote)
+			continue;
+
+		switch (line[lp]) {
+		/* quotes. pretty easy */
+		case '\'':
+			quote = !quote;
+			continue;
+
+		/* "stackable" syntax.  remember, we're moving backwards */
+		case '}':
+			syntax[sp++] = '{';
+			break;
+		case '{':
+			if (sp == 0) {
+				*start = rl_line_buffer + lp + 1;
+				return NORMAL;
+			}
+			if (syntax[--sp] != '{') {
+				*start = rl_line_buffer;
+				return SYNTAX_ERROR;
+			}
+			break;
+		case ')':
+			syntax[sp++] = '(';
+			break;
+		case '(':
+			if (sp > 0) {
+				if (syntax[--sp] != '(') {
+					*start = rl_line_buffer;
+					return SYNTAX_ERROR;
+				}
+			} else {
+				/* TODO: make `<=(a b` work */
+				first_word = TRUE;
+			}
+			break;
+
+		/* command separator chars */
+		case ';':
+			if (sp == 0) {
+				*start = rl_line_buffer + lp + 1;
+				return NORMAL;
+			}
+			break;
+		case '&':
+			if (sp == 0) {
+				*start = rl_line_buffer + lp + 1;
+				return NORMAL;
+			}
+			break;
+		case '|':
+			if (sp == 0) {
+				int pp = lp+1;
+				Boolean inbraces = FALSE;
+				if (pp < rl_point && line[pp] == '[') {
+					inbraces = TRUE;
+					while (pp < rl_point) {
+						if (line[pp++] == ']') {
+							inbraces = FALSE;
+							break;
+						}
+					}
+				}
+				*start = rl_line_buffer + pp;
+				return inbraces ? FDBRACES : NORMAL;
+			}
+			break;
+		case '`':
+			if (first_word) {
+				*start = rl_line_buffer + lp + 1;
+				return NORMAL;
+			}
+			break;
+		case '<':
+			if (first_word && lp < rl_point - 1 && line[lp+1] == '=') {
+				*start = rl_line_buffer + lp + 2;
+				return NORMAL;
+			}
+			break;
+		}
+		if (nw[(unsigned char)line[lp]])
+			first_word = FALSE;
+	}
+	/* TODO: fetch previous lines if sp > 0 */
+	*start = rl_line_buffer;
+	return NORMAL;
 }
 
-/* TODO: rename this */
-static char *list_completion_function(const char *text, int state) {
+
+/* calls `%complete prefix word` to get a list of candidates for how to complete
+ * `word`.
+ *
+ * TODO: improve argv for %complete
+ *  - special dispatch for special syntax
+ *  - split up args in a syntax-aware way
+ *  - dequote args before and requote after (already done, just do it better)
+ *  - skip/handle "command-irrelevant" syntax
+ *      ! redirections binders
+ *  - MAYBE: provide raw command/point?
+ *
+ * all the new behaviors above should ideally be done "manually", so that %complete
+ * can be used the same way without worrying about the line editing library.
+ *
+ * Handle the following properly, though maybe not in this function
+ *   `let (a =`
+ *   `let (a = b)`
+ *   `a =`
+ *   `a > `
+ *   `!`
+ *   `$(f`
+ */
+
+static List *callcomplete(char *word) {
+	int len;
+	char *start;
+	CompletionType type;
+
+	Ref(List *, result, NULL);
+	Ref(List *, fn, NULL);
+	if ((fn = varlookup("fn-%complete", NULL)) == NULL) {
+		RefPop(fn);
+		return NULL;
+	}
+	type = boundcmd(&start);
+
+	if (type == FDBRACES) {
+		/* TODO: fd completion */
+		RefPop2(result, fn);
+		return NULL;
+	}
+
+	len = rl_point - (start - rl_line_buffer) - strlen(word);
+	if (len < 0) {	/* TODO: fix `word` for `|[2]` and delete this hack */
+		len = 0;
+		word = "";
+	}
+	Ref(char *, line, gcndup(start, len));
+	gcdisable();
+	fn = append(fn, mklist(mkstr(line),
+				mklist(mkstr(str("%s", word)), NULL)));
+	gcenable();
+	result = eval(fn, NULL, 0);
+	RefEnd2(line, fn);
+	RefReturn(result);
+}
+
+/* calls 'callcomplete' to produce candidates, and then returns them in a way
+ * readline likes. */
+static char *completion_matches(const char *text, int state) {
 	static char **matches = NULL;
 	static int matches_idx, matches_len;
 	int rlen;
 	char *result;
 
 	if (!state) {
-		Vector *vm = vectorize(cmdcomplete((char *)text));
+		Vector *vm = vectorize(callcomplete((char *)text));
 		matches = vm->vector;
 		matches_len = vm->count;
 		matches_idx = 0;
@@ -151,16 +306,21 @@ static char *list_completion_function(const char *text, int state) {
 	return result;
 }
 
+/* calls out to get candidates, and manages the tools to present those candidates
+ * correctly.
+ * TODO:
+ *  - Hook function so completers can not only say "are these candidates files?"
+ *    but also "how to get to the file from these candidates?" (for e.g.,
+ *    pathsearch-y commands)
+ */
 char **es_completion(UNUSED const char *text, UNUSED int start, UNUSED int end) {
 	char **matches;
 	Push caf;
 	varpush(&caf, "completions-are-filenames", NULL);
 
-	matches = rl_completion_matches(text, list_completion_function);
+	matches = rl_completion_matches(text, completion_matches);
 
 	/* mechanisms to control how the results are presented */
-	/* TODO: use rl_filename_stat_hook for command completion */
-	/* ugly hack ... whether to treat 'em as filenames */
 	rl_filename_completion_desired = istrue(varlookup("completions-are-filenames", NULL));
 	rl_attempted_completion_over = 1;	/* suppress "default" completions */
 
@@ -179,7 +339,7 @@ static void initreadline(void) {
 
 	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_filename_quoting_function = quote;
-	rl_filename_dequoting_function = unquote;
+	rl_filename_dequoting_function = dequote;
 }
 
 /* set up readline for the next call */
@@ -201,6 +361,30 @@ extern void rlsetup(void) {
 	if (RL_ISSTATE(RL_STATE_INITIALIZED))
 		rl_reset_screen_size();
 }
+
+static char *callreadline(char *prompt) {
+	char *r, *volatile line = NULL;
+	/* should this be called after each interruption, or? */
+	rlsetup();
+	interrupted = FALSE;
+	if (!setjmp(slowlabel)) {
+		slow = TRUE;
+		r = interrupted ? NULL : readline(prompt);
+		if (interrupted)
+			errno = EINTR;
+	} else {
+		r = NULL;
+		errno = EINTR;
+	}
+	slow = FALSE;
+	if (r != NULL) {
+		line = str("%s", r);
+		efree(r);
+	}
+	SIGCHK();
+	return line;
+}
+
 
 /*
  * primitives
@@ -243,29 +427,6 @@ PRIM(setmaxhistorylength) {
 PRIM(resetterminal) {
 	resetterminal = TRUE;
 	return ltrue;
-}
-
-static char *callreadline(char *prompt) {
-	char *r, *volatile line = NULL;
-	/* should this be called after each interruption, or? */
-	rlsetup();
-	interrupted = FALSE;
-	if (!setjmp(slowlabel)) {
-		slow = TRUE;
-		r = interrupted ? NULL : readline(prompt);
-		if (interrupted)
-			errno = EINTR;
-	} else {
-		r = NULL;
-		errno = EINTR;
-	}
-	slow = FALSE;
-	if (r != NULL) {
-		line = str("%s", r);
-		efree(r);
-	}
-	SIGCHK();
-	return line;
 }
 
 static char *emptyprompt = "";
