@@ -2,7 +2,7 @@
 
 #	This file exists to explore some options for programmable completion in
 #	es; it's not an endorsement of any particular design for completion.
-#	However, this setup seems to perform at least as well as the current
+#	However, this setup already performs much better than the current
 #	"built-in" readline completion that es has, with surprisingly little
 #	direct support from the readline library.  This corresponds well with
 #	how much es is built on top of es, and (hopefully) indicates that es
@@ -11,9 +11,8 @@
 #
 #	Syntax isn't handled really robustly with this setup, and probably
 #	requires some kind of internal parsing machinery to do right; for
-#	example, we don't have great behavior with  `$(var1 var2[TAB]`, or
-#	`command1; command2 [TAB]`.  The same is true for binders like
-#	`let (f[TAB]` or `let (a = b) command[TAB]`.
+#	example, we don't have great behavior with  `$(var1 var2[TAB]`,
+#	`let (f[TAB]`, `let (a = b) command[TAB]`, or `cmd > fi[TAB]`.
 #
 #	Some hook functions back syntax and ideally modifying the hook functions'
 #	completion functions (e.g., `%complete-%create`) would also modify how
@@ -22,19 +21,20 @@
 #	though there's some trickiness in designing how that would actually be
 #	executed.
 #
-#	We also want automatic de-quoting and re-quoting of terms, and splitting
-#	arguments in a syntax-aware way.
+#	We also want good automatic de-quoting and re-quoting of terms, and
+#	splitting arguments in a syntax-aware way.
 #
 #	Closer integration with readline is another open question.  For example,
 #	it's common to have specific key bindings refer to specific types of
 #	completion.  How do we implement that?  Moreover, how do we do so in a
-#	way that works with .inputrc?
+#	way that works with .inputrc?  How might we design this in a way that's
+#	library-agnostic?
 #
 #	This setup produces a fairly large amount of overhead in the es function
 #	namespace.  We would likely want to reduce that overhead, especially since
 #	all of this has absolutely no value in the non-interactive case.  Perhaps
 #	all of the per-command completions should come from autoloadable files and
-#	be marked noexport.  I susepct that while it's quite nice to have good
+#	be marked noexport.  I suspect that while it's quite nice to have good
 #	coverage for autocompletion, in practical use, only a few commands are
 #	actually auto-completed in any interactive session.
 
@@ -56,17 +56,6 @@
 #	how much of es' "internal" behavior is based on hook functions.
 
 fn %complete prefix word {
-	# $completions-are-filenames signals to readline whether or not to
-	# interpret returned items as filenames.  Readline uses this information
-	# to more informatively display options (e.g., executable files look
-	# different than symlinks, etc.) as well as to make it much easier to "walk
-	# the filesystem" with directory tab-completion.
-
-	# TODO: Change this to some hookable function for readline to map a
-	# completion candidate to a file, so that things like path-searched
-	# binaries or cdpath-searched directories can be treated correctly.
-	completions-are-filenames = <=false
-
 	if {~ $word '$&'*} {
 		# Primitive completion.  So far, no need to make a function of this.
 		result $word^<={~~ '$&'^<=$&primitives $word^*}
@@ -141,7 +130,14 @@ fn %whatis-complete word {
 #	directories or executable files.
 
 fn %file-complete filter word {
-	completions-are-filenames = <=true
+	# Defining the %completion-to-file function during %complete signals to
+	# the line editing library that the results of this function are meant
+	# to be treated as files, and defines a function for the line editing
+	# library to use to map from each entry to a valid file.  This enables
+	# nice behavior for things like path-searching commands; see
+	# %complete-%pathsearch for an example of this.
+	fn-%completion-to-file = result
+
 	let (files = (); homepat = ()) {
 		if {!~ <={homepat = <={~~ $word '~'*'/'*}} ()} {
 			let (homedir = (); path = $homepat(2)) {
@@ -225,11 +221,17 @@ fn %complete-%whatis _ word {
 #	refer to %complete-%pathsearch and %complete-%home.
 
 fn %complete-%pathsearch _ word {
+	fn %completion-to-file f {
+		catch @ e {result $f} {
+			# Like %pathsearch, but don't filter file types.
+			access -n $f -1e $path
+		}
+	}
 	let (files = ()) {
-		let (wordpat = $path/$word)
-		for (bin = $path/*)
-		if {access -x -- $bin} {
-			files = $files $word^<={~~ $bin $wordpat^*}
+		for (p = $path)
+		for (w = $p/$word^*)
+		if {access -x -- $w} {
+			files = $files <={~~ $w $p/*}
 		}
 		result $files
 	}
@@ -392,7 +394,7 @@ fn %complete-%or _ word			{%whatis-complete $word}
 
 # "Demo" completions of external binaries
 
-#	Incomplete ls completion to see how --option= completion works.
+#	Very incomplete ls completion to see how --option= completion works.
 #	Not great so far!
 #	TODO: enable --opt[TAB] to complete to '--option=', not '--option= '.
 #	TODO: some kind of fanciness to enable good short-option support?
@@ -423,7 +425,8 @@ fn %complete-man prefix word {
 			break
 		}
 		let (result = (); manpath = <={%fsplit : $MANPATH}) {
-			# This `for` just kills performance on `man [TAB]` :/
+			# This `for` kills performance on `man [TAB]` :/
+			# `*.*` doesn't work for things like `man sysupdate.d`
 			for ((nm ext) = <={~~ $manpath/man$sections/$word^* $manpath/man$sections/*.*})
 				result = $result $nm
 			result $result

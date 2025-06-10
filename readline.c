@@ -279,6 +279,32 @@ static List *callcomplete(char *word) {
 	RefReturn(result);
 }
 
+List *completion_to_file;
+
+static int callcompletiontofile(char **filep) {
+	List *result;
+	if (completion_to_file == NULL)
+		return 0;
+	Ref(List *, call, NULL);
+	gcdisable();
+	call = append(completion_to_file, mklist(mkstr(*filep), NULL));
+	gcenable();
+	result = eval(call, NULL, 0);
+	RefEnd(call);
+	switch (length(result)) {
+	case 0:
+		return 0;
+	case 1:
+		if (streq(*filep, getstr(result->term)))
+			return 0;
+		/* move into ealloc-space */
+		*filep = mprint("%E", result->term);
+		return 1;
+	default:
+		fail("%completion-to-file", "completion-filename mapping must return one value");
+	}
+}
+
 /* calls 'callcomplete' to produce candidates, and then returns them in a way
  * readline likes. */
 static char *completion_matches(const char *text, int state) {
@@ -315,16 +341,18 @@ static char *completion_matches(const char *text, int state) {
  */
 char **es_completion(UNUSED const char *text, UNUSED int start, UNUSED int end) {
 	char **matches;
-	Push caf;
-	varpush(&caf, "completions-are-filenames", NULL);
+	Push ctf;
+	varpush(&ctf, "fn-%completion-to-file", NULL);
 
 	matches = rl_completion_matches(text, completion_matches);
 
 	/* mechanisms to control how the results are presented */
-	rl_filename_completion_desired = istrue(varlookup("completions-are-filenames", NULL));
+	completion_to_file = varlookup("fn-%completion-to-file", NULL);
+	if (completion_to_file != NULL)
+		rl_filename_completion_desired = TRUE;
+	varpop(&ctf);
 	rl_attempted_completion_over = 1;	/* suppress "default" completions */
 
-	varpop(&caf);
 	return matches;
 }
 
@@ -340,6 +368,12 @@ static void initreadline(void) {
 	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_filename_quoting_function = quote;
 	rl_filename_dequoting_function = dequote;
+
+	/* are these the right hooks? god there are a lot */
+	rl_directory_rewrite_hook = callcompletiontofile;
+	rl_filename_stat_hook = callcompletiontofile;
+
+	globalroot(&completion_to_file);
 }
 
 /* set up readline for the next call */
