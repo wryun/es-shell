@@ -425,10 +425,24 @@ fn %complete-man prefix word {
 			break
 		}
 		let (result = (); manpath = <={%fsplit : $MANPATH}) {
-			# This `for` kills performance on `man [TAB]` :/
-			# `*.*` doesn't work for things like `man sysupdate.d`
-			for ((nm ext) = <={~~ $manpath/man$sections/$word^* $manpath/man$sections/*.*})
-				result = $result $nm
+			# This whole `for` kills performance on `man [TAB]` :/
+			# Slightly buggy :/
+			for (fi = $manpath/man$sections/$word^*) {
+				if {access $fi} {
+					let (sp = <={%fsplit . <={
+						~~ $fi $manpath/man$sections/*
+					}}) {
+						if {~ $sp($#sp) gz} {
+							let (nsp = 1 2 $sp)
+							sp = $nsp(3 ... $#sp)
+						} {
+							let (nsp = 1 $sp)
+							sp = $nsp(2 ... $#sp)
+						}
+						result = $result <={%flatten . $sp}
+					}
+				}
+			}
 			result $result
 		}
 	}
