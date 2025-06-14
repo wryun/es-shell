@@ -220,9 +220,7 @@ fn cd dir {
 }
 
 #	The vars function is provided for cultural compatibility with
-#	rc's whatis when used without arguments.  The option parsing
-#	is very primitive;  perhaps es should provide a getopt-like
-#	builtin.
+#	rc's whatis when used without arguments.
 #
 #	The options to vars can be partitioned into two categories:
 #	those which pick variables based on their source (-e for
@@ -237,17 +235,10 @@ fn cd dir {
 #	unless it is on the noexport list.
 
 fn vars {
-	# choose default options
-	if {~ $* -a} {
-		* = -v -f -s -e -p -i
-	} {
-		if {!~ $* -[vfs]}	{ * = $* -v }
-		if {!~ $* -[epi]}	{ * = $* -e }
-	}
 	# check args
 	for (i = $*)
-		if {!~ $i -[vfsepi]} {
-			throw error vars illegal option: $i -- usage: vars '-[vfsepia]'
+		if {!~ $i -*} {
+			throw error vars illegal option: $i -- usage: vars -[vfsepia]
 		}
 	let (
 		vars	= false
@@ -256,34 +247,44 @@ fn vars {
 		export	= false
 		priv	= false
 		intern	= false
+		all	= false
 	) {
-		for (i = $*) if (
-			{~ $i -v}	{vars	= true}
-			{~ $i -f}	{fns	= true}
-			{~ $i -s}	{sets	= true}
-			{~ $i -e}	{export	= true}
-			{~ $i -p}	{priv	= true}
-			{~ $i -i}	{intern = true}
+		for (a = $*)
+		for (i = <={%fsplit '' <={~~ $a -*}})
+		if (
+			{~ $i v}	{vars	= true}
+			{~ $i f}	{fns	= true}
+			{~ $i s}	{sets	= true}
+			{~ $i e}	{export	= true}
+			{~ $i p}	{priv	= true}
+			{~ $i i}	{intern = true}
+			{~ $i a}	{all	= true}
 			{throw error vars vars: bad option: $i}
 		)
+		if {!{$vars || $fns || $sets}} {
+			vars = true
+		}
+		if {!{$export || $priv || $intern}} {
+			export = true
+		}
 		let (
-			dovar = @ var {
+			fn dovar var {
 				# print functions and/or settor vars
-				if {if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
+				if {$all || if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
 					echo <={%var $var}
 				}
 			}
 		) {
-			if {$export || $priv} {
-				for (var = <= $&vars)
+			if {$all || $export || $priv} {
+				for (var = <=$&vars)
 					# if not exported but in priv
-					if {if {~ $var $noexport} $priv $export} {
-						$dovar $var
+					if {$all || if {~ $var $noexport} $priv $export} {
+						dovar $var
 					}
 			}
-			if {$intern} {
-				for (var = <= $&internals)
-					$dovar $var
+			if {$all || $intern} {
+				for (var = <=$&internals)
+					dovar $var
 			}
 		}
 	}
@@ -579,6 +580,28 @@ fn %pathsearch name { access -n $name -1e -xf $path }
 
 if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
+#	The %write-history hook is used in interactive contexts to write
+#	command input to the history file (and/or readline's in-memory
+#	history log).  By default, $&writehistory (which is available if
+#	readline is compiled in) will write to readline's history log if
+#	$max-history-length allows, and will write to the file designated
+#	by $history if that variable is set and the file it points to
+#	exists and is writeable.
+
+if {~ <=$&primitives writehistory} {
+	fn-%write-history = $&writehistory
+} {
+	fn %write-history input {
+		if {!~ $history ()} {
+			if {access -w $history} {
+				echo $input >> $history
+			} {
+				history = ()
+			}
+		}
+	}
+}
+
 
 #
 # Read-eval-print loops
@@ -599,12 +622,11 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	%batch-loop is used.
 #
 #	The function %parse can be used to call the parser, which returns
-#	an es command.  %parse takes two arguments, which are used as the
-#	main and secondary prompts, respectively.  %parse typically returns
-#	one line of input, but es allows commands (notably those with braces
-#	or backslash continuations) to continue across multiple lines; in
-#	that case, the complete command and not just one physical line is
-#	returned.
+#	an es command.  %parse takes two arguments, which are used as the main
+#	and secondary prompts, respectively.  %parse typically returns one line
+#	of input, but es allows commands (notably those with braces or backslash
+#	continuations) to continue across multiple lines; in that case, the
+#	complete command and not just one physical line is returned.
 #
 #	By convention, the REPL must pass commands to the fn %dispatch,
 #	which has the actual responsibility for executing the command.
@@ -626,9 +648,9 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%parse	= $&parse
-fn-%batch-loop	= $&batchloop
-fn-%is-interactive = $&isinteractive
+fn-%parse		= $&parse
+fn-%batch-loop		= $&batchloop
+fn-%is-interactive	= $&isinteractive
 
 fn %interactive-loop {
 	let (result = <=true) {
@@ -716,14 +738,17 @@ set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
-#	If the primitive $&resetterminal is defined (meaning that readline
-#	is being used), setting the variables $TERM or $TERMCAP should
-#	notify the line editor library.
+#	If the primitives $&sethistory or $&resetterminal are defined (meaning
+#	that readline or editline is being used), setting the variables $TERM,
+#	$TERMCAP, or $history should notify the line editor library.
+
+if {~ <=$&primitives sethistory} {
+	set-history = $&sethistory
+}
 
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }

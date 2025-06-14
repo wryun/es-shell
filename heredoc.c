@@ -22,7 +22,7 @@ extern Tree *getherevar(void) {
 	while ((c = GETC()) != EOF && !dnw[c])
 		buf = bufputc(buf, c);
 	len = buf->len;
-	s = sealcountedbuffer(buf);
+	s = psealcountedbuffer(buf);
 	if (len == 0) {
 		yyerror("null variable name in here document");
 		return NULL;
@@ -44,7 +44,6 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 		return NULL;
 	}
 	ignoreeof = TRUE;
-	disablehistory = TRUE;
 
 	for (tree = NULL, tailp = &tree, buf = openbuffer(0);;) {
 		int c;
@@ -55,7 +54,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 			if (buf->current == 0 && tree != NULL)
 				freebuffer(buf);
 			else
-				*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
+				*tailp = treecons(mk(nQword, psealcountedbuffer(buf)), NULL);
 			break;
 		}
 		if (s != (unsigned char *) eof)
@@ -65,7 +64,6 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 				yyerror("incomplete here document");
 				freebuffer(buf);
 				ignoreeof = FALSE;
-				disablehistory = FALSE;
 				return NULL;
 			}
 			if (c == '$' && !quoted && (c = GETC()) != '$') {
@@ -74,14 +72,13 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 				if (buf->current == 0)
 					freebuffer(buf);
 				else {
-					*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
+					*tailp = treecons(mk(nQword, psealcountedbuffer(buf)), NULL);
 					tailp = &(*tailp)->CDR;
 				}
 				var = getherevar();
 				if (var == NULL) {
 					freebuffer(buf);
 					ignoreeof = FALSE;
-					disablehistory = FALSE;
 					return NULL;
 				}
 				*tailp = treecons(var, NULL);
@@ -96,7 +93,6 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 	}
 
 	ignoreeof = FALSE;
-	disablehistory = FALSE;
 	return tree->CDR == NULL ? tree->CAR : tree;
 }
 
@@ -137,7 +133,7 @@ extern Boolean queueheredoc(Tree *t) {
 		return FALSE;
 	}
 
-	here = gcalloc(sizeof (Here), NULL);
+	here = palloc(sizeof (Here), NULL);
 	here->next = hereq;
 	here->marker = eof;
 	hereq = here;
@@ -146,5 +142,4 @@ extern Boolean queueheredoc(Tree *t) {
 
 extern void emptyherequeue(void) {
 	hereq = NULL;
-	disablehistory = FALSE;
 }

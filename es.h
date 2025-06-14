@@ -136,7 +136,7 @@ extern List *sortlist(List *list);
 
 /* tree.c */
 
-extern Tree *mk(NodeKind VARARGS);
+extern Tree *gcmk(NodeKind VARARGS);	/* gcalloc a tree node */
 
 
 /* closure.c */
@@ -292,12 +292,8 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 extern char *prompt, *prompt2;
 extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
-extern void sethistory(char *file);
 extern Boolean isinteractive(void);
-#if HAVE_READLINE
-extern void setmaxhistorylength(int length);
-#endif
-extern void initgetenv(void);
+extern Boolean isfromfd(void);
 extern void initinput(void);
 extern void resetparser(void);
 
@@ -314,6 +310,21 @@ extern List *runstring(const char *str, const char *name, int flags);
 #if HAVE_READLINE
 extern Boolean resetterminal;
 #endif
+
+
+/* history.c */
+#if HAVE_READLINE
+extern void inithistory(void);
+
+extern void sethistory(char *file);
+extern void loghistory(char *cmd);
+extern void setmaxhistorylength(int length);
+extern void checkreloadhistory(void);
+#endif
+
+extern void newhistbuffer(void);
+extern void addhistbuffer(char c);
+extern char *dumphistbuffer(void);
 
 
 /* opt.c */
@@ -359,6 +370,7 @@ extern jmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);
 extern Boolean issilentsignal(List *e);
+extern void exitonsignal(List *e);
 extern void setsigdefaults(void);
 extern void blocksignals(void);
 extern void unblocksignals(void);
@@ -391,6 +403,12 @@ extern void gcreserve(size_t nbytes);		/* provoke a collection, if enabled and n
 extern void gcenable(void);			/* enable collections */
 extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
+
+/* operations with pspace, the explicitly-collected gc space for parse tree building */
+extern void *palloc(size_t n, Tag *t);		/* allocate n with collection tag t, but in pspace */
+extern void *pseal(void *p);			/* collect pspace into gcspace with root p */
+extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */
+extern char *pndup(const char *s, size_t n);	/* copy a counted string into pspace */
 
 
 /*

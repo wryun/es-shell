@@ -4,6 +4,8 @@
 #include "gc.h"
 #include "prim.h"
 
+#include <limits.h>
+
 static const char *caller;
 
 static int getnumber(const char *s) {
@@ -157,32 +159,59 @@ static int pipefork(int p[2], int *extra) {
 	return pid;
 }
 
-REDIR(here) {
-	int pid, p[2];
-	List *doc, *tail, **tailp;
+PRIM(here) {
+	int fd, doclen, p[2], status, ticket = UNREGISTERED;
+	volatile int pid = -1;
+	List *tail, **tailp;
 
-	assert(list != NULL);
-	for (tailp = &list; (tail = *tailp)->next != NULL; tailp = &tail->next)
+	caller = "$&here";
+	if (length(list) < 2)
+		argcount("%here fd [word ...] cmd");
+
+	fd = getnumber(getstr(list->term));
+	Ref(List *, lp, list->next);
+	for (tailp = &lp; (tail = *tailp)->next != NULL; tailp = &tail->next)
 		;
-	doc = (list == tail) ? NULL : list;
 	*tailp = NULL;
 
-	if ((pid = pipefork(p, NULL)) == 0) {		/* child that writes to pipe */
+	Ref(char *, doc, (lp == tail) ? NULL : str("%L", lp, ""));
+	doclen = strlen(doc);
+
+	Ref(List *, cmd, tail);
+#ifdef PIPE_BUF
+	if (doclen <= PIPE_BUF) {
+		if (pipe(p) == -1)
+			fail("$&here", "pipe: %s", esstrerror(errno));
+		ewrite(p[1], doc, doclen);
+	} else
+#endif
+	if ((pid = pipefork(p, NULL)) == 0) {	/* child that writes to pipe */
 		close(p[0]);
-		fprint(p[1], "%L", doc, "");
+		ewrite(p[1], doc, doclen);
 		esexit(0);
 	}
 
 	close(p[1]);
-	*srcfdp = p[0];
-	return tail;
-}
+	ticket = defer_mvfd(TRUE, p[0], fd);
 
-PRIM(here) {
-	caller = "$&here";
-	if (length(list) < 2)
-		argcount("%here fd [word ...] cmd");
-	return redir(redir_here, list, evalflags);
+	ExceptionHandler
+		lp = eval(cmd, NULL, evalflags);
+	CatchException (e)
+		undefer(ticket);
+		close(p[0]);
+		if (pid > 0)
+			ewaitfor(pid);
+		throw(e);
+	EndExceptionHandler
+
+	undefer(ticket);
+	close(p[0]);
+	if (pid > 0) {
+		status = ewaitfor(pid);
+		printstatus(0, status);
+	}
+	RefEnd2(cmd, doc);
+	RefReturn(lp);
 }
 
 PRIM(pipe) {
@@ -335,9 +364,9 @@ static List *bqinput(const char *sep, int fd) {
 	startsplit(sep, TRUE);
 
 restart:
+	/* avoid SIGCHK()ing in here so we don't abandon our child process */
 	while ((n = eread(fd, in, sizeof in)) > 0)
 		splitstring(in, n, FALSE);
-	SIGCHK();
 	if (n == -1) {
 		if (errno == EINTR)
 			goto restart;
@@ -349,7 +378,7 @@ restart:
 
 PRIM(backquote) {
 	int pid, p[2], status;
-	
+
 	caller = "$&backquote";
 	if (list == NULL)
 		fail(caller, "usage: backquote separator command [args ...]");

@@ -7,7 +7,7 @@ test 'es -c' {
 }
 
 test 'es -e' {
-	let (temp = `{mktemp es-e-script.XXXX})
+	let (temp = `{mktemp es-e-script.XXXXXX})
 	unwind-protect {
 		for (	(command 				continue) = (
 			# commands

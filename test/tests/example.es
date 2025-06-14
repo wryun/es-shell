@@ -25,7 +25,7 @@ test 'matches match' {
 test 'redirects redirect' {
 	# Here's a more complex test where we actually do some setup and the test cases
 	# build upon each other.
-	let (test-file = `mktemp)
+	let (test-file = `{mktemp redirect-file.XXXXXX})
 	unwind-protect {
 		assert {~ `{cat <<< $test-file} $test-file} 'herestring herestrings'
 

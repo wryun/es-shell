@@ -31,7 +31,7 @@ static void checkfd(int fd, OpenKind r) {
 static void initpath(void) {
 	int i;
 	static const char * const path[] = { INITIAL_PATH };
-	
+
 	Ref(List *, list, NULL);
 	for (i = arraysize(path); i-- > 0;) {
 		Term *t = mkstr((char *) path[i]);
@@ -56,11 +56,13 @@ static void runesrc(void) {
 		CatchException (e)
 			if (termeq(e->term, "exit") || termeq(e->term, "false"))
 				exit(exitstatus(e->next));
-			else if (termeq(e->term, "error"))
+			else if (termeq(e->term, "error")) {
 				eprint("%L\n",
 				       e->next == NULL ? NULL : e->next->next,
 				       " ");
-			else if (!issilentsignal(e))
+				return;
+			}
+			if (!issilentsignal(e))
 				eprint("uncaught exception: %L\n", e, " ");
 			return;
 		EndExceptionHandler
@@ -82,6 +84,8 @@ static Noreturn usage(void) {
 		"	-p	don't load functions from the environment\n"
 		"	-o	don't open stdin, stdout, and stderr if they were closed\n"
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
+	);
+	eprint(""
 #if GCINFO
 		"	-I	print garbage collector information\n"
 #endif
@@ -109,8 +113,8 @@ int main(int argc, char **argv0) {
 	Boolean keepclosed = FALSE;		/* -o */
 	Ref(const char *volatile, cmd, NULL);	/* -c */
 
-	initgc();
 	initconv();
+	initgc();
 
 	if (argc == 0) {
 		argc = 1;
@@ -175,21 +179,24 @@ getopt_done:
 		roothandler = &_localhandler;	/* unhygeinic */
 
 		initinput();
+#if HAVE_READLINE
+		inithistory();
+#endif
 		initprims();
 		initvars();
-	
+
 		runinitial();
-	
+
 		initpath();
 		initpid();
 		initsignals(runflags & run_interactive, allowquit);
 		initpgrp();
 		hidevariables();
 		initenv(environ, protected);
-	
+
 		if (loginshell)
 			runesrc();
-	
+
 		if (cmd == NULL && !cmd_stdin && argp != NULL) {
 			int fd;
 			char *file = getstr(argp->term);
@@ -204,7 +211,7 @@ getopt_done:
 			status = exitstatus(runfd(fd, file, runflags));
 			goto return_main;
 		}
-	
+
 		vardef("*", NULL, argp);
 		vardef("0", NULL, mklist(mkstr(argv[0]), NULL));
 		if (cmd != NULL)
@@ -217,11 +224,19 @@ getopt_done:
 		if (termeq(e->term, "exit") || termeq(e->term, "false")) {
 			status = exitstatus(e->next);
 			goto return_main;
-		} else if (termeq(e->term, "error"))
+		} else if (termeq(e->term, "error")) {
 			eprint("%L\n",
 			       e->next == NULL ? NULL : e->next->next,
 			       " ");
-		else if (!issilentsignal(e))
+			status = 1;
+			goto return_main;
+		} else {
+#if JOB_PROTECT
+			tcreturnpgrp();
+#endif
+			exitonsignal(e);
+		}
+		if (!issilentsignal(e))
 			eprint("uncaught exception: %L\n", e, " ");
 		status = 1;
 

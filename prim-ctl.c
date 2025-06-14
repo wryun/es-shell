@@ -18,7 +18,7 @@ PRIM(if) {
 		List *cond = ltrue;
 		if (lp->next != NULL) {
 			ExceptionHandler
-				cond = eval1(lp->term, evalflags &~ eval_inchild);
+				cond = eval1(lp->term, evalflags &~ (lp->next == NULL ? 0 : eval_inchild));
 			CatchException (e)
 				if (termeq(e->term, "false"))
 					cond = e->next;

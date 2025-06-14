@@ -148,19 +148,27 @@ PRIM(var) {
 	return list;
 }
 
-PRIM(sethistory) {
-	if (list == NULL) {
-		sethistory(NULL);
-		return NULL;
-	}
-	Ref(List *, lp, list);
-	sethistory(getstr(lp->term));
-	RefReturn(lp);
+static void loginput(char *input) {
+	char *c;
+	List *fn = varlookup("fn-%write-history", NULL);
+	if (!isinteractive() || !isfromfd() || fn == NULL)
+		return;
+	for (c = input;; c++)
+		switch (*c) {
+		case '#': case '\n': return;
+		case ' ': case '\t': break;
+		default: goto writeit;
+		}
+writeit:
+	gcdisable();
+	Ref(List *, list, append(fn, mklist(mkstr(input), NULL)));
+	gcenable();
+	eval(list, NULL, 0);
+	RefEnd(list);
 }
 
 PRIM(parse) {
 	List *result;
-	Tree *tree;
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
@@ -170,12 +178,24 @@ PRIM(parse) {
 			prompt2 = getstr(lp->term);
 	}
 	RefEnd(lp);
-	tree = parse(prompt1, prompt2);
+	newhistbuffer();
+
+	Ref(Tree *, tree, NULL);
+	ExceptionHandler
+		tree = parse(prompt1, prompt2);
+	CatchException (ex)
+		Ref(List *, e, ex);
+		loginput(dumphistbuffer());
+		throw(e);
+		RefEnd(e);
+	EndExceptionHandler
+
+	loginput(dumphistbuffer());
 	result = (tree == NULL)
 		   ? NULL
-		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
+		   : mklist(mkterm(NULL, mkclosure(gcmk(nThunk, tree), NULL)),
 			    NULL);
-	RefEnd2(prompt2, prompt1);
+	RefEnd3(tree, prompt2, prompt1);
 	return result;
 }
 
@@ -283,6 +303,23 @@ PRIM(setmaxevaldepth) {
 }
 
 #if HAVE_READLINE
+PRIM(sethistory) {
+	if (list == NULL) {
+		sethistory(NULL);
+		return NULL;
+	}
+	Ref(List *, lp, list);
+	sethistory(getstr(lp->term));
+	RefReturn(lp);
+}
+
+PRIM(writehistory) {
+	if (list == NULL || list->next != NULL)
+		fail("$&writehistory", "usage: $&writehistory command");
+	loghistory(getstr(list->term));
+	return NULL;
+}
+
 PRIM(setmaxhistorylength) {
 	char *s;
 	int n;
@@ -319,7 +356,6 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(dot);
 	X(flatten);
 	X(whatis);
-	X(sethistory);
 	X(split);
 	X(fsplit);
 	X(var);
@@ -336,6 +372,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(noreturn);
 	X(setmaxevaldepth);
 #if HAVE_READLINE
+	X(sethistory);
+	X(writehistory);
 	X(resetterminal);
 	X(setmaxhistorylength);
 #endif

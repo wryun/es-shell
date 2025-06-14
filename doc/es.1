@@ -446,7 +446,7 @@ is the same as
 Note that when assigning values to more than one variable,
 the list of variables must be enclosed in parentheses.
 .PP
-For ``free careting'' (see below) to work correctly,
+For \(lqfree careting\(rq (see below) to work correctly,
 .I es
 must make certain assumptions
 about what characters may appear in a variable name.
@@ -605,7 +605,7 @@ For example, the following are all equivalent:
 .PP
 .I Es
 inserts a free-caret between the
-.Rc `` \- ''
+.Rc \(lq \- \(rq
 and
 .Cr "$opts" ,
 as well
@@ -679,7 +679,7 @@ The rules for character class matching are the same as those for
 .IR ed (1),
 with the exception that character class negation is achieved
 with the tilde
-.Rc ( ~ ),
+.Rc ( \(ti ),
 not the caret
 .Rc ( \(ha ),
 since the caret already means
@@ -696,7 +696,7 @@ do not match a dot character
 at the beginning of a filename component.
 .PP
 A tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 as the first character of an argument is used to refer to home directories.
 A tilde alone or followed by a slash
 .Rc ( / )
@@ -708,13 +708,13 @@ of that user, according to
 .IR getpwent (3).
 .SS "Pattern Matching"
 The tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 operator is used in
 .I es
 for matching strings against wildcard patterns.
 The command
 .Ds
-.Cr "~ \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
+.Cr "\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
 .De
 .PP
 returns a true value if and only if the subject matches any of the patterns.
@@ -726,18 +726,18 @@ do not have to be matched explicitly,
 and home directory expansion does not occur.
 Thus
 .Ds
-.Cr "~ foo f*"
+.Cr "\(ti foo f*"
 .De
 .PP
 returns zero (true), while
 .Ds
-.Cr "~ (bar baz) f*"
+.Cr "\(ti (bar baz) f*"
 .De
 .PP
 returns one (false).
 The null list is matched by the null list, so
 .Ds
-.Cr "~ $foo ()"
+.Cr "\(ti $foo ()"
 .De
 .PP
 checks to see whether
@@ -746,11 +746,11 @@ is empty or not.
 This may also be achieved
 by the test
 .Ds
-.Cr "~ $#foo 0"
+.Cr "\(ti $#foo 0"
 .De
 .PP
 Note that inside a
-.Cr ~
+.Cr \(ti
 command
 .I es
 does not match patterns against file
@@ -765,21 +765,21 @@ does expand the subject against filenames if it contains
 metacharacters.
 Thus, the command
 .Ds
-.Cr "~ * ?"
+.Cr "\(ti * ?"
 .De
 .PP
 returns true if any of the files in the current directory have a
 single-character name.
 Note that if the
-.Cr ~
+.Cr \(ti
 command is given a list as its first
 argument, then a successful match against any of the elements of that
 list will cause
-.Cr ~
+.Cr \(ti
 to return true.
 For example:
 .Ds
-.Cr "~ (foo goo zoo) z*"
+.Cr "\(ti (foo goo zoo) z*"
 .De
 .PP
 is true.
@@ -788,7 +788,7 @@ is true.
 provides a
 .Cr match
 command for cases where repeated pattern matching with the tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 operator is inconvenient.
 .PP
 This invocation compares the
@@ -824,7 +824,7 @@ pairs must be separated by newlines or semicolons.
 The matching behavior is equivalent to an
 .Cr if
 command with multiple
-.Cr ~
+.Cr \(ti
 comparisons.
 For example, the
 .Cr match
@@ -836,9 +836,9 @@ command below are equivalent:
 .Cr "               bp = biff plop"
 .Cr "               bw = bam boom wham"
 
-.Cr "match $sound (          if {~ $sound $bc} {"
+.Cr "match $sound (          if {\(ti $sound $bc} {"
 .Cr "  $bc {result 3}          result 3"
-.Cr "  ($bp $bw *ow) {}      } {~ $sound $bp $bw *ow} {"
+.Cr "  ($bp $bw *ow) {}      } {\(ti $sound $bp $bw *ow} {"
 .Cr "  * {                   } {"
 .Cr "    false                 false"
 .Cr "  }                     }"
@@ -853,13 +853,13 @@ within the body of the
 .Cr match .
 .SS "Pattern Extraction"
 The double-tilde
-.Rc ( ~~ )
+.Rc ( \(ti\(ti )
 operator is used in
 .I es
 for extracting the parts of strings that match patterns.
 The command
 .Ds
-.Cr "~~ \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
+.Cr "\(ti\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
 .De
 .PP
 returns the parts of each matching subject which correspond to the
@@ -876,7 +876,7 @@ subject.  If the subject does not match, the next pattern is tried.
 .PP
 For example, the result of the extraction operation
 .Ds
-.Cr "~~ (foo.c foo.x bar.h) *.[ch]"
+.Cr "\(ti\(ti (foo.c foo.x bar.h) *.[ch]"
 .De
 .PP
 is the list
@@ -894,7 +894,7 @@ Its return value is stored in the variable
 .PP
 The characters in the variable
 .Cr $ifs
-(for ``input field separator'')
+(for \(lqinput field separator\(rq)
 are used to split the output into list elements.
 By default,
 .Cr $ifs
@@ -978,13 +978,13 @@ might produce the output
 along with any output or error messages from the programs.
 .PP
 .I Es
-functions and primitives can produce ``rich return values,''
+functions and primitives can produce \(lqrich return values,\(rq
 that is, arbitrary lists as return values.
 .PP
 When return values are interpreted as truth values,
 an extension of the normal shell conventions apply.
 If any element of a list is not equal to
-.Rc `` 0 ''
+.Rc \(lq 0 \(rq
 (or the empty string), that list is considered false.
 .PP
 The return value of an assignment operation is the assigned value.
@@ -1015,13 +1015,13 @@ which depend on the exit status of a command.
 .De
 .PP
 executes the first command and then executes the second command if and only if
-the first command has a ``true'' return value.
+the first command has a \(lqtrue\(rq return value.
 .Ds
 .Ic command1 " || " command2
 .De
 .PP
 executes the first command and then executes the second command if and only if
-the first command has a ``false'' return value.
+the first command has a \(lqfalse\(rq return value.
 .Ds
 .Ci ! " command"
 .De
@@ -1082,7 +1082,7 @@ truncates a file and opens it for reading and writing, and
 opens a file for reading and appending;
 these operators use file descriptor 1 by default.
 .PP
-``Here documents'' are supported as in
+\(lqHere documents\(rq are supported as in
 .IR sh (1)
 with the use of
 .Ds
@@ -1108,7 +1108,7 @@ in a here document created with an unquoted end-of-file marker, use
 .PP
 Additionally,
 .I es
-supports ``here strings'', which are like here documents,
+supports \(lqhere strings\(rq, which are like here documents,
 except that input is taken directly from a string on the command line.
 Its use is illustrated here:
 .Ds
@@ -1360,7 +1360,7 @@ and will invoke appropriately named settor functions (see below).
 In addition to local variables,
 .I es
 supports a different form of temporary variable binding,
-using let-bound, or ``lexically scoped,'' variables.
+using let-bound, or \(lqlexically scoped,\(rq variables.
 (Lexical scoping is the form of binding used by most compiled
 programming languages, such as C or Scheme.)
 A lexically scoped variable is introduced with a
@@ -1386,8 +1386,8 @@ An example best shows the difference between
 .Cr let
 and
 .Cr local
-(also known as ``dynamic'') binding: (note that
-.Rc `` "; " ''
+(also known as \(lqdynamic\(rq) binding: (note that
+.Rc \(lq "; " \(rq
 is
 .IR es 's
 default prompt.)
@@ -1636,7 +1636,7 @@ does not append commands to any file.
 .TP
 .Cr home
 The current user's home directory, used in tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 expansion, as the default directory for the builtin
 .Cr cd
 command, and as the directory in which
@@ -2147,7 +2147,7 @@ disables core dumps.
 .TP
 \&
 The limit values must either be the word
-.Rc `` unlimited ''
+.Rc \(lq unlimited \(rq
 or a number with an optional suffix indicating units.
 For size limits, the suffixes
 .Cr k
@@ -2299,7 +2299,7 @@ the returned string.
 .SS "Hook Functions"
 A subset of the
 .Cr % -named
-functions are known as ``hook functions.''
+functions are known as \(lqhook functions.\(rq
 The hook functions are called to implement some internal
 shell operations, and are available as functions in order
 that their values can be changed.
@@ -2602,6 +2602,22 @@ For each named
 returns the pathname, primitive, lambda, or code fragment which
 would be run if the program appeared as the first word of a command.
 .TP
+.Cr "%write-history \fIinput\fP"
+Called at the end of
+.Cr %parse
+to write the
+.I input
+to the file given in
+.Cr $history ,
+if such a file exists and can be written.
+Also appends the
+.I input
+to the in-memory history log if
+.I readline
+support is compiled in.
+(For more on this, see
+.Cr max-history-length .)
+.TP
 .Cr "%writeto \fIvar output cmd\fP"
 Runs
 .I cmd
@@ -2678,15 +2694,15 @@ Primitives are referenced with the
 .PP
 notation.
 In this section, the
-.Rc `` $& ''
+.Rc \(lq $& \(rq
 prefixes will be omitted when primitive names are mentioned.
 Note that, by convention, primitive names follow C identifier
 names where
 .I es
 variable and function names often contain
-.Rc `` % ''
+.Rc \(lq % \(rq
 and
-.Rc `` - ''
+.Rc \(lq - \(rq
 characters.
 .PP
 The following primitives directly implement the
@@ -2705,7 +2721,7 @@ exit	result
 In addition, the primitive
 .Cr dot
 implements the
-.Rc `` . ''
+.Rc \(lq . \(rq
 builtin function.
 .PP
 The
@@ -2724,7 +2740,7 @@ builtin.
 .PP
 The following primitives implement the hook functions
 of the same names, with
-.Rc `` % ''
+.Rc \(lq % \(rq
 prefixes:
 .ta 1.75i 3.5i
 .Ds
@@ -2733,14 +2749,14 @@ apids	here	read
 close	home	run
 count	newfd	seq
 dup	openfile	split
-flatten	parse	var
-fsplit	pipe	whatis
+flatten	var	fsplit
+pipe	whatis
 .ft R
 .De
 .PP
 The following primitives implement the similar named hook functions,
 with
-.Rc `` % ''
+.Rc \(lq % \(rq
 prefixes and internal hyphens:
 .ta 1.75i 3.5i
 .Ds
@@ -2750,12 +2766,19 @@ batchloop	exitonfalse	isinteractive
 .De
 .PP
 The
+.Cr parse
+primitive is used to implement the
+.Cr %parse
+hook function.
+.PP
+The
 .Cr background
 primitive is used to implement the
 .Cr %background
 hook function, but does not print the process ID of the
 background process or set
 .Cr $apid .
+.PP
 The
 .Cr backquote
 primitive is used to implement the
@@ -2769,7 +2792,7 @@ The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-sethistory	setnoexport	setsignals
+setnoexport	setsignals
 .ft R
 .De
 .PP
@@ -2788,27 +2811,37 @@ writeto	%writeto
 .ft R
 .De
 .PP
-The primitive
-.Cr resetterminal
-is if
+The following primitives in particular are included if
 .I es
 is compiled with support for the
 .I readline
-library.
-It is used in the implementation of settor functions of the
+library:
+.ta 2i
+.Ds
+.ft \*(Cf
+resetterminal	sethistory
+setmaxhistorylength	writehistory
+.ft R
+.De
+.PP
+.Cr sethistory
+and
+.Cr setmaxhistorylength
+are used as settor functions for the
+.Cr history
+and
+.Cr max-history-length
+variables.
+.Cr resetterminal
+is used in the settor functions for the
 .Cr TERM
 and
 .Cr TERMCAP
-variables to notify the line editing packages that the terminal
-configuration has changed.
-Similarly,
-.Cr setmaxhistorylength
-is used as the settor function for the
-.Cr max-history-length
-variable, which signals to the
-.I readline
-library how much of the history file should be read into the in-memory
-history log.
+variables.
+.Cr writehistory
+is used as the initial implementation of the
+.Cr %write-history
+function.
 .PP
 Several primitives are not directly associated with other function.
 They are:
@@ -2920,7 +2953,7 @@ or
 This is used for debugging.
 .SH CANONICAL EXTENSIONS
 .I Es
-is distributed with a directory of ``canonical extension'' scripts, which
+is distributed with a directory of \(lqcanonical extension\(rq scripts, which
 implement a number of features commonly desired by users but not built into
 the shell itself.
 They are typically installed into either
@@ -2957,7 +2990,7 @@ to search the directory given by
 or, if
 .Cr $XDG_DATA_HOME
 is not set,
-.Cr ~/.local/share/es/autoload ,)
+.Cr \(ti/.local/share/es/autoload ,)
 containing function definitions which are then defined on-demand.
 .TP
 .Cr cdpath.es
@@ -2989,14 +3022,14 @@ this function also enables interactive-shell startup scripts.
 .Cr path-cache.es
 Adds behavior to
 .Cr %pathsearch
-to ``cache'' the location of external commands by automatically defining
+to \(lqcache\(rq the location of external commands by automatically defining
 .Ds
 .Ci fn- command " = " /path/to/command
 .De
 .sp .7v
 when paths to external commands are found.
 This can be helpful to performance when path searching is slow, and
-corresponds with the ``hashing'' behavior found in some other shells.
+corresponds with the \(lqhashing\(rq behavior found in some other shells.
 .TP
 .Cr status.es
 Adds a variable
