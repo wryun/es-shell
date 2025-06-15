@@ -988,6 +988,24 @@ If any element of a list is not equal to
 (or the empty string), that list is considered false.
 .PP
 The return value of an assignment operation is the assigned value.
+.PP
+When
+.I es
+is invoked with the
+.Cr \-e
+option, false return values generate the
+.Cr false
+exception.
+(See the section entitled
+.B Exceptions
+for more information about the
+.Cr false
+exception.)
+The
+.Cr false
+exception is caught and treated as a return value by the
+.Cr "<="
+construct.
 .SS "Logical Operators"
 There are a number of operators in
 .I es
@@ -1543,6 +1561,20 @@ and the signal is listed in the variable
 .Cr signals .
 .I Signame
 is the name of the signal that was raised.
+.TP
+.Cr "exit \fIcode\fP"
+Raised by the
+.Cr exit
+command.
+Causes the shell to exit with the given
+.Cr code .
+.TP
+.Cr "false \fIvalue\fP"
+Raised by the
+.Cr $&exitonfalse
+primitive when a command exits with a falsey status.
+Causes the shell to exit if not caught.
+By default, this exception is caught in an interactive shell.
 .PP
 See the builtin commands
 .Cr catch
@@ -2071,6 +2103,13 @@ If none of the
 are true, the
 .I else
 command is run.
+The
+.Cr if
+function catches any
+.Cr false
+exceptions generated from
+.IR test s
+and treats them as a false return value.
 .TP
 .Cr "limit \fR[\fP-h\fR]\fP \fI\fR[\fPresource \fR[\fPvalue\fR]\fP\fR]\fP\fP"
 Similar to the
@@ -2367,14 +2406,18 @@ may provide a builtin version of this function to handle
 shell scripts if the kernel does not.
 .TP
 .Cr "%exit-on-false \fIcmd\fP"
-Runs the command, and exits if any command
-(except those executing as the tests of conditional statements)
+Runs the command, and throws the
+.Cr false
+exception if any command (except assignments)
 returns a non-zero status.
 (This function is used in the definition of
 .Cr %dispatch
 when the shell is invoked with the
 .Cr \-e
 option.)
+The uncaught
+.Cr false
+exception causes the shell to exit.
 .TP
 .Cr "%flatten \fIseparator list\fP"
 Concatenate the elements of
@@ -2871,8 +2914,10 @@ starts with a dash
 .Rc ( - ).
 .TP
 .Cr \-e
-Exit if any command (except those executing as the tests of
-conditional statements) returns a non-zero status.
+Throw a
+.Cr false
+exception if any command (other than assignments) returns a non-zero
+status.
 .TP
 .Cr \-v
 Echo all input to standard error.
