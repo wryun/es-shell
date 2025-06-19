@@ -131,11 +131,8 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 		padding = 0;
 
 	padchar = ' ';
-	if (padding > 0 && flags & FMT_zeropad) {
+	if (flags & FMT_zeropad)
 		padchar = '0';
-		if ((flags & FMT_leftside) == 0)
-			padding = 0;
-	}
 
 	if ((flags & FMT_leftside) == 0)
 		pad(format, padding, padchar);
