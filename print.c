@@ -79,7 +79,7 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 		"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 	};
 	char padchar;
-	size_t len, pre, zeroes, padding, width;
+	size_t len, pre, padding, width;
 	long flags;
 	intmax_t n;
 	uintmax_t u;
@@ -109,12 +109,22 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 			prefix[pre++] = *altform++;
 
 	len = utostr(u, number, radix, table[upper]) - number;
-	if ((flags & FMT_f2set) && (size_t) format->f2 > len)
-		zeroes = format->f2 - len;
-	else
-		zeroes = 0;
+	if (flags & FMT_f2set) {
+		size_t i, figs = format->f2;
+		if (figs >= len) {
+			prefix[pre++] = '0';
+			prefix[pre++] = '.';
+			for (i = figs - len; i > 0; i--)
+				prefix[pre++] = '0';
+		} else {
+			len++;
+			for (i = len; i >= len - figs; i--)
+				number[i] = number[i-1];
+			number[i] = '.';
+		}
+	}
 
-	width = pre + zeroes + len;
+	width = pre + len;
 	if ((flags & FMT_f1set) && (size_t) format->f1 > width) {
 		padding = format->f1 - width;
 	} else
@@ -123,16 +133,13 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 	padchar = ' ';
 	if (padding > 0 && flags & FMT_zeropad) {
 		padchar = '0';
-		if ((flags & FMT_leftside) == 0) {
-			zeroes += padding;
+		if ((flags & FMT_leftside) == 0)
 			padding = 0;
-		}
 	}
 
 	if ((flags & FMT_leftside) == 0)
 		pad(format, padding, padchar);
 	fmtappend(format, prefix, pre);
-	pad(format, zeroes, '0');
 	fmtappend(format, number, len);
 	if (flags & FMT_leftside)
 		pad(format, padding, padchar);

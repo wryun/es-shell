@@ -373,20 +373,21 @@ static void subtimes(struct times a, struct times b, struct times *ret) {
 	ret->sys_usec = a.sys_usec - b.sys_usec;
 }
 
-/* FIXME: numbers are allowed to be negative */
 static char *strtimes(struct times time) {
 	return str(
+#if PRECISE_REALTIME
+		"%6.3jd"
+#else
 		"%6jd"
-#if PRECISE_REALTIME
-		".%03jd"
 #endif
-		"r %5jd.%03jdu %5jd.%03jds",
+		"r %7.3jdu %7.3jds",
+#if PRECISE_REALTIME
+		time.real_usec / 1000,
+#else
 		time.real_usec / 1000000,
-#if PRECISE_REALTIME
-		(time.real_usec % 1000000) / 1000,
 #endif
-		time.user_usec / 1000000, (time.user_usec % 1000000) / 1000,
-		time.sys_usec / 1000000, (time.sys_usec % 1000000) / 1000
+		time.user_usec / 1000,
+		time.sys_usec / 1000
 	);
 }
 
