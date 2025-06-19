@@ -58,7 +58,7 @@ ES_WITH_READLINE
 dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h unistd.h memory.h stdarg.h sys/cdefs.h)
+AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h unistd.h memory.h stdarg.h sys/cdefs.h inttypes.h)
 
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -71,7 +71,7 @@ AC_TYPE_GETGROUPS
 AC_FUNC_MMAP
 
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
-sysconf sigsetjmp getrusage mmap mprotect)
+sysconf sigsetjmp getrusage gettimeofday mmap mprotect)
 
 AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
 [if test "$ac_cv_header_stdlib_h" = no || test "$ac_cv_header_stdc" = no; then
