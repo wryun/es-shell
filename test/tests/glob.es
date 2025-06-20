@@ -17,3 +17,28 @@ test 'file globbing' {
 		}
 	}
 }
+
+# From https://research.swtch.com/glob.go
+test 'asterisk patterns' {
+	for ((test want) = (
+		{~	''	''}	true
+		{~	x	''}	false
+		{~	''	x}	false
+		{~	abc	abc}	true
+		{~	abc	*}	true
+		{~	abc	*c}	true
+		{~	abc	*b}	false
+		{~	abc	a*}	true
+		{~	abc	b*}	false
+		{~	a	a*}	true
+		{~	a	*a}	true
+		{~	axbxcxdxe	a*b*c*d*e*}	true
+		{~	axbxcxdxexxx	a*b*c*d*e*}	true
+		{~	abxbbxdbxebxczzx	a*b?c*x}	true
+		{~	abxbbxdbxebxczzy	a*b?c*x}	false
+		{~	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	a*a*a*a*b}	false
+		{~	xxx	*x}	true
+	)) {
+		assert {~ <={$test} <={$want}}
+	}
+}
