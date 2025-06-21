@@ -21,23 +21,39 @@ test 'file globbing' {
 # From https://research.swtch.com/glob.go
 test 'asterisk patterns' {
 	for ((test want) = (
-		{~	''	''}	true
-		{~	x	''}	false
-		{~	''	x}	false
-		{~	abc	abc}	true
-		{~	abc	*}	true
-		{~	abc	*c}	true
-		{~	abc	*b}	false
-		{~	abc	a*}	true
-		{~	abc	b*}	false
-		{~	a	a*}	true
-		{~	a	*a}	true
-		{~	axbxcxdxe	a*b*c*d*e*}	true
-		{~	axbxcxdxexxx	a*b*c*d*e*}	true
-		{~	abxbbxdbxebxczzx	a*b?c*x}	true
-		{~	abxbbxdbxebxczzy	a*b?c*x}	false
-		{~	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	a*a*a*a*b}	false
-		{~	xxx	*x}	true
+		{~ ''	''}	true
+		{~ x	''}	false
+		{~ ''	x}	false
+		{~ abc	abc}	true
+		{~ abc	*}	true
+		{~ abc	*c}	true
+		{~ abc	*b}	false
+		{~ abc	a*}	true
+		{~ abc	b*}	false
+		{~ a	a*}	true
+		{~ a	*a}	true
+		{~ axbxcxdxe	a*b*c*d*e*}	true
+		{~ axbxcxdxexxx	a*b*c*d*e*}	true
+		{~ abxbbxdbxebxczzx	a*b?c*x}	true
+		{~ abxbbxdbxebxczzy	a*b?c*x}	false
+		{~ xxx	*x}	true
+		{~ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	a*a*a*a*b}	false
+	)) {
+		assert {~ <={$test} <={$want}}
+	}
+}
+
+test 'range patterns' {
+	for ((test want) = (
+		{~ x  [x]}	true
+		{~ x  [y]}	false
+		{~ x  [xyz]}	true
+		{~ y  [xyz]}	true
+		{~ z  [xyz]}	true
+		{~ x  [xy  }	false
+		{~ px p[~a]}	true
+		{~ pa p[~a]}	false
+		{~ p  p[~a]}	false	# https://github.com/rakitzis/rc/issues/115
 	)) {
 		assert {~ <={$test} <={$want}}
 	}
