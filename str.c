@@ -5,16 +5,17 @@
 #include "print.h"
 
 /* grow -- buffer grow function for str() */
-static void str_grow(Format *f, size_t more) {
+static int str_grow(Format *f, size_t more) {
 	Buffer *buf = expandbuffer(f->u.p, more);
 	f->u.p		= buf;
 	f->buf		= buf->str + (f->buf - f->bufbegin);
 	f->bufbegin	= buf->str;
 	f->bufend	= buf->str + buf->len;
+	return 0;
 }
 
 /* strv -- print a formatted string into gc space */
-extern char *strv(const char *fmt, va_list args) {
+static char *sstrv(char *(*seal)(Buffer *), const char *fmt, va_list args) {
 	Buffer *buf;
 	Format format;
 
@@ -36,7 +37,11 @@ extern char *strv(const char *fmt, va_list args) {
 	fmtputc(&format, '\0');
 	gcenable();
 
-	return sealbuffer(format.u.p);
+	return seal(format.u.p);
+}
+
+extern char *strv(const char *fmt, va_list args) {
+	return sstrv(sealbuffer, fmt, args);
 }
 
 /* str -- create a string (in garbage collection space) by printing to it */
@@ -49,11 +54,21 @@ extern char *str VARARGS1(const char *, fmt) {
 	return s;
 }
 
+/* pstr -- create a string (in pspace) by printing to it */
+extern char *pstr VARARGS1(const char *, fmt) {
+	char *s;
+	va_list args;
+	VA_START(args, fmt);
+	s = sstrv(psealbuffer, fmt, args);
+	va_end(args);
+	return s;
+}
+
 
 #define	PRINT_ALLOCSIZE	64
 
 /* mprint_grow -- buffer grow function for mprint() */
-static void mprint_grow(Format *format, size_t more) {
+static int mprint_grow(Format *format, size_t more) {
 	char *buf;
 	size_t len = format->bufend - format->bufbegin + 1;
 	len = (len >= more)
@@ -63,6 +78,7 @@ static void mprint_grow(Format *format, size_t more) {
 	format->buf	 = buf + (format->buf - format->bufbegin);
 	format->bufbegin = buf;
 	format->bufend	 = buf + len - 1;
+	return 0;
 }
 
 /* mprint -- create a string in ealloc space by printing to it */

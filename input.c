@@ -1,9 +1,7 @@
 /* input.c -- read input from files or strings ($Revision: 1.2 $) */
-/* stdgetenv is based on the FreeBSD getenv */
 
 #include "es.h"
 #include "input.h"
-
 
 /*
  * constants
@@ -26,22 +24,11 @@
 Input *input;
 char *prompt, *prompt2;
 
-Boolean disablehistory = FALSE;
+Boolean ignoreeof = FALSE;
 Boolean resetterminal = FALSE;
-static char *history;
-static int historyfd = -1;
 
-#if READLINE
+#if HAVE_READLINE
 #include <readline/readline.h>
-extern void add_history(char *);
-extern int read_history(char *);
-extern void stifle_history(int);
-
-#if ABUSED_GETENV
-static char *stdgetenv(const char *);
-static char *esgetenv(const char *);
-static char *(*realgetenv)(const char *) = stdgetenv;
-#endif
 #endif
 
 
@@ -50,16 +37,16 @@ static char *(*realgetenv)(const char *) = stdgetenv;
  */
 
 /* locate -- identify where an error came from */
-static char *locate(Input *in, char *s) {
+static const char *locate(Input *in, const char *s) {
 	return (in->runflags & run_interactive)
 		? s
 		: str("%s:%d: %s", in->name, in->lineno, s);
 }
 
-static char *error = NULL;
+static const char *error = NULL;
 
 /* yyerror -- yacc error entry point */
-extern void yyerror(char *s) {
+extern void yyerror(const char *s) {
 #if sgi
 	/* this is so that trip.es works */
 	if (streq(s, "Syntax error"))
@@ -108,55 +95,6 @@ extern int runflags_to_int(List *list) {
 
 
 /*
- * history
- */
-
-/* loghistory -- write the last command out to a file */
-static void loghistory(const char *cmd, size_t len) {
-	const char *s, *end;
-	if (history == NULL || disablehistory)
-		return;
-	if (historyfd == -1) {
-		historyfd = eopen(history, oAppend);
-		if (historyfd == -1) {
-			eprint("history(%s): %s\n", history, esstrerror(errno));
-			vardef("history", NULL, NULL);
-			return;
-		}
-	}
-	/* skip empty lines and comments in history */
-	for (s = cmd, end = s + len; s < end; s++)
-		switch (*s) {
-		case '#': case '\n':	return;
-		case ' ': case '\t':	break;
-		default:		goto writeit;
-		}
-	writeit:
-		;
-	/*
-	 * Small unix hack: since read() reads only up to a newline
-	 * from a terminal, then presumably this write() will write at
-	 * most only one input line at a time.
-	 */
-	ewrite(historyfd, cmd, len);
-}
-
-/* sethistory -- change the file for the history log */
-extern void sethistory(char *file) {
-	if (historyfd != -1) {
-		close(historyfd);
-		historyfd = -1;
-	}
-#if READLINE
-	/* Attempt to populate readline history with new history file. */
-	stifle_history(50000); /* Keep memory usage within sane-ish bounds. */
-	read_history(file);
-#endif
-	history = file;
-}
-
-
-/*
  * unget -- character pushback
  */
 
@@ -181,9 +119,7 @@ extern void unget(Input *in, int c) {
 	if (in->ungot > 0) {
 		assert(in->ungot < MAXUNGET);
 		in->unget[in->ungot++] = c;
-	} else if (in->bufbegin < in->buf && in->buf[-1] == c && (input->runflags & run_echoinput) == 0)
-		--in->buf;
-	else {
+	} else {
 		assert(in->rfill == NULL);
 		in->rfill = in->fill;
 		in->fill = ungetfill;
@@ -204,8 +140,11 @@ extern void unget(Input *in, int c) {
 /* get -- get a character, filter out nulls */
 static int get(Input *in) {
 	int c;
+	Boolean uf = (in->fill == ungetfill);
 	while ((c = (in->buf < in->bufend ? *in->buf++ : (*in->fill)(in))) == '\0')
 		warn("null character ignored");
+	if (!uf && c != EOF)
+		addhistbuffer((char)c);
 	return c;
 }
 
@@ -224,104 +163,42 @@ static int getverbose(Input *in) {
 }
 
 /* eoffill -- report eof when called to fill input buffer */
-static int eoffill(Input *in) {
+static int eoffill(Input UNUSED *in) {
 	assert(in->fd == -1);
 	return EOF;
 }
 
-#if READLINE
+#if HAVE_READLINE
 /* callreadline -- readline wrapper */
-static char *callreadline(char *prompt) {
+static char *callreadline(char *prompt0) {
 	char *r;
+	Ref(char *volatile, prompt, prompt0);
 	if (prompt == NULL)
 		prompt = ""; /* bug fix for readline 2.0 */
+	checkreloadhistory();
 	if (resetterminal) {
 		rl_reset_terminal(NULL);
 		resetterminal = FALSE;
 	}
+	if (RL_ISSTATE(RL_STATE_INITIALIZED))
+		rl_reset_screen_size();
 	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
 		r = interrupted ? NULL : readline(prompt);
-	} else
+		if (interrupted)
+			errno = EINTR;
+	} else {
 		r = NULL;
-	slow = FALSE;
-	if (r == NULL)
 		errno = EINTR;
+	}
+	slow = FALSE;
 	SIGCHK();
+	RefEnd(prompt);
 	return r;
 }
+#endif
 
-#if ABUSED_GETENV
-
-/* getenv -- fake version of getenv for readline (or other libraries) */
-static char *esgetenv(const char *name) {
-	List *value = varlookup(name, NULL);
-	if (value == NULL)
-		return NULL;
-	else {
-		char *export;
-		static Dict *envdict;
-		static Boolean initialized = FALSE;
-		Ref(char *, string, NULL);
-
-		gcdisable();
-		if (!initialized) {
-			initialized = TRUE;
-			envdict = mkdict();
-			globalroot(&envdict);
-		}
-
-		string = dictget(envdict, name);
-		if (string != NULL)
-			efree(string);
-
-		export = str("%W", value);
-		string = ealloc(strlen(export) + 1);
-		strcpy(string, export);
-		envdict = dictput(envdict, (char *) name, string);
-
-		gcenable();
-		RefReturn(string);
-	}
-}
-
-static char *
-stdgetenv(name)
-	register const char *name;
-{
-	extern char **environ;
-	register int len;
-	register const char *np;
-	register char **p, *c;
-
-	if (name == NULL || environ == NULL)
-		return (NULL);
-	for (np = name; *np && *np != '='; ++np)
-		continue;
-	len = np - name;
-	for (p = environ; (c = *p) != NULL; ++p)
-		if (strncmp(c, name, len) == 0 && c[len] == '=') {
-			return (c + len + 1);
-		}
-	return (NULL);
-}
-
-char *
-getenv(char *name)
-{
-	return realgetenv(name);
-}
-
-extern void
-initgetenv(void)
-{
-	realgetenv = esgetenv;
-}
-
-#endif /* ABUSED_GETENV */
-
-#endif	/* READLINE */
 
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
@@ -329,15 +206,15 @@ static int fdfill(Input *in) {
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
 
-#if READLINE
+#if HAVE_READLINE
 	if (in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = callreadline(prompt);
+		char *rlinebuf = NULL;
+		do {
+			rlinebuf = callreadline(prompt);
+		} while (rlinebuf == NULL && errno == EINTR);
 		if (rlinebuf == NULL)
-
 			nread = 0;
 		else {
-			if (*rlinebuf != '\0')
-				add_history(rlinebuf);
 			nread = strlen(rlinebuf) + 1;
 			if (in->buflen < (unsigned int)nread) {
 				while (in->buflen < (unsigned int)nread)
@@ -356,17 +233,16 @@ static int fdfill(Input *in) {
 	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
-		close(in->fd);
-		in->fd = -1;
-		in->fill = eoffill;
-		in->runflags &= ~run_interactive;
+		if (!ignoreeof) {
+			close(in->fd);
+			in->fd = -1;
+			in->fill = eoffill;
+			in->runflags &= ~run_interactive;
+		}
 		if (nread == -1)
 			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
 		return EOF;
 	}
-
-	if (in->runflags & run_interactive)
-		loghistory((char *) in->bufbegin, nread);
 
 	in->buf = in->bufbegin;
 	in->bufend = &in->buf[nread];
@@ -396,7 +272,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
-#if READLINE
+#if HAVE_READLINE
 	prompt = (pr1 == NULL) ? "" : pr1;
 #else
 	if (pr1 != NULL)
@@ -404,23 +280,26 @@ extern Tree *parse(char *pr1, char *pr2) {
 #endif
 	prompt2 = pr2;
 
-	gcreserve(300 * sizeof (Tree));
-	gcdisable();
 	result = yyparse();
-	gcenable();
 
 	if (result || error != NULL) {
-		char *e;
 		assert(error != NULL);
-		e = error;
+		Ref(const char *, e, error);
 		error = NULL;
+		pseal(NULL);
 		fail("$&parse", "%s", e);
+		RefEnd(e);
 	}
+
 #if LISPTREES
+	Ref(Tree *, pt, pseal(parsetree));
 	if (input->runflags & run_lisptrees)
-		eprint("%B\n", parsetree);
+		eprint("%B\n", pt);
+	RefReturn(pt);
+#else
+	return pseal(parsetree);
 #endif
-	return parsetree;
+
 }
 
 /* resetparser -- clear parser errors in the signal handler */
@@ -584,7 +463,7 @@ extern Tree *parsestring(const char *str) {
 /*
  * readline integration.
  */
-#if READLINE
+#if HAVE_READLINE
 /* quote -- teach readline how to quote a word in es during completion */
 static char *quote(char *text, int type, char *qp) {
 	char *p, *r;
@@ -627,7 +506,7 @@ static List *(*wordslistgen)(char *);
 static char *list_completion_function(const char *text, int state) {
 	static char **matches = NULL;
 	static int matches_idx, matches_len;
-	int rlen;
+	int i, rlen;
 	char *result;
 
 	const int pfx_len = strlen(complprefix);
@@ -646,7 +525,7 @@ static char *list_completion_function(const char *text, int state) {
 
 	rlen = strlen(matches[matches_idx]);
 	result = ealloc(rlen + pfx_len + 1);
-	for (int i = 0; i < pfx_len; i++)
+	for (i = 0; i < pfx_len; i++)
 		result[i] = complprefix[i];
 	strcpy(&result[pfx_len], matches[matches_idx]);
 	result[rlen + pfx_len] = '\0';
@@ -655,7 +534,7 @@ static char *list_completion_function(const char *text, int state) {
 	return result;
 }
 
-char **builtin_completion(const char *text, int start, int end) {
+char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	char **matches = NULL;
 
 	if (*text == '$') {
@@ -678,7 +557,7 @@ char **builtin_completion(const char *text, int start, int end) {
 
 	return matches;
 }
-#endif /* READLINE */
+#endif /* HAVE_READLINE */
 
 
 /*
@@ -690,18 +569,11 @@ extern void initinput(void) {
 	input = NULL;
 
 	/* declare the global roots */
-	globalroot(&history);		/* history file */
 	globalroot(&error);		/* parse errors */
 	globalroot(&prompt);		/* main prompt */
 	globalroot(&prompt2);		/* secondary prompt */
 
-	/* mark the historyfd as a file descriptor to hold back from forked children */
-	registerfd(&historyfd, TRUE);
-
-	/* call the parser's initialization */
-	initparse();
-
-#if READLINE
+#if HAVE_READLINE
 	rl_readline_name = "es";
 
 	/* these two word_break_characters exclude '&' due to primitive completion */
@@ -712,7 +584,7 @@ extern void initinput(void) {
 
 	rl_attempted_completion_function = builtin_completion;
 
-	rl_filename_quote_characters = " \t\n\\`$><=;|&{()}";
+	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_filename_quoting_function = quote;
 	rl_filename_dequoting_function = unquote;
 #endif

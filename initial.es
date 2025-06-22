@@ -81,14 +81,14 @@ fn-%read	= $&read
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.
 
-fn eval { '{' ^ $^* ^ '}' }
+fn-eval = $&noreturn @ { '{' ^ $^* ^ '}' }
 
 #	Through version 0.84 of es, true and false were primitives,
 #	but, as many pointed out, they don't need to be.  These
 #	values are not very clear, but unix demands them.
 
-fn-true		= result 0
-fn-false	= result 1
+fn-true		= { result 0 }
+fn-false	= { result 1 }
 
 #	These functions just generate exceptions for control-flow
 #	constructions.  The for command and the while builtin both
@@ -297,6 +297,7 @@ fn vars {
 		export	= false
 		priv	= false
 		intern	= false
+		all	= false
 	) {
 		if {!~ <={%getopt @ arg c {
 			match $c (
@@ -319,7 +320,7 @@ fn vars {
 			export = true
 		}
 		let (
-			dovar = @ var {
+			fn dovar var {
 				# print functions and/or settor vars
 				if {$all || if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
 					echo <={%var $var}
@@ -327,15 +328,15 @@ fn vars {
 			}
 		) {
 			if {$all || $export || $priv} {
-				for (var = <= $&vars)
+				for (var = <=$&vars)
 					# if not exported but in priv
 					if {$all || if {~ $var $noexport} $priv $export} {
-						$dovar $var
+						dovar $var
 					}
 			}
 			if {$all || $intern} {
-				for (var = <= $&internals)
-					$dovar $var
+				for (var = <=$&internals)
+					dovar $var
 			}
 		}
 	}
@@ -486,11 +487,16 @@ fn-%or = $&noreturn @ first rest {
 #		cmd &			%background {cmd}
 
 fn %background cmd {
-	let (pid = <={$&background $cmd}) {
+	let (bg = $&background) {
 		if {~ $runflags interactive} {
-			echo >[1=2] $pid
+			bg = newpgrp $&background
 		}
-		apid = $pid
+		let (pid = <={$bg $cmd}) {
+			apid = $pid
+			if {~ $runflags interactive} {
+				echo >[1=2] $pid
+			}
+		}
 	}
 }
 
@@ -597,7 +603,7 @@ fn-%pipe	= $&pipe
 if {~ <=$&primitives readfrom} {
 	fn-%readfrom = $&readfrom
 } {
-	fn %readfrom var input cmd {
+	fn-%readfrom = $&noreturn @ var input cmd {
 		local ($var = /tmp/es.$var.$pid) {
 			unwind-protect {
 				$input > $$var
@@ -613,7 +619,7 @@ if {~ <=$&primitives readfrom} {
 if {~ <=$&primitives writeto} {
 	fn-%writeto = $&writeto
 } {
-	fn %writeto var output cmd {
+	fn-%writeto = $&noreturn @ var output cmd {
 		local ($var = /tmp/es.$var.$pid) {
 			unwind-protect {
 				> $$var
@@ -681,6 +687,28 @@ fn %pathsearch name { access -n $name -1e -xf $path }
 
 if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
+#	The %write-history hook is used in interactive contexts to write
+#	command input to the history file (and/or readline's in-memory
+#	history log).  By default, $&writehistory (which is available if
+#	readline is compiled in) will write to readline's history log if
+#	$max-history-length allows, and will write to the file designated
+#	by $history if that variable is set and the file it points to
+#	exists and is writeable.
+
+if {~ <=$&primitives writehistory} {
+	fn-%write-history = $&writehistory
+} {
+	fn %write-history input {
+		if {!~ $history ()} {
+			if {access -w $history} {
+				echo $input >> $history
+			} {
+				history = ()
+			}
+		}
+	}
+}
+
 
 #
 # Settor functions
@@ -714,19 +742,34 @@ set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
-#	If the primitive $&resetterminal is defined (meaning that readline
-#	or editline is being used), setting the variables $TERM or $TERMCAP
-#	should notify the line editor library.
+#	If the primitives $&sethistory or $&resetterminal are defined (meaning
+#	that readline or editline is being used), setting the variables $TERM,
+#	$TERMCAP, or $history should notify the line editor library.
+
+if {~ <=$&primitives sethistory} {
+	set-history = $&sethistory
+}
 
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }
 	set-TERMCAP	= @ { $&resetterminal; result $* }
 }
+
+#	The primitive $&setmaxhistorylength is another readline-only primitive
+#	which limits the length of the in-memory history list, to reduce memory
+#	size implications of a large history file.  Setting max-history-length
+#	to 0 clears the history list and disables adding anything more to it.
+#	Unsetting max-history-length allows the history list to grow unbounded.
+
+if {~ <=$&primitives setmaxhistorylength} {
+	set-max-history-length = $&setmaxhistorylength
+	max-history-length = 5000
+}
+
 
 #
 # Variables

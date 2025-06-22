@@ -4,6 +4,8 @@
 #include "gc.h"
 #include "prim.h"
 
+#include <limits.h>
+
 static const char *caller;
 
 static int getnumber(const char *s) {
@@ -41,7 +43,7 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 
 #define	REDIR(name)	static List *CONCAT(redir_,name)(int *srcfdp, List *list)
 
-static noreturn argcount(const char *s) {
+static Noreturn argcount(const char *s) {
 	fail(caller, "argument count: usage: %s", s);
 }
 
@@ -157,32 +159,59 @@ static int pipefork(int p[2], int *extra) {
 	return pid;
 }
 
-REDIR(here) {
-	int pid, p[2];
-	List *doc, *tail, **tailp;
-
-	assert(list != NULL);
-	for (tailp = &list; (tail = *tailp)->next != NULL; tailp = &tail->next)
-		;
-	doc = (list == tail) ? NULL : list;
-	*tailp = NULL;
-
-	if ((pid = pipefork(p, NULL)) == 0) {		/* child that writes to pipe */
-		close(p[0]);
-		fprint(p[1], "%L", doc, "");
-		exit(0);
-	}
-
-	close(p[1]);
-	*srcfdp = p[0];
-	return tail;
-}
-
 PRIM(here) {
+	int fd, doclen, p[2], status, ticket = UNREGISTERED;
+	volatile int pid = -1;
+	List *tail, **tailp;
+
 	caller = "$&here";
 	if (length(list) < 2)
 		argcount("%here fd [word ...] cmd");
-	return redir(redir_here, list, evalflags);
+
+	fd = getnumber(getstr(list->term));
+	Ref(List *, lp, list->next);
+	for (tailp = &lp; (tail = *tailp)->next != NULL; tailp = &tail->next)
+		;
+	*tailp = NULL;
+
+	Ref(char *, doc, (lp == tail) ? NULL : str("%L", lp, ""));
+	doclen = strlen(doc);
+
+	Ref(List *, cmd, tail);
+#ifdef PIPE_BUF
+	if (doclen <= PIPE_BUF) {
+		if (pipe(p) == -1)
+			fail("$&here", "pipe: %s", esstrerror(errno));
+		ewrite(p[1], doc, doclen);
+	} else
+#endif
+	if ((pid = pipefork(p, NULL)) == 0) {	/* child that writes to pipe */
+		close(p[0]);
+		ewrite(p[1], doc, doclen);
+		esexit(0);
+	}
+
+	close(p[1]);
+	ticket = defer_mvfd(TRUE, p[0], fd);
+
+	ExceptionHandler
+		lp = eval(cmd, NULL, evalflags);
+	CatchException (e)
+		undefer(ticket);
+		close(p[0]);
+		if (pid > 0)
+			ewaitfor(pid);
+		throw(e);
+	EndExceptionHandler
+
+	undefer(ticket);
+	close(p[0]);
+	if (pid > 0) {
+		status = ewaitfor(pid);
+		printstatus(0, status);
+	}
+	RefEnd2(cmd, doc);
+	RefReturn(lp);
 }
 
 PRIM(pipe) {
@@ -204,7 +233,7 @@ PRIM(pipe) {
 
 	for (;; list = list->next) {
 		int p[2], pid;
-		
+
 		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork(p, &inpipe);
 
 		if (pid == 0) {		/* child */
@@ -219,10 +248,11 @@ PRIM(pipe) {
 				mvfd(p[1], fd);
 				close(p[0]);
 			}
-			exit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
+			esexit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
 		}
 		pids[n++] = pid;
-		close(inpipe);
+		if (inpipe != -1)
+			close(inpipe);
 		if (list->next == NULL)
 			break;
 		list = list->next->next;
@@ -240,7 +270,7 @@ PRIM(pipe) {
 		result = mklist(t, result);
 	} while (0 < n);
 	if (evalflags & eval_inchild)
-		exit(exitstatus(result));
+		esexit(exitstatus(result));
 	RefReturn(result);
 }
 
@@ -262,7 +292,7 @@ PRIM(readfrom) {
 	if ((pid = pipefork(p, NULL)) == 0) {
 		close(p[0]);
 		mvfd(p[1], 1);
-		exit(exitstatus(eval1(input, evalflags &~ eval_inchild)));
+		esexit(exitstatus(eval1(input, evalflags &~ eval_inchild)));
 	}
 
 	close(p[1]);
@@ -302,7 +332,7 @@ PRIM(writeto) {
 	if ((pid = pipefork(p, NULL)) == 0) {
 		close(p[1]);
 		mvfd(p[0], 0);
-		exit(exitstatus(eval1(output, evalflags &~ eval_inchild)));
+		esexit(exitstatus(eval1(output, evalflags &~ eval_inchild)));
 	}
 
 	close(p[0]);
@@ -334,9 +364,9 @@ static List *bqinput(const char *sep, int fd) {
 	startsplit(sep, TRUE);
 
 restart:
+	/* avoid SIGCHK()ing in here so we don't abandon our child process */
 	while ((n = eread(fd, in, sizeof in)) > 0)
 		splitstring(in, n, FALSE);
-	SIGCHK();
 	if (n == -1) {
 		if (errno == EINTR)
 			goto restart;
@@ -360,7 +390,7 @@ PRIM(backquote) {
 	if ((pid = pipefork(p, NULL)) == 0) {
 		mvfd(p[1], 1);
 		close(p[0]);
-		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	}
 
 	close(p[1]);
@@ -406,7 +436,10 @@ PRIM(read) {
 	buffer = openbuffer(0);
 
 	while ((c = read1(fd)) != EOF && c != '\n')
-		buffer = bufputc(buffer, c);
+		if (c == '\0')
+			fail("$&read", "%%read: null character encountered");
+		else
+			buffer = bufputc(buffer, c);
 
 	if (c == EOF && buffer->current == 0) {
 		freebuffer(buffer);
@@ -425,8 +458,8 @@ PRIM(isatty) {
 		fail("$&isatty", "usage: $&isatty fd");
 	fd = getnumber(getstr(list->term));
 	if (isatty(fd))
-		return true;
-	return false;
+		return ltrue;
+	return lfalse;
 }
 
 extern Dict *initprims_io(Dict *primdict) {

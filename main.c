@@ -4,10 +4,15 @@
 
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
+	volatile int status = 1;
 	initgc();
 	initconv();
+	initgc();
 
 	initinput();
+#if HAVE_READLINE
+	inithistory();
+#endif
 	initprims();
 	initvars();
 
@@ -35,10 +40,15 @@ int main(int argc, char **argv) {
 		/* This is the sub-root handler for the shell.
 		 * The real root handler is in runtime.es. */
 		if (termeq(e->term, "exit"))
-			return exitstatus(e->next);
-		return 1;
+			status = exitstatus(e->next);
+		else
+			exitonsignal(e);
 
 	EndExceptionHandler
-
 	RefEnd2(esmain, args);
+
+#if JOB_PROTECT
+	tcreturnpgrp();
+#endif
+	return status;
 }

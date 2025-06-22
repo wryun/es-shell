@@ -4,7 +4,7 @@
 #include "prim.h"
 
 PRIM(batchloop) {
-	Ref(List *, result, true);
+	Ref(List *, result, ltrue);
 
 	ExceptionHandler
 
@@ -51,8 +51,10 @@ PRIM(usage) {
 		"	-p	don't load functions from the environment\n"
 		"	-o	don't open stdin, stdout, and stderr if they were closed\n"
 		"	-d	don't ignore SIGQUIT or SIGTERM"
+	;
+	static char *optusage = "\n"
 #if GCINFO
-		"\n	-I	print garbage collector information"
+		"	-I	print garbage collector information"
 #endif
 #if GCVERBOSE
 		"\n	-G	print verbose garbage collector information"
@@ -61,7 +63,7 @@ PRIM(usage) {
 		"\n	-L	print parser results in LISP format"
 #endif
 	;
-	return mklist(mkstr(usage), NULL);
+	return mklist(mkstr(str("%s%s", usage, optusage)), NULL);
 }
 
 PRIM(conditionalflags) {

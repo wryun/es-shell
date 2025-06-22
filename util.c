@@ -64,7 +64,7 @@ extern void *ealloc(size_t n) {
 	void *p = malloc(n);
 	if (p == NULL) {
 		uerror("malloc");
-		exit(1);
+		esexit(1);
 	}
 	return p;
 }
@@ -77,7 +77,7 @@ extern void *erealloc(void *p, size_t n) {
 	p = realloc(p, n);
 	if (p == NULL) {
 		uerror("realloc");
-		exit(1);
+		esexit(1);
 	}
 	return p;
 }
@@ -110,7 +110,6 @@ extern void ewrite(int fd, const char *buf, size_t n) {
 		slow = FALSE;
 	}
 	slow = FALSE;
-	SIGCHK();
 }
 
 extern long eread(int fd, char *buf, size_t n) {
@@ -129,6 +128,5 @@ extern long eread(int fd, char *buf, size_t n) {
 		errno = EINTR;
 		r = -1;
 	}
-	SIGCHK();
 	return r;
 }

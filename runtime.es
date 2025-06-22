@@ -138,12 +138,10 @@ fn %main argv {
 
 		# This is the main "root" exception handler for the shell.
 		catch @ e type msg {
-			if {~ $e exit} {
+			if {~ $e (exit signal)} {
 				throw $e $type $msg
 			} {~ $e error} {
 				echo >[1=2] $msg
-			} {~ $e signal && ~ $type sigint} {
-				# sigint: the silent signal
 			} {
 				echo >[1=2] uncaught exception: $e $type $msg
 			}

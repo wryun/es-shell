@@ -21,12 +21,50 @@ jobs:
 
       - run:
           name: Configure
-          command: ./configure --with-readline
+          command: ./configure --enable-strict --with-readline
 
       - run:
           name: Build
-          command: make 'ADDCFLAGS=-DGCDEBUG=1 -DREF_ASSERTIONS=1'
+          command: make
+
+      - run:
+          name: Build test helper
+          command: make testrun
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - es
+            - testrun
+
+  test:
+    docker:
+      - image: cimg/base:stable
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
 
       - run:
           name: Test
-          command: make trip
+          command: |
+            mkdir -p ./test/results
+            ./es -ps < ./test/test.es --junit ./test/tests/* > ./test/results/results.xml
+
+      - store_artifacts:
+          path: ./test/results/
+
+      - store_test_results:
+          path: ./test/results/
+
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build

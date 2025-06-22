@@ -14,26 +14,36 @@
 #define	GROUP	3
 #define	OTHER	0
 
+#define	IFREG	1
+#define	IFDIR	2
+#define	IFCHR	3
+#define	IFBLK	4
+#define	IFLNK	5
+#define	IFSOCK	6
+#define	IFIFO	7
+
 /* ingroupset -- determine whether gid lies in the user's set of groups */
 static Boolean ingroupset(gidset_t gid) {
-#ifdef NGROUPS
 	int i;
 	static int ngroups;
-	static gidset_t gidset[NGROUPS];
+	static gidset_t *gidset;
 	static Boolean initialized = FALSE;
 	if (!initialized) {
+		ngroups = getgroups(0, NULL);
+		if (ngroups == -1)
+			fail("$&access", "getgroups: %s", esstrerror(errno));
+		gidset = ealloc(ngroups * sizeof(gidset_t));
+		assert(getgroups(ngroups, gidset) != -1);
 		initialized = TRUE;
-		ngroups = getgroups(NGROUPS, gidset);
 	}
 	for (i = 0; i < ngroups; i++)
 		if (gid == gidset[i])
 			return TRUE;
-#endif
 	return FALSE;
 }
 
-static int testperm(struct stat *stat, int perm) {
-	int mask;
+static int testperm(struct stat *stat, unsigned int perm) {
+	unsigned int mask;
 	static gidset_t uid, gid;
 	static Boolean initialized = FALSE;
 	if (perm == 0)
@@ -51,21 +61,22 @@ static int testperm(struct stat *stat, int perm) {
 				: ((gid == stat->st_gid  || ingroupset(stat->st_gid))
 					? GROUP
 					: OTHER)));
-	return (stat->st_mode & mask) ? 0 : EACCES;
+	return (stat->st_mode & mask) == mask ? 0 : EACCES;
 }
 
-static int testfile(char *path, int perm, unsigned int type) {
+static int testfile(char *path, unsigned int perm, unsigned int type) {
 	struct stat st;
-#ifdef S_IFLNK
-	if (type == S_IFLNK) {
-		if (lstat(path, &st) == -1)
-			return errno;
-	} else
-#endif
-		if (stat(path, &st) == -1)
-			return errno;
-	if (type != 0 && (st.st_mode & S_IFMT) != type)
-		return EACCES;		/* what is an appropriate return value? */
+	if ((type == IFLNK ? lstat(path, &st) : stat(path, &st)) == -1)
+		return errno;
+	/* is EACCES the right return value? */
+	switch(type) {
+	case IFREG:	if (!S_ISREG(st.st_mode)) return EACCES; break;
+	case IFDIR:	if (!S_ISDIR(st.st_mode)) return EACCES; break;
+	case IFBLK:	if (!S_ISBLK(st.st_mode)) return EACCES; break;
+	case IFLNK:	if (!S_ISLNK(st.st_mode)) return EACCES; break;
+	case IFSOCK:	if (!S_ISSOCK(st.st_mode)) return EACCES; break;
+	case IFIFO:	if (!S_ISFIFO(st.st_mode)) return EACCES; break;
+	}
 	return testperm(&st, perm);
 }
 
@@ -113,25 +124,19 @@ extern Dict *initprims_access(Dict *primdict) {
 	FLAGTAB(perm, x, EXEC);
 
 	FLAGTAB(type, a, 0);
-	FLAGTAB(type, f, S_IFREG);
-	FLAGTAB(type, d, S_IFDIR);
-	FLAGTAB(type, c, S_IFCHR);
-	FLAGTAB(type, b, S_IFBLK);
-#ifdef S_IFLNK
-	FLAGTAB(type, l, S_IFLNK);
-#endif
-#ifdef S_IFSOCK
-	FLAGTAB(type, s, S_IFSOCK);
-#endif
-#ifdef S_IFIFO
-	FLAGTAB(type, p, S_IFIFO);
-#endif
+	FLAGTAB(type, f, IFREG);
+	FLAGTAB(type, d, IFDIR);
+	FLAGTAB(type, c, IFCHR);
+	FLAGTAB(type, b, IFBLK);
+	FLAGTAB(type, l, IFLNK);
+	FLAGTAB(type, s, IFSOCK);
+	FLAGTAB(type, p, IFIFO);
 
 	X(access);
 	return primdict;
 }
 
 extern char *checkexecutable(char *file) {
-	int err = testfile(file, EXEC, S_IFREG);
+	int err = testfile(file, EXEC, IFREG);
 	return err == 0 ? NULL : esstrerror(err);
 }

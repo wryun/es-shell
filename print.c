@@ -63,9 +63,9 @@ static Boolean sconv(Format *format) {
 	return FALSE;
 }
 
-static char *utoa(unsigned long u, char *t, unsigned int radix, char *digit) {
+static char *utostr(unsigned long u, char *t, unsigned int radix, char *digit) {
 	if (u >= radix) {
-		t = utoa(u / radix, t, radix, digit);
+		t = utostr(u / radix, t, radix, digit);
 		u %= radix;
 	}
 	*t++ = digit[u];
@@ -104,7 +104,7 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 		while (*altform != '\0')
 			prefix[pre++] = *altform++;
 
-	len = utoa(u, number, radix, table[upper]) - number;
+	len = utostr(u, number, radix, table[upper]) - number;
 	if ((flags & FMT_f2set) && (size_t) format->f2 > len)
 		zeroes = format->f2 - len;
 	else
@@ -263,6 +263,10 @@ extern int printfmt(Format *format, const char *fmt) {
  * the public entry points
  */
 
+#ifndef va_copy
+#define	va_copy	__va_copy
+#endif
+
 extern int fmtprint VARARGS2(Format *, format, const char *, fmt) {
 	int n = -format->flushed;
 #if NO_VA_LIST_ASSIGN
@@ -281,7 +285,7 @@ extern int fmtprint VARARGS2(Format *, format, const char *, fmt) {
 	return n + format->flushed;
 }
 
-static void fprint_flush(Format *format, size_t more) {
+static int fprint_flush(Format *format, size_t UNUSED more) {
 	size_t n = format->buf - format->bufbegin;
 	char *buf = format->bufbegin;
 
@@ -289,17 +293,16 @@ static void fprint_flush(Format *format, size_t more) {
 	format->buf = format->bufbegin;
 	while (n != 0) {
 		int written = write(format->u.n, buf, n);
-		if (written == -1) {
-			if (format->u.n != 2)
-				uerror("write");
-			exit(1);
-		}
+		if (written == -1)
+			return errno;
 		n -= written;
 	}
+	return 0;
 }
 
-static void fdprint(Format *format, int fd, const char *fmt) {
+static int fdprint(Format *format, int fd, const char *fmt) {
 	char buf[FPRINT_BUFSIZ];
+	int err;
 
 	format->buf	= buf;
 	format->bufbegin = buf;
@@ -310,41 +313,54 @@ static void fdprint(Format *format, int fd, const char *fmt) {
 
 	gcdisable();
 	printfmt(format, fmt);
-	fprint_flush(format, 0);
+	err = fprint_flush(format, 0);
 	gcenable();
+	return err;
 }
 
 extern int fprint VARARGS2(int, fd, const char *, fmt) {
+	int err;
 	Format format;
 	VA_START(format.args, fmt);
-	fdprint(&format, fd, fmt);
+	err = fdprint(&format, fd, fmt);
 	va_end(format.args);
+	if (err != 0)
+		fail("es:fprint", "fprint: %s", esstrerror(err));
 	return format.flushed;
 }
 
 extern int print VARARGS1(const char *, fmt) {
+	int err;
 	Format format;
 	VA_START(format.args, fmt);
-	fdprint(&format, 1, fmt);
+	err = fdprint(&format, 1, fmt);
 	va_end(format.args);
+	if (err != 0)
+		fail("es:print", "print: %s", esstrerror(err));
 	return format.flushed;
 }
 
 extern int eprint VARARGS1(const char *, fmt) {
+	int err;
 	Format format;
 	VA_START(format.args, fmt);
-	fdprint(&format, 2, fmt);
+	err = fdprint(&format, 2, fmt);
 	va_end(format.args);
+	if (err != 0)
+		fail("es:eprint", "eprint: %s", esstrerror(err));
 	return format.flushed;
 }
 
-extern noreturn panic VARARGS1(const char *, fmt) {
+extern Noreturn panic VARARGS1(const char *, fmt) {
 	Format format;
 	gcdisable();
 	VA_START(format.args, fmt);
-	eprint("es panic: ");
+	/* ignore the exception, we're already busy dying */
+	ExceptionHandler
+		eprint("es panic: ");
+	EndExceptionHandler
 	fdprint(&format, 2, fmt);
 	va_end(format.args);
 	eprint("\n");
-	exit(1);
+	esexit(1);
 }

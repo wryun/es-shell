@@ -136,7 +136,7 @@ extern List *sortlist(List *list);
 
 /* tree.c */
 
-extern Tree *mk(NodeKind VARARGS);
+extern Tree *gcmk(NodeKind VARARGS);	/* gcalloc a tree node */
 
 
 /* closure.c */
@@ -207,7 +207,7 @@ extern void varpop(Push *);
 
 /* status.c */
 
-extern List *true, *false;
+extern List *ltrue, *lfalse;
 extern Boolean istrue(List *status);
 extern int exitstatus(List *status);
 extern char *mkstatus(int status);
@@ -223,8 +223,18 @@ extern char *checkexecutable(char *file);
 
 extern Boolean hasforked;
 extern int efork(Boolean parent, Boolean background);
-extern int ewait(int pid, Boolean interruptible, void *rusage);
-#define	ewaitfor(pid)	ewait(pid, FALSE, NULL)
+extern pid_t spgrp(pid_t pgid);
+extern int tctakepgrp(void);
+extern void initpgrp(void);
+extern int ewait(int pid, Boolean interruptible);
+#define	ewaitfor(pid)	ewait(pid, FALSE)
+
+#if JOB_PROTECT
+extern void tcreturnpgrp(void);
+extern Noreturn esexit(int);
+#else
+#define	esexit(n)	(exit(n))
+#endif
 
 
 /* dict.c */
@@ -247,7 +257,7 @@ extern void initconv(void);
 extern int print(const char *fmt VARARGS);
 extern int eprint(const char *fmt VARARGS);
 extern int fprint(int fd, const char *fmt VARARGS);
-extern noreturn panic(const char *fmt VARARGS);
+extern Noreturn panic(const char *fmt VARARGS);
 
 
 /* str.c */
@@ -282,7 +292,6 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 extern char *prompt, *prompt2;
 extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
-extern void sethistory(char *file);
 extern void initinput(void);
 extern void resetparser(void);
 
@@ -298,9 +307,24 @@ extern List *runstring(const char *str, List *cmd);
 #define	run_echoinput		8	/* -v */
 #define	run_lisptrees		16	/* -L and defined(LISPTREES) */
 
-#if READLINE
+#if HAVE_READLINE
 extern Boolean resetterminal;
 #endif
+
+
+/* history.c */
+#if HAVE_READLINE
+extern void inithistory(void);
+
+extern void sethistory(char *file);
+extern void loghistory(char *cmd);
+extern void setmaxhistorylength(int length);
+extern void checkreloadhistory(void);
+#endif
+
+extern void newhistbuffer(void);
+extern void addhistbuffer(char c);
+extern char *dumphistbuffer(void);
 
 
 /* prim.c */
@@ -338,6 +362,8 @@ extern Atomic slow, interrupted;
 extern jmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);
+extern Boolean issilentsignal(List *e);
+extern void exitonsignal(List *e);
 extern void setsigdefaults(void);
 extern void blocksignals(void);
 extern void unblocksignals(void);
@@ -347,6 +373,7 @@ extern void unblocksignals(void);
 
 typedef enum { oOpen, oCreate, oAppend, oReadWrite, oReadCreate, oReadAppend } OpenKind;
 extern int eopen(char *name, OpenKind k);
+extern int opentty(void);
 
 
 /* version.c */
@@ -368,7 +395,13 @@ extern void gc(void);				/* provoke a collection, if enabled */
 extern void gcreserve(size_t nbytes);		/* provoke a collection, if enabled and not enough space */
 extern void gcenable(void);			/* enable collections */
 extern void gcdisable(void);			/* disable collections */
-extern Boolean gcisblocked();			/* is collection disabled? */
+extern Boolean gcisblocked(void);		/* is collection disabled? */
+
+/* operations with pspace, the explicitly-collected gc space for parse tree building */
+extern void *palloc(size_t n, Tag *t);		/* allocate n with collection tag t, but in pspace */
+extern void *pseal(void *p);			/* collect pspace into gcspace with root p */
+extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */
+extern char *pndup(const char *s, size_t n);	/* copy a counted string into pspace */
 
 
 /*
@@ -437,6 +470,9 @@ extern Root *rootlist;
 
 extern void globalroot(void *addr);
 
+extern void exceptionroot(Root *, List **exceptionp);
+extern void exceptionunroot(void);
+
 /* struct Push -- varpush() placeholder */
 
 struct Push {
@@ -471,8 +507,8 @@ struct Handler {
 extern Handler *tophandler, *roothandler;
 extern List *exception;
 extern void pophandler(Handler *handler);
-extern noreturn throw(List *exc);
-extern noreturn fail(const char *from, const char *name VARARGS);
+extern Noreturn throw(List *exc);
+extern Noreturn fail(const char *from, const char *name VARARGS);
 extern void newchildcatcher(void);
 
 #if DEBUG_EXCEPTIONS

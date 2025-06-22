@@ -27,16 +27,18 @@ static int rangematch(const char *p, const char *q, char c) {
 	const char *orig = p;
 	Boolean neg;
 	Boolean matched = FALSE;
+	Boolean advanceq = (q != QUOTED && q != UNQUOTED);
+#define QX(expr) (advanceq ? (expr) : 0)
 	if (*p == '~' && !ISQUOTED(q, 0)) {
-		p++, q++;
+		p++, QX(q++);
 	    	neg = TRUE;
 	} else
 		neg = FALSE;
 	if (*p == ']' && !ISQUOTED(q, 0)) {
-		p++, q++;
+		p++, QX(q++);
 		matched = (c == ']');
 	}
-	for (; *p != ']' || ISQUOTED(q, 0); p++, q++) {
+	for (; *p != ']' || ISQUOTED(q, 0); p++, QX(q++)) {
 		if (*p == '\0')
 			return RANGE_ERROR;	/* bad syntax */
 		if (p[1] == '-' && !ISQUOTED(q, 1) && ((p[2] != ']' && p[2] != '\0') || ISQUOTED(q, 2))) {
@@ -44,7 +46,7 @@ static int rangematch(const char *p, const char *q, char c) {
 			if (c >= *p && c <= p[2])
 				matched = TRUE;
 			p += 2;
-			q += 2;
+			QX(q += 2);
 		} else if (*p == c)
 			matched = TRUE;
 	}
@@ -52,6 +54,7 @@ static int rangematch(const char *p, const char *q, char c) {
 		return p - orig + 1; /* skip the right-bracket */
 	else
 		return RANGE_FAIL;
+#undef QX
 }
 
 /* match -- match a single pattern against a single string. */
@@ -212,7 +215,7 @@ static List *extractsinglematch(const char *subject, const char *pattern,
 				}
 				i += j;
 			    }
-			    /* FALLTHROUGH */
+			    FALLTHROUGH;
 			    case '?':
 				result = mklist(mkstr(str("%c", *s)), result);
 				break;

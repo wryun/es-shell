@@ -136,7 +136,7 @@ static Boolean deepequal(Tree *t1, Tree *t2) {
 	return FALSE;
 }
 
-static void treededup(void *arg, char *unused, void *value) {
+static void treededup(void *arg, char UNUSED *ignore, void *value) {
 	Tree **new = arg;
 	Tree *old = value;
 	if (deepequal(*new, old))
@@ -243,7 +243,7 @@ static char *dumplist(List *list) {
 	return name;
 }
 
-static void dumpvar(void *ignore, char *key, void *value) {
+static void dumpvar(void UNUSED *ignore, char *key, void *value) {
 	Var *var = value;
 	dumpstring(key);
 	dumplist(var->defn);
@@ -253,17 +253,17 @@ static void dumpdef(char *name, Var *var) {
 	print("\t{ %s, (const List *) %s },\n", dumpstring(name), dumplist(var->defn));
 }
 
-static void dumpfunctions(void *ignore, char *key, void *value) {
+static void dumpfunctions(void UNUSED *ignore, char *key, void *value) {
 	if (hasprefix(key, "fn-"))
 		dumpdef(key, value);
 }
 
-static void dumpsettors(void *ignore, char *key, void *value) {
+static void dumpsettors(void UNUSED *ignore, char *key, void *value) {
 	if (hasprefix(key, "set-"))
 		dumpdef(key, value);
 }
 
-static void dumpvariables(void *ignore, char *key, void *value) {
+static void dumpvariables(void UNUSED *ignore, char *key, void *value) {
 	if (!hasprefix(key, "fn-") && !hasprefix(key, "set-"))
 		dumpdef(key, value);
 }
@@ -289,9 +289,8 @@ static void printheader(List *title) {
 }
 
 extern void runinitial(void) {
-	initdumpprims();
-
 	List *title = NULL;
+	initdumpprims();
 
 	ExceptionHandler
 
