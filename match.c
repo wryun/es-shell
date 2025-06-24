@@ -21,7 +21,7 @@ enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 
 #define	ISQUOTED(q, n)	((q) == QUOTED || ((q) != UNQUOTED && (q)[n] == 'q'))
 #define TAILQUOTE(q, n) ((q) == UNQUOTED ? UNQUOTED : ((q) + (n)))
-#define QX(q, texpr, fexpr) (((q) != QUOTED && (q) != UNQUOTED) ? (texpr) : (fexpr))
+#define QX(expr) ((q != QUOTED && q != UNQUOTED) ? (expr) : q)
 
 /* rangematch -- match a character against a character class */
 static int rangematch(const char *p, const char *q, char c) {
@@ -29,15 +29,15 @@ static int rangematch(const char *p, const char *q, char c) {
 	Boolean neg;
 	Boolean matched = FALSE;
 	if (*p == '~' && !ISQUOTED(q, 0)) {
-		p++, QX(q, q++, 0);
+		p++, QX(q++);
 	    	neg = TRUE;
 	} else
 		neg = FALSE;
 	if (*p == ']' && !ISQUOTED(q, 0)) {
-		p++, QX(q, q++, 0);
+		p++, QX(q++);
 		matched = (c == ']');
 	}
-	for (; *p != ']' || ISQUOTED(q, 0); p++, QX(q, q++, 0)) {
+	for (; *p != ']' || ISQUOTED(q, 0); p++, QX(q++)) {
 		if (*p == '\0')
 			return c == '[' ? 0 : RANGE_FAIL;	/* no right bracket */
 		if (p[1] == '-' && !ISQUOTED(q, 1) && ((p[2] != ']' && p[2] != '\0') || ISQUOTED(q, 2))) {
@@ -45,7 +45,7 @@ static int rangematch(const char *p, const char *q, char c) {
 			if (c >= *p && c <= p[2])
 				matched = TRUE;
 			p += 2;
-			QX(q, q += 2, 0);
+			QX(q += 2);
 		} else if (*p == c)
 			matched = TRUE;
 	}
@@ -68,22 +68,22 @@ extern Boolean match(const char *s, const char *p, const char *q) {
 			switch (*p) {
 			case '?':
 				if (*s) {
-					p++; s++; QX(q, q++, 0);
+					p++; s++; QX(q++);
 					continue;
 				}
 				break;
 			case '*':
 				next.p = p++;
-				next.q = QX(q, q++, q);
+				next.q = QX(q++);
 				next.s = *s ? s+1 : NULL;
 				continue;
 			case '[': {
 				if (!*s)
 					return FALSE;
-				int r = 1 + rangematch(p+1, QX(q, q+1, q), *s);
+				int r = 1 + rangematch(p+1, QX(q+1), *s);
 				if (r > 0) {
 					p += r; s++;
-					q = QX(q, q + r, q);
+					q = QX(q + r);
 					continue;
 				}
 				break;
@@ -91,7 +91,7 @@ extern Boolean match(const char *s, const char *p, const char *q) {
 			default:
 			literal_char:
 				if (*s == *p) {
-					p++; s++; QX(q, q++, 0);
+					p++; s++; QX(q++);
 					continue;
 				}
 			}
