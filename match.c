@@ -21,14 +21,13 @@ enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 
 #define	ISQUOTED(q, n)	((q) == QUOTED || ((q) != UNQUOTED && (q)[n] == 'q'))
 #define TAILQUOTE(q, n) ((q) == UNQUOTED ? UNQUOTED : ((q) + (n)))
+#define QX(expr) ((q != QUOTED && q != UNQUOTED) ? (expr) : q)
 
 /* rangematch -- match a character against a character class */
 static int rangematch(const char *p, const char *q, char c) {
 	const char *orig = p;
 	Boolean neg;
 	Boolean matched = FALSE;
-	Boolean advanceq = (q != QUOTED && q != UNQUOTED);
-#define QX(expr) (advanceq ? (expr) : 0)
 	if (*p == '~' && !ISQUOTED(q, 0)) {
 		p++, QX(q++);
 	    	neg = TRUE;
@@ -40,7 +39,7 @@ static int rangematch(const char *p, const char *q, char c) {
 	}
 	for (; *p != ']' || ISQUOTED(q, 0); p++, QX(q++)) {
 		if (*p == '\0')
-			return RANGE_ERROR;	/* bad syntax */
+			return c == '[' ? 0 : RANGE_FAIL;	/* no right bracket */
 		if (p[1] == '-' && !ISQUOTED(q, 1) && ((p[2] != ']' && p[2] != '\0') || ISQUOTED(q, 2))) {
 			/* check for [..-..] but ignore [..-] */
 			if (c >= *p && c <= p[2])
@@ -54,64 +53,63 @@ static int rangematch(const char *p, const char *q, char c) {
 		return p - orig + 1; /* skip the right-bracket */
 	else
 		return RANGE_FAIL;
-#undef QX
 }
 
 /* match -- match a single pattern against a single string. */
 extern Boolean match(const char *s, const char *p, const char *q) {
-	int i;
+	struct { const char *s, *p, *q; } next;
 	if (q == QUOTED)
 		return streq(s, p);
-	for (i = 0;;) {
-		int c = p[i++];
-		if (c == '\0')
-			return *s == '\0';
-		else if (q == UNQUOTED || q[i - 1] == 'r') {
-			switch (c) {
+	next.s = NULL;
+	while (*s || *p) {
+		if (*p) {
+			if (q != UNQUOTED && *q != 'r')
+				goto literal_char;
+			switch (*p) {
 			case '?':
-				if (*s++ == '\0')
-					return FALSE;
+				if (*s) {
+					p++; s++; QX(q++);
+					continue;
+				}
 				break;
 			case '*':
-				while (p[i] == '*' && (q == UNQUOTED || q[i] == 'r'))	/* collapse multiple stars */
-					i++;
-				if (p[i] == '\0') 	/* star at end of pattern? */
-					return TRUE;
-				while (*s != '\0')
-					if (match(s++, p + i, TAILQUOTE(q, i)))
-						return TRUE;
-				return FALSE;
+				next.p = p++;
+				next.q = QX(q++);
+				next.s = *s ? s+1 : NULL;
+				continue;
 			case '[': {
-				int j;
-				if (*s == '\0')
+				if (!*s)
 					return FALSE;
-				switch (j = rangematch(p + i, TAILQUOTE(q, i), *s)) {
-				default:
-					i += j;
-					break;
-				case RANGE_FAIL:
-					return FALSE;
-				case RANGE_ERROR:
-					if (*s != '[')
-						return FALSE;
+				int r = 1 + rangematch(p+1, QX(q+1), *s);
+				if (r > 0) {
+					p += r; s++;
+					q = QX(q + r);
+					continue;
 				}
-				s++;
 				break;
 			}
 			default:
-				if (c != *s++)
-					return FALSE;
+			literal_char:
+				if (*s == *p) {
+					p++; s++; QX(q++);
+					continue;
+				}
 			}
-		} else if (c != *s++)
+		}
+		if (next.s == NULL)
 			return FALSE;
+		s = next.s;
+		p = next.p;
+		q = next.q;
 	}
+	return TRUE;
 }
 
 
 /*
  * listmatch
  *
- * 	Matches a list of words s against a list of patterns p.
+ *	Matches a list of words s against a list of patterns p.
  *	Returns true iff a pattern in p matches a word in s.
  *	() matches (), but otherwise null patterns match nothing.
  */
