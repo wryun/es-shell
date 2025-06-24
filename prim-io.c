@@ -450,12 +450,15 @@ PRIM(read) {
 		c = EOF;
 		while ((n = eread(fd, s, BUFSIZE)) > 0) {
 			c = 0;
-			if ((p = strchr(s, '\n')) == NULL)
-				buffer = bufncat(buffer, s, n);
-			else {
+			if ((p = memchr(s, '\0', n)) != NULL) {
+				lseek(fd, 1 + ((p - s) - n), SEEK_CUR);
+				fail("$&read", "%%read: null character encountered");
+			} else if ((p = strchr(s, '\n')) != NULL) {
 				buffer = bufncat(buffer, s, (p - s));
 				lseek(fd, 1 + ((p - s) - n), SEEK_CUR);
 				break;
+			} else {
+				buffer = bufncat(buffer, s, n);
 			}
 		}
 	}
