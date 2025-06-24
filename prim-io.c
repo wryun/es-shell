@@ -435,11 +435,35 @@ PRIM(read) {
 		freebuffer(buffer);
 	buffer = openbuffer(0);
 
-	while ((c = read1(fd)) != EOF && c != '\n')
-		if (c == '\0')
-			fail("$&read", "%%read: null character encountered");
-		else
-			buffer = bufputc(buffer, c);
+#if HAVE_LSEEK
+	if (lseek(fd, 0, SEEK_CUR) < 0) {
+#endif
+		while ((c = read1(fd)) != EOF && c != '\n')
+			if (c == '\0')
+				fail("$&read", "%%read: null character encountered");
+			else
+				buffer = bufputc(buffer, c);
+#if HAVE_LSEEK
+	} else {
+		int n;
+		char *p;
+		char s[BUFSIZE];
+		c = EOF;
+		while ((n = eread(fd, s, BUFSIZE)) > 0) {
+			c = 0;
+			if ((p = memchr(s, '\0', n)) != NULL) {
+				lseek(fd, 1 + ((p - s) - n), SEEK_CUR);
+				fail("$&read", "%%read: null character encountered");
+			} else if ((p = strchr(s, '\n')) != NULL) {
+				buffer = bufncat(buffer, s, (p - s));
+				lseek(fd, 1 + ((p - s) - n), SEEK_CUR);
+				break;
+			} else {
+				buffer = bufncat(buffer, s, n);
+			}
+		}
+	}
+#endif
 
 	if (c == EOF && buffer->current == 0) {
 		freebuffer(buffer);
