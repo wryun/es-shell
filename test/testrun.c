@@ -29,5 +29,8 @@ int main(int argc, char **argv) {
 		return print0();
 	case 's':
 		return dosleep();
+	case 'a':
+		printf("%s\n", argv[0]);
+		return 0;
 	}
 }
