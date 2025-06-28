@@ -40,41 +40,55 @@ PRIM(exec) {
 	return eval(list, NULL, evalflags | eval_inchild);
 }
 
-PRIM(dot) {
-	int c, fd;
-	Push zero, star;
-	volatile int runflags = (evalflags & eval_inchild);
-	const char * const usage = ". [-einvx] file [arg ...]";
+/* If not -DGCVERBOSE or -DGCINFO, these variables are harmlessly useless */
+Boolean gcverbose	= FALSE;
+Boolean gcinfo		= FALSE;
 
-	esoptbegin(list, "$&dot", usage, TRUE);
-	while ((c = esopt("einvx")) != EOF)
-		switch (c) {
-		case 'e':	runflags |= eval_exitonfalse;	break;
-		case 'i':	runflags |= run_interactive;	break;
-		case 'n':	runflags |= run_noexec;		break;
-		case 'v':	runflags |= run_echoinput;	break;
-		case 'x':	runflags |= run_printcmds;	break;
-		}
+PRIM(setrunflags) {
+	Ref(List *, lp, list);
+	for (lp = list; lp != NULL; lp = lp->next) {
+		if (termeq(lp->term, "gcverbose"))
+			gcverbose = TRUE;
+		else if (termeq(lp->term, "gcinfo"))
+			gcinfo = TRUE;
+	}
+	RefEnd(lp);
 
+	setrunflags(runflags_to_int(list));
+	return list;
+}
+
+PRIM(runfile) {
+	int fd = 0;
+	if (list == NULL || (list->next != NULL && list->next->next != NULL))
+		fail("$&runfile", "usage: $&runfile command [file]");
 	Ref(List *, result, NULL);
-	Ref(List *, lp, esoptend());
-	if (lp == NULL)
-		fail("$&dot", "usage: %s", usage);
+	Ref(List *, cmd, mklist(list->term, NULL));
+	Ref(char *, file, "stdin");
 
-	Ref(char *, file, getstr(lp->term));
-	lp = lp->next;
-	fd = eopen(file, oOpen);
-	if (fd == -1)
-		fail("$&dot", "%s: %s", file, esstrerror(errno));
+	if (list->next != NULL) {
+		file = getstr(list->next->term);
+		fd = eopen(file, oOpen);
+		if (fd == -1)
+			fail("$&runfile", "%s: %s", file, esstrerror(errno));
+	}
 
-	varpush(&star, "*", lp);
-	varpush(&zero, "0", mklist(mkstr(file), NULL));
+	result = runfd(fd, file, cmd);
 
-	result = runfd(fd, file, runflags);
+	RefEnd2(file, cmd);
+	RefReturn(result);
+}
 
-	varpop(&zero);
-	varpop(&star);
-	RefEnd2(file, lp);
+PRIM(runstring) {
+	if (list == NULL || list->next == NULL || list->next->next != NULL)
+		fail("$&runstring", "usage: $&runstring command string");
+	Ref(List *, result, NULL);
+	Ref(List *, cmd, mklist(list->term, NULL));
+	Ref(char *, string, getstr(list->next->term));
+
+	result = runstring(string, cmd);
+
+	RefEnd2(string, cmd);
 	RefReturn(result);
 }
 
@@ -151,7 +165,8 @@ PRIM(var) {
 static void loginput(char *input) {
 	char *c;
 	List *fn = varlookup("fn-%write-history", NULL);
-	if (!isinteractive() || !isfromfd() || fn == NULL)
+	/* TODO: fix this for isinteractive() or !isfromfd() */
+	if (fn == NULL)
 		return;
 	for (c = input;; c++)
 		switch (*c) {
@@ -203,42 +218,6 @@ PRIM(exitonfalse) {
 	return eval(list, NULL, evalflags | eval_exitonfalse);
 }
 
-PRIM(batchloop) {
-	Ref(List *, result, ltrue);
-	Ref(List *, dispatch, NULL);
-
-	SIGCHK();
-
-	ExceptionHandler
-
-		for (;;) {
-			List *parser, *cmd;
-			parser = varlookup("fn-%parse", NULL);
-			cmd = (parser == NULL)
-					? prim("parse", NULL, NULL, 0)
-					: eval(parser, NULL, 0);
-			SIGCHK();
-			dispatch = varlookup("fn-%dispatch", NULL);
-			if (cmd != NULL) {
-				if (dispatch != NULL)
-					cmd = append(dispatch, cmd);
-				result = eval(cmd, NULL, evalflags);
-				SIGCHK();
-			}
-		}
-
-	CatchException (e)
-
-		if (!termeq(e->term, "eof"))
-			throw(e);
-		RefEnd(dispatch);
-		if (result == ltrue)
-			result = ltrue;
-		RefReturn(result);
-
-	EndExceptionHandler
-}
-
 PRIM(collect) {
 	gc();
 	return ltrue;
@@ -260,10 +239,6 @@ PRIM(vars) {
 
 PRIM(internals) {
 	return listvars(TRUE);
-}
-
-PRIM(isinteractive) {
-	return isinteractive() ? ltrue : lfalse;
 }
 
 #ifdef noreturn
@@ -300,6 +275,21 @@ PRIM(setmaxevaldepth) {
 		n = (n == 0) ? MAXmaxevaldepth : MINmaxevaldepth;
 	maxevaldepth = n;
 	RefReturn(lp);
+}
+
+static Boolean didonce = FALSE;
+PRIM(importenvfuncs) {
+	if (didonce)
+		return lfalse;
+
+	importenv(TRUE);
+	didonce = TRUE;
+
+	return ltrue;
+}
+
+PRIM(getpid) {
+	return mklist(mkstr(str("%d", getpid())), NULL);
 }
 
 #if HAVE_READLINE
@@ -353,24 +343,26 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(count);
 	X(version);
 	X(exec);
-	X(dot);
+	X(setrunflags);
+	X(runfile);
+	X(runstring);
 	X(flatten);
 	X(whatis);
 	X(split);
 	X(fsplit);
 	X(var);
 	X(parse);
-	X(batchloop);
 	X(collect);
 	X(home);
 	X(setnoexport);
 	X(vars);
 	X(internals);
 	X(result);
-	X(isinteractive);
 	X(exitonfalse);
 	X(noreturn);
 	X(setmaxevaldepth);
+	X(importenvfuncs);
+	X(getpid);
 #if HAVE_READLINE
 	X(sethistory);
 	X(writehistory);

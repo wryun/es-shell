@@ -63,6 +63,38 @@ static void warn(char *s) {
 
 
 /*
+ * runflags
+ */
+
+# define NRUNFLAGS 3
+static struct{
+	int mask;
+	char *name;
+} flagarr[NRUNFLAGS] = {
+	{run_interactive, "interactive"},
+	{run_echoinput, "echoinput"},
+	{run_lisptrees, "lisptrees"}
+};
+
+extern int runflags_to_int(List *list) {
+	char *s;
+	int flags = 0;
+	int i = 0;
+	Ref(List *, lp, list);
+	for (; lp != NULL; lp = lp->next) {
+		s = getstr(lp->term);
+		for (i = 0; i < NRUNFLAGS; i++)
+			if (streq(s, flagarr[i].name)) {
+				flags |= flagarr[i].mask;
+				break;
+			}
+	}
+	RefEnd(lp);
+	return flags;
+}
+
+
+/*
  * unget -- character pushback
  */
 
@@ -217,6 +249,13 @@ static int fdfill(Input *in) {
 	return *in->buf++;
 }
 
+extern void setrunflags(int flags) {
+	if (input != NULL) {
+		input->runflags = flags;
+		input->get = (flags & run_echoinput) ? getverbose : get;
+	}
+}
+
 
 /*
  * the input loop
@@ -269,45 +308,22 @@ extern void resetparser(void) {
 }
 
 /* runinput -- run from an input source */
-extern List *runinput(Input *in, int runflags) {
-	volatile int flags = runflags;
+extern List *runinput(Input *in, List *cmd) {
 	List * volatile result = NULL;
-	List *repl, *dispatch;
-	Push push;
-	const char *dispatcher[] = {
-		"fn-%eval-noprint",
-		"fn-%eval-print",
-		"fn-%noeval-noprint",
-		"fn-%noeval-print",
-	};
 
-	flags &= ~eval_inchild;
-	in->runflags = flags;
-	in->get = (flags & run_echoinput) ? getverbose : get;
+	if (input != NULL)
+		in->runflags = input->runflags;
+	else
+		in->runflags = runflags_to_int(varlookup("runflags", NULL));
+
+	in->runflags &= ~eval_inchild;
+	in->get = (in->runflags & run_echoinput) ? getverbose : get;
 	in->prev = input;
 	input = in;
 
 	ExceptionHandler
 
-		dispatch
-	          = varlookup(dispatcher[((flags & run_printcmds) ? 1 : 0)
-					 + ((flags & run_noexec) ? 2 : 0)],
-			      NULL);
-		if (flags & eval_exitonfalse) {
-			dispatch = mklist(mkstr("%exit-on-false"), dispatch);
-			flags &= ~eval_exitonfalse;
-		}
-		varpush(&push, "fn-%dispatch", dispatch);
-
-		repl = varlookup((flags & run_interactive)
-				   ? "fn-%interactive-loop"
-				   : "fn-%batch-loop",
-				 NULL);
-		result = (repl == NULL)
-				? prim("batchloop", NULL, NULL, flags)
-				: eval(repl, NULL, flags);
-
-		varpop(&push);
+		result = eval(cmd, NULL, in->runflags);
 
 	CatchException (e)
 
@@ -336,7 +352,7 @@ static void fdcleanup(Input *in) {
 }
 
 /* runfd -- run commands from a file descriptor */
-extern List *runfd(int fd, const char *name, int flags) {
+extern List *runfd(int fd, const char *name, List *cmd) {
 	Input in;
 	List *result;
 
@@ -352,7 +368,7 @@ extern List *runfd(int fd, const char *name, int flags) {
 	in.name = (name == NULL) ? str("fd %d", fd) : name;
 
 	RefAdd(in.name);
-	result = runinput(&in, flags);
+	result = runinput(&in, cmd);
 	RefRemove(in.name);
 
 	return result;
@@ -369,28 +385,36 @@ static int stringfill(Input *in) {
 	return EOF;
 }
 
+static Input stringinput(const char *str, unsigned char **buf) {
+	Input in;
+
+	memzero(&in, sizeof (Input));
+	in.fd = -1;
+	in.lineno = 1;
+	in.name = str;
+	in.fill = stringfill;
+	in.buflen = strlen(str);
+	*buf = ealloc(in.buflen + 1);
+	memcpy(*buf, str, in.buflen);
+	in.bufbegin = in.buf = *buf;
+	in.bufend = in.buf + in.buflen;
+	in.cleanup = stringcleanup;
+
+	return in;
+}
+
 /* runstring -- run commands from a string */
-extern List *runstring(const char *str, const char *name, int flags) {
+extern List *runstring(const char *str, List *cmd) {
 	Input in;
 	List *result;
 	unsigned char *buf;
 
 	assert(str != NULL);
 
-	memzero(&in, sizeof (Input));
-	in.fd = -1;
-	in.lineno = 1;
-	in.name = (name == NULL) ? str : name;
-	in.fill = stringfill;
-	in.buflen = strlen(str);
-	buf = ealloc(in.buflen + 1);
-	memcpy(buf, str, in.buflen);
-	in.bufbegin = in.buf = buf;
-	in.bufend = in.buf + in.buflen;
-	in.cleanup = stringcleanup;
+	in = stringinput(str, &buf);
 
 	RefAdd(in.name);
-	result = runinput(&in, flags);
+	result = runinput(&in, cmd);
 	RefRemove(in.name);
 	return result;
 }
@@ -427,34 +451,12 @@ extern Tree *parsestring(const char *str) {
 
 	assert(str != NULL);
 
-	/* TODO: abstract out common code with runstring */
-
-	memzero(&in, sizeof (Input));
-	in.fd = -1;
-	in.lineno = 1;
-	in.name = str;
-	in.fill = stringfill;
-	in.buflen = strlen(str);
-	buf = ealloc(in.buflen + 1);
-	memcpy(buf, str, in.buflen);
-	in.bufbegin = in.buf = buf;
-	in.bufend = in.buf + in.buflen;
-	in.cleanup = stringcleanup;
+	in = stringinput(str, &buf);
 
 	RefAdd(in.name);
 	result = parseinput(&in);
 	RefRemove(in.name);
 	return result;
-}
-
-/* isinteractive -- is the innermost input source interactive? */
-extern Boolean isinteractive(void) {
-	return input == NULL ? FALSE : ((input->runflags & run_interactive) != 0);
-}
-
-/* isfromfd -- is the innermost input source reading from a file descriptor? */
-extern Boolean isfromfd(void) {
-	return input == NULL ? FALSE : (input->fill == fdfill);
 }
 
 

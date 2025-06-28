@@ -1778,6 +1778,56 @@ in
 .Cr $signals ;
 other values will be on the list if the shell starts up with
 some signals ignored.
+.TP
+.Cr runflags
+Contains a list of flags which control the execution of the
+.I es
+interpreter context.
+Several of these correspond with shell options.
+Any word can belong to the value of
+.Cr $runflags ,
+but only certain words have meaning to the
+.I es
+interpreter.
+These words are
+.IS
+.TP
+.Cr exitonfalse
+Exit if any command returns a non-zero status.
+Corresponds with the
+.Cr \-e
+option.
+.TP
+.Cr interactive
+Run as an interactive shell.
+Corresponds with the
+.Cr \-i
+option.
+.TP
+.Cr noexec
+Turn off execution of commands.
+Corresponds with the
+.Cr \-n
+option.
+.TP
+.Cr echoinput
+Echo input to standard error.
+Corresponds with the
+.Cr \-v
+option.
+.TP
+.Cr printcmds
+Print commands to standard error before executing them.
+Corresponds with the
+.Cr \-x
+option.
+.TP
+.Cr login
+Run as a login shell.
+Mainly this controls whether
+.Cr .esrc
+is run at startup.
+.IE
 .PP
 The values of
 .Cr path
@@ -2283,8 +2333,9 @@ Runs the command in the background.
 The shell variable
 .Cr apid
 contains the process ID of the background process,
-which is printed if the shell is interactive (according to
-.Cr %is-interactive ).
+which is printed if the shell is interactive (according to the
+.Cr interactive
+runflag.
 .TP
 .Cr "%backquote \fIseparator cmd\fP"
 Runs the command in a child process and returns its
@@ -2382,6 +2433,17 @@ Concatenate the elements of
 into one string,
 separated by the string
 .IR separator .
+.TP
+.Cr "%getopt \fIoptfunc args ...\fP"
+This performs common
+.Rc getopt
+behavior, iterating through
+.I args
+and passing the args and the individual options they contain to
+.IR optfunc .
+All built-in
+.I es
+option parsing works via this function.
 .TP
 .Cr "%here \fIfd word ... cmd\fP"
 Runs the command with the
@@ -2601,16 +2663,6 @@ Repeated instances of separator characters cause null strings to
 appear in the result.
 (This function is used by some builtin settor functions.)
 .TP
-.Cr "%is-interactive"
-Returns true if the current interpreter context is interactive;
-that is, if shell command input is currently coming from an
-interactive user.
-More precisely, this is true if the innermost enclosing read-eval-print
-loop is
-.Cr %interactive-loop
-rather than
-.Cr %batch-loop .
-.TP
 .Cr "%newfd"
 Returns a file descriptor that the shell thinks is not currently in use.
 .TP
@@ -2622,6 +2674,25 @@ This builtin can be used to set
 .Cr argv[0]
 (by convention, the name of the program)
 to something other than file name.
+.TP
+.Cr "%run-file \fI[file]\fP"
+Runs either
+.Cr %interactive-loop
+or
+.Cr %batch-loop
+reading the
+.I file
+for input.
+stdin is used as input if no file is given.
+.TP
+.Cr "%run-string \fIstring\fP"
+Runs either
+.Cr %interactive-loop
+or
+.Cr %batch-loop
+using the
+.I string
+directly as input.
 .TP
 .Cr "%split \fIseparator \fR[\fPargs ...\fR]"
 Splits its arguments into separate strings at every occurrence
@@ -2667,19 +2738,12 @@ builtin functions with the same names:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-access	forever	throw
-catch	fork	umask
-echo	if	wait
-exec	newpgrp
-exit	result
+forever	throw	catch
+fork	umask	echo
+if	wait	exec
+newpgrp	exit	result
 .ft R
 .De
-.PP
-In addition, the primitive
-.Cr dot
-implements the
-.Rc \(lq . \(rq
-builtin function.
 .PP
 The
 .Cr cd
@@ -2693,6 +2757,11 @@ and
 .Cr internals
 primitives are used by the implementation of the
 .Cr vars
+builtin.
+The
+.Cr access
+primitive is used by the implementation of the
+.Cr access
 builtin.
 .PP
 The following primitives implement the hook functions
@@ -2718,7 +2787,7 @@ prefixes and internal hyphens:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-batchloop	exitonfalse	isinteractive
+exitonfalse	runfile	runstring
 .ft R
 .De
 .PP
@@ -2749,7 +2818,7 @@ The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-setnoexport	setsignals
+setnoexport	setsignals	setrunflags
 .ft R
 .De
 .PP
@@ -2809,6 +2878,17 @@ The garbage collector in
 .I es
 runs rather frequently;
 there should be no reason for a user to issue this command.
+.TP
+.Cr "$&importenvfuncs"
+Imports functions and settor functions from the environment.
+This is used during
+.I es
+startup.
+It is hardcoded to have no effect (and return false) if it has
+already been called.
+.TP
+.Cr "$&isatty"
+Tests whether the given fd is a TTY or not.
 .TP
 .Cr "$&noreturn \fIlambda args ...\fP"
 Call the
