@@ -80,103 +80,58 @@ static int testfile(char *path, unsigned int perm, unsigned int type) {
 	return testperm(&st, perm);
 }
 
-static char *pathcat(char *prefix, char *suffix) {
-	char *s;
-	size_t plen, slen, len;
-	static char *pathbuf = NULL;
-	static size_t pathlen = 0;
-
-	if (*prefix == '\0')
-		return suffix;
-	if (*suffix == '\0')
-		return prefix;
-
-	plen = strlen(prefix);
-	slen = strlen(suffix);
-	len = plen + slen + 2;		/* one for '/', one for '\0' */
-	if (pathlen < len) {
-		pathlen = len;
-		pathbuf = erealloc(pathbuf, pathlen);
-	}
-
-	memcpy(pathbuf, prefix, plen);
-	s = pathbuf + plen;
-	if (s[-1] != '/')
-		*s++ = '/';
-	memcpy(s, suffix, slen + 1);
-	return pathbuf;
-}
+static int *permtab[256] = { NULL };
+static int *typetab[256] = { NULL };
 
 PRIM(access) {
-	int c, estatus = ENOENT;
-	unsigned int perm = 0, type = 0;
-	Boolean first = FALSE, throws = FALSE;
-	char *suffix = NULL;
-	List *lp;
-	const char * const usage = "access [-n name] [-1e] [-rwx] [-fdcblsp] path ...";
+	int c, *p, perm = 0, type = 0, estatus;
 
-	gcdisable();
-	esoptbegin(list, "$&access", usage, TRUE);
-	while ((c = esopt("bcdefln:prswx1")) != EOF)
-		switch (c) {
-		case 'n':	suffix = getstr(esoptarg());	break;
-		case '1':	first = TRUE;			break;
-		case 'e':	throws = TRUE;			break;
-		case 'r':	perm |= READ;			break;
-		case 'w':	perm |= WRITE;			break;
-		case 'x':	perm |= EXEC;			break;
-		case 'f':	type = IFREG;			break;
-		case 'd':	type = IFDIR;			break;
-		case 'c':	type = IFCHR;			break;
-		case 'b':	type = IFBLK;			break;
-		case 'l':	type = IFLNK;			break;
-		case 's':	type = IFSOCK;			break;
-		case 'p':	type = IFIFO;			break;
-		default:
-			esoptend();
-			fail("$&access", "access -%c is not supported on this system", c);
-		}
-	list = esoptend();
+	if (length(list) != 3)
+		fail("$&access", "usage: access access-type file-type name");
 
-	for (lp = NULL; list != NULL; list = list->next) {
-		int error;
-		char *name;
+	Ref(List *, result, NULL);
+	Ref(char *, atype, getstr(list->term));
+	Ref(char *, ftype, getstr(list->next->term));
+	Ref(char *, name, getstr(list->next->next->term));
 
-		name = getstr(list->term);
-		if (suffix != NULL)
-			name = pathcat(name, suffix);
-		error = testfile(name, perm, type);
-
-		if (first) {
-			if (error == 0) {
-				Ref(List *, result,
-					mklist(mkstr(suffix == NULL
-							? name
-							: gcdup(name)),
-					       NULL));
-				gcenable();
-				RefReturn(result);
-			} else if (error != ENOENT)
-				estatus = error;
-		} else
-			lp = mklist(mkstr(error == 0 ? "0" : gcdup(esstrerror(error))),
-				    lp);
+	for (c = 0; atype[c] != '\0'; c++) {
+		if ((p = permtab[(unsigned char)atype[c]]) == NULL)
+			fail("$&access", "bad access type '%c'", c);
+		perm |= *p;
 	}
 
-	if (first && throws) {
-		gcenable();
-		if (suffix)
-			fail("$&access", "%s: %s", suffix, esstrerror(estatus));
-		else
-			fail("$&access", "%s", esstrerror(estatus));
-	}
+	if (ftype[0] == '\0' || ftype[1] != '\0')
+		fail("$&access", "file type argument must be one character");
+	if ((p = typetab[(unsigned char)ftype[0]]) == NULL)
+		fail("$&access", "bad file type argument '%c'", ftype[0]);
+	type = *p;
 
-	Ref(List *, result, reverse(lp));
-	gcenable();
+	estatus = testfile(name, perm, type);
+	result = mklist(mkstr(estatus == 0 ? "0" : esstrerror(estatus)), NULL);
+
+	RefEnd3(name, ftype, atype);
 	RefReturn(result);
 }
 
+#define FLAGTAB(type, c, def) \
+	STMT(static int CONCAT(type,c) = def; \
+	     CONCAT(type,tab)[(unsigned char)(STRING(c)[0])] = &CONCAT(type,c))
+
 extern Dict *initprims_access(Dict *primdict) {
+	FLAGTAB(perm, e, 0);
+	FLAGTAB(perm, r, READ);
+	FLAGTAB(perm, w, WRITE);
+	FLAGTAB(perm, x, EXEC);
+
+	FLAGTAB(type, a, 0);
+	FLAGTAB(type, f, IFREG);
+	FLAGTAB(type, d, IFDIR);
+	FLAGTAB(type, c, IFCHR);
+	FLAGTAB(type, b, IFBLK);
+	FLAGTAB(type, l, IFLNK);
+	FLAGTAB(type, s, IFSOCK);
+	FLAGTAB(type, p, IFIFO);
+
 	X(access);
 	return primdict;
 }

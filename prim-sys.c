@@ -38,11 +38,6 @@ PRIM(newpgrp) {
 PRIM(background) {
 	int pid = efork(TRUE, TRUE);
 	if (pid == 0) {
-#if JOB_PROTECT
-		/* job control safe version: put it in a new pgroup, if interactive. */
-		if (isinteractive())
-			setpgid(0, 0);
-#endif
 		mvfd(eopen("/dev/null", oOpen), 0);
 		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	}

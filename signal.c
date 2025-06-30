@@ -158,7 +158,7 @@ extern void getsigeffects(Sigeffect effects[]) {
  * initialization
  */
 
-extern void initsignals(Boolean interactive, Boolean allowdumps) {
+extern void initsignals() {
 	int sig;
 	Push settor;
 
@@ -191,15 +191,6 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 		}
 	}
 
-	if (interactive || sigeffect[SIGINT] == sig_default)
-		esignal(SIGINT, sig_special);
-	if (!allowdumps) {
-		if (interactive)
-			esignal(SIGTERM, sig_noop);
-		if (interactive || sigeffect[SIGQUIT] == sig_default)
-			esignal(SIGQUIT, sig_noop);
-	}
-
 	/* here's the end-run around set-signals */
 	varpush(&settor, "set-signals", NULL);
 	vardef("signals", NULL, mksiglist());
@@ -220,12 +211,6 @@ extern void setsigdefaults(void) {
  * utility functions
  */
 
-extern Boolean issilentsignal(List *e) {
-	return (termeq(e->term, "signal"))
-		&& e->next != NULL
-		&& termeq(e->next->term, "sigint");
-}
-
 extern void exitonsignal(List *exception) {
 	int sig;
 	Sigeffect e;
@@ -241,6 +226,8 @@ extern void exitonsignal(List *exception) {
 
 	/* didn't work, put the handler back */
 	esignal(sig, e);
+	if (sig != SIGINT)
+		eprint("uncaught exception: signal %E\n", exception->next->term);
 }
 
 extern List *mksiglist(void) {

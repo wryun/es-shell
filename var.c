@@ -549,12 +549,15 @@ extern int putenv(char *envstr) {
 }
 #endif
 
-/* initenv -- load variables from the environment */
-extern void initenv(char **envp, Boolean protected) {
+extern char **environ;
+
+/* importenv -- load variables from the environment */
+extern void importenv(Boolean funcs) {
 	int i;
 	char *envstr;
 	size_t bufsize = 1024;
 	char *buf = ealloc(bufsize);
+	char **envp = environ;
 
 	Ref(Vector *, imported, mkvector(ENVSIZE));
 	Ref(char *, name, NULL);
@@ -570,8 +573,7 @@ extern void initenv(char **envp, Boolean protected) {
 		memcpy(buf, envstr, nlen);
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
-		if (!protected
-		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
+		if (funcs == (hasprefix(name, "fn-") || hasprefix(name, "set-"))) {
 			importvar(name, eq+1);
 			VECPUSH(imported, name);
 		}

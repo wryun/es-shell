@@ -56,11 +56,6 @@ test 'es -p' {
 }
 
 test 'es -i' {
-	local (
-		fn %batch-loop {echo 'batch loop'}
-		fn %interactive-loop {echo 'interactive loop'}
-	) {
-		assert {~ `` \n {$es -c 'echo fail'} 'batch loop'} 'es -c is non-interactive by default'
-		assert {~ `` \n {$es -ic 'echo fail'} 'interactive loop'} 'es -i forces interactive'
-	}
+	assert {!~ `{$es -c 'echo $runflags'} 'interactive'} 'es -c is non-interactive by default'
+	assert {~ `{$es -ic 'echo $runflags'} 'interactive'} 'es -i forces interactive'
 }

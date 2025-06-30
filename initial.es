@@ -63,8 +63,6 @@
 #	These builtin functions are straightforward calls to primitives.
 #	See the manual page for details on what they do.
 
-fn-.		= $&dot
-fn-access	= $&access
 fn-break	= $&break
 fn-catch	= $&catch
 fn-echo		= $&echo
@@ -219,6 +217,62 @@ fn cd dir {
 	}
 }
 
+#	The %getopt function is likely a mistake to include in the shell,
+#	but multiple built-ins in es require some option-parsing behavior
+#	and having a "librarified" version ensures some degree of consistency.
+#
+#	This version of %getopt is designed to take advantage of the features of
+#	es.  Its first argument, the "optfunc", is a lambda expression which will
+#	be repeatedly called to do the user's specific work.
+#
+#	The remainder of the arguments to %getopt are the arguments to be parsed.
+#	%getopt will iterate through these until it finds one which doesn't match
+#	-*, or until a break-getopt exception is thrown.  It will call optfunc
+#	once for each option, passing the full option argument and the specific
+#	option.  The full option argument is useful for things like testing for
+#	`--`.  When %getopt finishes, either due to an exception or a non-option
+#	argument, it will return the remainder of the arguments it was given.
+#
+#	%getopt dynamically binds the function `optarg`, which when called, will
+#	remove the next argument from its iteration and return it to the caller.
+#
+#	%getopt is $&noreturn and it calls its optfunc as $&noreturn, in order to
+#	allow the calling context to call return without any dynamic-behavior
+#	surprises.
+
+fn-%getopt = $&noreturn @ optfunc args {
+	catch @ e rest {
+		if {~ $e break-getopt} {
+			result $args
+		} {
+			throw $e $rest
+		}
+	} {
+		local (fn-optarg = {
+			let (result = $args(1)) {
+				args = $args(2 ...)
+				result $result
+			}
+		})
+		while {~ $args(1) -*} {
+			catch @ e rest {
+				if {!~ $e continue-getopt} {
+					throw $e $rest
+				}
+			} {
+				let (arg = $args(1)) {
+					args = $args(2 ...)
+					for (c = <={%fsplit '' <={~~ $arg -*}}) {
+						$&noreturn $optfunc $arg $c
+					}
+				}
+			}
+		}
+		result $args
+	}
+}
+
+
 #	The vars function is provided for cultural compatibility with
 #	rc's whatis when used without arguments.
 #
@@ -235,12 +289,8 @@ fn cd dir {
 #	unless it is on the noexport list.
 
 fn vars {
-	# check args
-	for (i = $*)
-		if {!~ $i -*} {
-			throw error vars illegal option: $i -- usage: vars -[vfsepia]
-		}
 	let (
+		all	= false
 		vars	= false
 		fns	= false
 		sets	= false
@@ -249,22 +299,24 @@ fn vars {
 		intern	= false
 		all	= false
 	) {
-		for (a = $*)
-		for (i = <={%fsplit '' <={~~ $a -*}})
-		if (
-			{~ $i v}	{vars	= true}
-			{~ $i f}	{fns	= true}
-			{~ $i s}	{sets	= true}
-			{~ $i e}	{export	= true}
-			{~ $i p}	{priv	= true}
-			{~ $i i}	{intern = true}
-			{~ $i a}	{all	= true}
-			{throw error vars vars: bad option: $i}
-		)
-		if {!{$vars || $fns || $sets}} {
+		if {!~ <={%getopt @ arg c {
+			match $c (
+				a	{all	= true}
+				v 	{vars	= true}
+				f	{fns	= true}
+				s	{sets	= true}
+				e	{export	= true}
+				p	{priv	= true}
+				i	{intern	= true}
+				*	{throw error vars vars: bad option: -$c -- usage: vars '-[vfsepia]'}
+			)
+		} $*} ()} {
+			throw error vars vars: takes no positional arguments
+		}
+		if {!$vars && !$fns && !$sets} {
 			vars = true
 		}
-		if {!{$export || $priv || $intern}} {
+		if {!$export && !$priv && !$intern} {
 			export = true
 		}
 		let (
@@ -287,6 +339,56 @@ fn vars {
 					dovar $var
 			}
 		}
+	}
+}
+
+
+#	The access function provides a more capable and convenient wrapper
+#	around the $&access primitive: it can test multiple files at once,
+#	perform path-like searching (in fact, it is used for path searching),
+#	and react more thoroughly to successes and failures than $&access can.
+
+fn access {
+	let (
+		perm = ''
+		type = a
+
+		suffix = ()
+		first = false
+		exception = false
+
+		result = ()
+	) {
+		* = <={%getopt @ arg c {
+			match $c (
+				n {suffix = <=optarg}
+				1 {first = true}
+				e {exception = true}
+				(r w x) {perm = $perm^$c}
+				(f d c b l s p) {type = $c}
+				* {usage}
+			)
+		} $*}
+
+		let (r = ()) {
+			for (file = $*) {
+				if {!~ $suffix ()} {
+					if {~ $file */} {
+						file = $file$suffix
+					} {
+						file = $file/$suffix
+					}
+				}
+				if {r = <={$&access $perm $type $file} && $first} {
+					return $file
+				}
+				result = $result $r
+			}
+			if {$first && $exception} {
+				throw error access <={%flatten ' ' $suffix^':' $r}
+			}
+		}
+		result $result
 	}
 }
 
@@ -385,10 +487,15 @@ fn-%or = $&noreturn @ first rest {
 #		cmd &			%background {cmd}
 
 fn %background cmd {
-	let (pid = <={$&background $cmd}) {
-		apid = $pid
-		if {%is-interactive} {
-			echo >[1=2] $pid
+	let (bg = $&background) {
+		if {~ $runflags interactive} {
+			bg = newpgrp $&background
+		}
+		let (pid = <={$bg $cmd}) {
+			apid = $pid
+			if {~ $runflags interactive} {
+				echo >[1=2] $pid
+			}
 		}
 	}
 }
@@ -604,99 +711,6 @@ if {~ <=$&primitives writehistory} {
 
 
 #
-# Read-eval-print loops
-#
-
-#	In es, the main read-eval-print loop (REPL) can lie outside the
-#	shell itself.  Es can be run in one of two modes, interactive or
-#	batch, and there is a hook function for each form.  It is the
-#	responsibility of the REPL to call the parser for reading commands,
-#	hand those commands to an appropriate dispatch function, and handle
-#	any exceptions that may be raised.  The function %is-interactive
-#	can be used to determine whether the most closely binding REPL is
-#	interactive or batch.
-#
-#	The REPLs are invoked by the shell's main() routine or the . or
-#	eval builtins.  If the -i flag is used or the shell determines that
-#	it's input is interactive, %interactive-loop is invoked; otherwise
-#	%batch-loop is used.
-#
-#	The function %parse can be used to call the parser, which returns
-#	an es command.  %parse takes two arguments, which are used as the main
-#	and secondary prompts, respectively.  %parse typically returns one line
-#	of input, but es allows commands (notably those with braces or backslash
-#	continuations) to continue across multiple lines; in that case, the
-#	complete command and not just one physical line is returned.
-#
-#	By convention, the REPL must pass commands to the fn %dispatch,
-#	which has the actual responsibility for executing the command.
-#	Whatever routine invokes the REPL (internal, for now) has
-#	the responsibility of setting up fn %dispatch appropriately;
-#	it is used for implementing the -e, -n, and -x options.
-#	Typically, fn %dispatch is locally bound.
-#
-#	The %parse function raises the eof exception when it encounters
-#	an end-of-file on input.  You can probably simulate the C shell's
-#	ignoreeof by restarting appropriately in this circumstance.
-#	Other than eof, %interactive-loop does not exit on exceptions,
-#	where %batch-loop does.
-#
-#	The looping construct forever is used rather than while, because
-#	while catches the break exception, which would make it difficult
-#	to print ``break outside of loop'' errors.
-#
-#	The parsed code is executed only if it is non-empty, because otherwise
-#	result gets set to zero when it should not be.
-
-fn-%parse		= $&parse
-fn-%batch-loop		= $&batchloop
-fn-%is-interactive	= $&isinteractive
-
-fn %interactive-loop {
-	let (result = <=true) {
-		catch @ e type msg {
-			if {~ $e eof} {
-				return $result
-			} {~ $e exit} {
-				throw $e $type $msg
-			} {~ $e error} {
-				echo >[1=2] $msg
-				$fn-%dispatch false
-			} {~ $e signal} {
-				if {!~ $type sigint sigterm sigquit} {
-					echo >[1=2] caught unexpected signal: $type
-				}
-			} {
-				echo >[1=2] uncaught exception: $e $type $msg
-			}
-			throw retry # restart forever loop
-		} {
-			forever {
-				if {!~ $#fn-%prompt 0} {
-					%prompt
-				}
-				let (code = <={%parse $prompt}) {
-					if {!~ $#code 0} {
-						result = <={$fn-%dispatch $code}
-					}
-				}
-			}
-		}
-	}
-}
-
-#	These functions are potentially passed to a REPL as the %dispatch
-#	function.  (For %eval-noprint, note that an empty list prepended
-#	to a command just causes the command to be executed.)
-
-fn-%eval-noprint	=					# <default>
-fn-%eval-print		= $&noreturn @ { echo $* >[1=2]; $* }	# -x
-fn-%noeval-noprint	= { }					# -n
-fn-%noeval-print	= @ { echo $* >[1=2] }			# -n -x
-fn-%exit-on-false	= $&exitonfalse				# -e
-
-
-#
 # Settor functions
 #
 
@@ -769,6 +783,7 @@ home		= /
 ifs		= ' ' \t \n
 prompt		= '; ' ''
 max-eval-depth	= 640
+path		= <=$&defaultpath
 
 #	noexport lists the variables that are not exported.  It is not
 #	exported, because none of the variables that it refers to are
@@ -781,8 +796,12 @@ max-eval-depth	= 640
 #	is does.  fn-%dispatch is really only important to the current
 #	interpreter loop.
 
-noexport = noexport pid signals apid bqstatus fn-%dispatch path home matchexpr
+noexport = noexport pid signals apid bqstatus path home matchexpr
 
+fn-. = $&runfile $&batchloop
+
+# source the runtime init script.
+. ./runtime.es
 
 #
 # Title
