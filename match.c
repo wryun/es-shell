@@ -78,9 +78,10 @@ extern Boolean match(const char *s, const char *p, const char *q) {
 				next.s = *s ? s+1 : NULL;
 				continue;
 			case '[': {
+				int r;
 				if (!*s)
 					return FALSE;
-				int r = 1 + rangematch(p+1, QX(q+1), *s);
+				r = 1 + rangematch(p+1, QX(q+1), *s);
 				if (r > 0) {
 					p += r; s++;
 					q = QX(q + r);
