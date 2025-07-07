@@ -409,6 +409,11 @@ restart:
 		if (error != NULL)
 			fail("$&whatis", "%s: %s", name, error);
 		gcdisable();
+		if (funcname != NULL) {
+			Term *fn = mkstr(funcname);
+			list = mklist(fn, list->next);
+			funcname = NULL;
+		}
 		list = mklist(mkstr("%run"), mklist(mkstr(name), list));
 		gcenable();
 		RefPop(name);
@@ -426,6 +431,8 @@ restart:
 		goto restart;
 	}
 
+	if (fn != NULL)
+		funcname = getstr(list->term);
 	list = append(fn, list->next);
 	goto restart;
 

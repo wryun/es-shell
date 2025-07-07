@@ -63,9 +63,9 @@ static Boolean sconv(Format *format) {
 	return FALSE;
 }
 
-static char *utoa(unsigned long u, char *t, unsigned int radix, char *digit) {
+static char *utostr(unsigned long u, char *t, unsigned int radix, char *digit) {
 	if (u >= radix) {
-		t = utoa(u / radix, t, radix, digit);
+		t = utostr(u / radix, t, radix, digit);
 		u %= radix;
 	}
 	*t++ = digit[u];
@@ -104,7 +104,7 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 		while (*altform != '\0')
 			prefix[pre++] = *altform++;
 
-	len = utoa(u, number, radix, table[upper]) - number;
+	len = utostr(u, number, radix, table[upper]) - number;
 	if ((flags & FMT_f2set) && (size_t) format->f2 > len)
 		zeroes = format->f2 - len;
 	else
@@ -262,6 +262,10 @@ extern int printfmt(Format *format, const char *fmt) {
 /*
  * the public entry points
  */
+
+#ifndef va_copy
+#define	va_copy	__va_copy
+#endif
 
 extern int fmtprint VARARGS2(Format *, format, const char *, fmt) {
 	int n = -format->flushed;

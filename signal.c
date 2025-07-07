@@ -13,6 +13,7 @@ Atomic interrupted = FALSE;
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
+static Sighandler handler_in[NSIG];
 
 #if HAVE_SIGACTION
 #ifndef	SA_NOCLDSTOP
@@ -132,7 +133,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 			}
 			break;
 		case sig_default:
-			setsignal(sig, SIG_DFL);
+			setsignal(sig, (handler_in[sig] == NULL ? SIG_DFL : handler_in[sig]));
 			break;
 		default:
 			NOTREACHED;
@@ -183,13 +184,11 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 			sigeffect[sig] = sig_ignore;
 		}
 #endif /* !HAVE_SIGACTION */
-		else if (h == SIG_DFL || h == SIG_ERR)
+		else {
 			sigeffect[sig] = sig_default;
-		else
-			panic(
-				"initsignals: bad incoming signal value for %s: %x",
-				signame(sig), h
-			);
+			if (h != SIG_ERR)
+				handler_in[sig] = h;
+		}
 	}
 
 	if (interactive || sigeffect[SIGINT] == sig_default)
@@ -225,6 +224,23 @@ extern Boolean issilentsignal(List *e) {
 	return (termeq(e->term, "signal"))
 		&& e->next != NULL
 		&& termeq(e->next->term, "sigint");
+}
+
+extern void exitonsignal(List *exception) {
+	int sig;
+	Sigeffect e;
+	if (exception == NULL || exception->next == NULL || !termeq(exception->term, "signal"))
+		return;
+	sig = signumber(getstr(exception->next->term));
+	if (sig == -1)
+		return;
+
+	/* try to die via this signal */
+	e = esignal(sig, sig_default);
+	kill(getpid(), sig);
+
+	/* didn't work, put the handler back */
+	esignal(sig, e);
 }
 
 extern List *mksiglist(void) {
@@ -293,8 +309,10 @@ extern void sigchk(void) {
 		}
 	}
 	resetparser();
-	Ref(List *, e,
-	    mklist(mkstr("signal"), mklist(mkstr(signame(sig)), NULL)));
+	Ref(List *, e, NULL);
+	gcdisable();
+	e = mklist(mkstr("signal"), mklist(mkstr(signame(sig)), NULL));
+	gcenable();
 
 	switch (sigeffect[sig]) {
 	case sig_catch:

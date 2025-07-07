@@ -27,9 +27,8 @@ struct Input {
 
 extern Input *input;
 extern void unget(Input *in, int c);
-extern Boolean disablehistory;
 extern Boolean ignoreeof;
-extern void yyerror(char *s);
+extern void yyerror(const char *s);
 
 
 /* token.c */
@@ -44,7 +43,6 @@ extern void print_prompt2(void);
 
 extern Tree *parsetree;
 extern int yyparse(void);
-extern void initparse(void);
 
 
 /* heredoc.c */

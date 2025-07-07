@@ -7,13 +7,16 @@ test 'es -c' {
 }
 
 test 'es -e' {
-	let (temp = `{mktemp es-e-script.XXXX})
+	let (temp = `{mktemp es-e-script.XXXXXX})
 	unwind-protect {
 		for (	(command 				continue) = (
 			# commands
 			'false'					false
 			'if {false} {true}'			true
 			'if {true} {false}'			false
+			'if {false; true} {true}'		true
+			'if {true} {false; true}'		false
+			'if {false} {true} {false; true}'	false
 			'{true; {true; {false; true}}}'		false
 
 			# assignments
