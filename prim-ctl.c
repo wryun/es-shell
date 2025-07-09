@@ -46,44 +46,24 @@ PRIM(throw) {
 }
 
 PRIM(catch) {
-	Atomic retry;
-
 	if (list == NULL)
 		fail("$&catch", "usage: catch catcher body");
 
 	Ref(List *, result, NULL);
 	Ref(List *, lp, list);
 
-	do {
-		retry = FALSE;
+	ExceptionHandler
 
-		ExceptionHandler
+		result = eval(lp->next, NULL, evalflags);
 
-			result = eval(lp->next, NULL, evalflags);
+	CatchException (e)
 
-		CatchException (frombody)
+		blocksignals();
+		result = prim("noreturn", mklist(lp->term, e), NULL, evalflags);
+		unblocksignals();
 
-			blocksignals();
-			ExceptionHandler
-				result
-				  = prim("noreturn",
-					 mklist(lp->term, frombody),
-					 NULL,
-					 evalflags);
-				unblocksignals();
-			CatchException (fromcatcher)
+	EndExceptionHandler
 
-				if (termeq(fromcatcher->term, "retry")) {
-					retry = TRUE;
-					unblocksignals();
-				} else {
-					unblocksignals();
-					throw(fromcatcher);
-				}
-			EndExceptionHandler
-
-		EndExceptionHandler
-	} while (retry);
 	RefEnd(lp);
 	RefReturn(result);
 }

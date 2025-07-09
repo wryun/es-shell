@@ -66,7 +66,6 @@
 fn-.		= $&dot
 fn-access	= $&access
 fn-break	= $&break
-fn-catch	= $&catch
 fn-echo		= $&echo
 fn-exec		= $&exec
 fn-forever	= $&forever
@@ -101,6 +100,53 @@ fn-false	= { result 1 }
 fn-break	= throw break
 fn-exit		= throw exit
 fn-return	= throw return
+
+#	The catch function wraps $&catch and adds handling for the
+#	retry exception as well as "selectable exceptions": if catch is
+#	called like `catch foo $catcher $body`, then `catch` will only
+#	actually catch the 'foo' exception, and no others.
+
+fn-catch = $&noreturn @ catcher body {
+	let (exception = (); result = <=true; retry = ()) {
+		if {!~ $#body (0 1)} {
+			(exception catcher body) = $catcher $body
+		}
+		if {!~ $#body (0 1)} {
+			throw error catch 'usage: catch [exception] catcher body'
+		}
+		$&catch @ e rest {
+			if {~ $e return-from-catch} {
+				result $rest
+			} {
+				throw $e $rest
+			}
+		} {
+			forever {
+				retry = false
+				$&catch @ e rest {
+					if {~ $e retry} {
+						retry = true
+					} {
+						throw $e $rest
+					}
+				} {
+					result = <={$&catch @ e rest {
+						if {~ $#exception 0} {
+							$&noreturn $catcher $e $rest
+						} {~ $exception $e} {
+							$&noreturn $catcher $rest
+						} {
+							throw $e $rest
+						}
+					} $body}
+				}
+				if {!$retry} {
+					throw return-from-catch $result
+				}
+			}
+		}
+	}
+}
 
 #	unwind-protect is a simple wrapper around catch that is used
 #	to ensure that some cleanup code is run after running a code
