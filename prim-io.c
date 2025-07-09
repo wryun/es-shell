@@ -174,10 +174,10 @@ PRIM(here) {
 		;
 	*tailp = NULL;
 
+	Ref(List *, cmd, tail);
 	Ref(char *, doc, (lp == tail) ? NULL : str("%L", lp, ""));
 	doclen = strlen(doc);
 
-	Ref(List *, cmd, tail);
 #ifdef PIPE_BUF
 	if (doclen <= PIPE_BUF) {
 		if (pipe(p) == -1)
@@ -210,7 +210,7 @@ PRIM(here) {
 		status = ewaitfor(pid);
 		printstatus(0, status);
 	}
-	RefEnd2(cmd, doc);
+	RefEnd2(doc, cmd);
 	RefReturn(lp);
 }
 
