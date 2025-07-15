@@ -47,6 +47,7 @@ PRIM(throw) {
 
 PRIM(catch) {
 	Atomic retry;
+	volatile Boolean root = FALSE;
 
 	if (list == NULL)
 		fail("$&catch", "usage: catch catcher body");
@@ -58,6 +59,11 @@ PRIM(catch) {
 		retry = FALSE;
 
 		ExceptionHandler
+
+			if (roothandler == NULL) {
+				root = TRUE;
+				roothandler = &_localhandler;
+			}
 
 			result = eval(lp->next, NULL, evalflags);
 
@@ -78,12 +84,19 @@ PRIM(catch) {
 					unblocksignals();
 				} else {
 					unblocksignals();
+					if (root)
+						roothandler = NULL;
 					throw(fromcatcher);
 				}
+
 			EndExceptionHandler
 
 		EndExceptionHandler
 	} while (retry);
+
+	if (root)
+		roothandler = NULL;
+
 	RefEnd(lp);
 	RefReturn(result);
 }

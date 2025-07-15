@@ -3,6 +3,7 @@
 #include "es.h"
 #include "var.h"
 #include "term.h"
+#include "prim.h"
 
 #define	MAXVARNAME 20
 
@@ -288,8 +289,27 @@ static void printheader(List *title) {
 }
 
 extern void runinitial(void) {
-	List *title = runfd(0, "initial.es", 0);
-	
+	List *title = NULL;
+	initdumpprims();
+
+	ExceptionHandler
+
+		title = runfd(0, "initial.es", mklist(mkstr("$&batchloop"), NULL));
+
+	CatchException (e)
+
+		if (termeq(e->term, "exit"))
+			exit(exitstatus(e->next));
+		else if (termeq(e->term, "error"))
+			eprint("%L\n",
+			       e->next == NULL ? NULL : e->next->next,
+			       " ");
+		else
+			eprint("uncaught exception %L\n", e, " ");
+		exit(1);
+
+	EndExceptionHandler
+
 	gcdisable();
 
 	cvars = mkdict();

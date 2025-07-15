@@ -37,6 +37,10 @@ PRIM(primitives) {
 	return primlist;
 }
 
+extern void initdumpprims(void) {
+	prims = initprims_dump(prims);
+}
+
 extern void initprims(void) {
 	prims = mkdict();
 	globalroot(&prims);
