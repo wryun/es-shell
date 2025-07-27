@@ -56,11 +56,16 @@ PRIM(catch) {
 
 		result = eval(lp->next, NULL, evalflags);
 
-	CatchException (e)
+	CatchException (frombody)
 
 		blocksignals();
-		result = prim("noreturn", mklist(lp->term, e), NULL, evalflags);
-		unblocksignals();
+		ExceptionHandler
+			result = prim("noreturn", mklist(lp->term, frombody), NULL, evalflags);
+			unblocksignals();
+		CatchException (fromcatcher)
+			unblocksignals();
+			throw(fromcatcher);
+		EndExceptionHandler
 
 	EndExceptionHandler
 
