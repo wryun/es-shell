@@ -84,6 +84,7 @@ PRIM(catch) {
 
 		EndExceptionHandler
 	} while (retry);
+	SIGCHK();
 	RefEnd(lp);
 	RefReturn(result);
 }
