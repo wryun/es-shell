@@ -159,6 +159,35 @@ never succeeded
 	}
 }
 
+test 'signals in exception catchers' {
+	local (signals = sigint) {
+		let (
+			was-blocked = false
+			thrown = ()
+			thrown2 = ()
+		) {
+			catch @ {
+				thrown = $*
+			} {
+				catch @ e {
+					kill -INT $pid
+					was-blocked = true
+				} {
+					throw exception
+				}
+			}
+			catch @ {
+				thrown2 = $*
+			} {
+				catch @ e {kill -INT $pid} {throw exception2}
+			}
+			assert $was-blocked signal is blocked during catcher
+			assert {~ $thrown(1) signal} signal exception during catcher is thrown
+			assert {~ $thrown2(1) signal} second signal is caught
+		}
+	}
+}
+
 test 'heredocs and herestrings' {
 	let (bigfile = `{mktemp big-file.XXXXXX})
 	unwind-protect {
