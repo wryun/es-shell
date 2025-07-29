@@ -372,6 +372,7 @@ extern List *eval(List *list0, Binding *binding0, int flags) {
 
 restart:
 	if (list == NULL) {
+		SIGCHK();
 		RefPop3(funcname, binding, list);
 		--evaldepth;
 		return ltrue;
