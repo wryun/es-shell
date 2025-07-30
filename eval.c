@@ -371,6 +371,8 @@ extern List *eval(List *list0, Binding *binding0, int flags) {
 	Ref(char *, funcname, NULL);
 
 restart:
+	if (interrupted)
+		SIGCHK();
 	if (list == NULL) {
 		RefPop3(funcname, binding, list);
 		--evaldepth;
