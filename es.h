@@ -282,7 +282,6 @@ extern void *ealloc(size_t n);
 extern void *erealloc(void *p, size_t n);
 extern void efree(void *p);
 extern void ewrite(int fd, const char *s, size_t n);
-#define eread read
 extern Boolean isabsolute(char *path);
 extern Boolean streq2(const char *s, const char *t1, const char *t2);
 

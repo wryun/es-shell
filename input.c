@@ -193,7 +193,7 @@ static int fdfill(Input *in) {
 	} else
 #endif
 	do {
-		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
+		nread = read(in->fd, (char *) in->bufbegin, in->buflen);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 
