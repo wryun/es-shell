@@ -22,8 +22,7 @@ struct Space {
 #define	MIN_minpspace	1000
 
 #if GCPROTECT
-#define	NSPACES		12
-#define FIRSTSPACE	1
+#define	NSPACES		10
 #endif
 
 #if HAVE_SYSCONF
@@ -46,7 +45,7 @@ static Space *spaces;
 #endif
 static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
-static size_t minpspace = MIN_minpspace;
+static size_t minpspace = MIN_minpspace;	/* minimum number of bytes in a new pspace */
 
 
 /*
@@ -207,7 +206,7 @@ static void deprecate(Space *space) {
 	assert(space != NULL);
 	for (base = space; base->next != NULL; base = base->next)
 		;
-	assert(&spaces[0] <= base && base < &spaces[NSPACES]);
+	assert(space == pspace || (&spaces[0] <= base && base < &spaces[NSPACES]));
 	for (;;) {
 		invalidate(space->bot, SPACESIZE(space));
 		if (space == base)
@@ -303,6 +302,7 @@ extern void *forward(void *p) {
 
 	tag = TAG(p);
 	assert(tag != NULL);
+
 	if (FORWARDED(tag)) {
 		np = FOLLOW(tag);
 		assert(TAG(np)->magic == TAGMAGIC);
@@ -421,7 +421,7 @@ extern void gc(void) {
 		for (; new->next != NULL; new = new->next)
 			;
 		if (++new >= &spaces[NSPACES])
-			new = &spaces[FIRSTSPACE];
+			new = &spaces[0];
 		new = mkspace(new, NULL, minspace);
 #else
 		new = newspace(NULL);
@@ -530,7 +530,9 @@ extern void *pseal(void *p) {
 #endif
 	deprecate(pspace);
 #if GCPROTECT
-	pspace = mkspace(base, NULL, minpspace);
+	/* TODO: integrate pspace with GCPROTECT better? */
+	/* pspace = mkspace(base, NULL, minpspace); */
+	pspace = newpspace(NULL);
 #else
 	pspace = newpspace(NULL);
 #endif
@@ -545,13 +547,21 @@ extern void initgc(void) {
 	initmmu();
 	spaces = ealloc(NSPACES * sizeof (Space));
 	memzero(spaces, NSPACES * sizeof (Space));
-	new = mkspace(&spaces[FIRSTSPACE], NULL, minspace);
-	pspace = mkspace(&spaces[0], NULL, minpspace);
+	new = mkspace(&spaces[0], NULL, minspace);
 #else
 	new = newspace(NULL);
-	pspace = newpspace(NULL);
 #endif
 	old = NULL;
+}
+
+extern void *createpspace(void) {
+	return (void *)newpspace(NULL);
+}
+
+extern void *setpspace(void *new) {
+	void *old = (void *)pspace;
+	pspace = (Space *)new;
+	return old;
 }
 
 
