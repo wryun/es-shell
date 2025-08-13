@@ -282,10 +282,8 @@ extern void *ealloc(size_t n);
 extern void *erealloc(void *p, size_t n);
 extern void efree(void *p);
 extern void ewrite(int fd, const char *s, size_t n);
-extern long eread(int fd, char *buf, size_t n);
 extern Boolean isabsolute(char *path);
 extern Boolean streq2(const char *s, const char *t1, const char *t2);
-
 
 /* input.c */
 
@@ -365,7 +363,7 @@ extern void setsigeffects(const Sigeffect effects[]);
 extern void getsigeffects(Sigeffect effects[]);
 extern List *mksiglist(void);
 extern void initsignals(Boolean interactive, Boolean allowdumps);
-extern Atomic slow, interrupted;
+extern Atomic slow;
 extern jmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);

@@ -365,7 +365,7 @@ static List *bqinput(const char *sep, int fd) {
 
 restart:
 	/* avoid SIGCHK()ing in here so we don't abandon our child process */
-	while ((n = eread(fd, in, sizeof in)) > 0)
+	while ((n = read(fd, in, sizeof in)) > 0)
 		splitstring(in, n, FALSE);
 	if (n == -1) {
 		if (errno == EINTR)
@@ -418,7 +418,7 @@ static int read1(int fd) {
 	int nread;
 	unsigned char buf;
 	do {
-		nread = eread(fd, (char *) &buf, 1);
+		nread = read(fd, (char *) &buf, 1);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 	if (nread == -1)
