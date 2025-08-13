@@ -7,13 +7,18 @@ typedef void (*Sighandler)(int);
 
 Boolean sigint_newline = TRUE;
 
-jmp_buf slowlabel;
-Atomic slow = FALSE;
-Atomic interrupted = FALSE;
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
 static Sighandler handler_in[NSIG];
+
+/*
+ * these variables are for the purpose of forcing a "return" from library or
+ * system calls when a signal is received, since some of them don't do that
+ * themselves.
+ */
+jmp_buf slowlabel;
+Atomic slow = FALSE;
 
 #if HAVE_SIGACTION
 #ifndef	SA_NOCLDSTOP
@@ -79,7 +84,6 @@ static void catcher(int sig) {
 		caught[sig] = TRUE;
 		++sigcount;
 	}
-	interrupted = TRUE;
 	if (slow)
 		longjmp(slowlabel, 1);
 }

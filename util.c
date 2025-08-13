@@ -98,35 +98,7 @@ extern void ewrite(int fd, const char *buf, size_t n) {
 	volatile long i, remain;
 	const char *volatile bufp = buf;
 	for (i = 0, remain = n; remain > 0; bufp += i, remain -= i) {
-		interrupted = FALSE;
-		if (!setjmp(slowlabel)) {
-			slow = TRUE;
-			if (interrupted)
-				break;
-			else if ((i = write(fd, bufp, remain)) <= 0)
-				break; /* abort silently on errors in write() */
-		} else
-			break;
-		slow = FALSE;
+		if ((i = write(fd, bufp, remain)) < 0 && errno != EINTR)
+			break; /* abort silently on errors in write() */
 	}
-	slow = FALSE;
-}
-
-extern long eread(int fd, char *buf, size_t n) {
-	long r;
-	interrupted = FALSE;
-	if (!setjmp(slowlabel)) {
-		slow = TRUE;
-		if (!interrupted)
-			r = read(fd, buf, n);
-		else
-			r = -2;
-	} else
-		r = -2;
-	slow = FALSE;
-	if (r == -2) {
-		errno = EINTR;
-		r = -1;
-	}
-	return r;
 }
