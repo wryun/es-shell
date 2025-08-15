@@ -2,6 +2,8 @@
 
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 
+#include "token.h"	/* for YYSTYPE */
+
 typedef struct Input Input;
 struct Input {
 	int (*get)(Input *self);
@@ -34,7 +36,7 @@ extern void yyerror(const char *s);
 /* token.c */
 
 extern const char dnw[];
-extern int yylex(void);
+extern int yylex(YYSTYPE *y);
 extern void inityy(void);
 extern void print_prompt2(void);
 
