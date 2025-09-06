@@ -374,13 +374,6 @@ extern void blocksignals(void);
 extern void unblocksignals(void);
 
 
-/* prim-sys.c */
-
-#if BUILTIN_TIME
-extern void setbasetime(void);
-#endif
-
-
 /* open.c */
 
 typedef enum { oOpen, oCreate, oAppend, oReadWrite, oReadCreate, oReadAppend } OpenKind;

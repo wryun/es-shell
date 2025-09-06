@@ -299,15 +299,9 @@ struct times {
 	intmax_t sys_usec;
 };
 
-static Boolean timethrows = TRUE;
-
 static void tmerrchk(int result, char *str) {
-	if (result != -1)
-		return;
-	if (timethrows)
+	if (result == -1)
 		fail("$&time", "%s: %s", str, esstrerror(errno));
-	eprint("%s: %s\n", str, esstrerror(errno));
-	eprint("Calls to `$&time` or `time` in this shell may produce bad values.\n");
 }
 
 static void getrealtime(struct times *ret) {
@@ -353,71 +347,52 @@ static void gettimes(struct times *ret) {
 	getusagetimes(ret);
 }
 
-static void parsetimes(List *list, struct times *ret) {
-	char *suffix;
-	if (length(list) != 3)
-		fail("$&time", "usage: $&time [r u s]");
-
-	ret->real_usec = strtoimax(getstr(list->term), &suffix, 10);
-	if (*suffix != '\0')
-		fail("$&time", "real-time argument not an int", list->term);
-	ret->user_usec = strtoimax(getstr(list->next->term), &suffix, 10);
-	if (*suffix != '\0')
-		fail("$&time", "user-time argument not an int", list->next->term);
-	ret->sys_usec = strtoimax(getstr(list->next->next->term), &suffix, 10);
-	if (*suffix != '\0')
-		fail("$&time", "sys-time argument not an int", list->next->next->term);
-}
-
 static void subtimes(struct times a, struct times b, struct times *ret) {
 	ret->real_usec = a.real_usec - b.real_usec;
 	ret->user_usec = a.user_usec - b.user_usec;
 	ret->sys_usec = a.sys_usec - b.sys_usec;
 }
 
-static char *strtimes(struct times time) {
-	return str(
+static void strtimes(struct times time, List *list) {
+	eprint(
 #if PRECISE_REALTIME
 		"%6.3jd"
 #else
 		"%6jd"
 #endif
-		"r %7.3jdu %7.3jds",
+		"r %7.3jdu %7.3jds\t%L\n",
 #if PRECISE_REALTIME
 		time.real_usec / 1000,
 #else
 		time.real_usec / 1000000,
 #endif
 		time.user_usec / 1000,
-		time.sys_usec / 1000
+		time.sys_usec / 1000,
+		list, " "
 	);
 }
 
-static struct times base;
-extern void setbasetime(void) {
-	timethrows = FALSE;
-	gettimes(&base);
-	timethrows = TRUE;
-}
-
 PRIM(time) {
+	int pid, status;
 	struct times prev, time;
 
+	Ref(List *, lp, list);
+
+	gc();	/* do a garbage collection first to ensure reproducible results */
+	gettimes(&prev);
+	pid = efork(TRUE, FALSE);
+	if (pid == 0)
+		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+	status = ewait(pid, FALSE);
 	gettimes(&time);
-	subtimes(time, base, &time);
+	SIGCHK();
+	printstatus(0, status);
 
-	if (list != NULL) {
-		parsetimes(list, &prev);
-		subtimes(time, prev, &time);
-	}
+	subtimes(time, prev, &time);
+	strtimes(time, lp);
 
-	gcdisable();
-	list = mklist(mkstr(strtimes(time)),
-		mklist(mkstr(str("%jd", time.real_usec)),
-		mklist(mkstr(str("%jd", time.user_usec)),
-		mklist(mkstr(str("%jd", time.sys_usec)), NULL))));
-	gcenable();
-	return list;
+	RefEnd(lp);
+	return mklist(mkstr(mkstatus(status)), NULL);
 }
 #endif	/* BUILTIN_TIME */
 
