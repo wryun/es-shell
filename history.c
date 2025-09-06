@@ -39,7 +39,7 @@ static char history_comment_char = '#';
  */
 
 
-extern void newhistbuffer() {
+extern void newhistbuffer(void) {
 	assert(histbuffer == NULL);
 	histbuffer = openbuffer(BUFSIZE);
 }
@@ -50,7 +50,7 @@ extern void addhistbuffer(char c) {
 	histbuffer = bufputc(histbuffer, c);
 }
 
-extern char *dumphistbuffer() {
+extern char *dumphistbuffer(void) {
 	char *s;
         size_t len;
 	assert(histbuffer != NULL);

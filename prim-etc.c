@@ -193,7 +193,7 @@ PRIM(parse) {
 	loginput(dumphistbuffer());
 	result = (tree == NULL)
 		   ? NULL
-		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
+		   : mklist(mkterm(NULL, mkclosure(gcmk(nThunk, tree), NULL)),
 			    NULL);
 	RefEnd3(tree, prompt2, prompt1);
 	return result;

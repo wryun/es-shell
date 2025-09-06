@@ -7,13 +7,18 @@ typedef void (*Sighandler)(int);
 
 Boolean sigint_newline = TRUE;
 
-jmp_buf slowlabel;
-Atomic slow = FALSE;
-Atomic interrupted = FALSE;
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
 static Sighandler handler_in[NSIG];
+
+/*
+ * these variables are for the purpose of forcing a "return" from library or
+ * system calls when a signal is received, since some of them don't do that
+ * themselves.
+ */
+jmp_buf slowlabel;
+Atomic slow = FALSE;
 
 #if HAVE_SIGACTION
 #ifndef	SA_NOCLDSTOP
@@ -79,7 +84,6 @@ static void catcher(int sig) {
 		caught[sig] = TRUE;
 		++sigcount;
 	}
-	interrupted = TRUE;
 	if (slow)
 		longjmp(slowlabel, 1);
 }
@@ -184,18 +188,10 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 			sigeffect[sig] = sig_ignore;
 		}
 #endif /* !HAVE_SIGACTION */
-		else if (h == SIG_DFL || h == SIG_ERR)
-			sigeffect[sig] = sig_default;
 		else {
-#if TRUST_INCOMING_SIGNAL_HANDLERS
 			sigeffect[sig] = sig_default;
-			handler_in[sig] = h;
-#else
-			panic(
-				"initsignals: bad incoming signal value for %s: %x",
-				signame(sig), h
-			);
-#endif
+			if (h != SIG_ERR)
+				handler_in[sig] = h;
 		}
 	}
 

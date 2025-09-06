@@ -19,9 +19,11 @@ struct Space {
 #define	INSPACE(p, sp)	((sp)->bot <= (char *) (p) && (char *) (p) < (sp)->top)
 
 #define	MIN_minspace	10000
+#define	MIN_minpspace	1000
 
 #if GCPROTECT
-#define	NSPACES		10
+#define	NSPACES		12
+#define FIRSTSPACE	1
 #endif
 
 #if HAVE_SYSCONF
@@ -38,12 +40,13 @@ int gcblocked = 0;
 Tag StringTag;
 
 /* own variables */
-static Space *new, *old;
+static Space *new, *old, *pspace;
 #if GCPROTECT
 static Space *spaces;
 #endif
 static Root *globalrootlist, *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
+static size_t minpspace = MIN_minpspace;
 
 
 /*
@@ -136,14 +139,15 @@ static void initmmu(void) {
 #if GCPROTECT
 
 /* mkspace -- create a new ``half'' space in debugging mode */
-static Space *mkspace(Space *space, Space *next) {
+static Space *mkspace(Space *space, Space *next, size_t size) {
 	assert(space == NULL || (&spaces[0] <= space && space < &spaces[NSPACES]));
 
+	/* find and clear out any existing/next spaces */
 	if (space != NULL) {
 		Space *sp;
 		if (space->bot == NULL)
 			sp = NULL;
-		else if ((size_t) SPACESIZE(space) < minspace)
+		else if ((size_t) SPACESIZE(space) < size)
 			sp = space;
 		else {
 			sp = space->next;
@@ -160,12 +164,13 @@ static Space *mkspace(Space *space, Space *next) {
 		}
 	}
 
+	/* build new space (or set up existing &space[n]) */
 	if (space == NULL) {
 		space = ealloc(sizeof (Space));
 		memzero(space, sizeof (Space));
 	}
 	if (space->bot == NULL) {
-		size_t n = PAGEROUND(minspace);
+		size_t n = PAGEROUND(size);
 		space->bot = take(n);
 		space->top = space->bot + n / (sizeof (*space->bot));
 	}
@@ -175,13 +180,14 @@ static Space *mkspace(Space *space, Space *next) {
 
 	return space;
 }
-#define	newspace(next)		mkspace(NULL, next)
+#define	newspace(next)		mkspace(NULL, next, minspace)
+#define	newpspace(next)		mkspace(NULL, next, minpspace)
 
 #else	/* !GCPROTECT */
 
 /* newspace -- create a new ``half'' space */
-static Space *newspace(Space *next) {
-	size_t n = ALIGN(minspace);
+static Space *newspacesz(Space *next, size_t size) {
+	size_t n = ALIGN(size);
 	Space *space = ealloc(sizeof (Space) + n);
 	space->bot = (void *) &space[1];
 	space->top = (void *) (((char *) space->bot) + n);
@@ -189,6 +195,8 @@ static Space *newspace(Space *next) {
 	space->next = next;
 	return space;
 }
+#define	newspace(next)		newspacesz(next, minspace)
+#define	newpspace(next)		newspacesz(next, minpspace)
 
 #endif	/* !GCPROTECT */
 
@@ -273,12 +281,20 @@ extern void exceptionunroot(void) {
 #define	FOLLOWTO(p)	((Tag *) (((char *) p) + 1))
 #define	FOLLOW(tagp)	((void *) (((char *) tagp) - 1))
 
+/* TODO: remove pmode: it's the Wrong Thing */
+static Boolean pmode = FALSE;
+
 /* forward -- forward an individual pointer from old space */
 extern void *forward(void *p) {
 	Tag *tag;
 	void *np;
 
-	if (!isinspace(old, p)) {
+	if (pmode && !isinspace(pspace, p)) {
+		VERBOSE(("GC %8ux : <<not in pspace>>\n", p));
+		return p;
+	}
+
+	if (!pmode && !isinspace(old, p)) {
 		VERBOSE(("GC %8ux : <<not in old space>>\n", p));
 		return p;
 	}
@@ -297,6 +313,12 @@ extern void *forward(void *p) {
 		VERBOSE(("%s	-> %8ux (forwarded)\n", tag->typename, np));
 		TAG(p) = FOLLOWTO(np);
 	}
+
+	if (pmode) {
+		tag = TAG(np);
+		(*tag->scan)(np);
+	}
+
 	return np;
 }
 
@@ -341,7 +363,11 @@ static void scanspace(void) {
 extern void gcenable(void) {
 	assert(gcblocked > 0);
 	--gcblocked;
+#if GCALWAYS
+	if (!gcblocked)
+#else
 	if (!gcblocked && new->next != NULL)
+#endif
 		gc();
 }
 
@@ -395,8 +421,8 @@ extern void gc(void) {
 		for (; new->next != NULL; new = new->next)
 			;
 		if (++new >= &spaces[NSPACES])
-			new = &spaces[0];
-		new = mkspace(new, NULL);
+			new = &spaces[FIRSTSPACE];
+		new = mkspace(new, NULL, minspace);
 #else
 		new = newspace(NULL);
 #endif
@@ -425,7 +451,7 @@ extern void gc(void) {
 #if GCINFO
 		if (gcinfo)
 			eprint(
-				"[GC: old %8d  live %8d  min %8d  (pid %5d)]\n",
+				"[   GC: old %8d  live %8d  min %8d              (pid %5d)]\n",
 				olddata, livedata, minspace, getpid()
 			);
 #endif
@@ -439,15 +465,91 @@ extern void gc(void) {
 	} while (new->next != NULL);
 }
 
+/* pseal -- collect pspace to new with p as its only root, and return the collected p */
+extern void *pseal(void *p) {
+	size_t psize = 0;
+	Space *sp;
+#if GCINFO
+	size_t newdata = 0, livedata = 0;
+#endif
+#if GCPROTECT
+	Space *base;
+#endif
+
+	for (sp = pspace; sp != NULL; sp = sp->next)
+		psize += SPACEUSED(sp);
+
+	if (psize == 0)
+		return p;
+
+	/* TODO: this is an overestimate since it counts garbage */
+	gcreserve(psize);
+	VERBOSE(("Reserved %d for pspace copy\n", psize));
+
+#if GCINFO
+	if (gcinfo)
+		for (sp = new; sp != NULL; sp = sp->next)
+			newdata += SPACEUSED(sp);
+#endif
+
+	assert (gcblocked >= 0);
+	++gcblocked;
+
+#if GCVERBOSE
+	for (sp = pspace; sp != NULL; sp = sp->next)
+		VERBOSE(("GC pspace = %ux ... %ux\n", sp->bot, sp->current));
+#endif
+	if (p != NULL) {
+		VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
+
+		pmode = TRUE;
+		p = forward(p);
+		(*(TAG(p))->scan)(p);
+		pmode = FALSE;
+	}
+
+#if GCINFO
+	if (gcinfo) {
+		for (sp = new; sp != NULL; sp = sp->next)
+			livedata += SPACEUSED(sp);
+		eprint(
+			"[pseal: old %8d  live %8d  min %8d  diff %5d  (pid %5d)]\n",
+			psize, livedata, minpspace, (livedata - newdata), getpid()
+		);
+	}
+#endif
+
+	if (psize > minpspace)
+		minpspace = psize * 2;
+	else if (psize < minpspace / 2 && MIN_minpspace <= minpspace / 2)
+		minpspace /= 2;
+
+#if GCPROTECT
+	for (base = pspace; base->next != NULL; base = base->next)
+		;
+#endif
+	deprecate(pspace);
+#if GCPROTECT
+	pspace = mkspace(base, NULL, minpspace);
+#else
+	pspace = newpspace(NULL);
+#endif
+
+	--gcblocked;
+	return p;
+}
+
 /* initgc -- initialize the garbage collector */
 extern void initgc(void) {
 #if GCPROTECT
 	initmmu();
 	spaces = ealloc(NSPACES * sizeof (Space));
 	memzero(spaces, NSPACES * sizeof (Space));
-	new = mkspace(&spaces[0], NULL);
+	new = mkspace(&spaces[FIRSTSPACE], NULL, minspace);
+	pspace = mkspace(&spaces[0], NULL, minpspace);
 #else
 	new = newspace(NULL);
+	pspace = newpspace(NULL);
 #endif
 	old = NULL;
 }
@@ -481,6 +583,24 @@ extern void *gcalloc(size_t nbytes, Tag *tag) {
 	}
 }
 
+/* palloc -- allocate an object in pspace */
+extern void *palloc(size_t nbytes, Tag *tag) {
+	size_t n = ALIGN(nbytes + sizeof (Tag *));
+	assert(tag == NULL || tag->magic == TAGMAGIC);
+	for (;;) {
+		Tag **p = (void *) pspace->current;
+		char *q = ((char *) p) + n;
+		if (q <= pspace->top) {
+			pspace->current = q;
+			*p++ = tag;
+			return p;
+		}
+		if (minpspace < nbytes)
+			minpspace = nbytes + sizeof (Tag *);
+		pspace = newpspace(pspace);
+	}
+}
+
 
 /*
  * strings
@@ -503,8 +623,23 @@ extern char *gcndup(const char *s, size_t n) {
 	RefReturn(result);
 }
 
+extern char *pndup(const char *s, size_t n) {
+	char *ns;
+
+	ns = palloc((n + 1) * sizeof (char), &StringTag);
+	memcpy(ns, s, n);
+	ns[n] = '\0';
+	assert(strlen(ns) == n);
+
+	return ns;
+}
+
 extern char *gcdup(const char *s) {
 	return gcndup(s, strlen(s));
+}
+
+extern char *pdup(const char *s) {
+	return pndup(s, strlen(s));
 }
 
 static void *StringCopy(void *op) {
@@ -547,8 +682,20 @@ extern char *sealbuffer(Buffer *buf) {
 	return s;
 }
 
+extern char *psealbuffer(Buffer *buf) {
+	char *s = pdup(buf->str);
+	efree(buf);
+	return s;
+}
+
 extern char *sealcountedbuffer(Buffer *buf) {
 	char *s = gcndup(buf->str, buf->current);
+	efree(buf);
+	return s;
+}
+
+extern char *psealcountedbuffer(Buffer *buf) {
+	char *s = pndup(buf->str, buf->current);
 	efree(buf);
 	return s;
 }

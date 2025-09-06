@@ -195,7 +195,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		else if (streq(buf, "match"))
 			return MATCH;
 		w = RW;
-		y->str = gcdup(buf);
+		y->str = pdup(buf);
 		return WORD;
 	}
 	if (c == '`' || c == '!' || c == '$' || c == '\'' || c == '=') {
@@ -244,7 +244,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		}
 		UNGETC(c);
 		buf[i] = '\0';
-		y->str = gcdup(buf);
+		y->str = pdup(buf);
 		return QWORD;
 	case '\\':
 		if ((c = GETC()) == '\n') {
@@ -306,7 +306,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			break;
 		}
 		buf[1] = 0;
-		y->str = gcdup(buf);
+		y->str = pdup(buf);
 		return QWORD;
 	case '#':
 		while ((c = GETC()) != '\n') /* skip comment until newline */
@@ -369,9 +369,10 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 				cmd = "%here";
 			} else
 				cmd = "%heredoc";
-		else if (c == '=')
+		else if (c == '=') {
+			w = NW;
 			return CALL;
-		else
+		} else
 			cmd = "%open";
 		goto redirection;
 	case '>':

@@ -136,7 +136,7 @@ extern List *sortlist(List *list);
 
 /* tree.c */
 
-extern Tree *mk(NodeKind VARARGS);
+extern Tree *gcmk(NodeKind VARARGS);	/* gcalloc a tree node */
 
 
 /* closure.c */
@@ -282,10 +282,8 @@ extern void *ealloc(size_t n);
 extern void *erealloc(void *p, size_t n);
 extern void efree(void *p);
 extern void ewrite(int fd, const char *s, size_t n);
-extern long eread(int fd, char *buf, size_t n);
 extern Boolean isabsolute(char *path);
 extern Boolean streq2(const char *s, const char *t1, const char *t2);
-
 
 /* input.c */
 
@@ -365,7 +363,7 @@ extern void setsigeffects(const Sigeffect effects[]);
 extern void getsigeffects(Sigeffect effects[]);
 extern List *mksiglist(void);
 extern void initsignals(Boolean interactive, Boolean allowdumps);
-extern Atomic slow, interrupted;
+extern Atomic slow;
 extern jmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);
@@ -410,6 +408,12 @@ extern void gcreserve(size_t nbytes);		/* provoke a collection, if enabled and n
 extern void gcenable(void);			/* enable collections */
 extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
+
+/* operations with pspace, the explicitly-collected gc space for parse tree building */
+extern void *palloc(size_t n, Tag *t);		/* allocate n with collection tag t, but in pspace */
+extern void *pseal(void *p);			/* collect pspace into gcspace with root p */
+extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */
+extern char *pndup(const char *s, size_t n);	/* copy a counted string into pspace */
 
 
 /*

@@ -139,8 +139,8 @@ static int eoffill(Input UNUSED *in) {
 #if HAVE_READLINE
 /* callreadline -- readline wrapper */
 static char *callreadline(char *prompt0) {
-	char *volatile prompt = prompt0;
 	char *r;
+	Ref(char *volatile, prompt, prompt0);
 	if (prompt == NULL)
 		prompt = ""; /* bug fix for readline 2.0 */
 	checkreloadhistory();
@@ -150,18 +150,16 @@ static char *callreadline(char *prompt0) {
 	}
 	if (RL_ISSTATE(RL_STATE_INITIALIZED))
 		rl_reset_screen_size();
-	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
-		r = interrupted ? NULL : readline(prompt);
-		if (interrupted)
-			errno = EINTR;
+		r = readline(prompt);
 	} else {
 		r = NULL;
 		errno = EINTR;
 	}
 	slow = FALSE;
 	SIGCHK();
+	RefEnd(prompt);
 	return r;
 }
 #endif
@@ -195,7 +193,7 @@ static int fdfill(Input *in) {
 	} else
 #endif
 	do {
-		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
+		nread = read(in->fd, (char *) in->bufbegin, in->buflen);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 
@@ -240,24 +238,26 @@ extern Tree *parse(char *pr1, char *pr2) {
 #endif
 	prompt2 = pr2;
 
-	gcreserve(300 * sizeof (Tree));
-	gcdisable();
 	result = yyparse();
-	gcenable();
 
 	if (result || error != NULL) {
-		const char *e;
 		assert(error != NULL);
-		e = error;
+		Ref(const char *, e, error);
 		error = NULL;
+		pseal(NULL);
 		fail("$&parse", "%s", e);
+		RefEnd(e);
 	}
 
 #if LISPTREES
+	Ref(Tree *, pt, pseal(parsetree));
 	if (input->runflags & run_lisptrees)
-		eprint("%B\n", parsetree);
+		eprint("%B\n", pt);
+	RefReturn(pt);
+#else
+	return pseal(parsetree);
 #endif
-	return parsetree;
+
 }
 
 /* resetparser -- clear parser errors in the signal handler */
@@ -567,9 +567,6 @@ extern void initinput(void) {
 	globalroot(&error);		/* parse errors */
 	globalroot(&prompt);		/* main prompt */
 	globalroot(&prompt2);		/* secondary prompt */
-
-	/* call the parser's initialization */
-	initparse();
 
 #if HAVE_READLINE
 	rl_readline_name = "es";
