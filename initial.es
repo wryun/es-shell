@@ -189,7 +189,15 @@ fn-while = $&noreturn @ cond body {
 				if {!$cond} {
 					throw break $result
 				} {
-					result <={result = <=$body}
+					result = <={catch @ e rest {
+						if {~ $e false} {
+							throw break $rest
+						} {
+							throw $e $rest
+						}
+					} {
+						$body
+					}}
 				}
 			}
 	}
