@@ -150,12 +150,9 @@ static char *callreadline(char *prompt0) {
 	}
 	if (RL_ISSTATE(RL_STATE_INITIALIZED))
 		rl_reset_screen_size();
-	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
-		r = interrupted ? NULL : readline(prompt);
-		if (interrupted)
-			errno = EINTR;
+		r = readline(prompt);
 	} else {
 		r = NULL;
 		errno = EINTR;
@@ -196,7 +193,7 @@ static int fdfill(Input *in) {
 	} else
 #endif
 	do {
-		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
+		nread = read(in->fd, (char *) in->bufbegin, in->buflen);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 

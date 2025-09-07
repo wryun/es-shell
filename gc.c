@@ -363,7 +363,11 @@ static void scanspace(void) {
 extern void gcenable(void) {
 	assert(gcblocked > 0);
 	--gcblocked;
+#if GCALWAYS
+	if (!gcblocked)
+#else
 	if (!gcblocked && new->next != NULL)
+#endif
 		gc();
 }
 
