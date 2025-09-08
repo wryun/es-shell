@@ -481,8 +481,10 @@ restart:
 
 done:
 	--evaldepth;
-	if ((flags & eval_exitonfalse) && !istrue(list) && !did_assign)
-		throw(mklist(mkterm("false", NULL), list));
+	if ((flags & eval_exitonfalse) && !istrue(list) && !did_assign) {
+		Term *t = mkstr("false");
+		throw(mklist(t, list));
+	}
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }
