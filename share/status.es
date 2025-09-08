@@ -23,10 +23,21 @@ fn %interactive-loop {
 			catch @ e rest {
 				if {~ $e return} {
 					status = $rest
+				} {~ $e caught-false} {
+					status = $rest
+					e = false
 				}
 				throw $e $rest
 			} {
-				status = <={$d $*}
+				status = <={catch @ e rest {
+					if {~ $e false} {
+						throw caught-false $rest
+					} {
+						throw $e $rest
+					}
+				} {
+					$d $*
+				}}
 			}
 		}
 	) $loop $*
