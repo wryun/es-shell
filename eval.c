@@ -306,15 +306,17 @@ extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
 
 /* whatis -- evaluate fn %whatis + some argument */
 static List *whatis(Term *term, char *name) {
-	List *list;
-	Ref(List *, search, NULL);
-	search = varlookup("fn-%whatis", NULL);
+	Ref(List *, list, NULL);
+	Ref(List *, search, varlookup("fn-%whatis", NULL));
 	if (search == NULL)
 		fail("es:whatis", "%E: fn %%whatis undefined", term);
+	gcdisable();
 	list = mklist(term, name == NULL ? NULL : mklist(mkstr(name), NULL));
 	list = append(search, list);
 	RefEnd(search);
-	return eval(list, NULL, 0);
+	gcenable();
+	list = eval(list, NULL, 0);
+	RefReturn(list);
 }
 
 /* eval -- evaluate a list, producing a list */
