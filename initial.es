@@ -178,28 +178,30 @@ fn whatis {
 #	does not catch the return exception.  It does, however, catch break.
 
 fn-while = $&noreturn @ cond body {
+	let (result = <=true)
 	catch @ e value {
-		if {!~ $e break} {
+		if {~ $e caught-false} {
+			throw false $value
+		} {!~ $e break} {
 			throw $e $value
 		}
-		result $value
+		result = $value
 	} {
-		let (result = <=true)
-			forever {
-				if {!$cond} {
-					throw break $result
-				} {
-					result = <={catch @ e rest {
-						if {~ $e false} {
-							throw break $rest
-						} {
-							throw $e $rest
-						}
+		forever {
+			if {!$cond} {
+				throw break $result
+			} {
+				result = <={catch @ e rest {
+					if {~ $e false} {
+						throw caught-false $rest
 					} {
-						$body
-					}}
-				}
+						throw $e $rest
+					}
+				} {
+					$body
+				}}
 			}
+		}
 	}
 }
 

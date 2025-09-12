@@ -20,6 +20,8 @@ test 'es -e' {
 			'{true; {true; {false; true}}}'		false
 			'let (fn-x = {false; true})
 				if {x} {true} {false}'		false
+			'let (n=;o=a b) while {!~ $o ()} {
+				o=$o(2 ...); n=$n $o}'		true
 
 			# assignments
 			'x = false'				true
