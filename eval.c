@@ -3,6 +3,7 @@
 #include "es.h"
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
+static Boolean did_assign;
 
 static Noreturn failexec(char *file, List *args) {
 	List *fn;
@@ -46,17 +47,17 @@ extern List *forkexec(char *file, List *list, Boolean inchild) {
 }
 
 /* assign -- bind a list of values to a list of variables */
-static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
+static List *assign(Tree *varform, Tree *valueform0, Binding *binding0, int evalflags) {
 	Ref(List *, result, NULL);
 
 	Ref(Tree *, valueform, valueform0);
 	Ref(Binding *, binding, binding0);
-	Ref(List *, vars, glom(varform, binding, FALSE));
+	Ref(List *, vars, glom(varform, binding, FALSE, evalflags));
 
 	if (vars == NULL)
 		fail("es:assign", "null variable name");
 
-	Ref(List *, values, glom(valueform, binding, TRUE));
+	Ref(List *, values, glom(valueform, binding, TRUE, evalflags));
 	result = values;
 
 	for (; vars != NULL; vars = vars->next) {
@@ -76,12 +77,13 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 	}
 
 	RefEnd4(values, vars, binding, valueform);
+	did_assign = TRUE;
 	RefReturn(result);
 }
 
 /* letbindings -- create a new Binding containing let-bound variables */
 static Binding *letbindings(Tree *defn0, Binding *outer0,
-			    Binding *context0, int UNUSED evalflags) {
+			    Binding *context0, int evalflags) {
 	Ref(Binding *, binding, outer0);
 	Ref(Binding *, context, context0);
 	Ref(Tree *, defn, defn0);
@@ -93,8 +95,8 @@ static Binding *letbindings(Tree *defn0, Binding *outer0,
 
 		Ref(Tree *, assign, defn->u[0].p);
 		assert(assign->kind == nAssign);
-		Ref(List *, vars, glom(assign->u[0].p, context, FALSE));
-		Ref(List *, values, glom(assign->u[1].p, context, TRUE));
+		Ref(List *, vars, glom(assign->u[0].p, context, FALSE, evalflags));
+		Ref(List *, values, glom(assign->u[1].p, context, TRUE, evalflags));
 
 		if (vars == NULL)
 			fail("es:let", "null variable name");
@@ -175,8 +177,8 @@ static List *forloop(Tree *defn0, Tree *body0,
 			continue;
 		Ref(Tree *, assign, defn->u[0].p);
 		assert(assign->kind == nAssign);
-		Ref(List *, vars, glom(assign->u[0].p, outer, FALSE));
-		Ref(List *, list, glom(assign->u[1].p, outer, TRUE));
+		Ref(List *, vars, glom(assign->u[0].p, outer, FALSE, evalflags));
+		Ref(List *, list, glom(assign->u[1].p, outer, TRUE, evalflags));
 		if (vars == NULL)
 			fail("es:for", "null variable name");
 		for (; vars != NULL; vars = vars->next) {
@@ -235,14 +237,14 @@ static List *forloop(Tree *defn0, Tree *body0,
 
 /* matchpattern -- does the text match a pattern? */
 static List *matchpattern(Tree *subjectform0, Tree *patternform0,
-			  Binding *binding) {
+			  Binding *binding, int evalflags) {
 	Boolean result;
 	List *pattern;
 	Ref(Binding *, bp, binding);
 	Ref(Tree *, patternform, patternform0);
-	Ref(List *, subject, glom(subjectform0, bp, TRUE));
+	Ref(List *, subject, glom(subjectform0, bp, TRUE, evalflags));
 	Ref(StrList *, quote, NULL);
-	pattern = glom2(patternform, bp, &quote);
+	pattern = glom2(patternform, bp, &quote, evalflags);
 	result = listmatch(subject, pattern, quote);
 	RefEnd4(quote, subject, patternform, bp);
 	return result ? ltrue : lfalse;
@@ -250,14 +252,14 @@ static List *matchpattern(Tree *subjectform0, Tree *patternform0,
 
 /* extractpattern -- Like matchpattern, but returns matches */
 static List *extractpattern(Tree *subjectform0, Tree *patternform0,
-			    Binding *binding) {
+			    Binding *binding, int evalflags) {
 	List *pattern;
 	Ref(List *, result, NULL);
 	Ref(Binding *, bp, binding);
 	Ref(Tree *, patternform, patternform0);
-	Ref(List *, subject, glom(subjectform0, bp, TRUE));
+	Ref(List *, subject, glom(subjectform0, bp, TRUE, evalflags));
 	Ref(StrList *, quote, NULL);
-	pattern = glom2(patternform, bp, &quote);
+	pattern = glom2(patternform, bp, &quote, evalflags);
 	result = (List *) extractmatches(subject, pattern, quote);
 	RefEnd4(quote, subject, patternform, bp);
 	RefReturn(result);
@@ -280,14 +282,14 @@ top:
 	    case nWord: case nThunk: case nLambda: case nCall: case nPrim: {
 		List *list;
 		Ref(Binding *, bp, binding);
-		list = glom(tree, binding, TRUE);
+		list = glom(tree, binding, TRUE, flags);
 		binding = bp;
 		RefEnd(bp);
 		return eval(list, binding, flags);
 	    }
 
 	    case nAssign:
-		return assign(tree->u[0].p, tree->u[1].p, binding);
+		return assign(tree->u[0].p, tree->u[1].p, binding, flags);
 
 	    case nLet: case nClosure:
 		Ref(Tree *, body, tree->u[1].p);
@@ -301,12 +303,12 @@ top:
 
 	    case nFor:
 		return forloop(tree->u[0].p, tree->u[1].p, binding, flags);
-	
+
 	    case nMatch:
-		return matchpattern(tree->u[0].p, tree->u[1].p, binding);
+		return matchpattern(tree->u[0].p, tree->u[1].p, binding, flags);
 
 	    case nExtract:
-		return extractpattern(tree->u[0].p, tree->u[1].p, binding);
+		return extractpattern(tree->u[0].p, tree->u[1].p, binding, flags);
 
 	    default:
 		panic("walk: bad node kind %d", tree->kind);
@@ -378,6 +380,7 @@ restart:
 		return ltrue;
 	}
 	assert(list->term != NULL);
+	did_assign = FALSE;
 
 	if ((cp = getclosure(list->term)) != NULL) {
 		switch (cp->tree->kind) {
@@ -418,7 +421,7 @@ restart:
 			EndExceptionHandler
 			break;
 		    case nList: {
-			Ref(List *, lp, glom(cp->tree, cp->binding, TRUE));
+			Ref(List *, lp, glom(cp->tree, cp->binding, TRUE, flags));
 			list = append(lp, list->next);
 			RefEnd(lp);
 			goto restart;
@@ -478,8 +481,10 @@ restart:
 
 done:
 	--evaldepth;
-	if ((flags & eval_exitonfalse) && !istrue(list))
-		esexit(exitstatus(list));
+	if ((flags & eval_exitonfalse) && !istrue(list) && !did_assign) {
+		Term *t = mkstr("false");
+		throw(mklist(t, list));
+	}
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }
