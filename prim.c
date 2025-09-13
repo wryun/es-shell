@@ -5,12 +5,12 @@
 
 static Dict *prims;
 
-extern List *prim(char *s, List *list, Binding *binding, int evalflags) {
+extern List *prim(char *s, List *list, int evalflags) {
 	Prim *p;
 	p = (Prim *) dictget(prims, s);
 	if (p == NULL)
 		fail("es:prim", "unknown primitive: %s", s);
-	return (p->prim)(list, binding, evalflags);
+	return (p->prim)(list, evalflags);
 }
 
 static char *list_prefix;
