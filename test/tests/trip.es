@@ -159,7 +159,7 @@ never succeeded
 	}
 }
 
-test 'exceptions + signals' {
+test 'signals in exception catchers' {
 	local (signals = sigint) {
 		let (
 			was-blocked = false
@@ -181,7 +181,6 @@ test 'exceptions + signals' {
 			} {
 				catch @ e {kill -INT $pid} {throw exception2}
 			}
-
 			assert $was-blocked signal is blocked during catcher
 			assert {~ $thrown(1) signal} signal exception during catcher is thrown
 			assert {~ $thrown2(1) signal} second signal is caught
