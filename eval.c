@@ -383,7 +383,7 @@ restart:
 		switch (cp->tree->kind) {
 		    case nPrim:
 			assert(cp->binding == NULL);
-			list = prim(cp->tree->u[0].s, list->next, binding, flags);
+			list = prim(cp->tree->u[0].s, list->next, flags);
 			break;
 		    case nThunk:
 			list = walk(cp->tree->u[0].p, cp->binding, flags);
