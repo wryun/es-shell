@@ -483,6 +483,10 @@ static char *unquote(char *text, int quote_char) {
 	return r;
 }
 
+static int matchcmp(const void *a, const void *b) {
+	return strcoll(*(const char **)a, *(const char **)b);
+}
+
 static char *complprefix;
 static List *(*wordslistgen)(char *);
 
@@ -532,12 +536,20 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 		case '#': complprefix = "$#"; break;
 		}
 		matches = rl_completion_matches(text, list_completion_function);
+	} else if (*text == '~' && !strchr(text, '/')) {
+		/* ~foo => username.  ~foo/bar gets completed as filename. */
+		matches = rl_completion_matches(text, rl_username_completion_function);
+	} else {
+		matches = rl_completion_matches(text, rl_filename_completion_function);
+	}
+	if (matches) {
+		int n;
+		for (n = 1; matches[n]; n++);
+		qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
 	}
 
-	/* ~foo => username.  ~foo/bar already gets completed as filename. */
-	if (!matches && *text == '~' && !strchr(text, '/'))
-		matches = rl_completion_matches(text, rl_username_completion_function);
-
+	rl_attempted_completion_over = 1;
+	rl_sort_completion_matches = 0;
 	return matches;
 }
 #endif /* HAVE_READLINE */
