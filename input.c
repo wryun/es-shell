@@ -461,24 +461,12 @@ extern Boolean isfromfd(void) {
 #if HAVE_READLINE
 /* quote -- teach readline how to quote a word in es during completion */
 static char *quote(char *text, int type, char *qp) {
-	char *p, *r;
-
-	/* worst-case size: string is 100% quote characters which will all be
-	 * doubled, plus initial and final quotes and \0 */
-	p = r = ealloc(strlen(text) * 2 + 3);
-	/* supply opening quote if not already present */
-	if (*qp != '\'')
-		*p++ = '\'';
-	while (*text) {
-		/* double any quotes for es quote-escaping rules */
-		if (*text == '\'')
-			*p++ = '\'';
-		*p++ = *text++;
+	if (*qp != '\0' || strpbrk(text, rl_filename_quote_characters)) {
+		text = mprint("%#S", text);
+		if (type != SINGLE_MATCH)
+			text[strlen(text)-1] = '\0';
 	}
-	if (type == SINGLE_MATCH)
-		*p++ = '\'';
-	*p = '\0';
-	return r;
+	return text;
 }
 
 /* unquote -- teach es how to unquote a word */
