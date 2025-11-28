@@ -480,10 +480,15 @@ static char *unquote(const char *text, char **qp) {
 
 	p = r = ealloc(strlen(text) + 1);
 	while ((*p = *text++)) {
-		if (*p == '\'' && (!quoted || *text != '\'')) {
-			quoted = !quoted;
-			if (quoted)
-				*qp = p;
+		if (*p == '\'') {
+			if (quoted && *text == '\'') {
+				p++;
+				text++;
+			} else {
+				quoted = !quoted;
+				if (quoted)
+					*qp = p;
+			}
 		} else
 			p++;
 	}
@@ -618,6 +623,5 @@ extern void initinput(void) {
 
 	rl_completion_word_break_hook = completion_start;
 	rl_attempted_completion_function = builtin_completion;
-
 #endif
 }
