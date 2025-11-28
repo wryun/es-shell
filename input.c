@@ -587,7 +587,7 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 		qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
 		/* TODO: verify this is the right thing across rl_completion_types */
 		for (i = 0; i < n; i++)
-			matches[i] = quote(matches[i], FALSE, qp);
+			matches[i] = quote(matches[i], i == 0 && n > 1, qp);
 	}
 
 	efree(t);
