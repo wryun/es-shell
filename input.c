@@ -489,6 +489,10 @@ static char *unquote(const char *text, char **qp) {
 				if (quoted)
 					*qp = p;
 			}
+		} else if (!quoted && *p == '\\') {
+			/* anything else won't be handled correctly by the completer */
+			if (*text == ' ' || *text == '\'')
+				*p++ = *text++;
 		} else
 			p++;
 	}
@@ -499,13 +503,20 @@ static char *unquote(const char *text, char **qp) {
 }
 
 static char *completion_start(void) {
-	int i, quoted = 0, start = 0;
+	int i, start = 0;
+	Boolean quoted = FALSE, backslash = FALSE;
 	for (i = 0; i < rl_point; i++) {
 		char c = rl_line_buffer[i];
+		if (backslash) {
+			backslash = FALSE;
+			continue;
+		}
 		if (c == '\'')
 			quoted = !quoted;
-		if (!quoted && strchr(rl_basic_word_break_characters, c))
-			start = i;
+		else if (!quoted && c == '\\')
+			backslash = TRUE;
+		else if (!quoted && strchr(rl_basic_word_break_characters, c))
+			start = i+1;
 	}
 	rl_point = start;
 	return NULL;
@@ -615,7 +626,7 @@ extern void initinput(void) {
 	rl_readline_name = "es";
 
 	/* this word_break_characters excludes '&' due to primitive completion */
-	rl_basic_word_break_characters = " \t\n\\`$><=;|{()}";
+	rl_basic_word_break_characters = " \t\n`$><=;|{()}";
 	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_basic_quote_characters = "";
 
