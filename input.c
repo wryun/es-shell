@@ -486,7 +486,7 @@ static char *unquote(const char *text, char **qp) {
 				text++;
 			} else {
 				quoted = !quoted;
-				if (quoted)
+				if (quoted && qp != NULL)
 					*qp = p;
 			}
 		} else if (!quoted && *p == '\\') {
@@ -497,9 +497,18 @@ static char *unquote(const char *text, char **qp) {
 			p++;
 	}
 	*p = '\0';
-	if (!quoted)
+	if (!quoted && qp != NULL)
 		*qp = p;
 	return r;
+}
+
+static int unquote_for_stat(char **name) {
+	if (strpbrk(*name, rl_filename_quote_characters)) {
+		char *unquoted = unquote(*name, NULL);
+		*name = unquoted;
+		return 1;
+	}
+	return 0;
 }
 
 static char *completion_start(void) {
@@ -524,14 +533,6 @@ static char *completion_start(void) {
 
 static int matchcmp(const void *a, const void *b) {
 	return strcoll(*(const char **)a, *(const char **)b);
-}
-
-static char *complete_filename(const char *text, int state) {
-	char *file = rl_filename_completion_function(text, state);
-	struct stat st;
-	if (file != NULL && stat(file, &st) == 0 && S_ISDIR(st.st_mode))
-		rl_completion_append_character = '/';
-	return file;
 }
 
 static char *complprefix;
@@ -571,7 +572,7 @@ static char *list_completion_function(const char *text, int state) {
 char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	char **matches = NULL, *qp = NULL;
 	char *t = unquote(text, &qp);
-	rl_compentry_func_t *completion = complete_filename;
+	rl_compentry_func_t *completion = rl_filename_completion_function;
 
 	if (*text == '$') {
 		completion = list_completion_function;
@@ -633,6 +634,7 @@ extern void initinput(void) {
 	rl_special_prefixes = "$";
 
 	rl_completion_word_break_hook = completion_start;
+	rl_filename_stat_hook = unquote_for_stat;
 	rl_attempted_completion_function = builtin_completion;
 #endif
 }
