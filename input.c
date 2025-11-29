@@ -525,7 +525,7 @@ static char *completion_start(void) {
 		else if (!quoted && c == '\\')
 			backslash = TRUE;
 		else if (!quoted && strchr(rl_basic_word_break_characters, c))
-			start = i+1;
+			start = i; /* keep possible '$' char in term */
 	}
 	rl_point = start;
 	return NULL;
@@ -572,10 +572,8 @@ static char *list_completion_function(const char *text, int state) {
 char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	char **matches = NULL, *qp = NULL;
 	char *t = unquote(text, &qp);
-	rl_compentry_func_t *completion = rl_filename_completion_function;
 
 	if (*text == '$') {
-		completion = list_completion_function;
 		wordslistgen = varswithprefix;
 		complprefix = "$";
 		switch (text[1]) {
@@ -586,20 +584,21 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 		case '^': complprefix = "$^"; break;
 		case '#': complprefix = "$#"; break;
 		}
+		matches = rl_completion_matches(t, list_completion_function);
 	} else if (*text == '~' && !strchr(text, '/')) {
 		/* ~foo => username.  ~foo/bar gets completed as a filename. */
-		completion = rl_username_completion_function;
-	}
-
-	matches = rl_completion_matches(t, completion);
-	if (matches) {
-		size_t i, n;
-		for (n = 1; matches[n]; n++)
-			;
-		qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
-		/* TODO: verify this is the right thing across rl_completion_types */
-		for (i = 0; i < n; i++)
-			matches[i] = quote(matches[i], i == 0 && n > 1, qp);
+		matches = rl_completion_matches(t, rl_username_completion_function);
+	} else {
+		matches = rl_completion_matches(t, rl_filename_completion_function);
+		if (matches) {
+			size_t i, n;
+			for (n = 1; matches[n]; n++)
+				;
+			qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
+			/* TODO: verify this is the right thing across rl_completion_types */
+			for (i = 0; i < n; i++)
+				matches[i] = quote(matches[i], i == 0 && n > 1, qp);
+		}
 	}
 
 	efree(t);
