@@ -461,19 +461,22 @@ extern Boolean isfromfd(void) {
  * readline integration.
  */
 #if HAVE_READLINE
-/* quote -- teach readline how to quote a word in es during completion */
-static char *quote(char *text, Boolean open, char *qp) {
+/* quote -- teach readline how to quote a word during completion.
+ * prefix is prepended _before_ the quotes, such as: $'foo bar' */
+static char *quote(char *text, Boolean open, char *prefix, char *qp) {
+	char *quoted;
 	if (*qp != '\0' || strpbrk(text, rl_filename_quote_characters)) {
-		char *quoted = mprint("%#S", text);
+		quoted = mprint("%s%#S", prefix, text);
 		if (open)
 			quoted[strlen(quoted)-1] = '\0';
-		efree(text);
-		return quoted;
+	} else {
+		quoted = mprint("%s%s", prefix, text);
 	}
-	return text;
+	efree(text);
+	return quoted;
 }
 
-/* unquote -- remove quotes from text and point *qp at the relevant quote */
+/* unquote -- remove quotes from text and point *qp at the relevant quote char */
 static char *unquote(const char *text, char **qp) {
 	char *p, *r;
 	Boolean quoted = FALSE;
@@ -503,12 +506,13 @@ static char *unquote(const char *text, char **qp) {
 }
 
 static int unquote_for_stat(char **name) {
-	if (strpbrk(*name, rl_filename_quote_characters)) {
-		char *unquoted = unquote(*name, NULL);
-		*name = unquoted;
-		return 1;
-	}
-	return 0;
+	if (!strpbrk(*name, rl_filename_quote_characters))
+		return 0;
+
+	char *unquoted = unquote(*name, NULL);
+	efree(*name);
+	*name = unquoted;
+	return 1;
 }
 
 static char *completion_start(void) {
@@ -535,69 +539,69 @@ static int matchcmp(const void *a, const void *b) {
 	return strcoll(*(const char **)a, *(const char **)b);
 }
 
-static char *complprefix;
-static List *(*wordslistgen)(char *);
-
-static char *list_completion_function(const char *text, int state) {
+static char *list_completion(const char *text, int state, List *(*gen)(const char *)) {
 	static char **matches = NULL;
-	static int matches_idx, matches_len;
-	int i, rlen;
-	char *result;
-
-	const int pfx_len = strlen(complprefix);
+	static int i, len;
 
 	if (!state) {
-		const char *name = &text[pfx_len];
-
-		Vector *vm = vectorize(wordslistgen((char *)name));
+		Vector *vm = vectorize(gen(text));
 		matches = vm->vector;
-		matches_len = vm->count;
-		matches_idx = 0;
+		len = vm->count;
+		i = 0;
 	}
 
-	if (!matches || matches_idx >= matches_len)
+	if (!matches || i >= len)
 		return NULL;
 
-	rlen = strlen(matches[matches_idx]);
-	result = ealloc(rlen + pfx_len + 1);
-	for (i = 0; i < pfx_len; i++)
-		result[i] = complprefix[i];
-	strcpy(&result[pfx_len], matches[matches_idx]);
-	result[rlen + pfx_len] = '\0';
+	return mprint("%s", matches[i++]);
+}
 
-	matches_idx++;
-	return result;
+static char *var_completion(const char *text, int state) {
+	return list_completion(text, state, varswithprefix);
+}
+
+static char *prim_completion(const char *text, int state) {
+	return list_completion(text, state, primswithprefix);
 }
 
 char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
-	char **matches = NULL, *qp = NULL;
+	char **matches = NULL, *qp = NULL, *prefix = "";
 	char *t = unquote(text, &qp);
+	Boolean quotable = TRUE;
+	rl_compentry_func_t *completion = rl_filename_completion_function;
 
 	if (*text == '$') {
-		wordslistgen = varswithprefix;
-		complprefix = "$";
+		completion = var_completion;
 		switch (text[1]) {
 		case '&':
-			wordslistgen = primswithprefix;
-			complprefix = "$&";
+			completion = prim_completion;
+			prefix = "$&";
+			quotable = FALSE;
 			break;
-		case '^': complprefix = "$^"; break;
-		case '#': complprefix = "$#"; break;
+		case '^': prefix = "$^"; break;
+		case '#': prefix = "$#"; break;
+		default:  prefix = "$";
 		}
-		matches = rl_completion_matches(t, list_completion_function);
 	} else if (*text == '~' && !strchr(text, '/')) {
 		/* ~foo => username.  ~foo/bar gets completed as a filename. */
-		matches = rl_completion_matches(t, rl_username_completion_function);
-	} else {
-		matches = rl_completion_matches(t, rl_filename_completion_function);
-		if (matches) {
-			size_t i, n;
-			for (n = 1; matches[n]; n++)
-				;
-			qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
-			/* TODO: verify this is the right thing across rl_completion_types */
-			for (i = 0; i < n; i++)
-				matches[i] = quote(matches[i], i == 0 && n > 1, qp);
+		completion = rl_username_completion_function;
+		quotable = FALSE;
+	}
+
+	matches = rl_completion_matches(t+strlen(prefix), completion);
+	if (matches != NULL) {
+		size_t i, n;
+		for (n = 1; matches[n]; n++)
+			;
+		qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
+		for (i = 0; i < n; i++) {
+			if (quotable) {
+				matches[i] = quote(matches[i], i == 0 && n > 1, prefix, qp);
+			} else if (*prefix != '\0') {
+				char *tmp = matches[i];
+				matches[i] = mprint("%s%s", prefix, matches[i]);
+				efree(tmp);
+			}
 		}
 	}
 
