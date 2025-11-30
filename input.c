@@ -564,29 +564,36 @@ static char *prim_completion(const char *text, int state) {
 	return list_completion(text, state, primswithprefix);
 }
 
+static rl_compentry_func_t *completion_func = NULL;
+
+rl_compentry_func_t *select_completion(const char *text, char **prefix) {
+	if (*text == '$') {
+		switch (text[1]) {
+		case '&':
+			*prefix = "$&";
+			return prim_completion;
+		case '^': *prefix = "$^"; break;
+		case '#': *prefix = "$#"; break;
+		default:  *prefix = "$";
+		}
+		return var_completion;
+	} else if (*text == '~' && !strchr(text, '/')) {
+		/* ~foo => username.  ~foo/bar gets completed as a filename. */
+		return rl_username_completion_function;
+	}
+	return rl_filename_completion_function;
+}
+
 char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	char **matches = NULL, *qp = NULL, *prefix = "";
 	char *t = unquote(text, &qp);
-	Boolean quotable = TRUE;
-	rl_compentry_func_t *completion = rl_filename_completion_function;
+	rl_compentry_func_t *completion;
 
-	if (*text == '$') {
-		completion = var_completion;
-		switch (text[1]) {
-		case '&':
-			completion = prim_completion;
-			prefix = "$&";
-			quotable = FALSE;
-			break;
-		case '^': prefix = "$^"; break;
-		case '#': prefix = "$#"; break;
-		default:  prefix = "$";
-		}
-	} else if (*text == '~' && !strchr(text, '/')) {
-		/* ~foo => username.  ~foo/bar gets completed as a filename. */
-		completion = rl_username_completion_function;
-		quotable = FALSE;
-	}
+	if (completion_func != NULL) {
+		completion = completion_func;
+		completion_func = NULL;
+	} else
+		completion = select_completion(text, &prefix);
 
 	matches = rl_completion_matches(t+strlen(prefix), completion);
 	if (matches != NULL) {
@@ -594,14 +601,10 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 		for (n = 1; matches[n]; n++)
 			;
 		qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
-		for (i = 0; i < n; i++) {
-			if (quotable) {
-				matches[i] = quote(matches[i], i == 0 && n > 1, prefix, qp);
-			} else if (*prefix != '\0') {
-				char *tmp = matches[i];
-				matches[i] = mprint("%s%s", prefix, matches[i]);
-				efree(tmp);
-			}
+		if (rl_completion_type != '?') {
+			matches[0] = quote(matches[0], n > 1, prefix, qp);
+			for (i = 1; i < n; i++)
+				matches[i] = quote(matches[i], FALSE, prefix, qp);
 		}
 	}
 
@@ -609,6 +612,21 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	rl_attempted_completion_over = 1;
 	rl_sort_completion_matches = 0;
 	return matches;
+}
+
+static int es_complete_filename(int UNUSED count, int UNUSED key) {
+	completion_func = rl_filename_completion_function;
+	return rl_complete_internal(rl_completion_mode(es_complete_filename));
+}
+
+static int es_complete_variable(int UNUSED count, int UNUSED key) {
+	completion_func = var_completion;
+	return rl_complete_internal(rl_completion_mode(es_complete_variable));
+}
+
+static int es_complete_primitive(int UNUSED count, int UNUSED key) {
+	completion_func = prim_completion;
+	return rl_complete_internal(rl_completion_mode(es_complete_primitive));
 }
 #endif /* HAVE_READLINE */
 
@@ -633,11 +651,16 @@ extern void initinput(void) {
 	rl_basic_word_break_characters = " \t\n`$><=;|{()}";
 	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
 	rl_basic_quote_characters = "";
-
 	rl_special_prefixes = "$";
 
 	rl_completion_word_break_hook = completion_start;
 	rl_filename_stat_hook = unquote_for_stat;
 	rl_attempted_completion_function = builtin_completion;
+
+	rl_add_funmap_entry("es-complete-filename", es_complete_filename);
+	rl_add_funmap_entry("es-complete-variable", es_complete_variable);
+	rl_add_funmap_entry("es-complete-primitive", es_complete_primitive);
+	rl_bind_keyseq("\e/", es_complete_filename);
+	rl_bind_keyseq("\e$", es_complete_variable);
 #endif
 }
