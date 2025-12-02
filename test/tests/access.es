@@ -7,6 +7,33 @@ test 'file permissions' {
 	assert {access -x $es}
 }
 
+test 'access exceptions' {
+	let (ex = ()) {
+		catch @ e {ex = $e} {
+			access -1e $es zzznonexistent
+		}
+		assert {~ $ex ()}
+	}
+	let (ex = ()) {
+		catch @ e {ex = $e} {
+			access -1e zzznonexistent $es
+		}
+		assert {~ $ex ()}
+	}
+	let (ex = ()) {
+		catch @ e {ex = $e} {
+			access -1e zzznonexistent xxxnonexistent
+		}
+		assert {!~ $ex ()}
+	}
+	let (ex = ()) {
+		catch @ e {ex = $e} {
+			access -n zzznonexistent -1e / .
+		}
+		assert {!~ $ex ()}
+	}
+}
+
 test 'file types' {
 	assert {access -d /}
 	assert {!access -d $es}

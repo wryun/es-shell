@@ -164,11 +164,12 @@ PRIM(access) {
 	}
 
 	if (first && throws) {
-		gcenable();
+		Ref(char *, err, esstrerror(estatus));
 		if (suffix)
-			fail("$&access", "%s: %s", suffix, esstrerror(estatus));
-		else
-			fail("$&access", "%s", esstrerror(estatus));
+			err = str("%s: %s", suffix, err);
+		gcenable();
+		fail("$&access", err);
+		RefEnd(err);
 	}
 
 	Ref(List *, result, reverse(lp));
