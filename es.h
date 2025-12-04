@@ -174,7 +174,7 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
 /* glob.c */
 
 extern char QUOTED[], UNQUOTED[];
-extern List *glob(List *list, StrList *quote);
+extern List *glob(List *list, StrList *quote, Binding *binding);
 extern Boolean haswild(const char *pattern, const char *quoting);
 
 
@@ -335,7 +335,7 @@ extern List *esoptend(void);
 
 /* prim.c */
 
-extern List *prim(char *s, List *list, Binding *binding, int evalflags);
+extern List *prim(char *s, List *list, int evalflags);
 extern void initprims(void);
 extern List *primswithprefix(char *prefix);
 
