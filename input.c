@@ -614,6 +614,36 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	return matches;
 }
 
+static void display_matches(char **matches, int num, int max) {
+	int i;
+	char **unquoted;
+
+	if (rl_completion_query_items > 0 && num >= rl_completion_query_items) {
+		int c;
+		rl_crlf();
+		fprintf(rl_outstream, "Display all %d possibilities? (y or n)", num);
+		fflush(rl_outstream);
+		c = rl_read_key();
+		if (c != 'y' && c != 'Y' && c != ' ') {
+			rl_crlf();
+			rl_forced_update_display();
+			return;
+		}
+	}
+
+	unquoted = ealloc(sizeof(char *) * (num + 2));
+	for (i = 0; matches[i]; i++)
+		unquoted[i] = unquote(matches[i], NULL);
+	unquoted[i] = NULL;
+
+	rl_display_match_list(unquoted, num, max);
+	rl_forced_update_display();
+
+	for (i = 0; unquoted[i]; i++)
+		efree(unquoted[i]);
+	efree(unquoted);
+}
+
 static int es_complete_filename(int UNUSED count, int UNUSED key) {
 	completion_func = rl_filename_completion_function;
 	return rl_complete_internal(rl_completion_mode(es_complete_filename));
@@ -656,6 +686,7 @@ extern void initinput(void) {
 	rl_completion_word_break_hook = completion_start;
 	rl_filename_stat_hook = unquote_for_stat;
 	rl_attempted_completion_function = builtin_completion;
+	rl_completion_display_matches_hook = display_matches;
 
 	rl_add_funmap_entry("es-complete-filename", es_complete_filename);
 	rl_add_funmap_entry("es-complete-variable", es_complete_variable);
