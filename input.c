@@ -505,6 +505,7 @@ static char *unquote(const char *text, char **qp) {
 	return r;
 }
 
+/* Unquote files to allow readline to detect which are directories. */
 static int unquote_for_stat(char **name) {
 	if (!strpbrk(*name, rl_filename_quote_characters))
 		return 0;
@@ -515,6 +516,11 @@ static int unquote_for_stat(char **name) {
 	return 1;
 }
 
+/* Find the start of the word to complete.  This uses the trick where we set rl_point
+ * to the start of the word to indicate the start of the word.  For this to work,
+ * rl_basic_quote_characters must be the empty string or else this function's result
+ * is overwritten, and doing that means we have to reimplement basically all quoting
+ * behavior manually. */
 static char *completion_start(void) {
 	int i, start = 0;
 	Boolean quoted = FALSE, backslash = FALSE;
@@ -535,10 +541,7 @@ static char *completion_start(void) {
 	return NULL;
 }
 
-static int matchcmp(const void *a, const void *b) {
-	return strcoll(*(const char **)a, *(const char **)b);
-}
-
+/* Basic function to use an es List created by gen() to generate readline matches. */
 static char *list_completion(const char *text, int state, List *(*gen)(const char *)) {
 	static char **matches = NULL;
 	static int i, len;
@@ -564,8 +567,11 @@ static char *prim_completion(const char *text, int state) {
 	return list_completion(text, state, primswithprefix);
 }
 
-static rl_compentry_func_t *completion_func = NULL;
+static int matchcmp(const void *a, const void *b) {
+	return strcoll(*(const char **)a, *(const char **)b);
+}
 
+/* Pick out a completion to perform based on the string's prefix */
 rl_compentry_func_t *select_completion(const char *text, char **prefix) {
 	if (*text == '$') {
 		switch (text[1]) {
@@ -584,8 +590,13 @@ rl_compentry_func_t *select_completion(const char *text, char **prefix) {
 	return rl_filename_completion_function;
 }
 
+static rl_compentry_func_t *completion_func = NULL;
+
+/* Top-level completion function.  If completion_func is set, performs that completion.
+ * Otherwise, performs a completion based on the prefix of the text. */
 char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 	char **matches = NULL, *qp = NULL, *prefix = "";
+	/* Manually unquote the text, since we told readline not to. */
 	char *t = unquote(text, &qp);
 	rl_compentry_func_t *completion;
 
@@ -596,24 +607,29 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 		completion = select_completion(text, &prefix);
 
 	matches = rl_completion_matches(t+strlen(prefix), completion);
+
+	/* Manually sort and then re-quote the matches. */
 	if (matches != NULL) {
 		size_t i, n;
 		for (n = 1; matches[n]; n++)
 			;
 		qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
-		if (rl_completion_type != '?') {
-			matches[0] = quote(matches[0], n > 1, prefix, qp);
-			for (i = 1; i < n; i++)
-				matches[i] = quote(matches[i], FALSE, prefix, qp);
-		}
+		matches[0] = quote(matches[0], n > 1, prefix, qp);
+		for (i = 1; i < n; i++)
+			matches[i] = quote(matches[i], FALSE, prefix, qp);
 	}
 
 	efree(t);
+
+	/* Since we had to sort and quote results ourselves, we disable the automatic
+	 * filename completion and sorting. */
 	rl_attempted_completion_over = 1;
 	rl_sort_completion_matches = 0;
 	return matches;
 }
 
+/* Unquote matches when displaying in a menu.  This wouldn't be necessary, if not for
+ * menu-complete. */
 static void display_matches(char **matches, int num, int max) {
 	int i;
 	char **unquoted;
