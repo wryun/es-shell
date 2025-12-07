@@ -1,4 +1,4 @@
-#! /bin/es -p
+#!/usr/local/bin/es -p
 # esdebug: a debugger for es scripts ($Revision: 1.1.1.1 $)
 
 # TODO
@@ -37,7 +37,7 @@ fn _print {
 }
 
 fn _get {
-	$&seq {echo >[1=3] -n $*} {return `{line <[0=3]}}
+	$&seq {echo >[1=3] -n $*} {%split ' '\t <={%read <[0=3]}}
 }
 
 _prompt = '(esdebug) '
@@ -173,7 +173,7 @@ _debug-watch	= @ vars {
 			} {
 				_print new $var '=' $*
 			} {
-				return $*
+				result $*
 			}
 		}
 	}
@@ -196,7 +196,7 @@ _debug-trap	= @ vars {
 				local (old = $$var; new = $*)
 					_debug break
 			} {
-				return $*
+				result $*
 			}
 		}
 	}
@@ -258,13 +258,14 @@ let (commands =) {
 # the main debugger loop
 #
 
+let (fn-while = $fn-while)
 fn-_debug = $&noreturn @ {
 	$&if {~ $1 break || $_stepping} {
 		<= {
-			$&while {
+			while {
 				let (cmd = <={_get $_prompt}) {
 					$&seq {
-						$&while {~ $cmd(1) $_prompt} {
+						while {~ $cmd(1) $_prompt} {
 							cmd = $cmd(2 ...)
 						}
 					} {
@@ -289,7 +290,8 @@ fn-_debug = $&noreturn @ {
 #
 
 history =
-fn %interactive-loop dispatch {
+let (fn-while = $fn-while)
+fn %interactive-loop {
 	let (result = <= true) {
 		catch @ e type msg {
 			$&if {~ $e eof} {
@@ -298,7 +300,13 @@ fn %interactive-loop dispatch {
 				} {
 					_debug break
 				} {
-					return $result
+					result $result
+				}
+			} {~ $e exit} {
+				$&seq {
+					_print exiting ...
+				} {
+					result $type
 				}
 			} {
 				$&seq {
@@ -315,20 +323,24 @@ fn %interactive-loop dispatch {
 					$&seq {
 						_print parsing input from $_program:
 					} {
-						$&while {~ $#cmd 0} {
+						while {~ $#cmd 0} {
 							cmd = <={%parse}
 						}
 					} {
 						_debug
 					} {
-						catch @ e {
-							$&seq {
-								_print exception: $e
+						catch @ e rest {
+							if {~ $e exit} {
+								throw $e $rest
 							} {
-								_debug
+								$&seq {
+									_print exception: $e ...
+								} {
+									_debug
+								}
 							}
 						} {
-							result = <={$dispatch $cmd}
+							result = <={$fn-%dispatch $cmd}
 						}
 					}
 				}
