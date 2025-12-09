@@ -262,7 +262,7 @@ let (fn-while = $fn-while)
 fn-_debug = $&noreturn @ {
 	$&if {~ $1 break || $_stepping} {
 		<= {
-			while {
+			while true {
 				let (cmd = <={_get $_prompt}) {
 					$&seq {
 						while {~ $cmd(1) $_prompt} {
