@@ -92,6 +92,9 @@ EOF
 
 	# https://github.com/wryun/es-shell/issues/206
 	assert {~ `` \n {$es -c 'let (a=<=true) echo $a'} <=true} 'concatenated assignment+call syntax works'
+
+	# https://github.com/wryun/es-shell/issues/235
+	assert {$es -c 'catch @ {} {%pathsearch %pnothingthatreallyexists}'} '%-like strings don''t break %pathsearch'
 }
 
 # These tests are based on notes in the CHANGES file from the pre-git days.

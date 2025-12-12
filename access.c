@@ -168,7 +168,7 @@ PRIM(access) {
 		if (suffix)
 			err = str("%s: %s", suffix, err);
 		gcenable();
-		fail("$&access", err);
+		fail("$&access", "%s", err);
 		RefEnd(err);
 	}
 

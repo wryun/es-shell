@@ -422,7 +422,7 @@ static int read1(int fd) {
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 	if (nread == -1)
-		fail("$&read", esstrerror(errno));
+		fail("$&read", "%s", esstrerror(errno));
 	return nread == 0 ? EOF : buf;
 }
 
