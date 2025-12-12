@@ -305,13 +305,13 @@ static void tmerrchk(int result, char *str) {
 }
 
 static void getrealtime(struct times *ret) {
-#if HAVE_GETTIMEOFDAY
-#define PRECISE_REALTIME	1
+#if HAVE_GETTIMEOFDAY && MILLISECOND_TIME
+#define HAVE_PRECISE_REALTIME	1
 	struct timeval tv;
 	tmerrchk(gettimeofday(&tv, NULL), "getrealtime()");
 	ret->real_usec = (tv.tv_sec * INTMAX_C(1000000)) + tv.tv_usec;
 #else	/* use time(3p) */
-#define PRECISE_REALTIME	0
+#define HAVE_PRECISE_REALTIME	0
 	time_t t = time(NULL);
 	tmerrchk(t, "getrealtime()");
 	ret->real_usec = t * 1000000;
@@ -354,14 +354,15 @@ static void subtimes(struct times a, struct times b, struct times *ret) {
 }
 
 static void strtimes(struct times time, List *list) {
+#if MILLISECOND_TIME
 	eprint(
-#if PRECISE_REALTIME
+#if HAVE_PRECISE_REALTIME
 		"%6.3jd"
 #else
 		"%6jd"
 #endif
 		"r %7.3jdu %7.3jds\t%L\n",
-#if PRECISE_REALTIME
+#if HAVE_PRECISE_REALTIME
 		time.real_usec / 1000,
 #else
 		time.real_usec / 1000000,
@@ -370,6 +371,15 @@ static void strtimes(struct times time, List *list) {
 		time.sys_usec / 1000,
 		list, " "
 	);
+#else
+	eprint(
+		"%6jdr %7.1jdu %7.1jds\t%L\n",
+		time.real_usec / 1000000,
+		time.user_usec / 100000,
+		time.sys_usec / 100000,
+		list, " "
+	);
+#endif
 }
 
 PRIM(time) {
