@@ -22,14 +22,6 @@
  */
 
 Input *input;
-char *prompt, *prompt2;
-
-Boolean ignoreeof = FALSE;
-Boolean resetterminal = FALSE;
-
-#if HAVE_READLINE
-#include <readline/readline.h>
-#endif
 
 
 /*
@@ -40,20 +32,22 @@ Boolean resetterminal = FALSE;
 static const char *locate(Input *in, const char *s) {
 	return (in->runflags & run_interactive)
 		? s
-		: str("%s:%d: %s", in->name, in->lineno, s);
+		: mprint("%s:%d: %s", in->name, in->lineno, s);
 }
 
-static const char *error = NULL;
+static int eoffill(Input UNUSED *in);
 
 /* yyerror -- yacc error entry point */
 extern void yyerror(const char *s) {
-#if sgi
-	/* this is so that trip.es works */
-	if (streq(s, "Syntax error"))
-		s = "syntax error";
-#endif
-	if (error == NULL)	/* first error is generally the most informative */
-		error = locate(input, s);
+	/* TODO: more graceful handling for memory exhaustion?
+	 * if we're here, then we're probably hopelessly lost */
+	if (streq(s, "memory exhausted")) {
+		input->fd = -1;
+		input->fill = eoffill;
+		input->runflags &= ~run_interactive;
+		input->error = s;
+	} else if (input->error == NULL)	/* first error is generally the most informative */
+		input->error = locate(input, s);
 }
 
 /* warn -- print a warning */
@@ -108,11 +102,8 @@ extern void unget(Input *in, int c) {
 /* get -- get a character, filter out nulls */
 static int get(Input *in) {
 	int c;
-	Boolean uf = (in->fill == ungetfill);
 	while ((c = (in->buf < in->bufend ? *in->buf++ : (*in->fill)(in))) == '\0')
 		warn("null character ignored");
-	if (!uf && c != EOF)
-		addhistbuffer((char)c);
 	return c;
 }
 
@@ -136,69 +127,19 @@ static int eoffill(Input UNUSED *in) {
 	return EOF;
 }
 
-#if HAVE_READLINE
-/* callreadline -- readline wrapper */
-static char *callreadline(char *prompt0) {
-	char *r;
-	Ref(char *volatile, prompt, prompt0);
-	if (prompt == NULL)
-		prompt = ""; /* bug fix for readline 2.0 */
-	checkreloadhistory();
-	if (resetterminal) {
-		rl_reset_terminal(NULL);
-		resetterminal = FALSE;
-	}
-	if (RL_ISSTATE(RL_STATE_INITIALIZED))
-		rl_reset_screen_size();
-	if (!setjmp(slowlabel)) {
-		slow = TRUE;
-		r = readline(prompt);
-	} else {
-		r = NULL;
-		errno = EINTR;
-	}
-	slow = FALSE;
-	SIGCHK();
-	RefEnd(prompt);
-	return r;
-}
-#endif
-
-
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
 	long nread;
-	assert(in->buf == in->bufend);
-	assert(in->fd >= 0);
+	if (in->fd < 0)
+		fail("$&parse", "cannot read from closed file descriptor");
 
-#if HAVE_READLINE
-	if (in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = NULL;
-		do {
-			rlinebuf = callreadline(prompt);
-		} while (rlinebuf == NULL && errno == EINTR);
-		if (rlinebuf == NULL)
-			nread = 0;
-		else {
-			nread = strlen(rlinebuf) + 1;
-			if (in->buflen < (unsigned int)nread) {
-				while (in->buflen < (unsigned int)nread)
-					in->buflen *= 2;
-				in->bufbegin = erealloc(in->bufbegin, in->buflen);
-			}
-			memcpy(in->bufbegin, rlinebuf, nread - 1);
-			in->bufbegin[nread - 1] = '\n';
-			efree(rlinebuf);
-		}
-	} else
-#endif
 	do {
 		nread = read(in->fd, (char *) in->bufbegin, in->buflen);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
-		if (!ignoreeof) {
+		if (!in->ignoreeof) {
 			close(in->fd);
 			in->fd = -1;
 			in->fill = eoffill;
@@ -214,55 +155,133 @@ static int fdfill(Input *in) {
 	return *in->buf++;
 }
 
+static List *fillcmd = NULL;
+
+static int cmdfill(Input *in) {
+	char *read;
+	List *result;
+	size_t nread;
+	int oldf;
+
+	assert(in->buf == in->bufend);
+
+	if (fillcmd == NULL)
+		return fdfill(in);
+
+	oldf = dup(0);
+	if (in->fd >= 0) {
+		if (dup2(in->fd, 0) == -1)
+			fail("$&parse", "dup2: %s", esstrerror(errno));
+	} else
+		close(0);
+
+	ExceptionHandler
+
+		result = eval(fillcmd, NULL, 0);
+
+	CatchException (e)
+
+		mvfd(oldf, 0);
+		throw(e);
+
+	EndExceptionHandler
+
+	mvfd(oldf, 0);
+
+	if (result == NULL) { /* eof */
+		if (!in->ignoreeof) {
+			close(in->fd);
+			in->fd = -1;
+			in->fill = eoffill;
+			in->runflags &= ~run_interactive;
+		}
+		return EOF;
+	}
+	read = str("%L\n", result, " ");
+
+	if ((nread = strlen(read)) > in->buflen) {
+		in->bufbegin = erealloc(in->bufbegin, nread);
+		in->buflen = nread;
+	}
+	memcpy(in->bufbegin, read, nread);
+
+	in->buf = in->bufbegin;
+	in->bufend = &in->buf[nread];
+
+	return *in->buf++;
+}
 
 /*
  * the input loop
  */
 
-/* parse -- call yyparse(), but disable garbage collection and catch errors */
-extern Tree *parse(char *pr1, char *pr2) {
+/* parse -- call yyparse() and catch errors */
+extern Tree *parse(List *fc) {
 	int result;
-	assert(error == NULL);
+	void *oldpspace;
+	Ref(List *, oldfillcmd, fillcmd);
 
-	inityy();
-	emptyherequeue();
+	/* TODO: change this error message */
+	if (input->parsing)
+		fail("$&parse", "cannot perform nested parsing");
 
+	assert(input->error == NULL);
+
+	/* TODO: update this check --
+	 *
+	 *   $ es -c '<={$&parse {result echo hello world}}'
+	 *
+	 * should work.  also, ignoreeof
+	 */
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
-#if HAVE_READLINE
-	prompt = (pr1 == NULL) ? "" : pr1;
-#else
-	if (pr1 != NULL)
-		eprint("%s", pr1);
-#endif
-	prompt2 = pr2;
+	fillcmd = fc;
+	input->parsing = TRUE;
+	oldpspace = setpspace(input->pspace);
 
-	result = yyparse();
+	inityy(input);
+	emptyherequeue();
 
-	if (result || error != NULL) {
-		assert(error != NULL);
-		Ref(const char *, e, error);
-		error = NULL;
+	ExceptionHandler
+
+		result = yyparse();
+
+	CatchException (e)
+
+		input->parsing = FALSE;
+		fillcmd = NULL;
 		pseal(NULL);
+		input->pspace = setpspace(oldpspace);
+		throw(e);
+
+	EndExceptionHandler
+
+	input->parsing = FALSE;
+	fillcmd = oldfillcmd;
+	RefEnd(oldfillcmd);
+
+	if (result || input->error != NULL) {
+		const char *e = input->error;
+		assert(e != NULL);
+		input->error = NULL;
+		pseal(NULL);
+		input->pspace = setpspace(oldpspace);
 		fail("$&parse", "%s", e);
-		RefEnd(e);
 	}
 
+	Ref(Tree *, pt, pseal(input->parsetree));
+	input->pspace = setpspace(oldpspace);
 #if LISPTREES
-	Ref(Tree *, pt, pseal(parsetree));
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", pt);
-	RefReturn(pt);
-#else
-	return pseal(parsetree);
 #endif
-
+	RefReturn(pt);
 }
 
 /* resetparser -- clear parser errors in the signal handler */
 extern void resetparser(void) {
-	error = NULL;
+	input->error = NULL;
 }
 
 /* runinput -- run from an input source */
@@ -339,7 +358,7 @@ extern List *runfd(int fd, const char *name, int flags) {
 
 	memzero(&in, sizeof (Input));
 	in.lineno = 1;
-	in.fill = fdfill;
+	in.fill = cmdfill;
 	in.cleanup = fdcleanup;
 	in.fd = fd;
 	registerfd(&in.fd, TRUE);
@@ -347,6 +366,7 @@ extern List *runfd(int fd, const char *name, int flags) {
 	in.bufbegin = in.buf = ealloc(in.buflen);
 	in.bufend = in.bufbegin;
 	in.name = (name == NULL) ? str("fd %d", fd) : name;
+	in.pspace = createpspace();
 
 	RefAdd(in.name);
 	result = runinput(&in, flags);
@@ -385,6 +405,7 @@ extern List *runstring(const char *str, const char *name, int flags) {
 	in.bufbegin = in.buf = buf;
 	in.bufend = in.buf + in.buflen;
 	in.cleanup = stringcleanup;
+	in.pspace = createpspace();	/* TODO: use special string-input pspace? */
 
 	RefAdd(in.name);
 	result = runinput(&in, flags);
@@ -402,7 +423,7 @@ extern Tree *parseinput(Input *in) {
 	input = in;
 
 	ExceptionHandler
-		result = parse(NULL, NULL);
+		result = parse(NULL);
 		if (get(in) != EOF)
 			fail("$&parse", "more than one value in term");
 	CatchException (e)
@@ -437,6 +458,7 @@ extern Tree *parsestring(const char *str) {
 	in.bufbegin = in.buf = buf;
 	in.bufend = in.buf + in.buflen;
 	in.cleanup = stringcleanup;
+	in.pspace = createpspace();	/* TODO: use special string-input pspace? */
 
 	RefAdd(in.name);
 	result = parseinput(&in);
@@ -449,110 +471,9 @@ extern Boolean isinteractive(void) {
 	return input == NULL ? FALSE : ((input->runflags & run_interactive) != 0);
 }
 
-/* isfromfd -- is the innermost input source reading from a file descriptor? */
 extern Boolean isfromfd(void) {
-	return input == NULL ? FALSE : (input->fill == fdfill);
+	return input == NULL ? FALSE : (input->fill == fdfill || input->fill == cmdfill);
 }
-
-
-/*
- * readline integration.
- */
-#if HAVE_READLINE
-/* quote -- teach readline how to quote a word in es during completion */
-static char *quote(char *text, int type, char *qp) {
-	char *p, *r;
-
-	/* worst-case size: string is 100% quote characters which will all be
-	 * doubled, plus initial and final quotes and \0 */
-	p = r = ealloc(strlen(text) * 2 + 3);
-	/* supply opening quote if not already present */
-	if (*qp != '\'')
-		*p++ = '\'';
-	while (*text) {
-		/* double any quotes for es quote-escaping rules */
-		if (*text == '\'')
-			*p++ = '\'';
-		*p++ = *text++;
-	}
-	if (type == SINGLE_MATCH)
-		*p++ = '\'';
-	*p = '\0';
-	return r;
-}
-
-/* unquote -- teach es how to unquote a word */
-static char *unquote(char *text, int quote_char) {
-	char *p, *r;
-
-	p = r = ealloc(strlen(text) + 1);
-	while (*text) {
-		*p++ = *text++;
-		if (quote_char && *(text - 1) == '\'' && *text == '\'')
-			++text;
-	}
-	*p = '\0';
-	return r;
-}
-
-static char *complprefix;
-static List *(*wordslistgen)(char *);
-
-static char *list_completion_function(const char *text, int state) {
-	static char **matches = NULL;
-	static int matches_idx, matches_len;
-	int i, rlen;
-	char *result;
-
-	const int pfx_len = strlen(complprefix);
-
-	if (!state) {
-		const char *name = &text[pfx_len];
-
-		Vector *vm = vectorize(wordslistgen((char *)name));
-		matches = vm->vector;
-		matches_len = vm->count;
-		matches_idx = 0;
-	}
-
-	if (!matches || matches_idx >= matches_len)
-		return NULL;
-
-	rlen = strlen(matches[matches_idx]);
-	result = ealloc(rlen + pfx_len + 1);
-	for (i = 0; i < pfx_len; i++)
-		result[i] = complprefix[i];
-	strcpy(&result[pfx_len], matches[matches_idx]);
-	result[rlen + pfx_len] = '\0';
-
-	matches_idx++;
-	return result;
-}
-
-char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
-	char **matches = NULL;
-
-	if (*text == '$') {
-		wordslistgen = varswithprefix;
-		complprefix = "$";
-		switch (text[1]) {
-		case '&':
-			wordslistgen = primswithprefix;
-			complprefix = "$&";
-			break;
-		case '^': complprefix = "$^"; break;
-		case '#': complprefix = "$#"; break;
-		}
-		matches = rl_completion_matches(text, list_completion_function);
-	}
-
-	/* ~foo => username.  ~foo/bar already gets completed as filename. */
-	if (!matches && *text == '~' && !strchr(text, '/'))
-		matches = rl_completion_matches(text, rl_username_completion_function);
-
-	return matches;
-}
-#endif /* HAVE_READLINE */
 
 
 /*
@@ -564,23 +485,5 @@ extern void initinput(void) {
 	input = NULL;
 
 	/* declare the global roots */
-	globalroot(&error);		/* parse errors */
-	globalroot(&prompt);		/* main prompt */
-	globalroot(&prompt2);		/* secondary prompt */
-
-#if HAVE_READLINE
-	rl_readline_name = "es";
-
-	/* these two word_break_characters exclude '&' due to primitive completion */
-	rl_completer_word_break_characters = " \t\n\\'`$><=;|{()}";
-	rl_basic_word_break_characters = " \t\n\\'`$><=;|{()}";
-	rl_completer_quote_characters = "'";
-	rl_special_prefixes = "$";
-
-	rl_attempted_completion_function = builtin_completion;
-
-	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
-	rl_filename_quoting_function = quote;
-	rl_filename_dequoting_function = unquote;
-#endif
+	globalroot(&fillcmd);
 }

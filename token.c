@@ -10,15 +10,7 @@
 #define	BUFSIZE	((size_t) 2048)
 #define	BUFMAX	(8 * BUFSIZE)
 
-typedef enum { NW, RW, KW } State;	/* "nonword", "realword", "keyword" */
-
-static State w = NW;
-static Boolean newline = FALSE;
-static Boolean goterror = FALSE;
-static size_t bufsize = 0;
-static char *tokenbuf = NULL;
-
-#define	InsertFreeCaret()	STMT(if (w != NW) { w = NW; UNGETC(c); return '^'; })
+#define	InsertFreeCaret()	STMT(if (input->ws != NW) { input->ws = NW; UNGETC(c); return '^'; })
 
 
 /*
@@ -65,22 +57,16 @@ const char dnw[] = {
 };
 
 
-/* print_prompt2 -- called before all continuation lines */
-extern void print_prompt2(void) {
+/* increment_line -- called before all continuation lines */
+extern void increment_line(void) {
 	input->lineno++;
-#if HAVE_READLINE
-	prompt = prompt2;
-#else
-	if ((input->runflags & run_interactive) && prompt2 != NULL)
-		eprint("%s", prompt2);
-#endif
 }
 
 /* scanerror -- called for lexical errors */
 static void scanerror(int c, char *s) {
 	while (c != '\n' && c != EOF)
 		c = GETC();
-	goterror = TRUE;
+	input->goterror = TRUE;
 	yyerror(s);
 }
 
@@ -142,41 +128,35 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 }
 
 extern int yylex(YYSTYPE *y) {
-	static Boolean dollar = FALSE;
 	int c;
 	size_t i;			/* The purpose of all these local assignments is to	*/
 	const char *meta;		/* allow optimizing compilers like gcc to load these	*/
-	char *buf = tokenbuf;		/* values into registers. On a sparc this is a		*/
+	char *buf = input->tokenbuf;	/* values into registers. On a sparc this is a		*/
 
-	if (goterror) {
-		goterror = FALSE;
+	if (input->goterror) {
+		input->goterror = FALSE;
 		return NL;
 	}
 
 	/* rc variable-names may contain only alnum, '*' and '_', so use dnw if we are scanning one. */
-	meta = (dollar ? dnw : nw);
-	dollar = FALSE;
-	if (newline) {
-		--input->lineno; /* slight space optimization; print_prompt2() always increments lineno */
-		print_prompt2();
-		newline = FALSE;
-	}
-top:	while ((c = GETC()) == ' ' || c == '\t')
-		w = NW;
+	meta = (input->dollar ? dnw : nw);
+	input->dollar = FALSE;
+	top:	while ((c = GETC()) == ' ' || c == '\t')
+		input->ws = NW;
 	if (c == EOF)
 		return ENDFILE;
 	if (!meta[(unsigned char) c]) {	/* it's a word or keyword. */
 		InsertFreeCaret();
-		w = RW;
+		input->ws = RW;
 		i = 0;
 		do {
 			buf[i++] = c;
-			if (i >= bufsize)
-				buf = tokenbuf = erealloc(buf, bufsize *= 2);
+			if (i >= input->bufsize)
+				buf = input->tokenbuf = erealloc(buf, input->bufsize *= 2);
 		} while ((c = GETC()) != EOF && !meta[(unsigned char) c]);
 		UNGETC(c);
 		buf[i] = '\0';
-		w = KW;
+		input->ws = KW;
 		if (buf[1] == '\0') {
 			int k = *buf;
 			if (k == '@' || k == '~')
@@ -193,14 +173,14 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			return CLOSURE;
 		else if (streq(buf, "match"))
 			return MATCH;
-		w = RW;
+		input->ws = RW;
 		y->str = pdup(buf);
 		return WORD;
 	}
 	if (c == '`' || c == '!' || c == '$' || c == '\'' || c == '=') {
 		InsertFreeCaret();
 		if (c == '!' || c == '=')
-			w = KW;
+			input->ws = KW;
 	}
 	switch (c) {
 	case '!':
@@ -219,7 +199,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		UNGETC(c);
 		return '`';
 	case '$':
-		dollar = TRUE;
+		input->dollar = TRUE;
 		switch (c = GETC()) {
 		case '#':	return COUNT;
 		case '^':	return FLAT;
@@ -227,19 +207,19 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		default:	UNGETC(c); return '$';
 		}
 	case '\'':
-		w = RW;
+		input->ws = RW;
 		i = 0;
 		while ((c = GETC()) != '\'' || (c = GETC()) == '\'') {
 			buf[i++] = c;
 			if (c == '\n')
-				print_prompt2();
+				increment_line();
 			if (c == EOF) {
-				w = NW;
+				input->ws = NW;
 				scanerror(c, "eof in quoted string");
 				return ERROR;
 			}
-			if (i >= bufsize)
-				buf = tokenbuf = erealloc(buf, bufsize *= 2);
+			if (i >= input->bufsize)
+				buf = input->tokenbuf = erealloc(buf, input->bufsize *= 2);
 		}
 		UNGETC(c);
 		buf[i] = '\0';
@@ -247,7 +227,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		return QWORD;
 	case '\\':
 		if ((c = GETC()) == '\n') {
-			print_prompt2();
+			increment_line();
 			UNGETC(' ');
 			goto top; /* Pretend it was just another space. */
 		}
@@ -258,7 +238,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		UNGETC(c);
 		c = '\\';
 		InsertFreeCaret();
-		w = RW;
+		input->ws = RW;
 		c = GETC();
 		switch (c) {
 		case 'a':	*buf = '\a';	break;
@@ -314,21 +294,20 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		FALLTHROUGH;
 	case '\n':
 		input->lineno++;
-		newline = TRUE;
-		w = NW;
+		input->ws = NW;
 		return NL;
 	case '(':
-		if (w == RW)	/* not keywords, so let & friends work */
+		if (input->ws == RW)	/* not keywords, so let & friends work */
 			c = SUB;
 		FALLTHROUGH;
 	case ';':
 	case '^':
 	case ')':
 	case '{': case '}':
-		w = NW;
+		input->ws = NW;
 		return c;
 	case '&':
-		w = NW;
+		input->ws = NW;
 		c = GETC();
 		if (c == '&')
 			return ANDAND;
@@ -337,7 +316,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 
 	case '|': {
 		int p[2];
-		w = NW;
+		input->ws = NW;
 		c = GETC();
 		if (c == '|')
 			return OROR;
@@ -369,7 +348,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			} else
 				cmd = "%heredoc";
 		else if (c == '=') {
-			w = NW;
+			input->ws = NW;
 			return CALL;
 		} else
 			cmd = "%open";
@@ -389,7 +368,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			cmd = "%create";
 		goto redirection;
 	redirection:
-		w = NW;
+		input->ws = NW;
 		if (!getfds(fd, c, fd[0], DEFAULT))
 			return ERROR;
 		if (fd[1] != DEFAULT) {
@@ -404,20 +383,20 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 
 	default:
 		assert(c != '\0');
-		w = NW;
+		input->ws = NW;
 		return c; /* don't know what it is, let yacc barf on it */
 	}
 }
 
-extern void inityy(void) {
-	newline = FALSE;
-	w = NW;
-	if (bufsize > BUFMAX) {		/* return memory to the system if the buffer got too large */
-		efree(tokenbuf);
-		tokenbuf = NULL;
+extern void inityy(Input *in) {
+	in->ws = NW;
+	in->dollar = FALSE;
+	if (in->bufsize > BUFMAX) { /* return memory to the system if the buffer got too large */
+		efree(in->tokenbuf);
+		in->tokenbuf = NULL;
 	}
-	if (tokenbuf == NULL) {
-		bufsize = BUFSIZE;
-		tokenbuf = ealloc(bufsize);
+	if (in->tokenbuf == NULL) {
+		in->bufsize = BUFSIZE;
+		in->tokenbuf = ealloc(in->bufsize);
 	}
 }

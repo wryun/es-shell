@@ -188,6 +188,7 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes);
 
 extern void initvars(void);
 extern void initenv(char **envp, Boolean protected);
+extern void initgetenv(void);
 extern void hidevariables(void);
 extern void validatevar(const char *var);
 extern List *varlookup(const char *name, Binding *binding);
@@ -197,7 +198,6 @@ extern Vector *mkenv(void);
 extern void setnoexport(List *list);
 extern void addtolist(void *arg, char *key, void *value);
 extern List *listvars(Boolean internal);
-extern List *varswithprefix(char *prefix);
 
 typedef struct Push Push;
 extern Push *pushlist;
@@ -288,7 +288,7 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 /* input.c */
 
 extern char *prompt, *prompt2;
-extern Tree *parse(char *esprompt1, char *esprompt2);
+extern Tree *parse(List *);
 extern Tree *parsestring(const char *str);
 extern Boolean isinteractive(void);
 extern Boolean isfromfd(void);
@@ -305,8 +305,16 @@ extern List *runstring(const char *str, const char *name, int flags);
 #define	run_printcmds		32	/* -x */
 #define	run_lisptrees		64	/* -L and defined(LISPTREES) */
 
+
+/* readline.c */
+
 #if HAVE_READLINE
-extern Boolean resetterminal;
+extern void inithistory(void);
+
+extern void sethistory(char *file);
+extern void loghistory(char *cmd);
+extern void setmaxhistorylength(int length);
+extern void rlsetup(void);
 #endif
 
 
@@ -337,7 +345,6 @@ extern List *esoptend(void);
 
 extern List *prim(char *s, List *list, Binding *binding, int evalflags);
 extern void initprims(void);
-extern List *primswithprefix(char *prefix);
 
 
 /* split.c */
@@ -403,6 +410,9 @@ extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
 
 /* operations with pspace, the explicitly-collected gc space for parse tree building */
+extern void *createpspace(void);
+extern void *setpspace(void *);
+
 extern void *palloc(size_t n, Tag *t);		/* allocate n with collection tag t, but in pspace */
 extern void *pseal(void *p);			/* collect pspace into gcspace with root p */
 extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */

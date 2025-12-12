@@ -1401,13 +1401,13 @@ yyreduce:
     {
   case 2: /* es: line end  */
 #line 43 "./parse.y"
-                                { parsetree = (yyvsp[-1].tree); YYACCEPT; }
+                                { input->parsetree = (yyvsp[-1].tree); YYACCEPT; }
 #line 1406 "y.tab.c"
     break;
 
   case 3: /* es: error end  */
 #line 44 "./parse.y"
-                                { yyerrok; parsetree = NULL; YYABORT; }
+                                { yyerrok; input->parsetree = NULL; YYABORT; }
 #line 1412 "y.tab.c"
     break;
 

@@ -648,9 +648,39 @@ if {~ <=$&primitives writehistory} {
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%parse		= $&parse
 fn-%batch-loop		= $&batchloop
 fn-%is-interactive	= $&isinteractive
+
+if {~ <=$&primitives readline} {
+	fn-%read-line = $&readline
+	# add completion logic
+	. completion.es
+} {
+	fn %read-line prompt {
+		echo -n $prompt
+		%read
+	}
+}
+
+fn %parse {
+	if %is-interactive {
+		let (in = (); p = $*(1))
+		let (code = <={$&parse {
+			let (r = <={%read-line $p}) {
+				in = $in $r
+				p = $*(2)
+				result $r
+			}
+		}}) {
+			if {!~ $#fn-%write-history 0} {
+				%write-history <={%flatten \n $in}
+			}
+			result $code
+		}
+	} {
+		$&parse $&read
+	}
+}
 
 fn %interactive-loop {
 	let (result = <=true) {
