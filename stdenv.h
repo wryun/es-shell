@@ -30,6 +30,20 @@
 #include <varargs.h>
 #endif
 
+/* half-heartedly try to handle a lack of <stdint.h> or <inttypes.h> */
+#if HAVE_STDINT_H
+#include <stdint.h>
+#else
+#define intmax_t long
+#define uintmax_t unsigned long
+#endif
+
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
+#else
+#define strtoimax strtol
+#endif
+
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
