@@ -178,20 +178,30 @@ fn whatis {
 #	does not catch the return exception.  It does, however, catch break.
 
 fn-while = $&noreturn @ cond body {
+	let (result = <=true)
 	catch @ e value {
-		if {!~ $e break} {
+		if {~ $e caught-false} {
+			throw false $value
+		} {!~ $e break} {
 			throw $e $value
 		}
-		result $value
+		result = $value
 	} {
-		let (result = <=true)
-			forever {
-				if {!$cond} {
-					throw break $result
+		forever {
+			if {!$cond} {
+				throw break $result
+			} {
+				result = <={catch @ e rest {
+					if {~ $e false} {
+						throw caught-false $rest
+					} {
+						throw $e $rest
+					}
 				} {
-					result = <=$body
-				}
+					$body
+				}}
 			}
+		}
 	}
 }
 
@@ -661,11 +671,13 @@ fn %interactive-loop {
 				throw $e $type $msg
 			} {~ $e error} {
 				echo >[1=2] $msg
-				$fn-%dispatch false
 			} {~ $e signal} {
 				if {!~ $type sigint sigterm sigquit} {
 					echo >[1=2] caught unexpected signal: $type
 				}
+			} {~ $e (false caught-false)} {
+				result = $type $msg
+				echo >[1=2] result '=' $result
 			} {
 				echo >[1=2] uncaught exception: $e $type $msg
 			}
@@ -677,7 +689,15 @@ fn %interactive-loop {
 				}
 				let (code = <={%parse $prompt}) {
 					if {!~ $#code 0} {
-						result = <={$fn-%dispatch $code}
+						result = <={catch @ e rest {
+							if {~ $e false} {
+								throw caught-false $rest
+							} {
+								throw $e $rest
+							}
+						} {
+							$fn-%dispatch $code
+						}}
 					}
 				}
 			}
