@@ -35,6 +35,7 @@
 #include <stdint.h>
 #else
 #define intmax_t long
+#define uintmax_t unsigned long
 #endif
 
 #if HAVE_INTTYPES_H
