@@ -3,6 +3,7 @@
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 
 typedef enum { NW, RW, KW } WordState;
+#include "token.h"	/* for YYSTYPE */
 
 typedef struct Input Input;
 struct Input {

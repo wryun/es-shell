@@ -400,12 +400,9 @@ static char *callreadline(char *prompt) {
 	char *r, *volatile line = NULL;
 	/* should this be called after each interruption, or? */
 	rlsetup();
-	interrupted = FALSE;
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
-		r = interrupted ? NULL : readline(prompt);
-		if (interrupted)
-			errno = EINTR;
+		r = readline(prompt);
 	} else {
 		r = NULL;
 		errno = EINTR;

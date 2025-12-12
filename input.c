@@ -134,7 +134,7 @@ static int fdfill(Input *in) {
 		fail("$&parse", "cannot read from closed file descriptor");
 
 	do {
-		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
+		nread = read(in->fd, (char *) in->bufbegin, in->buflen);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 
