@@ -350,7 +350,7 @@ static void listinternal(void *arg, char *key, void *value) {
 		addtolist(arg, key, value);
 }
 
-static char *list_prefix;
+static const char *list_prefix;
 
 static void listwithprefix(void *arg, char *key, void *value) {
 	if (strneq(key, list_prefix, strlen(list_prefix)))
@@ -367,7 +367,7 @@ extern List *listvars(Boolean internal) {
 
 /* varswithprefix -- return a list of all the (dynamic) variables
  * matching the given prefix */
-extern List *varswithprefix(char *prefix) {
+extern List *varswithprefix(const char *prefix) {
 	Ref(List *, varlist, NULL);
 	list_prefix = prefix;
 	dictforall(vars, listwithprefix, &varlist);

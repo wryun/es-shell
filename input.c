@@ -1,5 +1,7 @@
 /* input.c -- read input from files or strings ($Revision: 1.2 $) */
 
+#define	REQUIRE_STAT	1
+
 #include "es.h"
 #include "input.h"
 
@@ -459,98 +461,218 @@ extern Boolean isfromfd(void) {
  * readline integration.
  */
 #if HAVE_READLINE
-/* quote -- teach readline how to quote a word in es during completion */
-static char *quote(char *text, int type, char *qp) {
-	char *p, *r;
-
-	/* worst-case size: string is 100% quote characters which will all be
-	 * doubled, plus initial and final quotes and \0 */
-	p = r = ealloc(strlen(text) * 2 + 3);
-	/* supply opening quote if not already present */
-	if (*qp != '\'')
-		*p++ = '\'';
-	while (*text) {
-		/* double any quotes for es quote-escaping rules */
-		if (*text == '\'')
-			*p++ = '\'';
-		*p++ = *text++;
+/* quote -- teach readline how to quote a word during completion.
+ * prefix is prepended _before_ the quotes, such as: $'foo bar' */
+static char *quote(char *text, Boolean open, char *prefix, char *qp) {
+	char *quoted;
+	if (*qp != '\0' || strpbrk(text, rl_filename_quote_characters)) {
+		quoted = mprint("%s%#S", prefix, text);
+		if (open)
+			quoted[strlen(quoted)-1] = '\0';
+	} else {
+		quoted = mprint("%s%s", prefix, text);
 	}
-	if (type == SINGLE_MATCH)
-		*p++ = '\'';
-	*p = '\0';
-	return r;
+	efree(text);
+	return quoted;
 }
 
-/* unquote -- teach es how to unquote a word */
-static char *unquote(char *text, int quote_char) {
+/* unquote -- remove quotes from text and point *qp at the relevant quote char */
+static char *unquote(const char *text, char **qp) {
 	char *p, *r;
+	Boolean quoted = FALSE;
 
 	p = r = ealloc(strlen(text) + 1);
-	while (*text) {
-		*p++ = *text++;
-		if (quote_char && *(text - 1) == '\'' && *text == '\'')
-			++text;
+	while ((*p = *text++)) {
+		if (*p == '\'') {
+			if (quoted && *text == '\'') {
+				p++;
+				text++;
+			} else {
+				quoted = !quoted;
+				if (quoted && qp != NULL)
+					*qp = p;
+			}
+		} else if (!quoted && *p == '\\') {
+			/* anything else won't be handled correctly by the completer */
+			if (*text == ' ' || *text == '\'')
+				*p++ = *text++;
+		} else
+			p++;
 	}
 	*p = '\0';
+	if (!quoted && qp != NULL)
+		*qp = p;
 	return r;
 }
 
-static char *complprefix;
-static List *(*wordslistgen)(char *);
+/* Unquote files to allow readline to detect which are directories. */
+static int unquote_for_stat(char **name) {
+	if (!strpbrk(*name, rl_filename_quote_characters))
+		return 0;
 
-static char *list_completion_function(const char *text, int state) {
-	static char **matches = NULL;
-	static int matches_idx, matches_len;
-	int i, rlen;
-	char *result;
-
-	const int pfx_len = strlen(complprefix);
-
-	if (!state) {
-		const char *name = &text[pfx_len];
-
-		Vector *vm = vectorize(wordslistgen((char *)name));
-		matches = vm->vector;
-		matches_len = vm->count;
-		matches_idx = 0;
-	}
-
-	if (!matches || matches_idx >= matches_len)
-		return NULL;
-
-	rlen = strlen(matches[matches_idx]);
-	result = ealloc(rlen + pfx_len + 1);
-	for (i = 0; i < pfx_len; i++)
-		result[i] = complprefix[i];
-	strcpy(&result[pfx_len], matches[matches_idx]);
-	result[rlen + pfx_len] = '\0';
-
-	matches_idx++;
-	return result;
+	char *unquoted = unquote(*name, NULL);
+	efree(*name);
+	*name = unquoted;
+	return 1;
 }
 
-char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
-	char **matches = NULL;
-
-	if (*text == '$') {
-		wordslistgen = varswithprefix;
-		complprefix = "$";
-		switch (text[1]) {
-		case '&':
-			wordslistgen = primswithprefix;
-			complprefix = "$&";
-			break;
-		case '^': complprefix = "$^"; break;
-		case '#': complprefix = "$#"; break;
+/* Find the start of the word to complete.  This uses the trick where we set rl_point
+ * to the start of the word to indicate the start of the word.  For this to work,
+ * rl_basic_quote_characters must be the empty string or else this function's result
+ * is overwritten, and doing that means we have to reimplement basically all quoting
+ * behavior manually. */
+static char *completion_start(void) {
+	int i, start = 0;
+	Boolean quoted = FALSE, backslash = FALSE;
+	for (i = 0; i < rl_point; i++) {
+		char c = rl_line_buffer[i];
+		if (backslash) {
+			backslash = FALSE;
+			continue;
 		}
-		matches = rl_completion_matches(text, list_completion_function);
+		if (c == '\'')
+			quoted = !quoted;
+		else if (!quoted && c == '\\')
+			backslash = TRUE;
+		else if (!quoted && strchr(rl_basic_word_break_characters, c))
+			start = i; /* keep possible '$' char in term */
+	}
+	rl_point = start;
+	return NULL;
+}
+
+/* Basic function to use an es List created by gen() to generate readline matches. */
+static char *list_completion(const char *text, int state, List *(*gen)(const char *)) {
+	static char **matches = NULL;
+	static int i, len;
+
+	if (!state) {
+		Vector *vm = vectorize(gen(text));
+		matches = vm->vector;
+		len = vm->count;
+		i = 0;
 	}
 
-	/* ~foo => username.  ~foo/bar already gets completed as filename. */
-	if (!matches && *text == '~' && !strchr(text, '/'))
-		matches = rl_completion_matches(text, rl_username_completion_function);
+	if (!matches || i >= len)
+		return NULL;
 
+	return mprint("%s", matches[i++]);
+}
+
+static char *var_completion(const char *text, int state) {
+	return list_completion(text, state, varswithprefix);
+}
+
+static char *prim_completion(const char *text, int state) {
+	return list_completion(text, state, primswithprefix);
+}
+
+static int matchcmp(const void *a, const void *b) {
+	return strcoll(*(const char **)a, *(const char **)b);
+}
+
+/* Pick out a completion to perform based on the string's prefix */
+rl_compentry_func_t *select_completion(const char *text, char **prefix) {
+	if (*text == '$') {
+		switch (text[1]) {
+		case '&':
+			*prefix = "$&";
+			return prim_completion;
+		case '^': *prefix = "$^"; break;
+		case '#': *prefix = "$#"; break;
+		default:  *prefix = "$";
+		}
+		return var_completion;
+	} else if (*text == '~' && !strchr(text, '/')) {
+		/* ~foo => username.  ~foo/bar gets completed as a filename. */
+		return rl_username_completion_function;
+	}
+	return rl_filename_completion_function;
+}
+
+static rl_compentry_func_t *completion_func = NULL;
+
+/* Top-level completion function.  If completion_func is set, performs that completion.
+ * Otherwise, performs a completion based on the prefix of the text. */
+char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
+	char **matches = NULL, *qp = NULL, *prefix = "";
+	/* Manually unquote the text, since we told readline not to. */
+	char *t = unquote(text, &qp);
+	rl_compentry_func_t *completion;
+
+	if (completion_func != NULL) {
+		completion = completion_func;
+		completion_func = NULL;
+	} else
+		completion = select_completion(text, &prefix);
+
+	matches = rl_completion_matches(t+strlen(prefix), completion);
+
+	/* Manually sort and then re-quote the matches. */
+	if (matches != NULL) {
+		size_t i, n;
+		for (n = 1; matches[n]; n++)
+			;
+		qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
+		matches[0] = quote(matches[0], n > 1, prefix, qp);
+		for (i = 1; i < n; i++)
+			matches[i] = quote(matches[i], FALSE, prefix, qp);
+	}
+
+	efree(t);
+
+	/* Since we had to sort and quote results ourselves, we disable the automatic
+	 * filename completion and sorting. */
+	rl_attempted_completion_over = 1;
+	rl_sort_completion_matches = 0;
 	return matches;
+}
+
+/* Unquote matches when displaying in a menu.  This wouldn't be necessary, if not for
+ * menu-complete. */
+static void display_matches(char **matches, int num, int max) {
+	int i;
+	char **unquoted;
+
+	if (rl_completion_query_items > 0 && num >= rl_completion_query_items) {
+		int c;
+		rl_crlf();
+		fprintf(rl_outstream, "Display all %d possibilities? (y or n)", num);
+		fflush(rl_outstream);
+		c = rl_read_key();
+		if (c != 'y' && c != 'Y' && c != ' ') {
+			rl_crlf();
+			rl_forced_update_display();
+			return;
+		}
+	}
+
+	unquoted = ealloc(sizeof(char *) * (num + 2));
+	for (i = 0; matches[i]; i++)
+		unquoted[i] = unquote(matches[i], NULL);
+	unquoted[i] = NULL;
+
+	rl_display_match_list(unquoted, num, max);
+	rl_forced_update_display();
+
+	for (i = 0; unquoted[i]; i++)
+		efree(unquoted[i]);
+	efree(unquoted);
+}
+
+static int es_complete_filename(int UNUSED count, int UNUSED key) {
+	completion_func = rl_filename_completion_function;
+	return rl_complete_internal(rl_completion_mode(es_complete_filename));
+}
+
+static int es_complete_variable(int UNUSED count, int UNUSED key) {
+	completion_func = var_completion;
+	return rl_complete_internal(rl_completion_mode(es_complete_variable));
+}
+
+static int es_complete_primitive(int UNUSED count, int UNUSED key) {
+	completion_func = prim_completion;
+	return rl_complete_internal(rl_completion_mode(es_complete_primitive));
 }
 #endif /* HAVE_READLINE */
 
@@ -571,16 +693,21 @@ extern void initinput(void) {
 #if HAVE_READLINE
 	rl_readline_name = "es";
 
-	/* these two word_break_characters exclude '&' due to primitive completion */
-	rl_completer_word_break_characters = " \t\n\\'`$><=;|{()}";
-	rl_basic_word_break_characters = " \t\n\\'`$><=;|{()}";
-	rl_completer_quote_characters = "'";
+	/* this word_break_characters excludes '&' due to primitive completion */
+	rl_basic_word_break_characters = " \t\n`$><=;|{()}";
+	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
+	rl_basic_quote_characters = "";
 	rl_special_prefixes = "$";
 
+	rl_completion_word_break_hook = completion_start;
+	rl_filename_stat_hook = unquote_for_stat;
 	rl_attempted_completion_function = builtin_completion;
+	rl_completion_display_matches_hook = display_matches;
 
-	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
-	rl_filename_quoting_function = quote;
-	rl_filename_dequoting_function = unquote;
+	rl_add_funmap_entry("es-complete-filename", es_complete_filename);
+	rl_add_funmap_entry("es-complete-variable", es_complete_variable);
+	rl_add_funmap_entry("es-complete-primitive", es_complete_primitive);
+	rl_bind_keyseq("\e/", es_complete_filename);
+	rl_bind_keyseq("\e$", es_complete_variable);
 #endif
 }
