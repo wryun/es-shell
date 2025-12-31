@@ -68,7 +68,6 @@ PRIM(catch) {
 				result
 				  = prim("noreturn",
 					 mklist(lp->term, frombody),
-					 NULL,
 					 evalflags);
 				unblocksignals();
 			CatchException (fromcatcher)
