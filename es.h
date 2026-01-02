@@ -364,7 +364,7 @@ extern void getsigeffects(Sigeffect effects[]);
 extern List *mksiglist(void);
 extern void initsignals(Boolean interactive, Boolean allowdumps);
 extern Atomic slow;
-extern jmp_buf slowlabel;
+extern sigjmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);
 extern Boolean issilentsignal(List *e);
@@ -506,7 +506,7 @@ struct Handler {
 	Root *rootlist;
 	Push *pushlist;
 	unsigned long evaldepth;
-	jmp_buf label;
+	sigjmp_buf label;
 };
 
 extern Handler *tophandler, *roothandler;
@@ -530,7 +530,7 @@ extern List *raised(List *e);
 		_localhandler.evaldepth = evaldepth; \
 		_localhandler.up = tophandler; \
 		tophandler = &_localhandler; \
-		if (!setjmp(_localhandler.label)) {
+		if (!sigsetjmp(_localhandler.label, 0)) {
 	
 #define CatchException(e) \
 			pophandler(&_localhandler); \
