@@ -18,11 +18,15 @@ test 'es -e' {
 			'if {true} {false; true}'		false
 			'if {false} {true} {false; true}'	false
 			'{true; {true; {false; true}}}'		false
+			'let (fn-x = {false; true})
+				if {x} {true} {false}'		false
+			'let (n=;o=a b) while {!~ $o ()} {
+				o=$o(2 ...); n=$n $o}'		true
 
 			# assignments
-			'x = false'				false
-			'fn x {false}'				false
-			'{true; {true; {x = false}; true}}'	false
+			'x = false'				true
+			'fn x {false}'				true
+			'{true; {true; {x = false}; true}}'	true
 			'let (x = false) true'			true
 			'local (x = false) true'		true
 		)) {

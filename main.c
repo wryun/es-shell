@@ -54,7 +54,7 @@ static void runesrc(void) {
 		ExceptionHandler
 			runfd(fd, esrc, 0);
 		CatchException (e)
-			if (termeq(e->term, "exit"))
+			if (termeq(e->term, "exit") || termeq(e->term, "false"))
 				exit(exitstatus(e->next));
 			else if (termeq(e->term, "error")) {
 				eprint("%L\n",
@@ -221,7 +221,7 @@ getopt_done:
 
 	CatchException (e)
 
-		if (termeq(e->term, "exit")) {
+		if (termeq(e->term, "exit") || termeq(e->term, "false")) {
 			status = exitstatus(e->next);
 			goto return_main;
 		} else if (termeq(e->term, "error")) {

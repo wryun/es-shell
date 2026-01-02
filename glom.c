@@ -149,7 +149,7 @@ static List *subscript(List *list, List *subs) {
 }
 
 /* glom1 -- glom when we don't need to produce a quote list */
-static List *glom1(Tree *tree, Binding *binding) {
+static List *glom1(Tree *tree, Binding *binding, int evalflags) {
 	Ref(List *, result, NULL);
 	Ref(List *, tail, NULL);
 	Ref(Tree *, tp, tree);
@@ -179,7 +179,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 			tp = NULL;
 			break;
 		case nVar:
-			Ref(List *, var, glom1(tp->u[0].p, bp));
+			Ref(List *, var, glom1(tp->u[0].p, bp, evalflags));
 			tp = NULL;
 			for (; var != NULL; var = var->next) {
 				list = listcopy(varlookup(getstr(var->term), bp));
@@ -196,29 +196,36 @@ static List *glom1(Tree *tree, Binding *binding) {
 			RefEnd(var);
 			break;
 		case nVarsub:
-			list = glom1(tp->u[0].p, bp);
+			list = glom1(tp->u[0].p, bp, evalflags);
 			if (list == NULL)
 				fail("es:glom", "null variable name in subscript");
 			if (list->next != NULL)
 				fail("es:glom", "multi-word variable name in subscript");
 			Ref(char *, name, getstr(list->term));
 			list = varlookup(name, bp);
-			Ref(List *, sub, glom1(tp->u[1].p, bp));
+			Ref(List *, sub, glom1(tp->u[1].p, bp, evalflags));
 			tp = NULL;
 			list = subscript(list, sub);
 			RefEnd2(sub, name);
 			break;
 		case nCall:
-			list = listcopy(walk(tp->u[0].p, bp, 0));
+			ExceptionHandler
+				list = listcopy(walk(tp->u[0].p, bp, evalflags & eval_exitonfalse));
+			CatchException (e)
+				if (!termeq(e->term, "false"))
+					throw(e);
+				else
+					list = e->next;
+			EndExceptionHandler
 			tp = NULL;
 			break;
 		case nList:
-			list = glom1(tp->u[0].p, bp);
+			list = glom1(tp->u[0].p, bp, evalflags);
 			tp = tp->u[1].p;
 			break;
 		case nConcat:
-			Ref(List *, l, glom1(tp->u[0].p, bp));
-			Ref(List *, r, glom1(tp->u[1].p, bp));
+			Ref(List *, l, glom1(tp->u[0].p, bp, evalflags));
+			Ref(List *, r, glom1(tp->u[1].p, bp, evalflags));
 			tp = NULL;
 			list = concat(l, r);
 			RefEnd2(r, l);
@@ -243,7 +250,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 }
 
 /* glom2 -- glom and produce a quoting list */
-extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
+extern List *glom2(Tree *tree, Binding *binding, StrList **quotep, int evalflags) {
 	Ref(List *, result, NULL);
 	Ref(List *, tail, NULL);
 	Ref(StrList *, qtail, NULL);
@@ -270,7 +277,7 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 			tp = NULL;
 			break;
 		case nList:
-			list = glom2(tp->u[0].p, bp, &qlist);
+			list = glom2(tp->u[0].p, bp, &qlist, evalflags);
 			tp = tp->u[1].p;
 			break;
 		case nConcat:
@@ -278,14 +285,14 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 			Ref(List *, r, NULL);
 			Ref(StrList *, ql, NULL);
 			Ref(StrList *, qr, NULL);
-			l = glom2(tp->u[0].p, bp, &ql);
-			r = glom2(tp->u[1].p, bp, &qr);
+			l = glom2(tp->u[0].p, bp, &ql, evalflags);
+			r = glom2(tp->u[1].p, bp, &qr, evalflags);
 			list = qconcat(l, r, ql, qr, &qlist);
 			RefEnd4(qr, ql, r, l);
 			tp = NULL;
 			break;
 		default:
-			list = glom1(tp, bp);
+			list = glom1(tp, bp, evalflags);
 			Ref(List *, lp, list);
 			for (; lp != NULL; lp = lp->next)
 				qlist = mkstrlist(QUOTED, qlist);
@@ -316,14 +323,14 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 }
 
 /* glom -- top level glom dispatching */
-extern List *glom(Tree *tree, Binding *binding, Boolean globit) {
+extern List *glom(Tree *tree, Binding *binding, Boolean globit, int evalflags) {
 	if (globit) {
 		Ref(List *, list, NULL);
 		Ref(StrList *, quote, NULL);
-		list = glom2(tree, binding, &quote);
+		list = glom2(tree, binding, &quote, evalflags);
 		list = glob(list, quote);
 		RefEnd(quote);
 		RefReturn(list);
 	} else
-		return glom1(tree, binding);
+		return glom1(tree, binding, evalflags);
 }
