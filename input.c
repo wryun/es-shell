@@ -150,7 +150,7 @@ static char *callreadline(char *prompt0) {
 	}
 	if (RL_ISSTATE(RL_STATE_INITIALIZED))
 		rl_reset_screen_size();
-	if (!setjmp(slowlabel)) {
+	if (!sigsetjmp(slowlabel, 1)) {
 		slow = TRUE;
 		r = readline(prompt);
 	} else {
