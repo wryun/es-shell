@@ -1959,12 +1959,18 @@ Exits the current loop.
 .I Value
 is used as the return value for the loop command.
 .TP
-.Cr "catch \fIcatcher body\fP"
+.Cr "catch \fR[\fP\fIexception\fP\fR]\fP \fIcatcher body\fP"
 Runs
 .IR body .
-If it raises an exception,
+If it raises an exception, and
+.IR exception
+is either not provided or matches the first term of the exception,
 .IR catcher
 is run and passed the exception as an argument.
+If
+.IR exception
+is provided, then the passed argument does not include the first term
+of the exception, which has already been matched.
 .TP
 .Cr "cd \fR[\fP\fIdirectory\fP\fR]\fP"
 Changes the current directory to
