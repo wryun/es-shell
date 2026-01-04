@@ -70,8 +70,9 @@ extern char *dumphistbuffer(void) {
  */
 
 #if HAVE_READLINE
+static int currenthistlen = -1; /* unlimited */
+
 extern void setmaxhistorylength(int len) {
-	static int currenthistlen = -1; /* unlimited */
 	if (len != currenthistlen) {
 		switch (len) {
 		case -1:
@@ -101,10 +102,34 @@ extern void loghistory(char *cmd) {
 	}
 }
 
+static int count_history(void) {
+	int i, n, count = 0, fd = eopen(history, oOpen);
+	char buf[4096];
+	if (fd < 0)
+		return -1;
+	while ((n = read(fd, &buf, 4096)) != 0) {
+		if (n < 0) {
+			if (errno == EINTR) {
+				SIGCHK();
+				continue;
+			} else
+				return -1;
+		}
+		for (i = 0; i < n; i++)
+			if (buf[i] == '\n')
+				count++;
+	}
+	close(fd);
+	return count;
+}
+
 static void reload_history(void) {
 	/* Attempt to populate readline history with new history file. */
-	if (history != NULL)
-		read_history(history);
+	if (history != NULL) {
+		int n = count_history() - currenthistlen;
+		if (currenthistlen < 0 || n < 0) n = 0;
+		read_history_range(history, n, -1);
+	}
 	using_history();
 
 	reloadhistory = FALSE;
