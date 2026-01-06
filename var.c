@@ -177,7 +177,7 @@ extern List *fnlookup(char *prefix, char *name, List *args, Binding *bp) {
 		List *np;
 		Term *t = defn->term;
 		Closure *c = getclosure(t);
-		if (c != NULL && c->tree->kind != nPrim) {
+		if (c != NULL && (c->tree->kind == nLambda || c->tree->kind == nThunk)) {
 			c = mkclosure(c->tree, mkbinding("0", lname, c->binding));
 			t = mkterm(NULL, c);
 		}
