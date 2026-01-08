@@ -147,7 +147,27 @@ fn-%newfd	= $&newfd
 fn-%run         = $&run
 fn-%split       = $&split
 fn-%var		= $&var
-fn-%whatis	= $&whatis
+
+#	The %whatis function is called by the shell to convert anything that
+#	isn't a function into a function that it can call.  The shell performs
+#	its own function lookup, but %whatis does too for user convenience.
+#
+#	$name is the optional name used to refer to the current term being
+#	looked up, which comes up in cases like `fn-name = /path/to/bin`.
+
+fn %whatis term name {
+	if {~ $#name 0} {
+		name = $term
+	}
+	if {!~ $#(fn-$term) 0} {
+		result $(fn-$term)
+	} {~ $term /* ./* ../*} {
+		result %run $term $name
+	} {
+		let (searched = <={%pathsearch $term})
+		result %run $searched(1) $name $searched(2 ...)
+	}
+}
 
 #	These builtins are only around as a matter of convenience, so
 #	users don't have to type the infamous <= (nee <>) operator.
@@ -165,7 +185,14 @@ fn whatis {
 				echo >[1=2] $message
 				result = $result 1
 			} {
-				echo <={%whatis $i}
+				# Hide the %run call in this "sugary" case.
+				let (r = <={%whatis $i}) {
+					if {~ $r(1) %run} {
+						echo $r(2) $r(4 ...)
+					} {
+						echo $r
+					}
+				}
 				result = $result 0
 			}
 		}
