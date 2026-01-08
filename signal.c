@@ -85,7 +85,7 @@ static void catcher(int sig) {
 		++sigcount;
 	}
 	if (slow)
-		longjmp(slowlabel, 1);
+		siglongjmp(slowlabel, 1);
 }
 
 
