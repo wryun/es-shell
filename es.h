@@ -172,7 +172,7 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
 /* glob.c */
 
 extern char QUOTED[], UNQUOTED[];
-extern List *glob(List *list, StrList *quote);
+extern List *glob(List *list, StrList *quote, Binding *binding);
 extern Boolean haswild(const char *pattern, const char *quoting);
 
 
@@ -195,7 +195,7 @@ extern Vector *mkenv(void);
 extern void setnoexport(List *list);
 extern void addtolist(void *arg, char *key, void *value);
 extern List *listvars(Boolean internal);
-extern List *varswithprefix(char *prefix);
+extern List *varswithprefix(const char *prefix);
 
 typedef struct Push Push;
 extern Push *pushlist;
@@ -333,9 +333,9 @@ extern List *esoptend(void);
 
 /* prim.c */
 
-extern List *prim(char *s, List *list, Binding *binding, int evalflags);
+extern List *prim(char *s, List *list, int evalflags);
 extern void initprims(void);
-extern List *primswithprefix(char *prefix);
+extern List *primswithprefix(const char *prefix);
 
 
 /* split.c */
@@ -362,7 +362,7 @@ extern void getsigeffects(Sigeffect effects[]);
 extern List *mksiglist(void);
 extern void initsignals(Boolean interactive, Boolean allowdumps);
 extern Atomic slow;
-extern jmp_buf slowlabel;
+extern sigjmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);
 extern Boolean issilentsignal(List *e);
@@ -504,7 +504,7 @@ struct Handler {
 	Root *rootlist;
 	Push *pushlist;
 	unsigned long evaldepth;
-	jmp_buf label;
+	sigjmp_buf label;
 };
 
 extern Handler *tophandler, *roothandler;
@@ -528,7 +528,7 @@ extern List *raised(List *e);
 		_localhandler.evaldepth = evaldepth; \
 		_localhandler.up = tophandler; \
 		tophandler = &_localhandler; \
-		if (!setjmp(_localhandler.label)) {
+		if (!sigsetjmp(_localhandler.label, 0)) {
 	
 #define CatchException(e) \
 			pophandler(&_localhandler); \

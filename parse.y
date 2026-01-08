@@ -7,6 +7,8 @@
 #include "syntax.h"
 %}
 
+%define api.pure full
+
 %token <str>	WORD QWORD
 %token		LOCAL LET FOR CLOSURE FN
 %token <tree>	REDIR DUP

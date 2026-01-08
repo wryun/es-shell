@@ -22,6 +22,8 @@ dnl Build configuration.
 
 AC_ARG_ENABLE(strict, AS_HELP_STRING([--enable-strict], [enable strict compiler flags for testing and debugging; not all compilers support these]), opt_strict_mode=$enableval, opt_strict_mode=no)
 
+AC_ARG_VAR(YACC, [yacc command. es requires bison, byacc, or something else that supports generating pure parsers.])
+
 if test $opt_strict_mode = yes; then
 	AC_SUBST([STRICT_CFLAGS], ["-ansi -pedantic -DGCDEBUG=1 -D_POSIX_C_SOURCE=200112L -DREF_ASSERTIONS=1"])
 fi
@@ -31,7 +33,12 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
-AC_PROG_YACC
+
+dnl Custom yacc check, because we don't want POSIX yacc.
+dnl If we don't find either bison or byacc, just set it to yacc and see if it
+dnl works or barfs on the extension.
+
+AC_CHECK_PROGS(YACC, bison byacc, yacc)
 
 dnl ----------------------------
 dnl CHECK FOR /dev/fd FILESYSTEM
@@ -58,7 +65,7 @@ ES_WITH_READLINE
 dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h unistd.h memory.h stdarg.h sys/cdefs.h)
+AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h unistd.h memory.h stdarg.h sys/cdefs.h inttypes.h)
 
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -71,7 +78,7 @@ AC_TYPE_GETGROUPS
 AC_FUNC_MMAP
 
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
-sysconf sigsetjmp getrusage mmap mprotect)
+sysconf sigsetjmp getrusage gettimeofday mmap mprotect)
 
 AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
 [if test "$ac_cv_header_stdlib_h" = no || test "$ac_cv_header_stdc" = no; then
