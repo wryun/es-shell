@@ -303,7 +303,7 @@ extern List *runinput(Input *in, int runflags) {
 				   : "fn-%batch-loop",
 				 NULL);
 		result = (repl == NULL)
-				? prim("batchloop", NULL, NULL, flags)
+				? prim("batchloop", NULL, flags)
 				: eval(repl, NULL, flags);
 
 		varpop(&push);
