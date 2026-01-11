@@ -97,7 +97,7 @@ PRIM(whatis) {
 		List *fn;
 		Ref(char *, prog, getstr(term));
 		assert(prog != NULL);
-		fn = varlookup2("fn-", prog, binding);
+		fn = varlookup2("fn-", prog, NULL);
 		if (fn != NULL)
 			list = fn;
 		else {
@@ -141,7 +141,7 @@ PRIM(var) {
 	Ref(List *, rest, list->next);
 	Ref(char *, name, getstr(list->term));
 	Ref(List *, defn, varlookup(name, NULL));
-	rest = prim_var(rest, NULL, evalflags);
+	rest = prim_var(rest, evalflags);
 	term = mkstr(str("%S = %#L", name, defn, " "));
 	list = mklist(term, rest);
 	RefEnd3(defn, name, rest);
@@ -215,7 +215,7 @@ PRIM(batchloop) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
 			cmd = (parser == NULL)
-					? prim("parse", NULL, NULL, 0)
+					? prim("parse", NULL, 0)
 					: eval(parser, NULL, 0);
 			SIGCHK();
 			dispatch = varlookup("fn-%dispatch", NULL);

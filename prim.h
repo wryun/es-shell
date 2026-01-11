@@ -1,9 +1,9 @@
 /* prim.h -- definitions for es primitives ($Revision: 1.1.1.1 $) */
 
-typedef struct { List *(*prim)(List *, Binding *, int); } Prim;
+typedef struct { List *(*prim)(List *, int); } Prim;
 
 #define	PRIM(name)	static List *CONCAT(prim_,name)( \
-				List UNUSED *list, Binding UNUSED *binding, int UNUSED evalflags \
+				List UNUSED *list, int UNUSED evalflags \
 			)
 #define	X(name)		STMT( \
 			static Prim CONCAT(prim_struct_,name) = { CONCAT(prim_,name) }; \
