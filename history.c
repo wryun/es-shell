@@ -100,8 +100,10 @@ static int count_history(void) {
 			if (errno == EINTR) {
 				SIGCHK();
 				continue;
-			} else
+			} else {
+				close(fd);
 				return -1;
+			}
 		}
 		for (i = 0; i < n; i++)
 			if (buf[i] == '\n')
