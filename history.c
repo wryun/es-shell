@@ -70,22 +70,10 @@ extern char *dumphistbuffer(void) {
  */
 
 #if HAVE_READLINE
-static int currenthistlen = -1; /* unlimited */
+static int sethistorylength = -1; /* unlimited */
 
 extern void setmaxhistorylength(int len) {
-	if (len != currenthistlen) {
-		switch (len) {
-		case -1:
-			unstifle_history();
-			break;
-		case 0:
-			clear_history();
-			FALLTHROUGH;
-		default:
-			stifle_history(len);
-		}
-		currenthistlen = len;
-	}
+	sethistorylength = len;
 }
 
 extern void loghistory(char *cmd) {
@@ -126,8 +114,8 @@ static int count_history(void) {
 static void reload_history(void) {
 	/* Attempt to populate readline history with new history file. */
 	if (history != NULL) {
-		int n = count_history() - currenthistlen;
-		if (currenthistlen < 0 || n < 0) n = 0;
+		int n = count_history() - sethistorylength;
+		if (sethistorylength < 0 || n < 0) n = 0;
 		read_history_range(history, n, -1);
 	}
 	using_history();
@@ -142,9 +130,23 @@ extern void sethistory(char *file) {
 	history = file;
 }
 
-extern void checkreloadhistory(void) {
+extern void checkhistory(void) {
+	static int effectivelength = -1;
 	if (reloadhistory)
 		reload_history();
+	if (sethistorylength != effectivelength) {
+		switch (sethistorylength) {
+		case -1:
+			unstifle_history();
+			break;
+		case 0:
+			clear_history();
+			FALLTHROUGH;
+		default:
+			stifle_history(sethistorylength);
+		}
+		effectivelength = sethistorylength;
+	}
 }
 
 /*

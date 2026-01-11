@@ -145,7 +145,7 @@ static char *callreadline(char *prompt0) {
 	Ref(char *volatile, prompt, prompt0);
 	if (prompt == NULL)
 		prompt = ""; /* bug fix for readline 2.0 */
-	checkreloadhistory();
+	checkhistory();
 	if (resetterminal) {
 		rl_reset_terminal(NULL);
 		resetterminal = FALSE;
