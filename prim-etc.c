@@ -331,8 +331,8 @@ PRIM(setmaxhistorylength) {
 		fail("$&setmaxhistorylength", "usage: $&setmaxhistorylength [limit]");
 	Ref(List *, lp, list);
 	n = (int)strtol(getstr(lp->term), &s, 0);
-	if (n < -1 || (s != NULL && *s != '\0'))
-		fail("$&setmaxhistorylength", "max-history-length must be set to a positive integer or -1");
+	if (n < 0 || (s != NULL && *s != '\0'))
+		fail("$&setmaxhistorylength", "max-history-length must be set to a positive integer");
 	setmaxhistorylength(n);
 	RefReturn(lp);
 }
