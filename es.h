@@ -317,7 +317,7 @@ extern void inithistory(void);
 extern void sethistory(char *file);
 extern void loghistory(char *cmd);
 extern void setmaxhistorylength(int length);
-extern void checkreloadhistory(void);
+extern void checkhistory(void);
 #endif
 
 extern void newhistbuffer(void);
