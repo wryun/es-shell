@@ -58,12 +58,8 @@ fn recache progs {
 fn precache progs {
 	let (result = ())
 	for (p = $progs) {
-		catch @ e type msg {
-			if {~ $e error} {
-				echo >[1=2] $msg
-			} {
-				throw $e $type $msg
-			}
+		catch error @ _ msg {
+			echo >[1=2] $msg
 		} {
 			result = $result <={%pathsearch $p}
 		}
