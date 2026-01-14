@@ -46,6 +46,15 @@ static Tree *revtree(Tree *tree) {
 	return prev;
 }
 
+static char *doconcat(Tree *word) {
+	NodeKind k = word->kind;
+	assert(gcisblocked());
+	assert(k == nWord || k == nQword || k == nConcat);
+	if (k != nConcat)
+		return word->u[0].s;
+	return str("%s%s", doconcat(word->u[0].p), doconcat(word->u[1].p));
+}
+
 typedef struct Chain Chain;
 struct Chain {
 	Closure *closure;
@@ -69,7 +78,7 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 				Tree *word = defn->u[0].p;
 				NodeKind k = word->kind;
 				assert(defn->kind == nList);
-				assert(k == nWord || k == nQword || k == nPrim);
+				assert(k == nWord || k == nQword || k == nPrim || k == nConcat);
 				if (k == nPrim) {
 					char *prim = word->u[0].s;
 					if (streq(prim, "nestedbinding")) {
@@ -96,7 +105,9 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 						fail("$&parse", "bad unquoted primitive in %%closure: $&%s", prim);
 						NOTREACHED;
 					}
-				} else
+				} else if (k == nConcat)
+					term = mkstr(doconcat(word));
+				else
 					term = mkstr(word->u[0].s);
 				list = mklist(term, list);
 			}
