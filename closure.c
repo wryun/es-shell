@@ -69,7 +69,7 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 				Tree *word = defn->u[0].p;
 				NodeKind k = word->kind;
 				assert(defn->kind == nList);
-				assert(k == nWord || k == nQword || k == nPrim);
+				assert(k == nWord || k == nQword || k == nPrim || k == nConcat);
 				if (k == nPrim) {
 					char *prim = word->u[0].s;
 					if (streq(prim, "nestedbinding")) {
@@ -96,6 +96,12 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 						fail("$&parse", "bad unquoted primitive in %%closure: $&%s", prim);
 						NOTREACHED;
 					}
+				} else if (k == nConcat) {
+					Tree *p1 = word->u[0].p, *p2 = word->u[1].p;
+					NodeKind k1 = p1->kind;
+					NodeKind k2 = p2->kind;
+					assert((k1 == nWord || k1 == nQword) && (k2 == nWord || k2 == nQword));
+					term = mkstr(str("%s%s", p1->u[0].s, p2->u[0].s));
 				} else
 					term = mkstr(word->u[0].s);
 				list = mklist(term, list);

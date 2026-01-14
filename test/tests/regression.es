@@ -95,6 +95,11 @@ EOF
 
 	# https://github.com/wryun/es-shell/issues/235
 	assert {$es -c 'catch @ {} {%pathsearch %pnothingthatreallyexists}'} '%-like strings don''t break %pathsearch'
+
+	# https://github.com/wryun/es-shell/issues/246
+	let (x = \e^';')
+	local (fn ok {true})
+	assert {$es -c ok}
 }
 
 # These tests are based on notes in the CHANGES file from the pre-git days.
