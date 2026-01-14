@@ -100,6 +100,10 @@ EOF
 	let (x = \e^';'^\e^';'^\e^';')
 	local (fn ok {true})
 	assert {$es -c ok}
+
+	# https://github.com/wryun/es-shell/pull/248
+	local (fn %exec-failure {})
+	assert {~ `{%run notarealbinary >[2=1]} 'notarealbinary'*}
 }
 
 # These tests are based on notes in the CHANGES file from the pre-git days.
