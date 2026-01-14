@@ -97,7 +97,7 @@ EOF
 	assert {$es -c 'catch @ {} {%pathsearch %pnothingthatreallyexists}'} '%-like strings don''t break %pathsearch'
 
 	# https://github.com/wryun/es-shell/issues/246
-	let (x = \e^';')
+	let (x = \e^';'^\e^';'^\e^';')
 	local (fn ok {true})
 	assert {$es -c ok}
 }
