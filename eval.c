@@ -13,8 +13,8 @@ static Noreturn failexec(char *file, List *args) {
 		Ref(List *, list, append(fn, mklist(mkstr(file), args)));
 		RefAdd(file);
 		gcenable();
-		RefRemove(file);
 		eval(list, NULL, 0);
+		RefRemove(file);
 		RefEnd(list);
 		errno = olderror;
 	}
