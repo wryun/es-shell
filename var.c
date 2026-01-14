@@ -152,7 +152,7 @@ extern List *varlookup(const char *name, Binding *bp) {
 
 extern List *varlookup2(char *name1, char *name2, Binding *bp) {
 	Var *var;
-	
+
 	for (; bp != NULL; bp = bp->next)
 		if (streq2(bp->name, name1, name2))
 			return bp->defn;
@@ -163,22 +163,42 @@ extern List *varlookup2(char *name1, char *name2, Binding *bp) {
 	return var->defn;
 }
 
+/* fnlookup -- look up a function by name and prefix, lexically bind $0 to name,
+ * and append arguments while we're at it. */
+extern List *fnlookup(char *prefix, char *name, List *args, Binding *bp) {
+	List *lname, *lp, **prevp;
+	List *defn = varlookup2(prefix, name, bp);
+	if (defn == NULL)
+		return NULL;
+	gcdisable();
+
+	lname = mklist(mkstr(name), NULL);
+	for (prevp = &lp; defn != NULL; defn = defn->next) {
+		List *np;
+		Term *t = defn->term;
+		Closure *c = getclosure(t);
+		if (c != NULL && (c->tree->kind == nLambda || c->tree->kind == nThunk)) {
+			c = mkclosure(c->tree, mkbinding("0", lname, c->binding));
+			t = mkterm(NULL, c);
+		}
+		np = mklist(t, NULL);
+		*prevp = np;
+		prevp = &np->next;
+	}
+	*prevp = args;
+
+	Ref(List *, result, lp);
+	gcenable();
+	RefReturn(result);
+}
+
 static List *callsettor(char *name, List *defn) {
-	Push p;
 	List *settor;
 
-	if (specialvar(name) || (settor = varlookup2("set-", name, NULL)) == NULL)
+	if (specialvar(name) || (settor = fnlookup("set-", name, defn, NULL)) == NULL)
 		return defn;
 
-	Ref(List *, lp, defn);
-	Ref(List *, fn, settor);
-	varpush(&p, "0", mklist(mkstr(name), NULL));
-
-	lp = listcopy(eval(append(fn, lp), NULL, 0));
-
-	varpop(&p);
-	RefEnd(fn);
-	RefReturn(lp);
+	return listcopy(eval(settor, NULL, 0));
 }
 
 static void vardef0(char *name, Binding *binding, List *defn, Boolean startup) {
