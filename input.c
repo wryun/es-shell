@@ -507,10 +507,11 @@ static char *unquote(const char *text, char **qp) {
 
 /* Unquote files to allow readline to detect which are directories. */
 static int unquote_for_stat(char **name) {
+	char *unquoted;
 	if (!strpbrk(*name, rl_filename_quote_characters))
 		return 0;
 
-	char *unquoted = unquote(*name, NULL);
+	unquoted = unquote(*name, NULL);
 	efree(*name);
 	*name = unquoted;
 	return 1;
@@ -707,7 +708,7 @@ extern void initinput(void) {
 	rl_add_funmap_entry("es-complete-filename", es_complete_filename);
 	rl_add_funmap_entry("es-complete-variable", es_complete_variable);
 	rl_add_funmap_entry("es-complete-primitive", es_complete_primitive);
-	rl_bind_keyseq("\e/", es_complete_filename);
-	rl_bind_keyseq("\e$", es_complete_variable);
+	rl_bind_keyseq("\033/", es_complete_filename);
+	rl_bind_keyseq("\033$", es_complete_variable);
 #endif
 }
