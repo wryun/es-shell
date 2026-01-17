@@ -129,3 +129,43 @@ test 'precedence' {
 		assert {~ `` \n {eval echo '{'$have'}'} '{'$want'}'}
 	}
 }
+
+# These %closures are relatively easy to parse, even if they aren't expected to
+# be produced by normal code.
+test 'valid %closures' {
+	for (test = (
+		{result a}
+		{result a b}
+		{result 'a b'}
+		{result $&b}
+		{result \e^';'}
+		{result {}}
+		{result @ {}}
+	)) {
+		let (a = <=$test)
+		let (
+			c = `` \n {$es -c '''%closure(a='^$a^')echo{}''' >[2=1]}
+			l = `` \n {$es -c 'let (a='^$a^')echo {}'}
+		) {
+			assert {~ $^c $^l} $a
+		}
+	}
+}
+
+# These closures would require full glomming to make work right, which is a can
+# of worms.  Throw errors for them; they shouldn't be possible to produce with
+# normal code anyway.
+test 'bad %closures' {
+	for (test = (
+		'<={}'
+		'$x'
+		'$x(2)'
+	)) {
+		let ((status output) = <={$&backquote \n {
+			$es -c 'catch @ e {echo caught $e} {''%closure(a='^$test^')echo {ok}''}'
+		}}) {
+			assert {~ $output 'caught error $&parse'*} $test output
+			assert {~ $status 0} $test result
+		}
+	}
+}
