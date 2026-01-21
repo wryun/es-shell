@@ -104,6 +104,10 @@ EOF
 	# https://github.com/wryun/es-shell/pull/248
 	local (fn %exec-failure {})
 	assert {~ `{%run notarealbinary >[2=1]} 'notarealbinary'*}
+
+	# https://github.com/wryun/es-shell/pull/255
+	local (fn %pathsearch {result ~})
+	assert {$es -c 'notarealbinary; true'}
 }
 
 # These tests are based on notes in the CHANGES file from the pre-git days.
