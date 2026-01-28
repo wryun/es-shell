@@ -662,20 +662,21 @@ if {~ <=$&primitives readline} {
 	}
 }
 
-fn %parse {
+fn %parse prompt {
 	if %is-interactive {
-		let (in = (); p = $*(1))
-		let (code = <={$&parse {
-			let (r = <={%read-line $p}) {
-				in = $in $r
-				p = $*(2)
-				result $r
+		let (in = (); p = $prompt(1))
+		unwind-protect {
+			$&parse {
+				let (r = <={%read-line $p}) {
+					in = $in $r
+					p = $prompt(2)
+					result $r
+				}
 			}
-		}}) {
+		} {
 			if {!~ $#fn-%write-history 0} {
 				%write-history <={%flatten \n $in}
 			}
-			result $code
 		}
 	} {
 		$&parse $&read
