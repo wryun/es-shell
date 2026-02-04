@@ -1,0 +1,1 @@
+fn %complete-newpgrp = {result}

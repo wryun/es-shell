@@ -79,23 +79,40 @@ fn %complete prefix word {
 				# Command-position completion.
 				%whatis-complete $word
 			} {
-				# Non-command-position completion.
-				# TODO: Provide a way to define %complete-foo in an
-				# auto-loadable file!
-				if {!~ $#(fn-%complete-^$line(1)) 0} {
-					# Strip the first term from the line.
-					%complete-^$line(1) <={%flatten ' ' $line(2 ...)} $word
-				} {
-					%file-complete {} $word
-				}
+				# Strip the first term from the line.
+				%complete-fn $line(1) <={%flatten ' ' $line(2 ...)} $word
 			}
 		}
 	}
 }
 
 
+#	%complete-fn finds if necessary, and evaluates if possible, a particular
+#	completion function.  Calling this is strongly recommended instead of
+#	directly calling `%complete-$fnname` for any completion function other
+#	than those found in this file.
+
+completion-path = /home/jpco/git/es-fork/completions
+
+fn %complete-fn func prefix word {
+	if {~ $#(fn-%complete-^$func) 0} {
+		let (f = ()) {
+			f = <={access -n complete-$func^.es -1 -f $completion-path}
+			if {!~ $f ()} {
+				. $f
+			}
+		}
+	}
+	if {!~ $#(fn-%complete-^$func) 0} {
+		%complete-^$func $prefix $word
+	} {
+		%file-complete {} $word
+	}
+}
+
+
 #
-# Specific, not-per-command completion logic.
+# Completion logic for built-in concepts.
 #
 
 #	These functions (named according to the pattern %foo-complete) provide
@@ -120,7 +137,7 @@ fn %whatis-complete word {
 		result $word^<={~~ (
 			local let for fn %closure match
 			<={~~ (<=$&vars <=$&internals) 'fn-'^*}
-		) $word^*} <={%complete-%pathsearch '' $word}
+		) $word^*} <={%complete-fn %pathsearch '' $word}
 	}
 }
 
@@ -135,7 +152,7 @@ fn %file-complete filter word {
 	# to be treated as files, and defines a function for the line editing
 	# library to use to map from each entry to a valid file.  This enables
 	# nice behavior for things like path-searching commands; see
-	# %complete-%pathsearch for an example of this.
+	# completions/complete-%pathsearch.es for an example of this.
 	fn-%completion-to-file = result
 
 	let (files = (); homepat = ()) {
@@ -170,280 +187,3 @@ fn %pid-complete word {
 }
 
 #	TODO: %fd-complete? %ifs-complete?
-
-
-#
-# Per-command completions
-#
-
-#	We supply several of our own completion functions for shell built-ins
-#	and to demonstrate how the "API" works.
-#
-#		fn %complete-[command] prefix word {
-#			return (completion candidates)
-#		}
-#
-#	This "API" is rather weak.  Ideally, these functions would probably
-#	receive pre-split argument lines (e.g., `cat foo bar ba[TAB]` would call
-#	something like `%complete-cat foo bar ba`, perhaps actually with a
-#	numeric index argument so that the entire line can be given to a
-#	function where completion is happening in the middle.  Maybe this?
-#
-#		fn %complete-[command] index command {...}
-#
-#	A challenge is what to do for cases like %seq {blah[TAB]} {blah blah}.
-#	The less-fancy but much-more-straightforward option is to just do the
-#	`blah[TAB]` completion by itself.
-#
-#	In addition, we may consider filtering things like redirections out from
-#	the arguments before passing them to these functions, though in some cases
-#	like input substitution, we'd want to keep the argument in some form.
-
-
-# Built-ins
-
-#	In "hook-ish function" cases like %var where the user-level command uses
-#	common code with internal shell logic but the shell doesn't actually call
-#	these functions, we have %complete-%var and internal completion logic refer
-#	to a common "internal" %var-complete function.  This is also used for
-#	%whatis.
-
-fn %complete-%var _ word {
-	%var-complete $word
-}
-
-fn %complete-%whatis _ word {
-	%whatis-complete $word
-}
-
-#	In cases like %pathsearch and %home where the shell actually calls a hook
-#	function to get something done, internal completion functions also directly
-#	refer to %complete-%pathsearch and %complete-%home.
-
-fn %complete-%pathsearch _ word {
-	fn %completion-to-file f {
-		catch @ e {result $f} {
-			# Like %pathsearch, but don't filter file types.
-			access -n $f -1e $path
-		}
-	}
-	let (files = ()) {
-		for (p = $path)
-		for (w = $p/$word^*)
-		if {access -x -- $w} {
-			files = $files <={~~ $w $p/*}
-		}
-		result $files
-	}
-}
-
-fn %complete-%home _ word {
-	result $word^<={~~ `` \n {awk -F: '{print $1}' /etc/passwd} $word^*}
-}
-
-#	These functions which use 'cmd' are good demos of why the 'prefix' arg
-#	just isn't quite enough.
-
-fn %complete-%run prefix word {
-	let (cmd = <={%split ' '\t $prefix})
-	if {~ $#cmd 0} {
-		let (result = ()) {
-			# enforce an absolute path
-			for (r = <={%file-complete @ {access -x $*} $word}) {
-				if {~ $r /* ./* ../*} {
-					result = $result $r
-				} {
-					result = $result ./$r
-				}
-			}
-			result $result
-		}
-	} {~ $#cmd 1} {
-		# assume basename of the first term
-		let (ps = <={%split '/' $cmd(1)}) result $ps($#ps)
-	} {
-		# try to pass through to completion on second term
-		%complete <={%flatten ' ' $cmd(2 ...)} $word
-	}
-}
-
-fn %complete-%openfile prefix word {
-	let (cmd = <={%split ' '\t $prefix}) {
-		if {~ $#cmd 0} {
-			# mode
-			result $word^<={~~ (r w a r+ w+ a+) $word^*}
-		} {~ $#cmd 1} {
-			# fd
-			if {~ $cmd(1) r*} {
-				result 0
-			} {
-				result 1
-			}
-		} {~ $#cmd 2} {
-			# file
-			%file-complete {} $word
-		} {
-			# cmd: pass-through completion
-			%complete <={%flatten ' ' $cmd(4 ...)} $word
-		}
-	}
-}
-
-fn %complete-%open p w 		{%complete-%openfile 'r ' ^$p $w}
-fn %complete-%create p w	{%complete-%openfile 'w ' ^$p $w}
-fn %complete-%append p w	{%complete-%openfile 'a ' ^$p $w}
-fn %complete-%open-write p w	{%complete-%openfile 'r+ '^$p $w}
-fn %complete-%open-create p w	{%complete-%openfile 'w+ '^$p $w}
-fn %complete-%open-append p w	{%complete-%openfile 'a+ '^$p $w}
-
-#	Note that `cd' is consistently the most overloaded function es has;
-#	This function performs the basic completion, but doesn't know about
-#	things like cdpath, dir stacks, or anything else folks have done to
-#	cd in their setups.
-
-fn %complete-cd _ word {
-	%file-complete @ {access -d -- $*} $word
-}
-
-fn %complete-wait _ word {
-	%pid-complete $word
-}
-
-fn %complete-throw prefix word {
-	let (cmd = <={%split ' '\t $prefix}) {
-		if {~ $#cmd 0} {
-			return $word^<={~~ (break eof error retry return signal) $word^*}
-		}
-		match $cmd(1) (
-		(break eof retry return)	{result ()}	# no good guesses :/
-		error	{
-			if {~ $#cmd 1} {
-				%whatis-complete $word
-			} {
-				result ()
-			}
-		}
-		signal {
-			# The shell should be able to give us this list...
-			result $word^<={~~ (
-				sigabrt
-				sigalrm
-				sigbus
-				sigchld
-				sigcont
-				sigfpe
-				sighup
-				sigill
-				sigint
-				sigkill
-				sigpipe
-				sigpoll
-				sigprof
-				sigquit
-				sigsegv
-				sigstop
-				sigtstp
-				sigsys
-				sigterm
-				sigtrap
-				sigttin
-				sigttou
-				sigurg
-				sigusr1
-				sigusr2
-				sigvtalrm
-				sigxcpu
-				sigxfsz
-				sigwinch
-			) $word^*}
-		}
-		*	{result ()}	# Not sure :/
-		)
-	}
-}
-
-#	Functions which just wrap %functions.
-
-fn-%complete-var	= %complete-%var
-fn-%complete-whatis	= %complete-%whatis
-
-#	"Pass-through" completions for functions which take commands as arguments.
-
-fn-%complete-eval		= %complete
-fn-%complete-exec		= %complete
-fn-%complete-time		= %complete
-fn-%complete-%not		= %complete
-fn-%complete-%background	= %complete
-
-#	"Null" completions for commands which simply take no arguments.
-
-fn-%complete-true		= {result}
-fn-%complete-false		= {result}
-fn-%complete-newpgrp		= {result}
-fn-%complete-%read		= {result}
-fn-%complete-%is-interactive	= {result}
-
-#	Technically, all of the arguments to these are command words.
-
-fn %complete-if _ word			{%whatis-complete $word}
-fn %complete-unwind-protect _ word	{%whatis-complete $word}
-fn %complete-while _ word		{%whatis-complete $word}
-fn %complete-%and _ word		{%whatis-complete $word}
-fn %complete-%or _ word			{%whatis-complete $word}
-
-
-# "Demo" completions of external binaries
-
-#	Very incomplete ls completion to see how --option= completion works.
-#	Not great so far!
-#	TODO: enable --opt[TAB] to complete to '--option=', not '--option= '.
-#	TODO: some kind of fanciness to enable good short-option support?
-
-fn %complete-ls _ word {
-	if {~ $word -*} {
-		result $word^<={~~ (
-			--all
-			--author
-			--block-size=
-			--color=
-		) $word^*}
-	} {
-		%file-complete {} $word
-	}
-}
-
-#	Total support for `man` arguments is surprisingly complicated.
-#	This covers `man blah` and `man 1 blah` at least.
-
-fn %complete-man prefix word {
-	let (sections = 1 1p n l 8 3 3p 0 0p 2 3type 5 4 9 6 7) {
-		if {~ $#MANPATH 0} {
-			MANPATH = `manpath
-		}
-		for (a = <={%split ' '\t $prefix}) if {~ $a $sections} {
-			sections = $a
-			break
-		}
-		let (result = (); manpath = <={%fsplit : $MANPATH}) {
-			# This whole `for` kills performance on `man [TAB]` :/
-			# Slightly buggy :/
-			for (fi = $manpath/man$sections/$word^*) {
-				if {access $fi} {
-					let (sp = <={%fsplit . <={
-						~~ $fi $manpath/man$sections/*
-					}}) {
-						if {~ $sp($#sp) gz} {
-							let (nsp = 1 2 $sp)
-							sp = $nsp(3 ... $#sp)
-						} {
-							let (nsp = 1 $sp)
-							sp = $nsp(2 ... $#sp)
-						}
-						result = $result <={%flatten . $sp}
-					}
-				}
-			}
-			result $result
-		}
-	}
-}
