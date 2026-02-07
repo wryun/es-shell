@@ -141,13 +141,12 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	return TRUE;
 }
 
-extern int yylex(void) {
+extern int yylex(YYSTYPE *y) {
 	static Boolean dollar = FALSE;
 	int c;
 	size_t i;			/* The purpose of all these local assignments is to	*/
 	const char *meta;		/* allow optimizing compilers like gcc to load these	*/
 	char *buf = tokenbuf;		/* values into registers. On a sparc this is a		*/
-	YYSTYPE *y = &yylval;		/* win, in code size *and* execution time		*/
 
 	if (goterror) {
 		goterror = FALSE;
@@ -195,7 +194,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		else if (streq(buf, "match"))
 			return MATCH;
 		w = RW;
-		y->str = gcdup(buf);
+		y->str = pdup(buf);
 		return WORD;
 	}
 	if (c == '`' || c == '!' || c == '$' || c == '\'' || c == '=') {
@@ -244,7 +243,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		}
 		UNGETC(c);
 		buf[i] = '\0';
-		y->str = gcdup(buf);
+		y->str = pdup(buf);
 		return QWORD;
 	case '\\':
 		if ((c = GETC()) == '\n') {
@@ -306,7 +305,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			break;
 		}
 		buf[1] = 0;
-		y->str = gcdup(buf);
+		y->str = pdup(buf);
 		return QWORD;
 	case '#':
 		while ((c = GETC()) != '\n') /* skip comment until newline */
@@ -369,9 +368,10 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 				cmd = "%here";
 			} else
 				cmd = "%heredoc";
-		else if (c == '=')
+		else if (c == '=') {
+			w = NW;
 			return CALL;
-		else
+		} else
 			cmd = "%open";
 		goto redirection;
 	case '>':

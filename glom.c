@@ -320,8 +320,10 @@ extern List *glom(Tree *tree, Binding *binding, Boolean globit) {
 	if (globit) {
 		Ref(List *, list, NULL);
 		Ref(StrList *, quote, NULL);
+		RefAdd(binding);
 		list = glom2(tree, binding, &quote);
-		list = glob(list, quote);
+		list = glob(list, quote, binding);
+		RefRemove(binding);
 		RefEnd(quote);
 		RefReturn(list);
 	} else

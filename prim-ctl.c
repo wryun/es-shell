@@ -68,7 +68,6 @@ PRIM(catch) {
 				result
 				  = prim("noreturn",
 					 mklist(lp->term, frombody),
-					 NULL,
 					 evalflags);
 				unblocksignals();
 			CatchException (fromcatcher)
@@ -83,6 +82,8 @@ PRIM(catch) {
 			EndExceptionHandler
 
 		EndExceptionHandler
+
+		SIGCHK();
 	} while (retry);
 	RefEnd(lp);
 	RefReturn(result);

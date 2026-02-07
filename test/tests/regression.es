@@ -89,6 +89,25 @@ EOF
 
 	# https://github.com/wryun/es-shell/issues/199
 	assert {~ `` \n {echo 'fn-%write-history = $&collect'^\n^'cat << eof' | $es -i >[2=1]} *'incomplete here document'*}
+
+	# https://github.com/wryun/es-shell/issues/206
+	assert {~ `` \n {$es -c 'let (a=<=true) echo $a'} <=true} 'concatenated assignment+call syntax works'
+
+	# https://github.com/wryun/es-shell/issues/235
+	assert {$es -c 'catch @ {} {%pathsearch %pnothingthatreallyexists}'} '%-like strings don''t break %pathsearch'
+
+	# https://github.com/wryun/es-shell/issues/246
+	let (x = \e^';'^\e^';'^\e^';')
+	local (fn ok {true})
+	assert {$es -c ok}
+
+	# https://github.com/wryun/es-shell/pull/248
+	local (fn %exec-failure {})
+	assert {~ `{%run notarealbinary >[2=1]} 'notarealbinary'*}
+
+	# https://github.com/wryun/es-shell/pull/255
+	local (fn %pathsearch {result ~})
+	assert {$es -c 'notarealbinary; true'}
 }
 
 # These tests are based on notes in the CHANGES file from the pre-git days.

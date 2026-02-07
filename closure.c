@@ -46,6 +46,15 @@ static Tree *revtree(Tree *tree) {
 	return prev;
 }
 
+static char *doconcat(Tree *word) {
+	NodeKind k = word->kind;
+	assert(gcisblocked());
+	assert(k == nWord || k == nQword || k == nConcat);
+	if (k != nConcat)
+		return word->u[0].s;
+	return str("%s%s", doconcat(word->u[0].p), doconcat(word->u[1].p));
+}
+
 typedef struct Chain Chain;
 struct Chain {
 	Closure *closure;
@@ -67,12 +76,16 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 			for (; defn != NULL; defn = defn->u[1].p) {
 				Term *term;
 				Tree *word = defn->u[0].p;
-				NodeKind k = word->kind;
 				assert(defn->kind == nList);
-				assert(k == nWord || k == nQword || k == nPrim);
-				if (k == nPrim) {
-					char *prim = word->u[0].s;
-					if (streq(prim, "nestedbinding")) {
+				switch (word->kind) {
+				case nConcat:
+					term = mkstr(doconcat(word));
+					break;
+				case nWord: case nQword:
+					term = mkstr(word->u[0].s);
+					break;
+				case nPrim: {
+					if (streq(word->u[0].s, "nestedbinding")) {
 						int i, count;
 						Chain *cp;
 						if (
@@ -92,12 +105,19 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 								break;
 						}
 						term = mkterm(NULL, cp->closure);
-					} else {
-						fail("$&parse", "bad unquoted primitive in %%closure: $&%s", prim);
-						NOTREACHED;
+						break;
 					}
-				} else
-					term = mkstr(word->u[0].s);
+				}
+				FALLTHROUGH;
+				case nLambda: case nThunk:
+					term = mkterm(NULL, mkclosure(word, NULL));
+					break;
+				case nCall: case nVar: case nVarsub:
+					fail("$&parse", "bad definition in %%closure: %T\n", defn);
+					NOTREACHED;
+				default:
+					NOTREACHED;
+				}
 				list = mklist(term, list);
 			}
 			bindings = mkbinding(name->u[0].s, list, bindings);

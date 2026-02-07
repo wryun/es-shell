@@ -136,7 +136,7 @@ extern List *sortlist(List *list);
 
 /* tree.c */
 
-extern Tree *mk(NodeKind VARARGS);
+extern Tree *gcmk(NodeKind VARARGS);	/* gcalloc a tree node */
 
 
 /* closure.c */
@@ -174,7 +174,7 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
 /* glob.c */
 
 extern char QUOTED[], UNQUOTED[];
-extern List *glob(List *list, StrList *quote);
+extern List *glob(List *list, StrList *quote, Binding *binding);
 extern Boolean haswild(const char *pattern, const char *quoting);
 
 
@@ -197,7 +197,7 @@ extern Vector *mkenv(void);
 extern void setnoexport(List *list);
 extern void addtolist(void *arg, char *key, void *value);
 extern List *listvars(Boolean internal);
-extern List *varswithprefix(char *prefix);
+extern List *varswithprefix(const char *prefix);
 
 typedef struct Push Push;
 extern Push *pushlist;
@@ -282,10 +282,8 @@ extern void *ealloc(size_t n);
 extern void *erealloc(void *p, size_t n);
 extern void efree(void *p);
 extern void ewrite(int fd, const char *s, size_t n);
-extern long eread(int fd, char *buf, size_t n);
 extern Boolean isabsolute(char *path);
 extern Boolean streq2(const char *s, const char *t1, const char *t2);
-
 
 /* input.c */
 
@@ -319,7 +317,7 @@ extern void inithistory(void);
 extern void sethistory(char *file);
 extern void loghistory(char *cmd);
 extern void setmaxhistorylength(int length);
-extern void checkreloadhistory(void);
+extern void checkhistory(void);
 #endif
 
 extern void newhistbuffer(void);
@@ -337,9 +335,9 @@ extern List *esoptend(void);
 
 /* prim.c */
 
-extern List *prim(char *s, List *list, Binding *binding, int evalflags);
+extern List *prim(char *s, List *list, int evalflags);
 extern void initprims(void);
-extern List *primswithprefix(char *prefix);
+extern List *primswithprefix(const char *prefix);
 
 
 /* split.c */
@@ -365,8 +363,8 @@ extern void setsigeffects(const Sigeffect effects[]);
 extern void getsigeffects(Sigeffect effects[]);
 extern List *mksiglist(void);
 extern void initsignals(Boolean interactive, Boolean allowdumps);
-extern Atomic slow, interrupted;
-extern jmp_buf slowlabel;
+extern Atomic slow;
+extern sigjmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);
 extern Boolean issilentsignal(List *e);
@@ -410,6 +408,12 @@ extern void gcreserve(size_t nbytes);		/* provoke a collection, if enabled and n
 extern void gcenable(void);			/* enable collections */
 extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
+
+/* operations with pspace, the explicitly-collected gc space for parse tree building */
+extern void *palloc(size_t n, Tag *t);		/* allocate n with collection tag t, but in pspace */
+extern void *pseal(void *p);			/* collect pspace into gcspace with root p */
+extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */
+extern char *pndup(const char *s, size_t n);	/* copy a counted string into pspace */
 
 
 /*
@@ -509,7 +513,7 @@ struct Handler {
 	Root *rootlist;
 	Push *pushlist;
 	unsigned long evaldepth;
-	jmp_buf label;
+	sigjmp_buf label;
 };
 
 extern Handler *tophandler, *roothandler;
@@ -533,7 +537,7 @@ extern List *raised(List *e);
 		_localhandler.evaldepth = evaldepth; \
 		_localhandler.up = tophandler; \
 		tophandler = &_localhandler; \
-		if (!setjmp(_localhandler.label)) {
+		if (!sigsetjmp(_localhandler.label, 0)) {
 	
 #define CatchException(e) \
 			pophandler(&_localhandler); \

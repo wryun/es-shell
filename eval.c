@@ -13,8 +13,8 @@ static Noreturn failexec(char *file, List *args) {
 		Ref(List *, list, append(fn, mklist(mkstr(file), args)));
 		RefAdd(file);
 		gcenable();
-		RefRemove(file);
 		eval(list, NULL, 0);
+		RefRemove(file);
 		RefEnd(list);
 		errno = olderror;
 	}
@@ -347,12 +347,15 @@ extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
 
 /* pathsearch -- evaluate fn %pathsearch + some argument */
 extern List *pathsearch(Term *term) {
-	List *search, *list;
+	List *list;
+	Ref(List *, search, NULL);
 	search = varlookup("fn-%pathsearch", NULL);
 	if (search == NULL)
 		fail("es:pathsearch", "%E: fn %%pathsearch undefined", term);
 	list = mklist(term, NULL);
-	return eval(append(search, list), NULL, 0);
+	list = append(search, list);
+	RefEnd(search);
+	return eval(list, NULL, 0);
 }
 
 /* eval -- evaluate a list, producing a list */
@@ -368,6 +371,7 @@ extern List *eval(List *list0, Binding *binding0, int flags) {
 	Ref(char *, funcname, NULL);
 
 restart:
+	SIGCHK();
 	if (list == NULL) {
 		RefPop3(funcname, binding, list);
 		--evaldepth;
@@ -379,7 +383,7 @@ restart:
 		switch (cp->tree->kind) {
 		    case nPrim:
 			assert(cp->binding == NULL);
-			list = prim(cp->tree->u[0].s, list->next, binding, flags);
+			list = prim(cp->tree->u[0].s, list->next, flags);
 			break;
 		    case nThunk:
 			list = walk(cp->tree->u[0].p, cp->binding, flags);
@@ -449,6 +453,10 @@ restart:
 		char *error = checkexecutable(name);
 		if (error != NULL)
 			fail("$&whatis", "%s: %s", name, error);
+		if (funcname != NULL) {
+			Term *fn = mkstr(funcname);
+			list = mklist(fn, list->next);
+		}
 		list = forkexec(name, list, flags & eval_inchild);
 		RefPop(name);
 		goto done;
@@ -463,6 +471,8 @@ restart:
 		goto done;
 	}
 
+	if (fn != NULL)
+		funcname = getstr(list->term);
 	list = append(fn, list->next);
 	goto restart;
 

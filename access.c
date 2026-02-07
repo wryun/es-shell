@@ -29,10 +29,12 @@ static Boolean ingroupset(gidset_t gid) {
 	static gidset_t *gidset;
 	static Boolean initialized = FALSE;
 	if (!initialized) {
-		initialized = TRUE;
-		ngroups = getgroups(0, gidset);
+		ngroups = getgroups(0, NULL);
+		if (ngroups == -1)
+			fail("$&access", "getgroups: %s", esstrerror(errno));
 		gidset = ealloc(ngroups * sizeof(gidset_t));
-		getgroups(ngroups, gidset);
+		assert(getgroups(ngroups, gidset) != -1);
+		initialized = TRUE;
 	}
 	for (i = 0; i < ngroups; i++)
 		if (gid == gidset[i])
@@ -162,11 +164,12 @@ PRIM(access) {
 	}
 
 	if (first && throws) {
-		gcenable();
+		Ref(char *, err, esstrerror(estatus));
 		if (suffix)
-			fail("$&access", "%s: %s", suffix, esstrerror(estatus));
-		else
-			fail("$&access", "%s", esstrerror(estatus));
+			err = str("%s: %s", suffix, err);
+		gcenable();
+		fail("$&access", "%s", err);
+		RefEnd(err);
 	}
 
 	Ref(List *, result, reverse(lp));
