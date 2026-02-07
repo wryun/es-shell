@@ -299,36 +299,34 @@ struct times {
 	intmax_t sys_usec;
 };
 
-static Boolean timethrows = TRUE;
-
-static void tmerrchk(int result, char *str) {
+static void tmerrchk(int result, char *str, Boolean throw) {
 	if (result != -1)
 		return;
-	if (timethrows)
+	if (throw)
 		fail("$&time", "%s: %s", str, esstrerror(errno));
 	eprint("%s: %s\n", str, esstrerror(errno));
 	eprint("Calls to `$&time` or `time` in this shell may produce bad values.\n");
 }
 
-static void getrealtime(struct times *ret) {
+static void getrealtime(struct times *ret, Boolean throw) {
 #if HAVE_GETTIMEOFDAY && MILLISECOND_TIME
 #define HAVE_PRECISE_REALTIME	1
 	struct timeval tv;
-	tmerrchk(gettimeofday(&tv, NULL), "getrealtime()");
+	tmerrchk(gettimeofday(&tv, NULL), "getrealtime()", throw);
 	ret->real_usec = (tv.tv_sec * INTMAX_C(1000000)) + tv.tv_usec;
 #else	/* use time(3p) */
 #define HAVE_PRECISE_REALTIME	0
 	time_t t = time(NULL);
-	tmerrchk(t, "getrealtime()");
+	tmerrchk(t, "getrealtime()", throw);
 	ret->real_usec = t * 1000000;
 #endif
 }
 
-static void getusagetimes(struct times *ret) {
+static void getusagetimes(struct times *ret, Boolean throw) {
 #if HAVE_GETRUSAGE
 	struct rusage ru_self, ru_child;
-	tmerrchk(getrusage(RUSAGE_SELF, &ru_self), "getrusage(RUSAGE_SELF)");
-	tmerrchk(getrusage(RUSAGE_CHILDREN, &ru_child), "getrusage(RUSAGE_CHILDREN)");
+	tmerrchk(getrusage(RUSAGE_SELF, &ru_self), "getrusage(RUSAGE_SELF)", throw);
+	tmerrchk(getrusage(RUSAGE_CHILDREN, &ru_child), "getrusage(RUSAGE_CHILDREN)", throw);
 	ret->user_usec = (ru_self.ru_utime.tv_sec * 1000000)
 		+ ru_self.ru_utime.tv_usec
 		+ (ru_child.ru_utime.tv_sec * 1000000)
@@ -342,15 +340,15 @@ static void getusagetimes(struct times *ret) {
 	static long mul = -1;
 	if (mul == -1)
 		mul = 1000000 / sysconf(_SC_CLK_TCK);
-	tmerrchk(times(&tms), "getusagetimes()");
+	tmerrchk(times(&tms), "getusagetimes()", throw);
 	ret->user_usec = ((intmax_t)tms.tms_utime + tms.tms_cutime) * mul;
 	ret->sys_usec  = ((intmax_t)tms.tms_stime + tms.tms_cstime) * mul;
 #endif
 }
 
-static void gettimes(struct times *ret) {
-	getrealtime(ret);
-	getusagetimes(ret);
+static void gettimes(struct times *ret, Boolean throw) {
+	getrealtime(ret, throw);
+	getusagetimes(ret, throw);
 }
 
 static void parsetimes(List *list, struct times *ret) {
@@ -402,15 +400,13 @@ static char *strtimes(struct times time) {
 
 static struct times base;
 extern void setbasetime(void) {
-	timethrows = FALSE;
-	gettimes(&base);
-	timethrows = TRUE;
+	gettimes(&base, FALSE);
 }
 
 PRIM(time) {
 	struct times prev, time;
 
-	gettimes(&time);
+	gettimes(&time, TRUE);
 	subtimes(time, base, &time);
 
 	if (list != NULL) {
