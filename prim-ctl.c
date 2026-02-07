@@ -85,6 +85,7 @@ PRIM(catch) {
 
 		SIGCHK();
 	} while (retry);
+	SIGCHK();
 	RefEnd(lp);
 	RefReturn(result);
 }
