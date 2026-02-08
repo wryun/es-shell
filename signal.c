@@ -118,6 +118,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 	if (effect != sig_nochange && effect != old) {
 		switch (effect) {
 		case sig_ignore:
+		case sig_noop:
 			if (setsignal(sig, SIG_IGN) == SIG_ERR) {
 				eprint("$&setsignals: cannot ignore %s\n", signame(sig));
 				return old;
@@ -130,7 +131,6 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 			}
 			FALLTHROUGH;
 		case sig_catch:
-		case sig_noop:
 			if (setsignal(sig, catcher) == SIG_ERR) {
 				eprint("$&setsignals: cannot catch %s\n", signame(sig));
 				return old;
