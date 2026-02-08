@@ -310,12 +310,10 @@ static void tmerrchk(int result, char *str, Boolean throw) {
 
 static void getrealtime(struct times *ret, Boolean throw) {
 #if HAVE_GETTIMEOFDAY
-#define HAVE_PRECISE_REALTIME	1
 	struct timeval tv;
 	tmerrchk(gettimeofday(&tv, NULL), "getrealtime()", throw);
 	ret->real_usec = (tv.tv_sec * INTMAX_C(1000000)) + tv.tv_usec;
 #else	/* use time(3p) */
-#define HAVE_PRECISE_REALTIME	0
 	time_t t = time(NULL);
 	tmerrchk(t, "getrealtime()", throw);
 	ret->real_usec = t * 1000000;
@@ -375,13 +373,13 @@ static void subtimes(struct times a, struct times b, struct times *ret) {
 
 static char *strtimes(struct times time) {
 	return str(
-#if HAVE_PRECISE_REALTIME
+#if HAVE_GETTIMEOFDAY
 		"%6.3jd"
 #else
 		"%6jd"
 #endif
 		"r %7.3jdu %7.3jds",
-#if HAVE_PRECISE_REALTIME
+#if HAVE_GETTIMEOFDAY
 		time.real_usec / 1000,
 #else
 		time.real_usec / 1000000,
