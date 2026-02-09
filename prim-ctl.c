@@ -66,26 +66,28 @@ PRIM(catch) {
 
 			blocksignals();
 			ExceptionHandler
+
 				result
 				  = prim("noreturn",
 					 mklist(lp->term, frombody),
 					 evalflags);
-				unblocksignals();
+
 			CatchException (fromcatcher)
 
-				if (termeq(fromcatcher->term, "retry")) {
+				if (termeq(fromcatcher->term, "retry"))
 					retry = TRUE;
-				} else {
+				else
 					e = fromcatcher;
-				}
-				unblocksignals();
+
 			EndExceptionHandler
+			unblocksignals();
 
 		EndExceptionHandler
 
 		SIGCHK();
 		if (e != NULL)
 			throw(e);
+
 	} while (retry);
 	RefEnd(lp);
 	RefReturn(result);
