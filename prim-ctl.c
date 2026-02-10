@@ -55,6 +55,7 @@ PRIM(catch) {
 	Ref(List *, lp, list);
 
 	do {
+		List *e = NULL;
 		retry = FALSE;
 
 		ExceptionHandler
@@ -65,25 +66,28 @@ PRIM(catch) {
 
 			blocksignals();
 			ExceptionHandler
+
 				result
 				  = prim("noreturn",
 					 mklist(lp->term, frombody),
 					 evalflags);
-				unblocksignals();
+
 			CatchException (fromcatcher)
 
-				if (termeq(fromcatcher->term, "retry")) {
+				if (termeq(fromcatcher->term, "retry"))
 					retry = TRUE;
-					unblocksignals();
-				} else {
-					unblocksignals();
-					throw(fromcatcher);
-				}
+				else
+					e = fromcatcher;
+
 			EndExceptionHandler
+			unblocksignals();
 
 		EndExceptionHandler
 
 		SIGCHK();
+		if (e != NULL)
+			throw(e);
+
 	} while (retry);
 	RefEnd(lp);
 	RefReturn(result);

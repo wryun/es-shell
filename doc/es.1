@@ -1965,6 +1965,9 @@ Runs
 If it raises an exception,
 .IR catcher
 is run and passed the exception as an argument.
+Signals are blocked during the execution of
+.IR catcher
+and signal exceptions will only be thrown after it has finished running.
 .TP
 .Cr "cd \fR[\fP\fIdirectory\fP\fR]\fP"
 Changes the current directory to
