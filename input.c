@@ -159,7 +159,7 @@ static List *fillcmd = NULL;
 
 static int cmdfill(Input *in) {
 	char *read;
-	List *result;
+	List *cmd, *result;
 	size_t nread;
 	int oldf;
 
@@ -175,9 +175,11 @@ static int cmdfill(Input *in) {
 	} else
 		close(0);
 
+	cmd = append(fillcmd, mklist(mkstr(in->ignoreeof ? "heredoc" : "normal"), NULL));
+
 	ExceptionHandler
 
-		result = eval(fillcmd, NULL, 0);
+		result = eval(cmd, NULL, 0);
 
 	CatchException (e)
 

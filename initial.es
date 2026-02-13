@@ -666,7 +666,10 @@ fn %parse prompt {
 	if %is-interactive {
 		let (in = (); p = $prompt(1))
 		unwind-protect {
-			$&parse {
+			$&parse @ mode {
+				if {~ $mode heredoc} {
+					p = 'heredoc> '
+				}
 				let (r = <={%read-line $p}) {
 					in = $in $r
 					p = $prompt(2)
