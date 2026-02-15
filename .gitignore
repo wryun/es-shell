@@ -41,6 +41,7 @@ y.tab.h
 
 initial.c
 sigmsgs.c
+version.h
 es
 esdump
 testrun
