@@ -179,7 +179,7 @@
 .nr )P +.5v
 .sp .4v \}
 ..
-.TH ES 1 "29 August 2024"
+.TH ES 1 "15 February 2026"
 .SH NAME
 es \- extensible shell
 .SH SYNOPSIS
@@ -794,7 +794,7 @@ operator is inconvenient.
 This invocation compares the
 .I subject
 against the given patterns and executes the first action corresponding
-with a matched pattern, or throws an
+with a matched pattern, or raises an
 .Cr error
 exception if no matches for the
 .I subject
@@ -991,7 +991,7 @@ The return value of an assignment operation is the assigned value.
 .SS "Logical Operators"
 There are a number of operators in
 .I es
-which depend on the exit status of a command.
+which depend on the return value of a command.
 .Ds
 .Ic command1 " && " command2
 .De
@@ -1008,7 +1008,7 @@ the first command has a \(lqfalse\(rq return value.
 .Ci ! " command"
 .De
 .PP
-inverts the truth value of the exit status of a command.
+inverts the truth value of the return value of a command.
 .SS "Input and Output"
 The standard output of a command may be redirected to a file with
 .Ds
@@ -1126,6 +1126,7 @@ use:
 .Ic command " |[2] wc"
 .De
 .PP
+As is traditional, each element of a pipeline is run in a child process.
 A pipeline returns a list containing each element's exit status, which
 means that the exit status of a pipeline is considered true if and
 only if every command in the pipeline exits true.
@@ -1526,6 +1527,15 @@ interpreter catch this exception and print the message.
 is the name of the routine (typically a primitive) which
 raised the error.
 .TP
+.Cr "exit \fIvalue\fP"
+Raised by
+.Cr exit
+in order to exit the shell, with
+.I value
+used directly as the exit status if possible, or otherwise a true/false
+code corresponding with
+.IR value .
+.TP
 .Cr retry
 When raised from an exception catcher,
 causes the body of the
@@ -1543,6 +1553,10 @@ and the signal is listed in the variable
 .Cr signals .
 .I Signame
 is the name of the signal that was raised.
+If a signal causes the shell to exit, then the shell will attempt to
+kill itself with
+.I signame
+to exit with an appropriate signal status.
 .PP
 See the builtin commands
 .Cr catch
@@ -1634,7 +1648,7 @@ is space-tab-newline.
 Limits the maximum depth of the internal
 .I es
 call stack.
-If that maximum depth is reached, an error exception is thrown.
+If that maximum depth is reached, an error exception is raised.
 This protects the shell (and the user) from crashes when unbounded
 recursion happens.
 If
@@ -1967,7 +1981,7 @@ If it raises an exception,
 is run and passed the exception as an argument.
 Signals are blocked during the execution of
 .IR catcher
-and signal exceptions will only be thrown after it has finished running.
+and signal exceptions will only be raised after it has finished running.
 .TP
 .Cr "cd \fR[\fP\fIdirectory\fP\fR]\fP"
 Changes the current directory to
@@ -2181,7 +2195,10 @@ If no argument is present, the current mask value is printed.
 Runs
 .I body
 and, when it completes or raises an exception, runs
-.IR cleanup .
+.IR cleanup ,
+and then either re-returns the return value of
+.I body
+or re-raises the exception.
 .TP
 .Cr "var \fIvar ...\fP"
 Prints definitions of the named variables,
@@ -2431,7 +2448,7 @@ and
 options are used.
 .TP
 .Cr "%not \fIcmd\fP"
-Runs the command and returns false if its exit status was true,
+Runs the command and returns false if its return value was true,
 otherwise returns true.
 .TP
 .Cr "%one \fIlist\fP"
@@ -2673,8 +2690,7 @@ builtin functions with the same names:
 access	forever	throw
 catch	fork	umask
 echo	if	wait
-exec	newpgrp
-exit	result
+exec	newpgrp	result
 .ft R
 .De
 .PP
@@ -3027,10 +3043,10 @@ rather than something more useful.
 .PP
 Too many creatures have fept in.
 .PP
-Please send bug reports to
-.Cr "haahr@adobe.com"
-and
-.Cr "byron@netapp.com" .
+Please report bugs on the Github repository
+.Cr "https://github.com/wryun/es-shell" ,
+or send an email to
+.Cr "es-bugs@jpco.io" .
 .SH "SEE ALSO"
 .IR history (1),
 .IR rc (1),
