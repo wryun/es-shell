@@ -17,7 +17,7 @@ static Sighandler handler_in[NSIG];
  * system calls when a signal is received, since some of them don't do that
  * themselves.
  */
-jmp_buf slowlabel;
+sigjmp_buf slowlabel;
 Atomic slow = FALSE;
 
 #if HAVE_SIGACTION
