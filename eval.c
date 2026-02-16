@@ -391,20 +391,12 @@ restart:
 		    case nLambda:
 			ExceptionHandler
 
-				Push p;
 				Ref(Tree *, tree, cp->tree);
 				Ref(Binding *, context,
 					       bindargs(tree->u[0].p,
 							list->next,
 							cp->binding));
-				if (funcname != NULL)
-					varpush(&p, "0",
-						    mklist(mkterm(funcname,
-								  NULL),
-							   NULL));
 				list = walk(tree->u[1].p, context, flags);
-				if (funcname != NULL)
-					varpop(&p);
 				RefEnd2(context, tree);
 	
 			CatchException (e)
@@ -442,10 +434,10 @@ restart:
 	/* the logic here is duplicated in $&whatis */
 
 	Ref(char *, name, getstr(list->term));
-	fn = varlookup2("fn-", name, binding);
+	fn = fnlookup("fn-", name, list->next, binding);
 	if (fn != NULL) {
 		funcname = name;
-		list = append(fn, list->next);
+		list = fn;
 		RefPop(name);
 		goto restart;
 	}

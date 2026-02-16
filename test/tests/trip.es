@@ -274,7 +274,27 @@ test 'exit with signal codes' {
 		'die from a thrown signal even if we would ignore it externally'
 }
 
-test '$0 assignment' {
+test 'lexical $0' {
+	local (0 = es) {
+		assert {~ `{echo echo $0} es}
+		assert {if {~ $0 es} {true} {false}}
+		assert {let (fn if {$&if $*}) {if {~ $0 es} {true} {false}}}
+		assert {let (fn-if = $&noreturn @ {$&if $*}) {
+			if {~ $0 es} {true} {false}
+		}}
+		assert {~ <={true && result $0} es}
+
+		let (fn x {result $0 <={$*}})
+		let (result = <={x {result $0}})
+		assert {~ $result(1) x && ~ $result(2) es}
+
+		let (fn x {$*})
+		let (fn-doit = x @ {result $0})
+		assert {~ <=doit doit}
+	}
+}
+
+test 'binary $0' {
 	local (path = .)
 		assert {~ `{testrun a} 'testrun'} '$0 from hacked path is ok'
 	local (fn %pathsearch bin {result ./testrun a})

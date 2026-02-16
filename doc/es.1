@@ -1280,7 +1280,9 @@ is introduced with the syntax
 .PP
 If the function name appears as the first word of a command,
 the commands are run, with the named parameters bound to the
-arguments to the function.
+arguments to the function and
+.Cr $0
+bound to the function's name.
 .PP
 The similarity between functions and lambdas is not coincidental.
 A function in
@@ -1306,11 +1308,6 @@ which is equivalent to the assignment
 .Ds
 .Ci fn\- name =
 .De
-.PP
-If, as the most common case, a function variable is bound to a lambda,
-when the function is invoked, the variable
-.Cr $0
-is bound (dynamically, see below) to the name of the function.
 .PP
 Lambdas are just another form of code fragment, and, as such, can be
 exported in the environment, passed as arguments, etc.
@@ -1432,11 +1429,10 @@ A settor function is a variable of the form
 .Ci set- var\fR,
 which is typically bound to a lambda.
 Whenever a value is assigned to the named variable,
-the lambda is invoked with its arguments bound to the new value.
-While the settor function is running,
-the variable
+the lambda is invoked with its arguments bound to the new value
+and
 .Cr $0
-is bound to the name of the variable being assigned.
+bound to the name of the variable being assigned.
 The result of the settor function is used as the actual value in
 the assignment.
 .PP
@@ -1588,12 +1584,11 @@ Holds the value of
 with which
 .I es
 was invoked.
-Additionally,
+Additionally, within a function body,
 .Cr $0
-is set to the name of a function for the duration of
-the execution of that function, and
+is lexically bound to the name of the function, and
 .Cr $0
-is also set to the name of the
+is also dynamically bound to the name of the
 file being interpreted for the duration of a
 .Cr "." " command."
 .TP
