@@ -7,6 +7,8 @@
 #include "syntax.h"
 %}
 
+/* older byaccs don't understand this line.
+ * for them, it should work to replace it with `%pure-parser' */
 %define api.pure full
 
 %token <str>	WORD QWORD
