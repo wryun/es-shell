@@ -34,13 +34,15 @@ extern Closure *getclosure(Term *term) {
 			|| (*s == '$' && s[1] == '&')
 			|| hasprefix(s, "%closure")
 		) {
+			Closure *c;
 			Ref(Term *, tp, term);
 			Ref(Tree *, np, parsestring(s));
 			if (np == NULL) {
 				RefPop2(np, tp);
 				return NULL;
 			}
-			tp->closure = extractbindings(np);
+			c = extractbindings(np);
+			tp->closure = c;
 			tp->str = NULL;
 			term = tp;
 			RefEnd2(np, tp);

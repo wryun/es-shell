@@ -10,15 +10,7 @@
 #define	BUFSIZE	((size_t) 2048)
 #define	BUFMAX	(8 * BUFSIZE)
 
-typedef enum { NW, RW, KW } State;	/* "nonword", "realword", "keyword" */
-
-static State w = NW;
-static Boolean newline = FALSE;
-static Boolean goterror = FALSE;
-static size_t bufsize = 0;
-static char *tokenbuf = NULL;
-
-#define	InsertFreeCaret()	STMT(if (w != NW) { w = NW; UNGETC(c); return '^'; })
+#define	InsertFreeCaret()	STMT(if (p->ws != NW) { p->ws = NW; unget(p, c); return '^'; })
 
 
 /*
@@ -66,22 +58,23 @@ const char dnw[] = {
 
 
 /* print_prompt2 -- called before all continuation lines */
-extern void print_prompt2(void) {
-	input->lineno++;
+extern void print_prompt2(Parser *p) {
+	Input *in = p->input;
+	in->lineno++;
 #if HAVE_READLINE
-	prompt = prompt2;
+	in->prompt = in->prompt2;
 #else
-	if ((input->runflags & run_interactive) && prompt2 != NULL)
-		eprint("%s", prompt2);
+	if ((p->input->runflags & run_interactive) && in->prompt2 != NULL)
+		eprint("%s", in->prompt2);
 #endif
 }
 
 /* scanerror -- called for lexical errors */
-static void scanerror(int c, char *s) {
+static void scanerror(Parser *p, int c, char *s) {
 	while (c != '\n' && c != EOF)
-		c = GETC();
-	goterror = TRUE;
-	yyerror(s);
+		c = get(p);
+	p->goterror = TRUE;
+	yyerror(p, s);
 }
 
 /*
@@ -96,37 +89,37 @@ static void scanerror(int c, char *s) {
 #define	CLOSED	-1
 #define	DEFAULT	-2
 
-static Boolean getfds(int fd[2], int c, int default0, int default1) {
+static Boolean getfds(Parser *p, int fd[2], int c, int default0, int default1) {
 	int n;
 	fd[0] = default0;
 	fd[1] = default1;
 
 	if (c != '[') {
-		UNGETC(c);
+		unget(p, c);
 		return TRUE;
 	}
-	if ((unsigned int) (n = GETC() - '0') > 9) {
-		scanerror(n + '0', "expected digit after '['");
+	if ((unsigned int) (n = get(p) - '0') > 9) {
+		scanerror(p, n + '0', "expected digit after '['");
 		return FALSE;
 	}
 
-	while ((unsigned int) (c = GETC() - '0') <= 9)
+	while ((unsigned int) (c = get(p) - '0') <= 9)
 		n = n * 10 + c;
 	fd[0] = n;
 
 	switch (c += '0') {
 	case '=':
-		if ((unsigned int) (n = GETC() - '0') > 9) {
+		if ((unsigned int) (n = get(p) - '0') > 9) {
 			if (n != ']' - '0') {
-				scanerror(n + '0', "expected digit or ']' after '='");
+				scanerror(p, n + '0', "expected digit or ']' after '='");
 				return FALSE;
 			}
 			fd[1] = CLOSED;
 		} else {
-			while ((unsigned int) (c = GETC() - '0') <= 9)
+			while ((unsigned int) (c = get(p) - '0') <= 9)
 				n = n * 10 + c;
 			if (c != ']' - '0') {
-				scanerror(c + '0', "expected ']' after digit");
+				scanerror(p, c + '0', "expected ']' after digit");
 				return FALSE;
 			}
 			fd[1] = n;
@@ -135,49 +128,47 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	case ']':
 		break;
 	default:
-		scanerror(c, "expected '=' or ']' after digit");
+		scanerror(p, c, "expected '=' or ']' after digit");
 		return FALSE;
 	}
 	return TRUE;
 }
 
-extern int yylex(void) {
-	static Boolean dollar = FALSE;
+extern int yylex(YYSTYPE *y, Parser *p) {
 	int c;
 	size_t i;			/* The purpose of all these local assignments is to	*/
 	const char *meta;		/* allow optimizing compilers like gcc to load these	*/
-	char *buf = tokenbuf;		/* values into registers. On a sparc this is a		*/
-	YYSTYPE *y = &yylval;		/* win, in code size *and* execution time		*/
+	char *buf = p->tokenbuf;	/* values into registers. */
 
-	if (goterror) {
-		goterror = FALSE;
+	if (p->goterror) {
+		p->goterror = FALSE;
 		return NL;
 	}
 
 	/* rc variable-names may contain only alnum, '*' and '_', so use dnw if we are scanning one. */
-	meta = (dollar ? dnw : nw);
-	dollar = FALSE;
-	if (newline) {
-		--input->lineno; /* slight space optimization; print_prompt2() always increments lineno */
-		print_prompt2();
-		newline = FALSE;
+	meta = (p->dollar ? dnw : nw);
+	p->dollar = FALSE;
+	if (p->newline) {
+		--p->input->lineno; /* slight space optimization; print_prompt2() always increments lineno */
+		print_prompt2(p);
+		p->newline = FALSE;
 	}
-top:	while ((c = GETC()) == ' ' || c == '\t')
-		w = NW;
+top:	while ((c = get(p)) == ' ' || c == '\t')
+		p->ws = NW;
 	if (c == EOF)
 		return ENDFILE;
 	if (!meta[(unsigned char) c]) {	/* it's a word or keyword. */
 		InsertFreeCaret();
-		w = RW;
+		p->ws = RW;
 		i = 0;
 		do {
 			buf[i++] = c;
-			if (i >= bufsize)
-				buf = tokenbuf = erealloc(buf, bufsize *= 2);
-		} while ((c = GETC()) != EOF && !meta[(unsigned char) c]);
-		UNGETC(c);
+			if (i >= p->bufsize)
+				buf = p->tokenbuf = erealloc(buf, p->bufsize *= 2);
+		} while ((c = get(p)) != EOF && !meta[(unsigned char) c]);
+		unget(p, c);
 		buf[i] = '\0';
-		w = KW;
+		p->ws = KW;
 		if (buf[1] == '\0') {
 			int k = *buf;
 			if (k == '@' || k == '~')
@@ -194,73 +185,73 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			return CLOSURE;
 		else if (streq(buf, "match"))
 			return MATCH;
-		w = RW;
-		y->str = gcdup(buf);
+		p->ws = RW;
+		y->str = pdup(buf);
 		return WORD;
 	}
 	if (c == '`' || c == '!' || c == '$' || c == '\'' || c == '=') {
 		InsertFreeCaret();
 		if (c == '!' || c == '=')
-			w = KW;
+			p->ws = KW;
 	}
 	switch (c) {
 	case '!':
 	case '=':
 		return c;
 	case '`':
-		c = GETC();
+		c = get(p);
 		if (c == '`') {
-			c = GETC();
+			c = get(p);
 			if (c == '^')
 				return BBFLAT;
-			UNGETC(c);
+			unget(p, c);
 			return BACKBACK;
 		} else if (c == '^')
 			return BFLAT;
-		UNGETC(c);
+		unget(p, c);
 		return '`';
 	case '$':
-		dollar = TRUE;
-		switch (c = GETC()) {
+		p->dollar = TRUE;
+		switch (c = get(p)) {
 		case '#':	return COUNT;
 		case '^':	return FLAT;
 		case '&':	return PRIM;
-		default:	UNGETC(c); return '$';
+		default:	unget(p, c); return '$';
 		}
 	case '\'':
-		w = RW;
+		p->ws = RW;
 		i = 0;
-		while ((c = GETC()) != '\'' || (c = GETC()) == '\'') {
+		while ((c = get(p)) != '\'' || (c = get(p)) == '\'') {
 			buf[i++] = c;
 			if (c == '\n')
-				print_prompt2();
+				print_prompt2(p);
 			if (c == EOF) {
-				w = NW;
-				scanerror(c, "eof in quoted string");
+				p->ws = NW;
+				scanerror(p, c, "eof in quoted string");
 				return ERROR;
 			}
-			if (i >= bufsize)
-				buf = tokenbuf = erealloc(buf, bufsize *= 2);
+			if (i >= p->bufsize)
+				buf = p->tokenbuf = erealloc(buf, p->bufsize *= 2);
 		}
-		UNGETC(c);
+		unget(p, c);
 		buf[i] = '\0';
-		y->str = gcdup(buf);
+		y->str = pdup(buf);
 		return QWORD;
 	case '\\':
-		if ((c = GETC()) == '\n') {
-			print_prompt2();
-			UNGETC(' ');
+		if ((c = get(p)) == '\n') {
+			print_prompt2(p);
+			unget(p, ' ');
 			goto top; /* Pretend it was just another space. */
 		}
 		if (c == EOF) {
-			UNGETC(EOF);
+			unget(p, EOF);
 			goto badescape;
 		}
-		UNGETC(c);
+		unget(p, c);
 		c = '\\';
 		InsertFreeCaret();
-		w = RW;
-		c = GETC();
+		p->ws = RW;
+		c = get(p);
 		switch (c) {
 		case 'a':	*buf = '\a';	break;
 		case 'b':	*buf = '\b';	break;
@@ -272,7 +263,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		case 'x': case 'X': {
 			int n = 0;
 			for (;;) {
-				c = GETC();
+				c = get(p);
 				if (!isxdigit(c))
 					break;
 				n = (n << 4)
@@ -280,7 +271,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			}
 			if (n == 0)
 				goto badescape;
-			UNGETC(c);
+			unget(p, c);
 			*buf = n;
 			break;
 		}
@@ -288,67 +279,67 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			int n = 0;
 			do {
 				n = (n << 3) | (c - '0');
-				c = GETC();
+				c = get(p);
 			} while (isodigit(c));
 			if (n == 0)
 				goto badescape;
-			UNGETC(c);
+			unget(p, c);
 			*buf = n;
 			break;
 		}
 		default:
 			if (isalnum(c)) {
 			badescape:
-				scanerror(c, "bad backslash escape");
+				scanerror(p, c, "bad backslash escape");
 				return ERROR;
 			}
 			*buf = c;
 			break;
 		}
 		buf[1] = 0;
-		y->str = gcdup(buf);
+		y->str = pdup(buf);
 		return QWORD;
 	case '#':
-		while ((c = GETC()) != '\n') /* skip comment until newline */
+		while ((c = get(p)) != '\n') /* skip comment until newline */
 			if (c == EOF)
 				return ENDFILE;
 		FALLTHROUGH;
 	case '\n':
-		input->lineno++;
-		newline = TRUE;
-		w = NW;
+		p->input->lineno++;
+		p->newline = TRUE;
+		p->ws = NW;
 		return NL;
 	case '(':
-		if (w == RW)	/* not keywords, so let & friends work */
+		if (p->ws == RW)	/* not keywords, so let & friends work */
 			c = SUB;
 		FALLTHROUGH;
 	case ';':
 	case '^':
 	case ')':
 	case '{': case '}':
-		w = NW;
+		p->ws = NW;
 		return c;
 	case '&':
-		w = NW;
-		c = GETC();
+		p->ws = NW;
+		c = get(p);
 		if (c == '&')
 			return ANDAND;
-		UNGETC(c);
+		unget(p, c);
 		return '&';
 
 	case '|': {
-		int p[2];
-		w = NW;
-		c = GETC();
+		int pi[2];
+		p->ws = NW;
+		c = get(p);
 		if (c == '|')
 			return OROR;
-		if (!getfds(p, c, 1, 0))
+		if (!getfds(p, pi, c, 1, 0))
 			return ERROR;
-		if (p[1] == CLOSED) {
-			scanerror(c, "expected digit after '='");	/* can't close a pipe */
+		if (pi[1] == CLOSED) {
+			scanerror(p, c, "expected digit after '='");	/* can't close a pipe */
 			return ERROR;
 		}
-		y->tree = mk(nPipe, p[0], p[1]);
+		y->tree = mk(nPipe, pi[0], pi[1]);
 		return PIPE;
 	}
 
@@ -357,40 +348,41 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		int fd[2];
 	case '<':
 		fd[0] = 0;
-		if ((c = GETC()) == '>')
-			if ((c = GETC()) == '>') {
-				c = GETC();
+		if ((c = get(p)) == '>')
+			if ((c = get(p)) == '>') {
+				c = get(p);
 				cmd = "%open-append";
 			} else
 				cmd = "%open-write";
 		else if (c == '<')
-			if ((c = GETC()) == '<') {
-				c = GETC();
+			if ((c = get(p)) == '<') {
+				c = get(p);
 				cmd = "%here";
 			} else
 				cmd = "%heredoc";
-		else if (c == '=')
+		else if (c == '=') {
+			p->ws = NW;
 			return CALL;
-		else
+		} else
 			cmd = "%open";
 		goto redirection;
 	case '>':
 		fd[0] = 1;
-		if ((c = GETC()) == '>')
-			if ((c = GETC()) == '<') {
-				c = GETC();
+		if ((c = get(p)) == '>')
+			if ((c = get(p)) == '<') {
+				c = get(p);
 				cmd = "%open-append";
 			} else
 				cmd = "%append";
 		else if (c == '<') {
-			c = GETC();
+			c = get(p);
 			cmd = "%open-create";
 		} else
 			cmd = "%create";
 		goto redirection;
 	redirection:
-		w = NW;
-		if (!getfds(fd, c, fd[0], DEFAULT))
+		p->ws = NW;
+		if (!getfds(p, fd, c, fd[0], DEFAULT))
 			return ERROR;
 		if (fd[1] != DEFAULT) {
 			y->tree = (fd[1] == CLOSED)
@@ -404,20 +396,13 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 
 	default:
 		assert(c != '\0');
-		w = NW;
+		p->ws = NW;
 		return c; /* don't know what it is, let yacc barf on it */
 	}
 }
 
-extern void inityy(void) {
-	newline = FALSE;
-	w = NW;
-	if (bufsize > BUFMAX) {		/* return memory to the system if the buffer got too large */
-		efree(tokenbuf);
-		tokenbuf = NULL;
-	}
-	if (tokenbuf == NULL) {
-		bufsize = BUFSIZE;
-		tokenbuf = ealloc(bufsize);
-	}
+extern void inityy(Parser *p) {
+	p->newline = p->dollar = p->goterror = FALSE;
+	p->ws = NW;
+	p->bufsize = BUFSIZE;
 }

@@ -159,6 +159,44 @@ never succeeded
 	}
 }
 
+test 'signals in exception catchers' {
+	local (signals = sigint) {
+		let (
+			was-blocked = false
+			thrown = ()
+		) {
+			catch @ {
+				thrown = $*
+			} {
+				catch @ e {
+					kill -INT $pid
+					was-blocked = true
+				} {
+					throw exception
+				}
+			}
+			assert $was-blocked signal is blocked during catcher
+			assert {~ $thrown(1) signal} signal exception during catcher is thrown
+		}
+		let (thrown = ()) {
+			catch @ {
+				thrown = $*
+			} {
+				catch @ e {kill -INT $pid} {throw exception}
+			}
+			assert {~ $thrown(1) signal} second signal is caught
+		}
+		let (thrown = ()) {
+			catch @ {
+				thrown = $*
+			} {
+				catch @ e {kill -INT $pid; throw exception} {throw exception}
+			}
+			assert {~ $thrown(1) signal} signal exception has precedence within catcher
+		}
+	}
+}
+
 test 'heredocs and herestrings' {
 	let (bigfile = `{mktemp big-file.XXXXXX})
 	unwind-protect {
@@ -234,4 +272,23 @@ test 'exit with signal codes' {
 		'die normally with an ignored signal'
 	assert {~ <={$es -c 'signals = -sigterm; throw signal sigterm' >[2] /dev/null} sigterm} \
 		'die from a thrown signal even if we would ignore it externally'
+}
+
+test '$0 assignment' {
+	local (path = .)
+		assert {~ `{testrun a} 'testrun'} '$0 from hacked path is ok'
+	local (fn %pathsearch bin {result ./testrun a})
+		assert {~ `testrun 'testrun'} '$0 from hacked pathsearch is ok'
+	let (fn-testrun = ./testrun)
+		assert {~ `{testrun a} 'testrun'} '$0 from function is ok'
+}
+
+test 'backslash' {
+	assert {~ `` \n {echo h\
+i} 'h i'}
+	assert {~ `` \n {echo $es\es} $es^\es}
+	assert {~ `` \n {echo $es\
+es} $es^' es'}
+	assert {~ `` \n {echo h\\i} 'h\i'}
+	assert {~ `` \n {echo h \\ i} 'h \ i'}
 }

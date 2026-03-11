@@ -34,13 +34,14 @@ config.h
 
 # yacc
 
-y.*
+y.output
+y.tab.h
 
 # es
 
 initial.c
 sigmsgs.c
-token.h
+version.h
 es
 esdump
 testrun

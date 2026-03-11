@@ -30,6 +30,20 @@
 #include <varargs.h>
 #endif
 
+/* half-heartedly try to handle a lack of <stdint.h> or <inttypes.h> */
+#if HAVE_STDINT_H
+#include <stdint.h>
+#else
+#define intmax_t long
+#define uintmax_t unsigned long
+#endif
+
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
+#else
+#define strtoimax strtol
+#endif
+
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -130,16 +144,10 @@ extern void *qsort(
 
 /* setjmp */
 
-#if defined sigsetjmp || HAVE_SIGSETJMP
-/* under linux, sigsetjmp and setjmp are both macros 
- * -- need to undef setjmp to avoid problems
- */
-# ifdef setjmp
-#  undef setjmp
-# endif
-# define setjmp(buf) sigsetjmp(buf,1)
-# define longjmp(x,y)     siglongjmp(x,y)
-# define jmp_buf     sigjmp_buf
+#if !defined sigsetjmp && !HAVE_SIGSETJMP
+#define	sigsetjmp(b,n)	setjmp(b)
+#define	siglongjmp(x,y)	longjmp(x,y)
+#define	sigjmp_buf	jmp_buf
 #endif
 
 

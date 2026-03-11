@@ -3,9 +3,23 @@
 %{
 /* Some yaccs insist on including stdlib.h */
 #include "es.h"
-#include "input.h"
 #include "syntax.h"
+#include "input.h"
 %}
+
+/* This seems like the wrong way to go about this? */
+%code requires {
+typedef struct Input Input;
+typedef struct Parser Parser;
+typedef struct Here Here;
+}
+
+/* older byaccs don't understand this line.
+ * for them, it should work to replace it with `%pure-parser' */
+%define api.pure full
+
+%parse-param	{Parser *p}
+%lex-param	{Parser *p}
 
 %token <str>	WORD QWORD
 %token		LOCAL LET FOR CLOSURE FN
@@ -38,11 +52,11 @@
 
 %%
 
-es	: line end		{ parsetree = $1; YYACCEPT; }
-	| error end		{ yyerrok; parsetree = NULL; YYABORT; }
+es	: line end		{ p->tree = $1; YYACCEPT; }
+	| error end		{ yyerrok; p->tree = NULL; YYABORT; }
 
-end	: NL			{ if (!readheredocs(FALSE)) YYABORT; }
-	| ENDFILE		{ if (!readheredocs(TRUE)) YYABORT; }
+end	: NL			{ if (!readheredocs(p, FALSE)) YYABORT; }
+	| ENDFILE		{ if (!readheredocs(p, TRUE)) YYABORT; }
 
 line	: cmd			{ $$ = $1; }
 	| cmdsa line		{ $$ = mkseq("%seq", $1, $2); }
@@ -54,11 +68,11 @@ cmdsa	: cmd ';'		{ $$ = $1; }
 	| cmd '&'		{ $$ = prefix("%background", mk(nList, thunkify($1), NULL)); }
 
 cmdsan	: cmdsa			{ $$ = $1; }
-	| cmd NL		{ $$ = $1; if (!readheredocs(FALSE)) YYABORT; }
+	| cmd NL		{ $$ = $1; if (!readheredocs(p, FALSE)) YYABORT; }
 
 cmd	:		%prec LET		{ $$ = NULL; }
-	| simple				{ $$ = redirect($1); if ($$ == &errornode) YYABORT; }
-	| redir cmd	%prec '!'		{ $$ = redirect(mk(nRedir, $1, $2)); if ($$ == &errornode) YYABORT; }
+	| simple				{ $$ = redirect(p, $1); if ($$ == &errornode) YYABORT; }
+	| redir cmd	%prec '!'		{ $$ = redirect(p, mk(nRedir, $1, $2)); if ($$ == &errornode) YYABORT; }
 	| first assign				{ $$ = mk(nAssign, $1, $2); }
 	| fn					{ $$ = $1; }
 	| binder nl '(' bindings ')' nl cmd	{ $$ = mk($1, $4, $7); }
@@ -86,7 +100,7 @@ args	: word				{ $$ = treecons($1, NULL); }
 	| args redir			{ $$ = redirappend($1, $2); }
 
 redir	: DUP				{ $$ = $1; }
-	| REDIR word			{ $$ = mkredir($1, $2); }
+	| REDIR word			{ $$ = mkredir(p, $1, $2); }
 
 bindings: binding			{ $$ = treecons($1, NULL); }
 	| bindings ';' binding		{ $$ = treeconsend($1, $3); }

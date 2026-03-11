@@ -174,13 +174,14 @@ PRIM(here) {
 		;
 	*tailp = NULL;
 
+	Ref(List *, cmd, tail);
 	Ref(char *, doc, (lp == tail) ? NULL : str("%L", lp, ""));
 	doclen = strlen(doc);
 
-	Ref(List *, cmd, tail);
 #ifdef PIPE_BUF
 	if (doclen <= PIPE_BUF) {
-		pipe(p);
+		if (pipe(p) == -1)
+			fail("$&here", "pipe: %s", esstrerror(errno));
 		ewrite(p[1], doc, doclen);
 	} else
 #endif
@@ -209,7 +210,7 @@ PRIM(here) {
 		status = ewaitfor(pid);
 		printstatus(0, status);
 	}
-	RefEnd2(cmd, doc);
+	RefEnd2(doc, cmd);
 	RefReturn(lp);
 }
 
@@ -364,7 +365,7 @@ static List *bqinput(const char *sep, int fd) {
 
 restart:
 	/* avoid SIGCHK()ing in here so we don't abandon our child process */
-	while ((n = eread(fd, in, sizeof in)) > 0)
+	while ((n = read(fd, in, sizeof in)) > 0)
 		splitstring(in, n, FALSE);
 	if (n == -1) {
 		if (errno == EINTR)
@@ -417,11 +418,11 @@ static int read1(int fd) {
 	int nread;
 	unsigned char buf;
 	do {
-		nread = eread(fd, (char *) &buf, 1);
+		nread = read(fd, (char *) &buf, 1);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 	if (nread == -1)
-		fail("$&read", esstrerror(errno));
+		fail("$&read", "%s", esstrerror(errno));
 	return nread == 0 ? EOF : buf;
 }
 

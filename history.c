@@ -39,7 +39,7 @@ static char history_comment_char = '#';
  */
 
 
-extern void newhistbuffer() {
+extern void newhistbuffer(void) {
 	assert(histbuffer == NULL);
 	histbuffer = openbuffer(BUFSIZE);
 }
@@ -50,7 +50,7 @@ extern void addhistbuffer(char c) {
 	histbuffer = bufputc(histbuffer, c);
 }
 
-extern char *dumphistbuffer() {
+extern char *dumphistbuffer(void) {
 	char *s;
         size_t len;
 	assert(histbuffer != NULL);
@@ -70,21 +70,10 @@ extern char *dumphistbuffer() {
  */
 
 #if HAVE_READLINE
+static int sethistorylength = -1; /* unlimited */
+
 extern void setmaxhistorylength(int len) {
-	static int currenthistlen = -1; /* unlimited */
-	if (len != currenthistlen) {
-		switch (len) {
-		case -1:
-			unstifle_history();
-			break;
-		case 0:
-			clear_history();
-			FALLTHROUGH;
-		default:
-			stifle_history(len);
-		}
-		currenthistlen = len;
-	}
+	sethistorylength = len;
 }
 
 extern void loghistory(char *cmd) {
@@ -101,10 +90,36 @@ extern void loghistory(char *cmd) {
 	}
 }
 
+static int count_history(void) {
+	int i, n, count = 0, fd = eopen(history, oOpen);
+	char buf[4096];
+	if (fd < 0)
+		return -1;
+	while ((n = read(fd, &buf, 4096)) != 0) {
+		if (n < 0) {
+			if (errno == EINTR) {
+				SIGCHK();
+				continue;
+			} else {
+				close(fd);
+				return -1;
+			}
+		}
+		for (i = 0; i < n; i++)
+			if (buf[i] == '\n')
+				count++;
+	}
+	close(fd);
+	return count;
+}
+
 static void reload_history(void) {
 	/* Attempt to populate readline history with new history file. */
-	if (history != NULL)
-		read_history(history);
+	if (history != NULL) {
+		int n = count_history() - sethistorylength;
+		if (sethistorylength < 0 || n < 0) n = 0;
+		read_history_range(history, n, -1);
+	}
 	using_history();
 
 	reloadhistory = FALSE;
@@ -117,9 +132,23 @@ extern void sethistory(char *file) {
 	history = file;
 }
 
-extern void checkreloadhistory(void) {
+extern void checkhistory(void) {
+	static int effectivelength = -1;
 	if (reloadhistory)
 		reload_history();
+	if (sethistorylength != effectivelength) {
+		switch (sethistorylength) {
+		case -1:
+			unstifle_history();
+			break;
+		case 0:
+			clear_history();
+			FALLTHROUGH;
+		default:
+			stifle_history(sethistorylength);
+		}
+		effectivelength = sethistorylength;
+	}
 }
 
 /*

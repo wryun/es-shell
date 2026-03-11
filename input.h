@@ -2,50 +2,74 @@
 
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 
-typedef struct Input Input;
+#include "token.h"	/* for YYSTYPE */
+
+/* Input contains state that lasts longer than a $&parse. */
 struct Input {
-	int (*get)(Input *self);
-	int (*fill)(Input *self), (*rfill)(Input *self);
-	void (*cleanup)(Input *self);
+	/* previous Input */
 	Input *prev;
-	const char *name;
-	unsigned char *buf, *bufend, *bufbegin, *rbuf;
+
+	/* functions used to pull from Input */
+	int (*get)(Input *self);
+	int (*fill)(Input *self);
+	void (*cleanup)(Input *self);
+
+	/* input buffer */
 	size_t buflen;
-	int unget[MAXUNGET];
-	int ungot;
+	unsigned char *buf, *bufend, *bufbegin;
+
+	/* input metadata and flags */
+	const char *name;
 	int lineno;
 	int fd;
 	int runflags;
+
+	/* TODO: these belong in Parser, but it's a bit of work to do that
+	 * with the current input design; it's fine to wait until the Bigger
+	 * refactor to do this. */
+	Boolean ignoreeof;
+	char *prompt, *prompt2;	/* pspace-allocated */
 };
 
+typedef enum { NW, RW, KW } WordState;	/* nonword, realword, keyword */
 
-#define	GETC()		(*input->get)(input)
-#define	UNGETC(c)	unget(input, c)
+/* Parser contains state that lasts for one call to $&parse or less. */
+struct Parser {
+	Input *input;
+	void *space;	/* where the parse tree is kept in memory */
+
+	/* these variables are all allocated in pspace */
+	Tree *tree;		/* the final parse tree */
+	Here *hereq;		/* pending here document queue */
+	const char *error;	/* syntax error, if it exists */
+
+	/* token pushback buffer */
+	int unget[MAXUNGET];
+	int ungot;
+
+	/* lexer state */
+	WordState ws;
+	Boolean newline, goterror, dollar;
+	size_t bufsize;
+	char *tokenbuf;
+};
 
 
 /* input.c */
 
-extern Input *input;
-extern void unget(Input *in, int c);
-extern Boolean ignoreeof;
-extern void yyerror(char *s);
+extern int get(Parser *p);
+extern void unget(Parser *p, int c);
+extern void yyerror(Parser *p, const char *s);
 
 
 /* token.c */
 
 extern const char dnw[];
-extern int yylex(void);
-extern void inityy(void);
-extern void print_prompt2(void);
+extern int yylex(YYSTYPE *y, Parser *p);
+extern void inityy(Parser *p);
+extern void print_prompt2(Parser *p);
 
 
 /* parse.y */
 
-extern Tree *parsetree;
-extern int yyparse(void);
-extern void initparse(void);
-
-
-/* heredoc.c */
-
-extern void emptyherequeue(void);
+extern int yyparse(Parser *p);

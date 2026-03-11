@@ -1,0 +1,6 @@
+#!/bin/sh
+
+VERSION=0.10.0
+RELEASEDATE=15-Feb-2026
+
+echo "#define VERSION \"es version $VERSION $RELEASEDATE\""

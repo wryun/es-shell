@@ -1,5 +1,7 @@
 /* input.c -- read input from files or strings ($Revision: 1.2 $) */
 
+#define	REQUIRE_STAT	1
+
 #include "es.h"
 #include "input.h"
 
@@ -21,11 +23,8 @@
  * globals
  */
 
-Input *input;
-char *prompt, *prompt2;
-
-Boolean ignoreeof = FALSE;
-Boolean resetterminal = FALSE;
+static Input *input;
+Boolean resetterminal = FALSE;	/* TODO: localize when $&readline becomes a thing */
 
 #if HAVE_READLINE
 #include <readline/readline.h>
@@ -37,97 +36,58 @@ Boolean resetterminal = FALSE;
  */
 
 /* locate -- identify where an error came from */
-static char *locate(Input *in, char *s) {
+static const char *locate(Input *in, const char *s) {
 	return (in->runflags & run_interactive)
-		? s
-		: str("%s:%d: %s", in->name, in->lineno, s);
+		? pstr("%s", s)
+		: pstr("%s:%d: %s", in->name, in->lineno, s);
 }
 
-static char *error = NULL;
-
 /* yyerror -- yacc error entry point */
-extern void yyerror(char *s) {
-#if sgi
-	/* this is so that trip.es works */
-	if (streq(s, "Syntax error"))
-		s = "syntax error";
-#endif
-	if (error == NULL)	/* first error is generally the most informative */
-		error = locate(input, s);
+extern void yyerror(Parser *p, const char *s) {
+	if (p->error == NULL)	/* first error is generally the most informative */
+		p->error = locate(p->input, s);
 }
 
 /* warn -- print a warning */
-static void warn(char *s) {
-	eprint("warning: %s\n", locate(input, s));
+static void warn(Input *in, char *s) {
+	eprint("warning: %s\n", locate(in, s));
 }
 
 
 /*
- * unget -- character pushback
- */
-
-/* ungetfill -- input->fill routine for ungotten characters */
-static int ungetfill(Input *in) {
-	int c;
-	assert(in->ungot > 0);
-	c = in->unget[--in->ungot];
-	if (in->ungot == 0) {
-		assert(in->rfill != NULL);
-		in->fill = in->rfill;
-		in->rfill = NULL;
-		assert(in->rbuf != NULL);
-		in->buf = in->rbuf;
-		in->rbuf = NULL;
-	}
-	return c;
-}
-
-/* unget -- push back one character */
-extern void unget(Input *in, int c) {
-	if (in->ungot > 0) {
-		assert(in->ungot < MAXUNGET);
-		in->unget[in->ungot++] = c;
-	} else {
-		assert(in->rfill == NULL);
-		in->rfill = in->fill;
-		in->fill = ungetfill;
-		assert(in->rbuf == NULL);
-		in->rbuf = in->buf;
-		in->buf = in->bufend;
-		assert(in->ungot == 0);
-		in->ungot = 1;
-		in->unget[0] = c;
-	}
-}
-
-
-/*
- * getting characters
+ * getting and ungetting characters
  */
 
 /* get -- get a character, filter out nulls */
-static int get(Input *in) {
+extern int get(Parser *p) {
+	if (p->ungot > 0)
+		return p->unget[--p->ungot];
+	return p->input->get(p->input);
+}
+
+/* unget -- push back one character */
+extern void unget(Parser *p, int c) {
+	assert(p->ungot < MAXUNGET);
+	p->unget[p->ungot++] = c;
+}
+
+static int getnormal(Input *in) {
 	int c;
-	Boolean uf = (in->fill == ungetfill);
 	while ((c = (in->buf < in->bufend ? *in->buf++ : (*in->fill)(in))) == '\0')
-		warn("null character ignored");
-	if (!uf && c != EOF)
+		warn(in, "null character ignored");
+	if (c != EOF)
 		addhistbuffer((char)c);
 	return c;
 }
 
 /* getverbose -- get a character, print it to standard error */
 static int getverbose(Input *in) {
-	if (in->fill == ungetfill)
-		return get(in);
-	else {
-		int c = get(in);
-		if (c != EOF) {
-			char buf = c;
-			ewrite(2, &buf, 1);
-		}
-		return c;
+	int c = getnormal(in);
+	if (c != EOF) {
+		char buf = c;
+		ewrite(2, &buf, 1);
 	}
+	return c;
 }
 
 /* eoffill -- report eof when called to fill input buffer */
@@ -139,29 +99,27 @@ static int eoffill(Input UNUSED *in) {
 #if HAVE_READLINE
 /* callreadline -- readline wrapper */
 static char *callreadline(char *prompt0) {
-	char *volatile prompt = prompt0;
 	char *r;
+	Ref(char *volatile, prompt, prompt0);
 	if (prompt == NULL)
 		prompt = ""; /* bug fix for readline 2.0 */
-	checkreloadhistory();
+	checkhistory();
 	if (resetterminal) {
 		rl_reset_terminal(NULL);
 		resetterminal = FALSE;
 	}
 	if (RL_ISSTATE(RL_STATE_INITIALIZED))
 		rl_reset_screen_size();
-	interrupted = FALSE;
-	if (!setjmp(slowlabel)) {
+	if (!sigsetjmp(slowlabel, 1)) {
 		slow = TRUE;
-		r = interrupted ? NULL : readline(prompt);
-		if (interrupted)
-			errno = EINTR;
+		r = readline(prompt);
 	} else {
 		r = NULL;
 		errno = EINTR;
 	}
 	slow = FALSE;
 	SIGCHK();
+	RefEnd(prompt);
 	return r;
 }
 #endif
@@ -177,7 +135,7 @@ static int fdfill(Input *in) {
 	if (in->runflags & run_interactive && in->fd == 0) {
 		char *rlinebuf = NULL;
 		do {
-			rlinebuf = callreadline(prompt);
+			rlinebuf = callreadline(in->prompt);
 		} while (rlinebuf == NULL && errno == EINTR);
 		if (rlinebuf == NULL)
 			nread = 0;
@@ -195,12 +153,12 @@ static int fdfill(Input *in) {
 	} else
 #endif
 	do {
-		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
+		nread = read(in->fd, (char *) in->bufbegin, in->buflen);
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
-		if (!ignoreeof) {
+		if (!in->ignoreeof) {
 			close(in->fd);
 			in->fd = -1;
 			in->fill = eoffill;
@@ -224,45 +182,51 @@ static int fdfill(Input *in) {
 /* parse -- call yyparse(), but disable garbage collection and catch errors */
 extern Tree *parse(char *pr1, char *pr2) {
 	int result;
-	assert(error == NULL);
-
-	inityy();
-	emptyherequeue();
+	Parser p;
+	void *oldpspace;
 
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
-#if HAVE_READLINE
-	prompt = (pr1 == NULL) ? "" : pr1;
-#else
-	if (pr1 != NULL)
-		eprint("%s", pr1);
+	memzero(&p, sizeof (Parser));
+	p.input = input;
+	p.space = createpspace();
+	oldpspace = setpspace(p.space);
+
+	inityy(&p);
+	p.tokenbuf = ealloc(p.bufsize);
+
+	RefAdd(pr2);
+	input->prompt  = pr1 == NULL ? NULL : pstr("%s", pr1);
+	input->prompt2 = pr2 == NULL ? NULL : pstr("%s", pr2);
+	RefRemove(pr2);
+#if !HAVE_READLINE
+	if (input->prompt != NULL)
+		eprint("%s", input->prompt);
 #endif
-	prompt2 = pr2;
 
-	gcreserve(300 * sizeof (Tree));
-	gcdisable();
-	result = yyparse();
-	gcenable();
+	result = yyparse(&p);
 
-	if (result || error != NULL) {
-		char *e;
-		assert(error != NULL);
-		e = error;
-		error = NULL;
+	assert(p.ungot == 0);
+	if (p.tokenbuf != NULL)
+		efree(p.tokenbuf);
+
+	if (result || p.error != NULL) {
+		assert(p.error != NULL);
+		Ref(const char *, e, str("%s", p.error));
+		pseal(NULL);
+		setpspace(oldpspace);
 		fail("$&parse", "%s", e);
+		RefEnd(e);
 	}
 
+	Ref(Tree *, tree, pseal(p.tree));
+	setpspace(oldpspace);
 #if LISPTREES
 	if (input->runflags & run_lisptrees)
-		eprint("%B\n", parsetree);
+		eprint("%B\n", tree);
 #endif
-	return parsetree;
-}
-
-/* resetparser -- clear parser errors in the signal handler */
-extern void resetparser(void) {
-	error = NULL;
+	RefReturn(tree);
 }
 
 /* runinput -- run from an input source */
@@ -280,7 +244,7 @@ extern List *runinput(Input *in, int runflags) {
 
 	flags &= ~eval_inchild;
 	in->runflags = flags;
-	in->get = (flags & run_echoinput) ? getverbose : get;
+	in->get = (flags & run_echoinput) ? getverbose : getnormal;
 	in->prev = input;
 	input = in;
 
@@ -301,7 +265,7 @@ extern List *runinput(Input *in, int runflags) {
 				   : "fn-%batch-loop",
 				 NULL);
 		result = (repl == NULL)
-				? prim("batchloop", NULL, NULL, flags)
+				? prim("batchloop", NULL, flags)
 				: eval(repl, NULL, flags);
 
 		varpop(&push);
@@ -398,12 +362,12 @@ extern Tree *parseinput(Input *in) {
 
 	in->prev = input;
 	in->runflags = 0;
-	in->get = get;
+	in->get = getnormal;
 	input = in;
 
 	ExceptionHandler
 		result = parse(NULL, NULL);
-		if (get(in) != EOF)
+		if (getnormal(in) != EOF)
 			fail("$&parse", "more than one value in term");
 	CatchException (e)
 		(*input->cleanup)(input);
@@ -459,98 +423,219 @@ extern Boolean isfromfd(void) {
  * readline integration.
  */
 #if HAVE_READLINE
-/* quote -- teach readline how to quote a word in es during completion */
-static char *quote(char *text, int type, char *qp) {
-	char *p, *r;
-
-	/* worst-case size: string is 100% quote characters which will all be
-	 * doubled, plus initial and final quotes and \0 */
-	p = r = ealloc(strlen(text) * 2 + 3);
-	/* supply opening quote if not already present */
-	if (*qp != '\'')
-		*p++ = '\'';
-	while (*text) {
-		/* double any quotes for es quote-escaping rules */
-		if (*text == '\'')
-			*p++ = '\'';
-		*p++ = *text++;
+/* quote -- teach readline how to quote a word during completion.
+ * prefix is prepended _before_ the quotes, such as: $'foo bar' */
+static char *quote(char *text, Boolean open, char *prefix, char *qp) {
+	char *quoted;
+	if (*qp != '\0' || strpbrk(text, rl_filename_quote_characters)) {
+		quoted = mprint("%s%#S", prefix, text);
+		if (open)
+			quoted[strlen(quoted)-1] = '\0';
+	} else {
+		quoted = mprint("%s%s", prefix, text);
 	}
-	if (type == SINGLE_MATCH)
-		*p++ = '\'';
-	*p = '\0';
-	return r;
+	efree(text);
+	return quoted;
 }
 
-/* unquote -- teach es how to unquote a word */
-static char *unquote(char *text, int quote_char) {
+/* unquote -- remove quotes from text and point *qp at the relevant quote char */
+static char *unquote(const char *text, char **qp) {
 	char *p, *r;
+	Boolean quoted = FALSE;
 
 	p = r = ealloc(strlen(text) + 1);
-	while (*text) {
-		*p++ = *text++;
-		if (quote_char && *(text - 1) == '\'' && *text == '\'')
-			++text;
+	while ((*p = *text++)) {
+		if (*p == '\'') {
+			if (quoted && *text == '\'') {
+				p++;
+				text++;
+			} else {
+				quoted = !quoted;
+				if (quoted && qp != NULL)
+					*qp = p;
+			}
+		} else if (!quoted && *p == '\\') {
+			/* anything else won't be handled correctly by the completer */
+			if (*text == ' ' || *text == '\'')
+				*p++ = *text++;
+		} else
+			p++;
 	}
 	*p = '\0';
+	if (!quoted && qp != NULL)
+		*qp = p;
 	return r;
 }
 
-static char *complprefix;
-static List *(*wordslistgen)(char *);
+/* Unquote files to allow readline to detect which are directories. */
+static int unquote_for_stat(char **name) {
+	char *unquoted;
+	if (!strpbrk(*name, rl_filename_quote_characters))
+		return 0;
 
-static char *list_completion_function(const char *text, int state) {
-	static char **matches = NULL;
-	static int matches_idx, matches_len;
-	int i, rlen;
-	char *result;
-
-	const int pfx_len = strlen(complprefix);
-
-	if (!state) {
-		const char *name = &text[pfx_len];
-
-		Vector *vm = vectorize(wordslistgen((char *)name));
-		matches = vm->vector;
-		matches_len = vm->count;
-		matches_idx = 0;
-	}
-
-	if (!matches || matches_idx >= matches_len)
-		return NULL;
-
-	rlen = strlen(matches[matches_idx]);
-	result = ealloc(rlen + pfx_len + 1);
-	for (i = 0; i < pfx_len; i++)
-		result[i] = complprefix[i];
-	strcpy(&result[pfx_len], matches[matches_idx]);
-	result[rlen + pfx_len] = '\0';
-
-	matches_idx++;
-	return result;
+	unquoted = unquote(*name, NULL);
+	efree(*name);
+	*name = unquoted;
+	return 1;
 }
 
-char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
-	char **matches = NULL;
-
-	if (*text == '$') {
-		wordslistgen = varswithprefix;
-		complprefix = "$";
-		switch (text[1]) {
-		case '&':
-			wordslistgen = primswithprefix;
-			complprefix = "$&";
-			break;
-		case '^': complprefix = "$^"; break;
-		case '#': complprefix = "$#"; break;
+/* Find the start of the word to complete.  This uses the trick where we set rl_point
+ * to the start of the word to indicate the start of the word.  For this to work,
+ * rl_basic_quote_characters must be the empty string or else this function's result
+ * is overwritten, and doing that means we have to reimplement basically all quoting
+ * behavior manually. */
+static char *completion_start(void) {
+	int i, start = 0;
+	Boolean quoted = FALSE, backslash = FALSE;
+	for (i = 0; i < rl_point; i++) {
+		char c = rl_line_buffer[i];
+		if (backslash) {
+			backslash = FALSE;
+			continue;
 		}
-		matches = rl_completion_matches(text, list_completion_function);
+		if (c == '\'')
+			quoted = !quoted;
+		else if (!quoted && c == '\\')
+			backslash = TRUE;
+		else if (!quoted && strchr(rl_basic_word_break_characters, c))
+			start = i; /* keep possible '$' char in term */
+	}
+	rl_point = start;
+	return NULL;
+}
+
+/* Basic function to use an es List created by gen() to generate readline matches. */
+static char *list_completion(const char *text, int state, List *(*gen)(const char *)) {
+	static char **matches = NULL;
+	static int i, len;
+
+	if (!state) {
+		Vector *vm = vectorize(gen(text));
+		matches = vm->vector;
+		len = vm->count;
+		i = 0;
 	}
 
-	/* ~foo => username.  ~foo/bar already gets completed as filename. */
-	if (!matches && *text == '~' && !strchr(text, '/'))
-		matches = rl_completion_matches(text, rl_username_completion_function);
+	if (!matches || i >= len)
+		return NULL;
 
+	return mprint("%s", matches[i++]);
+}
+
+static char *var_completion(const char *text, int state) {
+	return list_completion(text, state, varswithprefix);
+}
+
+static char *prim_completion(const char *text, int state) {
+	return list_completion(text, state, primswithprefix);
+}
+
+static int matchcmp(const void *a, const void *b) {
+	return strcoll(*(const char **)a, *(const char **)b);
+}
+
+/* Pick out a completion to perform based on the string's prefix */
+rl_compentry_func_t *select_completion(const char *text, char **prefix) {
+	if (*text == '$') {
+		switch (text[1]) {
+		case '&':
+			*prefix = "$&";
+			return prim_completion;
+		case '^': *prefix = "$^"; break;
+		case '#': *prefix = "$#"; break;
+		default:  *prefix = "$";
+		}
+		return var_completion;
+	} else if (*text == '~' && !strchr(text, '/')) {
+		/* ~foo => username.  ~foo/bar gets completed as a filename. */
+		return rl_username_completion_function;
+	}
+	return rl_filename_completion_function;
+}
+
+static rl_compentry_func_t *completion_func = NULL;
+
+/* Top-level completion function.  If completion_func is set, performs that completion.
+ * Otherwise, performs a completion based on the prefix of the text. */
+char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
+	char **matches = NULL, *qp = NULL, *prefix = "";
+	/* Manually unquote the text, since we told readline not to. */
+	char *t = unquote(text, &qp);
+	rl_compentry_func_t *completion;
+
+	if (completion_func != NULL) {
+		completion = completion_func;
+		completion_func = NULL;
+	} else
+		completion = select_completion(text, &prefix);
+
+	matches = rl_completion_matches(t+strlen(prefix), completion);
+
+	/* Manually sort and then re-quote the matches. */
+	if (matches != NULL) {
+		size_t i, n;
+		for (n = 1; matches[n]; n++)
+			;
+		qsort(&matches[1], n - 1, sizeof(matches[0]), matchcmp);
+		matches[0] = quote(matches[0], n > 1, prefix, qp);
+		for (i = 1; i < n; i++)
+			matches[i] = quote(matches[i], FALSE, prefix, qp);
+	}
+
+	efree(t);
+
+	/* Since we had to sort and quote results ourselves, we disable the automatic
+	 * filename completion and sorting. */
+	rl_attempted_completion_over = 1;
+	rl_sort_completion_matches = 0;
 	return matches;
+}
+
+/* Unquote matches when displaying in a menu.  This wouldn't be necessary, if not for
+ * menu-complete. */
+static void display_matches(char **matches, int num, int max) {
+	int i;
+	char **unquoted;
+
+	if (rl_completion_query_items > 0 && num >= rl_completion_query_items) {
+		int c;
+		rl_crlf();
+		fprintf(rl_outstream, "Display all %d possibilities? (y or n)", num);
+		fflush(rl_outstream);
+		c = rl_read_key();
+		if (c != 'y' && c != 'Y' && c != ' ') {
+			rl_crlf();
+			rl_forced_update_display();
+			return;
+		}
+	}
+
+	unquoted = ealloc(sizeof(char *) * (num + 2));
+	for (i = 0; matches[i]; i++)
+		unquoted[i] = unquote(matches[i], NULL);
+	unquoted[i] = NULL;
+
+	rl_display_match_list(unquoted, num, max);
+	rl_forced_update_display();
+
+	for (i = 0; unquoted[i]; i++)
+		efree(unquoted[i]);
+	efree(unquoted);
+}
+
+static int es_complete_filename(int UNUSED count, int UNUSED key) {
+	completion_func = rl_filename_completion_function;
+	return rl_complete_internal(rl_completion_mode(es_complete_filename));
+}
+
+static int es_complete_variable(int UNUSED count, int UNUSED key) {
+	completion_func = var_completion;
+	return rl_complete_internal(rl_completion_mode(es_complete_variable));
+}
+
+static int es_complete_primitive(int UNUSED count, int UNUSED key) {
+	completion_func = prim_completion;
+	return rl_complete_internal(rl_completion_mode(es_complete_primitive));
 }
 #endif /* HAVE_READLINE */
 
@@ -563,27 +648,24 @@ char **builtin_completion(const char *text, int UNUSED start, int UNUSED end) {
 extern void initinput(void) {
 	input = NULL;
 
-	/* declare the global roots */
-	globalroot(&error);		/* parse errors */
-	globalroot(&prompt);		/* main prompt */
-	globalroot(&prompt2);		/* secondary prompt */
-
-	/* call the parser's initialization */
-	initparse();
-
 #if HAVE_READLINE
 	rl_readline_name = "es";
 
-	/* these two word_break_characters exclude '&' due to primitive completion */
-	rl_completer_word_break_characters = " \t\n\\'`$><=;|{()}";
-	rl_basic_word_break_characters = " \t\n\\'`$><=;|{()}";
-	rl_completer_quote_characters = "'";
+	/* this word_break_characters excludes '&' due to primitive completion */
+	rl_basic_word_break_characters = " \t\n`$><=;|{()}";
+	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
+	rl_basic_quote_characters = "";
 	rl_special_prefixes = "$";
 
+	rl_completion_word_break_hook = completion_start;
+	rl_filename_stat_hook = unquote_for_stat;
 	rl_attempted_completion_function = builtin_completion;
+	rl_completion_display_matches_hook = display_matches;
 
-	rl_filename_quote_characters = " \t\n\\`'$><=;|&{()}";
-	rl_filename_quoting_function = quote;
-	rl_filename_dequoting_function = unquote;
+	rl_add_funmap_entry("es-complete-filename", es_complete_filename);
+	rl_add_funmap_entry("es-complete-variable", es_complete_variable);
+	rl_add_funmap_entry("es-complete-primitive", es_complete_primitive);
+	rl_bind_keyseq("\033/", es_complete_filename);
+	rl_bind_keyseq("\033$", es_complete_variable);
 #endif
 }

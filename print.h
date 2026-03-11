@@ -23,7 +23,8 @@ enum {
 	FMT_leftside	= 16,		/* %- */
 	FMT_altform	= 32,		/* %# */
 	FMT_f1set	= 64,		/* %<n> */
-	FMT_f2set	= 128		/* %.<n> */
+	FMT_f2set	= 128,		/* %.<n> */
+	FMT_max		= 256		/* %j */
 };
 
 typedef Boolean (*Conv)(Format *);

@@ -6,12 +6,6 @@
 #include "token.h"
 
 Tree errornode;
-Tree *parsetree;
-
-/* initparse -- called at the dawn of time */
-extern void initparse(void) {
-	globalroot(&parsetree);
-}
 
 /* treecons -- create new tree list cell */
 extern Tree *treecons(Tree *car, Tree *cdr) {
@@ -116,8 +110,8 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
 	Boolean pipetail;
 
 	pipetail = firstis(t2, "%pipe");
-	tail = prefix(str("%d", outfd),
-		      prefix(str("%d", infd),
+	tail = prefix(pstr("%d", outfd),
+		      prefix(pstr("%d", infd),
 			     pipetail ? t2->CDR : treecons(thunkify(t2), NULL)));
 	if (firstis(t1, "%pipe"))
 		return treeappend(t1, tail);
@@ -136,8 +130,8 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
 
 static Tree placeholder = { nRedir, {{NULL}} };
 
-extern Tree *redirect(Tree *t) {
-	Tree *r, *p;
+extern Tree *redirect(Parser *p, Tree *t) {
+	Tree *r, *rp;
 	if (t == NULL)
 		return NULL;
 	if (t->kind != nRedir)
@@ -146,22 +140,22 @@ extern Tree *redirect(Tree *t) {
 	t = t->CDR;
 	for (; r->kind == nRedir; r = r->CDR)
 		t = treeappend(t, r->CAR);
-	for (p = r; p->CAR != &placeholder; p = p->CDR) {
-		assert(p != NULL);
-		assert(p->kind == nList);
+	for (rp = r; rp->CAR != &placeholder; rp = rp->CDR) {
+		assert(rp != NULL);
+		assert(rp->kind == nList);
 	}
 	if (firstis(r, "%heredoc"))
-		if (!queueheredoc(r))
+		if (!queueheredoc(p, r))
 			return &errornode;
-	p->CAR = thunkify(redirect(t));
+	rp->CAR = thunkify(redirect(p, t));
 	return r;
 }
 
 extern Tree *mkredircmd(char *cmd, int fd) {
-	return prefix(cmd, prefix(str("%d", fd), NULL));
+	return prefix(cmd, prefix(pstr("%d", fd), NULL));
 }
 
-extern Tree *mkredir(Tree *cmd, Tree *file) {
+extern Tree *mkredir(Parser *p, Tree *cmd, Tree *file) {
 	Tree *word = NULL;
 	if (file != NULL && file->kind == nThunk) {	/* /dev/fd operations */
 		char *op;
@@ -172,10 +166,10 @@ extern Tree *mkredir(Tree *cmd, Tree *file) {
 		else if (firstis(cmd, "%create"))
 			op = "%writeto";
 		else {
-			yyerror("bad /dev/fd redirection");
+			yyerror(p, "bad /dev/fd redirection");
 			op = "";
 		}
-		var = mk(nWord, str("_devfd%d", id++));
+		var = mk(nWord, pstr("_devfd%d", id++));
 		cmd = treecons(
 			mk(nWord, op),
 			treecons(var, NULL)
@@ -197,14 +191,14 @@ extern Tree *mkredir(Tree *cmd, Tree *file) {
 
 /* mkclose -- make a %close node with a placeholder */
 extern Tree *mkclose(int fd) {
-	return prefix("%close", prefix(str("%d", fd), treecons(&placeholder, NULL)));
+	return prefix("%close", prefix(pstr("%d", fd), treecons(&placeholder, NULL)));
 }
 
 /* mkdup -- make a %dup node with a placeholder */
 extern Tree *mkdup(int fd0, int fd1) {
 	return prefix("%dup",
-		      prefix(str("%d", fd0),
-			     prefix(str("%d", fd1),
+		      prefix(pstr("%d", fd0),
+			     prefix(pstr("%d", fd1),
 				    treecons(&placeholder, NULL))));
 }
 

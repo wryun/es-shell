@@ -1,6 +1,97 @@
 CHANGES
 =======
 
+0.9.2 to 0.10.0
+---------------
+
+Bugfixes for many crashes.  There are far fewer ways to creatively exit the
+shell than there were before.
+
+General build and portability improvements.  Es has now been tested on Linux
+(GNU, MUSL, and Android), FreeBSD and OpenBSD, macOS, OmniOS, Haiku, and the GNU
+Hurd.  It should work on any OS which implements a relevant subset of
+POSIX.1-2001, and with any ANSI C89 compiler.
+
+The new ./configure flag --enable-strict sets several build flags which should
+help surface bugs in the shell very quickly.  The set of tests for the shell has
+been expanded as well.
+
+The '=' character in command arguments does not require escaping now (huzzah!)
+
+A new switch-like "match" command has been added.  Its use looks like:
+
+    match $e (
+        eof {return $result}
+        exit {throw $e $type $msg}
+        * {echo >[1=2] uncaught exception}
+    )
+
+Readline integration has been improved.  Tab completion works with es' quote
+syntax now.  Variables, primitives, and usernames are completed appropriately,
+and have bindable functions available to use in .inputrc.  The special variable
+$max-history-length has been added to control the length of the in-memory
+history log.  Readline integration can be toggled with the ./configure flags
+--with-readline or --without-readline.
+
+Speaking of history, a new hook function %write-history has been added.  History
+primitives are no longer present when readline is not compiled in, as the
+behavior can be done using regular es script.  History writing happens once per
+command, rather than once per input line.
+
+There are now "canonical extension" scripts in the shell's share/ directory,
+which implement some of the more common or historically relevant spoofs that
+people perform.  These are:
+
+ - autoload.es: function autoloading, based on an original script from Paul
+ - cdpath.es: cdpath searching, based on the old behavior built into the shell
+ - interactive-init.es: an %interactive-init hook, commonly requested by users
+ - path-cache.es: similar to other shells' "hashing" behavior
+ - status.es: adds a variable $status to the interactive session
+
+Settor functions are called at startup only after all variables are imported,
+giving them a more consistent environment.
+
+Backgrounded commands are now placed in a new process group, rather than a new
+session; $&setpgrp does what it says it does; es is more active about managing
+terminal foregrounding.
+
+eval, %eval-print, %readfrom, and %writeto are $&noreturn as they should be.
+
+true and false ignore any arguments.
+
+If es exits due to a signal exception, it will try to kill itself so that its
+exit status is the signal which caused it to exit.
+
+The still-mostly-useless -e flag doesn't kill the shell if REPL-related hook
+functions like %parse or %prompt return false.
+
+%background returns true, rather than the new PID ($&background still returns
+the PID).
+
+Binaries called as functions defined like `fn-funcname = /path/to/bin` are run
+with their $0 set to `funcname'.
+
+Primitives cannot access their lexical scope; practically, only $&whatis is
+affected by this.
+
+%home is looked up in the call site's lexical context.
+
+When access is called with multiple permission checks specified (e.g.,
+`access -rx`), it now tests that every, rather than any, permission test passes.
+
+Waiting has been improved: the PIDs returned from $&apids should now more
+accurately reflect the actual set of processes the user meant to wait for, and
+spurious "wait: no child process" messages should no longer appear.
+
+Short heredocs no longer cause a fork.
+
+Signal handling has been somewhat deflaked.
+
+If es is built with the -DMILLISECOND_TIME=1 define, the $&time primitive
+will print timing information with millisecond precision.
+
+The man page more accurately renders characters like ' and ^.
+
 0.9.1 to 0.9.2
 --------------
 
