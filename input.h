@@ -6,14 +6,6 @@
 
 /* Input contains state that lasts longer than a $&parse. */
 struct Input {
-	/* previous Input */
-	Input *prev;
-
-	/* functions used to pull from Input */
-	int (*get)(Input *self);
-	int (*fill)(Input *self);
-	void (*cleanup)(Input *self);
-
 	/* input buffer */
 	size_t buflen;
 	unsigned char *buf, *bufend, *bufbegin;
@@ -23,11 +15,9 @@ struct Input {
 	int lineno;
 	int fd;
 	int runflags;
+	Boolean eof;
 
-	/* TODO: these belong in Parser, but it's a bit of work to do that
-	 * with the current input design; it's fine to wait until the Bigger
-	 * refactor to do this. */
-	Boolean ignoreeof;
+	/* TODO: these belong in Parser */
 	char *prompt, *prompt2;	/* pspace-allocated */
 };
 

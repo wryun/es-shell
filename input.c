@@ -13,18 +13,11 @@
 
 
 /*
- * macros
- */
-
-#define	ISEOF(in)	((in)->fill == eoffill)
-
-
-/*
  * globals
  */
 
-static Input *input;
-Boolean resetterminal = FALSE;	/* TODO: localize when $&readline becomes a thing */
+static Input *input = NULL;
+Boolean resetterminal = FALSE;	/* TODO: localize to readline code */
 
 #if HAVE_READLINE
 #include <readline/readline.h>
@@ -58,42 +51,30 @@ static void warn(Input *in, char *s) {
  * getting and ungetting characters
  */
 
+static int fill(Input *in);
+static void cleanup(Input *in);
+
 /* get -- get a character, filter out nulls */
 extern int get(Parser *p) {
+	int c;
+	Input *in = p->input;
 	if (p->ungot > 0)
 		return p->unget[--p->ungot];
-	return p->input->get(p->input);
+	while ((c = (in->buf < in->bufend ? *in->buf++ : fill(in))) == '\0')
+		warn(in, "null character ignored");
+	if (c != EOF) {
+		char buf = c;
+		addhistbuffer(buf);
+		if (p->input->runflags & run_echoinput)
+			ewrite(2, &buf, 1);
+	}
+	return c;
 }
 
 /* unget -- push back one character */
 extern void unget(Parser *p, int c) {
 	assert(p->ungot < MAXUNGET);
 	p->unget[p->ungot++] = c;
-}
-
-static int getnormal(Input *in) {
-	int c;
-	while ((c = (in->buf < in->bufend ? *in->buf++ : (*in->fill)(in))) == '\0')
-		warn(in, "null character ignored");
-	if (c != EOF)
-		addhistbuffer((char)c);
-	return c;
-}
-
-/* getverbose -- get a character, print it to standard error */
-static int getverbose(Input *in) {
-	int c = getnormal(in);
-	if (c != EOF) {
-		char buf = c;
-		ewrite(2, &buf, 1);
-	}
-	return c;
-}
-
-/* eoffill -- report eof when called to fill input buffer */
-static int eoffill(Input UNUSED *in) {
-	assert(in->fd == -1);
-	return EOF;
 }
 
 #if HAVE_READLINE
@@ -125,11 +106,14 @@ static char *callreadline(char *prompt0) {
 #endif
 
 
-/* fdfill -- fill input buffer by reading from a file descriptor */
-static int fdfill(Input *in) {
+static int fill(Input *in) {
 	long nread;
 	assert(in->buf == in->bufend);
-	assert(in->fd >= 0);
+
+	if (in->fd < 0) {
+		in->eof = TRUE;
+		return EOF;
+	}
 
 #if HAVE_READLINE
 	if (in->runflags & run_interactive && in->fd == 0) {
@@ -157,15 +141,10 @@ static int fdfill(Input *in) {
 		SIGCHK();
 	} while (nread == -1 && errno == EINTR);
 
-	if (nread <= 0) {
-		if (!in->ignoreeof) {
-			close(in->fd);
-			in->fd = -1;
-			in->fill = eoffill;
-			in->runflags &= ~run_interactive;
-		}
-		if (nread == -1)
-			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
+	if (nread == -1)
+		fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
+	if (nread == 0) {
+		in->eof = TRUE;
 		return EOF;
 	}
 
@@ -179,14 +158,16 @@ static int fdfill(Input *in) {
  * the input loop
  */
 
-/* parse -- call yyparse(), but disable garbage collection and catch errors */
+/* parse -- yyparse() wrapper */
 extern Tree *parse(char *pr1, char *pr2) {
 	int result;
 	Parser p;
 	void *oldpspace;
 
-	if (ISEOF(input))
+	if (input->eof) {
+		input->eof = FALSE;
 		throw(mklist(mkstr("eof"), NULL));
+	}
 
 	memzero(&p, sizeof (Parser));
 	p.input = input;
@@ -235,6 +216,7 @@ extern List *runinput(Input *in, int runflags) {
 	List * volatile result = NULL;
 	List *repl, *dispatch;
 	Push push;
+	Input *prev = input;
 	const char *dispatcher[] = {
 		"fn-%eval-noprint",
 		"fn-%eval-print",
@@ -244,8 +226,6 @@ extern List *runinput(Input *in, int runflags) {
 
 	flags &= ~eval_inchild;
 	in->runflags = flags;
-	in->get = (flags & run_echoinput) ? getverbose : getnormal;
-	in->prev = input;
 	input = in;
 
 	ExceptionHandler
@@ -272,14 +252,14 @@ extern List *runinput(Input *in, int runflags) {
 
 	CatchException (e)
 
-		(*input->cleanup)(input);
-		input = input->prev;
+		cleanup(input);
+		input = prev;
 		throw(e);
 
 	EndExceptionHandler
 
-	input = in->prev;
-	(*in->cleanup)(in);
+	cleanup(input);
+	input = prev;
 	return result;
 }
 
@@ -288,11 +268,11 @@ extern List *runinput(Input *in, int runflags) {
  * pushing new input sources
  */
 
-/* fdcleanup -- cleanup after running from a file descriptor */
-static void fdcleanup(Input *in) {
-	unregisterfd(&in->fd);
-	if (in->fd != -1)
+static void cleanup(Input *in) {
+	if (in->fd != -1) {
+		unregisterfd(&in->fd);
 		close(in->fd);
+	}
 	efree(in->bufbegin);
 }
 
@@ -303,8 +283,6 @@ extern List *runfd(int fd, const char *name, int flags) {
 
 	memzero(&in, sizeof (Input));
 	in.lineno = 1;
-	in.fill = fdfill;
-	in.cleanup = fdcleanup;
 	in.fd = fd;
 	registerfd(&in.fd, TRUE);
 	in.buflen = BUFSIZE;
@@ -319,17 +297,6 @@ extern List *runfd(int fd, const char *name, int flags) {
 	return result;
 }
 
-/* stringcleanup -- cleanup after running from a string */
-static void stringcleanup(Input *in) {
-	efree(in->bufbegin);
-}
-
-/* stringfill -- placeholder than turns into EOF right away */
-static int stringfill(Input *in) {
-	in->fill = eoffill;
-	return EOF;
-}
-
 /* runstring -- run commands from a string */
 extern List *runstring(const char *str, const char *name, int flags) {
 	Input in;
@@ -342,13 +309,11 @@ extern List *runstring(const char *str, const char *name, int flags) {
 	in.fd = -1;
 	in.lineno = 1;
 	in.name = (name == NULL) ? str : name;
-	in.fill = stringfill;
 	in.buflen = strlen(str);
 	buf = ealloc(in.buflen + 1);
 	memcpy(buf, str, in.buflen);
 	in.bufbegin = in.buf = buf;
 	in.bufend = in.buf + in.buflen;
-	in.cleanup = stringcleanup;
 
 	RefAdd(in.name);
 	result = runinput(&in, flags);
@@ -359,24 +324,23 @@ extern List *runstring(const char *str, const char *name, int flags) {
 /* parseinput -- turn an input source into a tree */
 extern Tree *parseinput(Input *in) {
 	Tree * volatile result = NULL;
+	Input *prev = input;
 
-	in->prev = input;
 	in->runflags = 0;
-	in->get = getnormal;
 	input = in;
 
 	ExceptionHandler
 		result = parse(NULL, NULL);
-		if (getnormal(in) != EOF)
+		if (!in->eof)
 			fail("$&parse", "more than one value in term");
 	CatchException (e)
-		(*input->cleanup)(input);
-		input = input->prev;
+		cleanup(input);
+		input = prev;
 		throw(e);
 	EndExceptionHandler
 
-	input = in->prev;
-	(*in->cleanup)(in);
+	cleanup(input);
+	input = prev;
 	return result;
 }
 
@@ -394,13 +358,11 @@ extern Tree *parsestring(const char *str) {
 	in.fd = -1;
 	in.lineno = 1;
 	in.name = str;
-	in.fill = stringfill;
 	in.buflen = strlen(str);
 	buf = ealloc(in.buflen + 1);
 	memcpy(buf, str, in.buflen);
 	in.bufbegin = in.buf = buf;
 	in.bufend = in.buf + in.buflen;
-	in.cleanup = stringcleanup;
 
 	RefAdd(in.name);
 	result = parseinput(&in);
@@ -415,7 +377,7 @@ extern Boolean isinteractive(void) {
 
 /* isfromfd -- is the innermost input source reading from a file descriptor? */
 extern Boolean isfromfd(void) {
-	return input == NULL ? FALSE : (input->fill == fdfill);
+	return input == NULL ? FALSE : (input->fd >= 0);
 }
 
 
@@ -646,8 +608,6 @@ static int es_complete_primitive(int UNUSED count, int UNUSED key) {
 
 /* initinput -- called at dawn of time from main() */
 extern void initinput(void) {
-	input = NULL;
-
 #if HAVE_READLINE
 	rl_readline_name = "es";
 
