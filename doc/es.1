@@ -2273,10 +2273,10 @@ and repeats.
 .Cr "%read"
 Reads from standard input and returns either the empty list (in the
 case of end-of-file) or a single element string with up to one line of
-data, including possible redirections.  This function reads one
-character at a time in order to not read more data out of a pipe than
-it should.  The terminating newline (if present) is not included in
-the returned string.
+data, including possible redirections.
+Any NUL characters encountered while reading are skipped.
+The terminating newline (if present) is not included in the returned
+string.
 .SS "Hook Functions"
 A subset of the
 .Cr % -named
@@ -2713,6 +2713,11 @@ and
 primitives are used by the implementation of the
 .Cr vars
 builtin.
+The
+.Cr read
+primitive is used by the implementation of the
+.Cr %read
+builtin, but splits its read-in line on NUL characters.
 .PP
 The following primitives implement the hook functions
 of the same names, with
@@ -2721,11 +2726,11 @@ prefixes:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-apids	here	read
-close	home	run
-count	newfd	seq
-dup	openfile	split
-flatten	var	fsplit
+apids	here	run
+close	home	seq
+count	newfd	split
+dup	openfile	fsplit
+flatten	var
 pipe	whatis
 .ft R
 .De

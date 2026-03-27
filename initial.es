@@ -78,8 +78,6 @@ fn-throw	= $&throw
 fn-umask	= $&umask
 fn-wait		= $&wait
 
-fn-%read	= $&read
-
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.
 
@@ -101,6 +99,13 @@ fn-false	= { result 1 }
 fn-break	= throw break
 fn-exit		= throw exit
 fn-return	= throw return
+
+#	The %read builtin wraps the $&read primitive, which splits its
+#	return value on NUL characters.  This is done so that other ways
+#	to handle NULs can be implemented, while keeping the behavior
+#	of %read predictable.
+
+fn-%read	= { %flatten '' <=$&read }
 
 #	unwind-protect is a simple wrapper around catch that is used
 #	to ensure that some cleanup code is run after running a code

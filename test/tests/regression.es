@@ -62,7 +62,7 @@ test 'regressions' {
 	}}
 
 	# https://github.com/wryun/es-shell/issues/93
-	assert {./testrun 0 | {catch @ {} {%read}}}
+	assert {./testrun 0 | {catch @ {} {%read >[2] /dev/null; true}}}
 
 	# https://github.com/wryun/es-shell/issues/99
 	assert {$es -c {catch @ {} {echo >[1=]}}}

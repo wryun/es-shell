@@ -6,31 +6,21 @@ test 'null reading' {
 		echo first line	 > $tmp
 		./testrun 0	>> $tmp
 
-		let (fl = (); ex = (); remainder = ()) {
-			catch @ e {
-				ex = $e
-				remainder = <=%read
-			} {
-				fl = <=%read
-				%read
+		let (first = (); second = ()) {
+			{
+				first = <=%read
+				second = <=%read
 			} < $tmp
-			assert {~ $fl 'first line'} 'seeking read reads valid line'
-			assert {~ $ex(3) *'null character encountered'*} 'seeking read throws exception correctly'
-			assert {~ $remainder 'sult 6'} 'seeking read leaves file in correct state:' $remainder
+			assert {~ $first 'first line'} 'read reads valid line'
+			assert {~ $second 'result 6'} 'read reads line with zero'
 		}
 
-		let ((fl ex remainder) = `` \n {
+		let ((first second) = `` \n {
 			let (fl = ())
-			cat $tmp | catch @ e {
-				echo $fl\n$e(3)\n^<=%read
-			} {
-				fl = <=%read
-				%read
-			}
+			cat $tmp | {echo <=%read^\n^<=%read}
 		}) {
-			assert {~ $fl 'first line'} 'non-seeking read reads valid line'
-			assert {~ $ex *'null character encountered'*} 'non-seeking read throws exception correctly'
-			assert {~ $remainder 'sult 6'} 'non-seeking read leaves file in correct state'
+			assert {~ $first 'first line'} 'pipe read reads valid line'
+			assert {~ $second 'result 6'} 'pipe read reads line with zero'
 		}
 	} {
 		rm -f $tmp

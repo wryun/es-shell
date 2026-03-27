@@ -441,52 +441,54 @@ static int readn(int fd, char *s, size_t n) {
 PRIM(read) {
 	int c;
 	int fd = fdmap(0);
-
-	static Buffer *buffer = NULL;
-	if (buffer != NULL)
-		freebuffer(buffer);
-	buffer = openbuffer(0);
+	Buffer *buffer = openbuffer(0);
+	Ref(List *, result, NULL);
 
 #if HAVE_LSEEK
-	if (lseek(fd, 0, SEEK_CUR) < 0) {
-#endif
-		while ((c = read1(fd)) != EOF && c != '\n')
-			if (c == '\0')
-				fail("$&read", "%%read: null character encountered");
-			else
-				buffer = bufputc(buffer, c);
-#if HAVE_LSEEK
-	} else {
+	if (lseek(fd, 0, SEEK_CUR) >= 0) {
 		int n;
 		char *np, *zp;
-		char s[BUFSIZE];
+		char buf[BUFSIZE];
 		c = EOF;
-		while ((n = readn(fd, s, BUFSIZE)) > 0) {
+		while ((n = readn(fd, buf, BUFSIZE)) > 0) {
+			char *s = buf;
 			c = 0;
-			if ((np = strchr(s, '\n')) != NULL) {
+			if ((np = memchr(s, '\n', n)) != NULL) {
 				lseek(fd, 1 + ((np - s) - n), SEEK_CUR);
 				n = np - s;
 			}
-			if ((zp = memchr(s, '\0', n)) != NULL) {
-				lseek(fd, 1 + ((zp - s) - n), SEEK_CUR);
-				fail("$&read", "%%read: null character encountered");
+			while ((zp = memchr(s, '\0', n)) != NULL) {
+				Term *term;
+				buffer = bufncat(buffer, s, zp - s);
+				n -= zp - s + 1;
+				s = zp + 1;
+				term = mkstr(sealcountedbuffer(buffer));
+				result = mklist(term, result);
+				buffer = openbuffer(0);
 			}
 			buffer = bufncat(buffer, s, n);
-			if (np != NULL && *np == '\n')
+			if (np != NULL)
 				break;
 		}
-	}
+	} else
 #endif
+		while ((c = read1(fd)) != EOF && c != '\n')
+			if (c == '\0') {
+				Term *term = mkstr(sealcountedbuffer(buffer));
+				result = mklist(term, result);
+				buffer = openbuffer(0);
+			} else
+				buffer = bufputc(buffer, c);
 
 	if (c == EOF && buffer->current == 0) {
 		freebuffer(buffer);
-		buffer = NULL;
-		return NULL;
 	} else {
-		List *result = mklist(mkstr(sealcountedbuffer(buffer)), NULL);
-		buffer = NULL;
-		return result;
+		Term *term = mkstr(sealcountedbuffer(buffer));
+		result = mklist(term, result);
 	}
+
+	result = reverse(result);
+	RefReturn(result);
 }
 
 extern Dict *initprims_io(Dict *primdict) {
