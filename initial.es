@@ -105,7 +105,14 @@ fn-return	= throw return
 #	to handle NULs can be implemented, while keeping the behavior
 #	of %read predictable.
 
-fn-%read	= { %flatten '' <=$&read }
+fn %read {
+	let (r = <=$&read)
+	if {~ $#r (0 1)} {
+		result $r
+	} {
+		%flatten '' $r
+	}
+}
 
 #	unwind-protect is a simple wrapper around catch that is used
 #	to ensure that some cleanup code is run after running a code

@@ -1,4 +1,4 @@
-# read.es -- test that reading handles edge cases
+# tests/read.es -- test that reading handles edge cases
 
 test 'null reading' {
 	let (tmp = `{mktemp test-nul.XXXXXX})
@@ -48,12 +48,23 @@ test 'null reading' {
 					first = <=$&readline
 					second = <=$&readline
 				} < $tmp >[2] /dev/null  # hush the echoing
-				assert {~ $first 'first line'} 'read reads valid line'
-				assert {~ $second 'result 6'} 'read reads line with zero'
+				assert {~ $first 'first line'} '$&readline reads valid line'
+				assert {~ $second 'result 6'} '$&readline reads line with zero'
 			}
 		}
 	} {
 		rm -f $tmp
+	}
+}
+
+test 'eof' {
+	let (l = <={$&read <<< ''})
+	assert {~ $#l 0} '$&read returns empty list on eof'
+	let (l = <={%read <<< ''})
+	assert {~ $#l 0} '%read returns empty list on eof'
+	if {~ <=$&primitives readline} {
+		let (l = <={$&readline <<< ''})
+		assert {~ $#l 0} '$&readline returns empty list on eof'
 	}
 }
 
