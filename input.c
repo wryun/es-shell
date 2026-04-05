@@ -111,9 +111,11 @@ static void initbuf(Parser *p) {
  * parse -- wrapper around yyparse()
  */
 extern Tree *parse(List *reader) {
-	int result, fd, ticket = UNREGISTERED;
+	volatile int result;
+	int fd, ticket = UNREGISTERED;
 	Parser p;
 	void *oldpspace;
+	List *volatile readexception = NULL;
 
 	if (input->eof) {
 		input->eof = FALSE;
@@ -142,15 +144,11 @@ extern Tree *parse(List *reader) {
 
 	CatchException (e)
 
-		undefer(ticket);
-		pseal(NULL);
-		setpspace(oldpspace);
-		throw(e);
+		readexception = e;
 
 	EndExceptionHandler
 
 	undefer(ticket);
-
 	RefRemove(p.reader);
 	assert(p.ungot == 0);
 	if (p.bufbegin != NULL)
@@ -158,12 +156,15 @@ extern Tree *parse(List *reader) {
 	if (p.tokenbuf != NULL)
 		efree(p.tokenbuf);
 
-	if (result || p.error != NULL) {
-		assert(p.error != NULL);
-		Ref(const char *, e, str("%s", p.error));
+	if (result || p.error != NULL || readexception != NULL) {
+		assert(p.error != NULL || readexception != NULL);
+		Ref(const char *, e, p.error != NULL ? str("%s", p.error) : NULL);
 		pseal(NULL);
 		setpspace(oldpspace);
-		fail("$&parse", "%s", e);
+		if (e != NULL)
+			fail("$&parse", "%s", e);
+		else
+			throw(readexception);
 		RefEnd(e);
 	}
 
