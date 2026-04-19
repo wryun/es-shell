@@ -108,7 +108,7 @@ extern void closefds(void);
 extern int fdmap(int fd);
 extern int defer_mvfd(Boolean parent, int old, int new);
 extern int defer_close(Boolean parent, int fd);
-extern void undefer(int ticket);
+extern void undefer(int ticket, Boolean doclose);
 
 
 /* term.c */

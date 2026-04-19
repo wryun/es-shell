@@ -32,9 +32,9 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 		   : defer_mvfd(inparent, srcfd, destfd);
 	ExceptionHandler
 		lp = eval(lp, NULL, evalflags);
-		undefer(ticket);
+		undefer(ticket, TRUE);
 	CatchException (e)
-		undefer(ticket);
+		undefer(ticket, TRUE);
 		throw(e);
 	EndExceptionHandler
 
@@ -197,14 +197,14 @@ PRIM(here) {
 	ExceptionHandler
 		lp = eval(cmd, NULL, evalflags);
 	CatchException (e)
-		undefer(ticket);
+		undefer(ticket, TRUE);
 		close(p[0]);
 		if (pid > 0)
 			ewaitfor(pid);
 		throw(e);
 	EndExceptionHandler
 
-	undefer(ticket);
+	undefer(ticket, TRUE);
 	close(p[0]);
 	if (pid > 0) {
 		status = ewaitfor(pid);
