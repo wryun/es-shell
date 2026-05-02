@@ -22,7 +22,7 @@
 # The other defines are to increase sensitivity to memory issues.
 
 make clean
-local (AFL_HARDEN = 1) make CC=/usr/bin/afl-clang-fast CFLAGS='-ggdb -DLOCAL_GETENV=0 -DGCPROTECT=1 -DREF_ASSERTIONS=1'
+local (AFL_HARDEN = 1) make CC=/usr/bin/afl-cc CFLAGS='-ggdb -DLOCAL_GETENV=0 -DGCPROTECT=1 -DREF_ASSERTIONS=1'
 
 # Step 2: Run afl-fuzz.  This will take a long time.
 # test/fuzz/dict.txt gives the fuzzer a shortcut to significant tokens.
