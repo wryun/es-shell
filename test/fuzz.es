@@ -1,6 +1,6 @@
 # test/fuzz.es - fuzz testing harness for es using afl-fuzz
 
-# This is very experimental and is most likely to be useful right now as
+# This is very experimental and is more likely to be useful right now as
 # documentation in the form of a shell script, rather than something actually
 # runnable.
 

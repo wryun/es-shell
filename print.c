@@ -246,7 +246,7 @@ extern void fmtcat(Format *format, const char *s) {
 extern int printfmt(Format *format, const char *fmt) {
 	unsigned char *s = (unsigned char *) fmt;
 
-	if (fmttab[0] == NULL)
+	if (fmttab == NULL || fmttab[0] == NULL)
 		inittab();
 
 	for (;;) {
