@@ -55,14 +55,21 @@ static char *doconcat(Tree *word) {
 	return str("%s%s", doconcat(word->u[0].p), doconcat(word->u[1].p));
 }
 
-typedef struct Chain Chain;
-struct Chain {
-	Closure *closure;
-	Chain *next;
-};
-static Chain *chain = NULL;
+static char *getrefid(Tree *defn) {
+	assert(defn == NULL || defn->kind == nList);
+	if (defn == NULL)
+		return NULL;
+	if (defn->u[0].p->kind != nPrim)
+		return NULL;
+	if (!streq(defn->u[0].p->u[0].s, "ref"))
+		return NULL;
+	defn = defn->u[1].p->u[0].p;
+	if (defn->kind != nWord && defn->kind != nQword)
+		return NULL;
+	return defn->u[0].s;
+}
 
-static Binding *extract(Tree *tree, Binding *bindings) {
+static Binding *extract(Tree *tree, Binding *bindings, Dict **refdictp) {
 	assert(gcisblocked());
 
 	for (; tree != NULL; tree = tree->u[1].p) {
@@ -71,7 +78,21 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 		if (defn != NULL) {
 			List *list = NULL;
 			Tree *name = defn->u[0].p;
+			char *refid;
+
 			assert(name->kind == nWord || name->kind == nQword);
+			bindings = mkbinding(name->u[0].s, NULL, bindings);
+
+			if ((refid = getrefid(defn->u[1].p)) != NULL) {
+				Binding *ref;
+				if ((ref = dictget(*refdictp, refid)) != NULL) {
+					bindings = ref;
+					continue;
+				} else
+					*refdictp = dictput(*refdictp, refid, bindings);
+				defn = defn->u[1].p->u[1].p;
+			}
+
 			defn = revtree(defn->u[1].p);
 			for (; defn != NULL; defn = defn->u[1].p) {
 				Term *term;
@@ -81,89 +102,57 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 				case nConcat:
 					term = mkstr(doconcat(word));
 					break;
-				case nWord: case nQword:
-					term = mkstr(word->u[0].s);
-					break;
-				case nPrim: {
-					if (streq(word->u[0].s, "nestedbinding")) {
-						int i, count;
-						Chain *cp;
-						if (
-							(defn = defn->u[1].p) == NULL
-						     || defn->u[0].p->kind != nWord
-						     || (count = (atoi(defn->u[0].p->u[0].s))) < 0
-						) {
-							fail("$&parse", "improper use of $&nestedbinding");
-							NOTREACHED;
-						}
-						for (cp = chain, i = 0;; cp = cp->next, i++) {
-							if (cp == NULL) {
-								fail("$&parse", "bad count in $&nestedbinding: %d", count);
-								NOTREACHED;
-							}
-							if (i == count)
-								break;
-						}
-						term = mkterm(NULL, cp->closure);
+				case nQword:
+					/* eagerly parse sub-closures so they
+					 * have access to the enclosing $&ref scope.
+					 * boy, do I dislike %closure syntax! */
+					if (hasprefix(word->u[0].s, "%closure")) {
+						Tree *np = parsestring(word->u[0].s);
+						Closure *c = extractbindingsinrefscope(np, refdictp);
+						term = mkterm(NULL, c);
 						break;
 					}
-				}
-				FALLTHROUGH;
-				case nLambda: case nThunk:
+					FALLTHROUGH;
+				case nWord:
+					term = mkstr(word->u[0].s);
+					break;
+				case nPrim: case nLambda: case nThunk:
 					term = mkterm(NULL, mkclosure(word, NULL));
 					break;
 				case nCall: case nVar: case nVarsub:
 					fail("$&parse", "bad definition in %%closure: %T\n", defn);
-					NOTREACHED;
 				default:
 					NOTREACHED;
 				}
 				list = mklist(term, list);
 			}
-			bindings = mkbinding(name->u[0].s, list, bindings);
+			bindings->defn = list;
 		}
 	}
 
 	return bindings;
 }
 
-extern Closure *extractbindings(Tree *tree0) {
-	Chain me;
-	Tree *volatile tree = tree0;
-	Binding *volatile bindings = NULL;
-
-	gcdisable();
-
+extern Closure *extractbindingsinrefscope(Tree *tree, Dict **refdictp) {
+	Binding *bindings = NULL;
 	if (tree->kind == nList && tree->u[1].p == NULL)
 		tree = tree->u[0].p;
 
-	me.closure = mkclosure(NULL, NULL);
-	me.next = chain;
-	chain = &me;
+	while (tree->kind == nClosure) {
+		bindings = extract(tree->u[0].p, bindings, refdictp);
+		tree = tree->u[1].p;
+		if (tree == NULL)
+			fail("$&parse", "null body in %%closure");
+		if (tree->kind == nList && tree->u[1].p == NULL)
+			tree = tree->u[0].p;
+	}
+	return mkclosure(tree, bindings);
+}
 
-	ExceptionHandler
-
-		while (tree->kind == nClosure) {
-			bindings = extract(tree->u[0].p, bindings);
-			tree = tree->u[1].p;
-			if (tree == NULL)
-				fail("$&parse", "null body in %%closure");
-			if (tree->kind == nList && tree->u[1].p == NULL)
-				tree = tree->u[0].p;
-		}
-
-	CatchException (e)
-
-		chain = chain->next;
-		throw(e);
-
-	EndExceptionHandler
-
-	chain = chain->next;
-
-	Ref(Closure *, result, me.closure);
-	result->tree = tree;
-	result->binding = bindings;
+extern Closure *extractbindings(Tree *tree) {
+	gcdisable();
+	Dict *refdict = mkdict();
+	Ref(Closure *, result, extractbindingsinrefscope(tree, &refdict));
 	gcenable();
 	RefReturn(result);
 }

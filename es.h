@@ -61,7 +61,6 @@ struct Tree {
 /*
  * miscellaneous data structures
  */
-
 typedef struct StrList StrList;
 struct StrList {
 	char *str;
@@ -73,6 +72,7 @@ typedef struct {
 	char *vector[1];
 } Vector;			/* environment or arguments */
 
+typedef struct Dict Dict;
 
 /*
  * our programming environment
@@ -117,6 +117,7 @@ extern Term *mkterm(char *str, Closure *closure);
 extern Term *mkstr(char *str);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
+extern Closure *getclosureinrefscope(Term *term, Dict **refdictp);
 extern Term *termcat(Term *t1, Term *t2);
 extern Boolean termeq(Term *term, const char *s);
 extern Boolean isclosure(Term *term);
@@ -143,6 +144,7 @@ extern Tree *gcmk(NodeKind VARARGS);	/* gcalloc a tree node */
 
 extern Closure *mkclosure(Tree *tree, Binding *binding);
 extern Closure *extractbindings(Tree *tree);
+extern Closure *extractbindingsinrefscope(Tree *tree, Dict **refdictp);
 extern Binding *mkbinding(char *name, List *defn, Binding *next);
 extern Binding *reversebindings(Binding *binding);
 
@@ -239,7 +241,6 @@ extern Noreturn esexit(int);
 
 /* dict.c */
 
-typedef struct Dict Dict;
 extern Dict *mkdict(void);
 extern void dictforall(Dict *dict, void (*proc)(void *, char *, void *), void *arg);
 extern void *dictget(Dict *dict, const char *name);

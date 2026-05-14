@@ -152,7 +152,7 @@ extern List *varlookup(const char *name, Binding *bp) {
 
 extern List *varlookup2(char *name1, char *name2, Binding *bp) {
 	Var *var;
-	
+
 	for (; bp != NULL; bp = bp->next)
 		if (streq2(bp->name, name1, name2))
 			return bp->defn;
@@ -314,7 +314,7 @@ static void mkenv0(void UNUSED *dummy, char *key, void *value) {
 	assert(env->count < env->alloclen);
 	VECPUSH(env, var->env);
 }
-	
+
 extern Vector *mkenv(void) {
 	if (isdirty || rebound) {
 		env->count = envmin;
@@ -396,16 +396,18 @@ extern void initvars(void) {
 }
 
 /* importvar -- import a single environment variable */
-static void importvar(char *name0, char *value) {
+static void importvar(char *name0, char *value, Dict **refdictp) {
 	char sep[2] = { ENV_SEPARATOR, '\0' };
+	List *lp;
 
 	Ref(char *, name, name0);
 	Ref(List *, defn, NULL);
 	defn = fsplit(sep, mklist(mkstr(value), NULL), FALSE);
 
+	gcdisable();
+
 	if (strchr(value, ENV_ESCAPE) != NULL) {
 		List *list;
-		gcdisable();
 		for (list = defn; list != NULL; list = list->next) {
 			int offset = 0;
 			const char *word = list->term->str;
@@ -442,8 +444,13 @@ static void importvar(char *name0, char *value) {
 				}
 			}
 		}
-		gcenable();
 	}
+
+	/* TODO: manage $&ref scope to avoid needing to parse early? */
+	for (lp = defn; lp != NULL; lp = lp->next)
+		getclosureinrefscope(lp->term, refdictp);
+
+	gcenable();
 	vardef0(name, NULL, defn, TRUE);
 	RefEnd2(defn, name);
 }
@@ -515,7 +522,7 @@ extern int setenv(const char *name, const char *value, int overwrite) {
 	}
 	Ref(char *, envname, str(ENV_DECODE, name));
 	if (overwrite || varlookup(envname, NULL) == NULL)
-		importvar(envname, (char *)value);
+		importvar(envname, (char *)value, NULL);
 	RefEnd(envname);
 	return 0;
 }
@@ -558,6 +565,7 @@ extern void initenv(char **envp, Boolean protected) {
 
 	Ref(Vector *, imported, mkvector(ENVSIZE));
 	Ref(char *, name, NULL);
+	Ref(Dict *, refdict, mkdict());
 	for (; (envstr = *envp) != NULL; envp++) {
 		size_t nlen;
 		char *eq = strchr(envstr, '=');
@@ -572,11 +580,11 @@ extern void initenv(char **envp, Boolean protected) {
 		name = str(ENV_DECODE, buf);
 		if (!protected
 		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
-			importvar(name, eq+1);
+			importvar(name, eq+1, &refdict);
 			VECPUSH(imported, name);
 		}
 	}
-	RefEnd(name);
+	RefEnd2(refdict, name);
 
 	sortvector(imported);
 	Ref(Var *, var, NULL);
