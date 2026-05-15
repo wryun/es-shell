@@ -396,9 +396,8 @@ extern void initvars(void) {
 }
 
 /* importvar -- import a single environment variable */
-static void importvar(char *name0, char *value, Dict **refdictp) {
+static void importvar(char *name0, char *value) {
 	char sep[2] = { ENV_SEPARATOR, '\0' };
-	List *lp;
 
 	Ref(char *, name, name0);
 	Ref(List *, defn, NULL);
@@ -445,10 +444,6 @@ static void importvar(char *name0, char *value, Dict **refdictp) {
 			}
 		}
 	}
-
-	/* TODO: manage $&ref scope to avoid needing to parse early? */
-	for (lp = defn; lp != NULL; lp = lp->next)
-		getclosureinrefscope(lp->term, refdictp);
 
 	gcenable();
 	vardef0(name, NULL, defn, TRUE);
@@ -522,7 +517,7 @@ extern int setenv(const char *name, const char *value, int overwrite) {
 	}
 	Ref(char *, envname, str(ENV_DECODE, name));
 	if (overwrite || varlookup(envname, NULL) == NULL)
-		importvar(envname, (char *)value, NULL);
+		importvar(envname, (char *)value);
 	RefEnd(envname);
 	return 0;
 }
@@ -565,7 +560,6 @@ extern void initenv(char **envp, Boolean protected) {
 
 	Ref(Vector *, imported, mkvector(ENVSIZE));
 	Ref(char *, name, NULL);
-	Ref(Dict *, refdict, mkdict());
 	for (; (envstr = *envp) != NULL; envp++) {
 		size_t nlen;
 		char *eq = strchr(envstr, '=');
@@ -580,11 +574,11 @@ extern void initenv(char **envp, Boolean protected) {
 		name = str(ENV_DECODE, buf);
 		if (!protected
 		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
-			importvar(name, eq+1, &refdict);
+			importvar(name, eq+1);
 			VECPUSH(imported, name);
 		}
 	}
-	RefEnd2(refdict, name);
+	RefEnd(name);
 
 	sortvector(imported);
 	Ref(Var *, var, NULL);

@@ -25,7 +25,7 @@ extern Term *mkstr(char *str) {
         return term;
 }
 
-extern Closure *getclosureinrefscope(Term *term, Dict **refdictp) {
+extern Closure *getclosure(Term *term) {
 	if (term->closure == NULL) {
 		char *s = term->str;
 		assert(s != NULL);
@@ -41,9 +41,7 @@ extern Closure *getclosureinrefscope(Term *term, Dict **refdictp) {
 				RefPop2(np, tp);
 				return NULL;
 			}
-			c = refdictp == NULL
-				? extractbindings(np)
-				: extractbindingsinrefscope(np, refdictp);
+			c = extractbindings(np);
 			tp->closure = c;
 			tp->str = NULL;
 			term = tp;
@@ -51,10 +49,6 @@ extern Closure *getclosureinrefscope(Term *term, Dict **refdictp) {
 		}
 	}
 	return term->closure;
-}
-
-extern Closure *getclosure(Term *term) {
-	return getclosureinrefscope(term, NULL);
 }
 
 extern char *getstr(Term *term) {
