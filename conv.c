@@ -179,14 +179,82 @@ top:
 	NOTREACHED;
 }
 
+typedef struct RefSet RefSet;
+struct RefSet {
+	Binding *binding;
+	int id;
+	int count;
+	RefSet *next;
+};
+
+/* create a new RefSet on top of the last one */
+static RefSet *mkrefset(Binding *binding, RefSet *next) {
+	RefSet *rs = ealloc(sizeof(RefSet));
+	rs->binding = binding;
+	rs->id = 0;
+	rs->count = 1;
+	rs->next = next;
+	return rs;
+}
+
+static RefSet *findbinding(RefSet *rs, Binding *b) {
+	if (rs == NULL)
+		return NULL;
+	if (rs->binding == b)
+		return rs;
+	return findbinding(rs->next, b);
+}
+
+/* recursively free RefSet */
+static void freerefset(RefSet *rs) {
+	if (rs == NULL)
+		return;
+	if (rs->next != NULL)
+		freerefset(rs->next);
+	efree(rs);
+}
+
+/* recursively scan RefSet for counts of individual bindings */
+static RefSet *refsetfromclosure(Closure *c, RefSet *rs) {
+	Binding *b;
+	for (b = c->binding; b != NULL; b = b->next) {
+		RefSet *p = findbinding(rs, b);
+		if (p != NULL)
+			p->count++;
+		else
+			rs = mkrefset(b, rs);
+		if (p == NULL || p->count <= 2) {
+			List *lp;
+			for (lp = b->defn; lp != NULL; lp = lp->next) {
+				if ((c = getclosure(lp->term)) != NULL) {
+					rs = refsetfromclosure(c, rs);
+				}
+			}
+		}
+	}
+	return rs;
+}
+
+static int refid = 0;
+
 /* enclose -- build up a closure */
-static void enclose(Format *f, Binding *binding, const char *sep) {
-	if (binding != NULL) {
-		Binding *next = binding->next;
-		enclose(f, next, ";");
+static void enclose(Format *f, Binding *binding, RefSet *rs, const char *sep) {
+	if (binding == NULL)
+		return;
+
+	enclose(f, binding->next, rs, ";");
+	RefSet *p = findbinding(rs, binding);
+	if (p->count < 2)
 		fmtprint(f, "%S=%#L%s", binding->name, binding->defn, " ", sep);
+	else if (p->id != 0)
+		fmtprint(f, "%S=$&ref %d%s", binding->name, p->id, sep);
+	else {
+		p->id = ++refid;
+		fmtprint(f, "%S=$&ref %d %#L%s", binding->name, p->id, binding->defn, " ", sep);
 	}
 }
+
+static RefSet *refset = NULL;
 
 /* %C -- print a closure */
 static Boolean Cconv(Format *f) {
@@ -194,16 +262,25 @@ static Boolean Cconv(Format *f) {
 	Tree *tree = closure->tree;
 	Binding *binding = closure->binding;
 	Boolean altform = (f->flags & FMT_altform) != 0;
+	Boolean makerefset = (refset == NULL);
+
+	if (makerefset)
+		refset = refsetfromclosure(closure, NULL);
 
 	if (altform)
 		fmtprint(f, "%S", str("%C", closure));
 	else {
 		if (binding != NULL) {
 			fmtprint(f, "%%closure(");
-			enclose(f, binding, "");
+			enclose(f, binding, refset, "");
 			fmtprint(f, ")");
 		}
 		fmtprint(f, "%T", tree);
+	}
+	if (makerefset) {
+		freerefset(refset);
+		refset = NULL;
+		refid = 0;
 	}
 	return FALSE;
 }

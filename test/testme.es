@@ -1,3 +1,5 @@
+# test/testme.es -- demo/test of closure splitting and looping fix
+
 #
 # First test: Splitting within a single %closure
 #
@@ -21,9 +23,8 @@ let (time = morning) {
 	}
 }
 
-# Ideal externalized version of the above.
-
-fn-say = '%closure(time=$&ref 1 morning;fn-goodnight=''%closure(time=$&ref 1)@ *{%seq {echo -n $time ''''-> ''''} {time=night} {echo $time}}'';fn-goodmorning=''%closure(time=$&ref 1)@ *{%seq {echo -n $time ''''-> ''''} {time=morning} {echo $time}}'')@ greeting{$greeting}'
+# Ideal externalized version of the above:
+# fn-say = '%closure(time=$&ref 1 morning;fn-goodnight=''%closure(time=$&ref 1)@ *{%seq {echo -n $time ''''-> ''''} {time=night} {echo $time}}'';fn-goodmorning=''%closure(time=$&ref 1)@ *{%seq {echo -n $time ''''-> ''''} {time=morning} {echo $time}}'')@ greeting{$greeting}'
 
 # Should print
 #   morning -> night
@@ -41,7 +42,7 @@ say goodmorning
 # Second test: Closure loops
 #
 
-# Today, externalizing fn-countdown will crash the shell.
+# Before, externalizing fn-countdown would crash the shell.
 
 let (cmds = ()) {
 	cmds = {echo 'liftoff!'}
@@ -51,9 +52,8 @@ let (cmds = ()) {
 	fn countdown {$cmds(4)}
 }
 
-# Ideal externalized version of the above.
-
-fn-countdown = '%closure(cmds=$&ref 1 ''%closure(cmds=$&ref 1){echo ''''liftoff!''''}'' ''%closure(cmds=$&ref 1){echo 1...; $cmds(1)}'' ''%closure(cmds=$&ref 1){echo 2...; $cmds(2)}'' ''%closure(cmds=$&ref 1){echo 3...; $cmds(3)}'')@ *{$cmds(4)}'
+# Ideal externalized version of the above:
+# fn-countdown = '%closure(cmds=$&ref 1 ''%closure(cmds=$&ref 1){echo ''''liftoff!''''}'' ''%closure(cmds=$&ref 1){%seq {echo 1...} {$cmds(1)}}'' ''%closure(cmds=$&ref 1){%seq {echo 2...} {$cmds(2)}}'' ''%closure(cmds=$&ref 1){%seq {echo 3...} {$cmds(3)}}'')@ *{$cmds(4)}'
 
 # Should print
 #   3...
@@ -62,9 +62,6 @@ fn-countdown = '%closure(cmds=$&ref 1 ''%closure(cmds=$&ref 1){echo ''''liftoff!
 #   liftoff!
 
 countdown
-
-# avoid externalizing fn-countdown so we don't explode
-noexport = $noexport fn-countdown
 
 
 #
@@ -85,10 +82,9 @@ let (stuff = lots) {
 	}
 }
 
-# Ideal externalized version of the above.
-
-fn-hello   = '%closure(stuff=$&ref 1 lots)@ *{%seq {echo take my stuff} {stuff=none}}'
-fn-goodbye = '%closure(stuff=$&ref 1 lots)@ *{if {~ $stuff none} {echo have fun with my stuff} {echo why do I still have stuff?}}'
+# Ideal externalized version of the above:
+# fn-hello   = '%closure(stuff=$&ref 1 lots)@ *{%seq {echo take my stuff} {stuff=none}}'
+# fn-goodbye = '%closure(stuff=$&ref 1 lots)@ *{if {~ $stuff none} {echo have fun with my stuff} {echo why do I still have stuff?}}'
 
 # Should print
 #   take my stuff
