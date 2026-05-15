@@ -188,9 +188,9 @@ struct RefSet {
 };
 
 /* create a new RefSet on top of the last one */
-static RefSet *mkrefset(Binding *binding, RefSet *next) {
+static RefSet *mkrefset(Binding *b, RefSet *next) {
 	RefSet *rs = ealloc(sizeof(RefSet));
-	rs->binding = binding;
+	rs->binding = b;
 	rs->id = 0;
 	rs->count = 1;
 	rs->next = next;
@@ -198,39 +198,37 @@ static RefSet *mkrefset(Binding *binding, RefSet *next) {
 }
 
 static RefSet *findbinding(RefSet *rs, Binding *b) {
-	if (rs == NULL)
-		return NULL;
-	if (rs->binding == b)
-		return rs;
-	return findbinding(rs->next, b);
+	RefSet *p;
+	for (p = rs; p != NULL; p = p->next)
+		if (p->binding == b)
+			return p;
+	return NULL;
 }
 
 /* recursively free RefSet */
 static void freerefset(RefSet *rs) {
-	if (rs == NULL)
-		return;
-	if (rs->next != NULL)
-		freerefset(rs->next);
-	efree(rs);
+	RefSet *p, *n;
+	for (p = rs; p != NULL; p = n) {
+		n = p->next;
+		efree(p);
+	}
 }
 
 /* recursively scan RefSet for counts of individual bindings */
-static RefSet *refsetfromclosure(Closure *c, RefSet *rs) {
-	Binding *b;
-	for (b = c->binding; b != NULL; b = b->next) {
+static RefSet *refsetfrombinding(Binding *b, RefSet *rs) {
+	for (; b != NULL; b = b->next) {
+		List *lp;
 		RefSet *p = findbinding(rs, b);
-		if (p != NULL)
-			p->count++;
-		else
-			rs = mkrefset(b, rs);
-		if (p == NULL || p->count <= 2) {
-			List *lp;
+
+		if (p != NULL) p->count++;
+		else rs = mkrefset(b, rs);
+
+		if (p == NULL || p->count <= 2)
 			for (lp = b->defn; lp != NULL; lp = lp->next) {
-				if ((c = getclosure(lp->term)) != NULL) {
-					rs = refsetfromclosure(c, rs);
-				}
+				Closure *c;
+				if ((c = getclosure(lp->term)) != NULL)
+					rs = refsetfrombinding(c->binding, rs);
 			}
-		}
 	}
 	return rs;
 }
@@ -239,16 +237,17 @@ static int refid = 0;
 
 /* enclose -- build up a closure */
 static void enclose(Format *f, Binding *binding, RefSet *rs, const char *sep) {
+	RefSet *p;
 	if (binding == NULL)
 		return;
 
 	enclose(f, binding->next, rs, ";");
-	RefSet *p = findbinding(rs, binding);
-	if (p->count < 2)
+	p = findbinding(rs, binding);
+	if (p->count < 2)	/* no need for $&ref when there's only one */
 		fmtprint(f, "%S=%#L%s", binding->name, binding->defn, " ", sep);
-	else if (p->id != 0)
+	else if (p->id != 0)	/* no need for defn - already printed */
 		fmtprint(f, "%S=$&ref %d%s", binding->name, p->id, sep);
-	else {
+	else {			/* need both $&ref and defn */
 		p->id = ++refid;
 		fmtprint(f, "%S=$&ref %d %#L%s", binding->name, p->id, binding->defn, " ", sep);
 	}
@@ -265,7 +264,7 @@ static Boolean Cconv(Format *f) {
 	Boolean makerefset = (refset == NULL);
 
 	if (makerefset)
-		refset = refsetfromclosure(closure, NULL);
+		refset = refsetfrombinding(binding, NULL);
 
 	if (altform)
 		fmtprint(f, "%S", str("%C", closure));

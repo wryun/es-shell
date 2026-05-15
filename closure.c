@@ -152,8 +152,9 @@ static Closure *extractbindingsinrefscope(Tree *tree, Dict **refdictp) {
 }
 
 extern Closure *extractbindings(Tree *tree) {
+	Dict *refdict;
 	gcdisable();
-	Dict *refdict = mkdict();
+	refdict = mkdict();
 	Ref(Closure *, result, extractbindingsinrefscope(tree, &refdict));
 	gcenable();
 	RefReturn(result);
