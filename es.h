@@ -118,6 +118,7 @@ extern Term *mkterm(char *str, Closure *closure);
 extern Term *mkstr(char *str);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
+extern Closure *getclosureinrefscope(Term *term, Dict **refdictp);
 extern Term *termcat(Term *t1, Term *t2);
 extern Boolean termeq(Term *term, const char *s);
 extern Boolean isclosure(Term *term);
@@ -253,7 +254,7 @@ extern void *dictget2(Dict *dict, const char *name1, const char *name2);
 extern void startrefscope(void);
 extern void reprintrefscope(void);
 extern void endrefscope(void);
-extern void *refsetfromlist(List *);
+extern void refsetfromlist(List *);
 extern void initconv(void);
 
 

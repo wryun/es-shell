@@ -309,17 +309,35 @@ static void mkenv0(void UNUSED *dummy, char *key, void *value) {
 		return;
 	if (var->env == NULL || (rebound && (var->flags & var_hasbindings))) {
 		char *envstr = str(ENV_FORMAT, key, var->defn);
+		reprintrefscope();
 		var->env = envstr;
 	}
 	assert(env->count < env->alloclen);
 	VECPUSH(env, var->env);
 }
 
+static void refscopeenv(void UNUSED *dummy, char *key, void *value) {
+	Var *var = value;
+	assert(gcisblocked());
+	if (
+		   var == NULL
+		|| var->defn == NULL
+		|| (var->flags & var_isinternal)
+		|| !isexported(key)
+	)
+		return;
+	if (var->env == NULL || (rebound && (var->flags & var_hasbindings)))
+		refsetfromlist(var->defn);
+}
+
 extern Vector *mkenv(void) {
 	if (isdirty || rebound) {
 		env->count = envmin;
 		gcdisable();		/* TODO: make this a good guess */
+		startrefscope();
+		dictforall(vars, refscopeenv, NULL);
 		dictforall(vars, mkenv0, NULL);
+		endrefscope();
 		gcenable();
 		env->vector[env->count] = NULL;
 		isdirty = FALSE;
@@ -396,17 +414,16 @@ extern void initvars(void) {
 }
 
 /* importvar -- import a single environment variable */
-static void importvar(char *name0, char *value) {
+static void importvar(char *name0, char *value, Dict **refdictp) {
 	char sep[2] = { ENV_SEPARATOR, '\0' };
+	List *list;
 
 	Ref(char *, name, name0);
 	Ref(List *, defn, NULL);
 	defn = fsplit(sep, mklist(mkstr(value), NULL), FALSE);
-
 	gcdisable();
 
 	if (strchr(value, ENV_ESCAPE) != NULL) {
-		List *list;
 		for (list = defn; list != NULL; list = list->next) {
 			int offset = 0;
 			const char *word = list->term->str;
@@ -442,6 +459,13 @@ static void importvar(char *name0, char *value) {
 				    }
 				}
 			}
+		}
+	}
+	for (list = defn; list != NULL; list = list->next) {
+		Closure *c = getclosureinrefscope(list->term, refdictp);
+		if (c != NULL) {
+			Term *t = mkterm(NULL, c);
+			list->term = t;
 		}
 	}
 
@@ -517,7 +541,7 @@ extern int setenv(const char *name, const char *value, int overwrite) {
 	}
 	Ref(char *, envname, str(ENV_DECODE, name));
 	if (overwrite || varlookup(envname, NULL) == NULL)
-		importvar(envname, (char *)value);
+		importvar(envname, (char *)value, NULL);
 	RefEnd(envname);
 	return 0;
 }
@@ -560,6 +584,7 @@ extern void initenv(char **envp, Boolean protected) {
 
 	Ref(Vector *, imported, mkvector(ENVSIZE));
 	Ref(char *, name, NULL);
+	Ref(Dict *, refdict, mkdict());
 	for (; (envstr = *envp) != NULL; envp++) {
 		size_t nlen;
 		char *eq = strchr(envstr, '=');
@@ -574,11 +599,11 @@ extern void initenv(char **envp, Boolean protected) {
 		name = str(ENV_DECODE, buf);
 		if (!protected
 		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-"))) {
-			importvar(name, eq+1);
+			importvar(name, eq+1, &refdict);
 			VECPUSH(imported, name);
 		}
 	}
-	RefEnd(name);
+	RefEnd2(refdict, name);
 
 	sortvector(imported);
 	Ref(Var *, var, NULL);

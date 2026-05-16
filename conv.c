@@ -245,14 +245,14 @@ static void enclose(Format *f, Binding *binding, RefSet *rs, const char *sep) {
 
 	enclose(f, binding->next, rs, ";");
 	p = findbinding(rs, binding);
-	if (p->id == 0)
-		p->id = ++refid;
 	if (p->count < 2)	/* no need for $&ref when there's only one */
 		fmtprint(f, "%S=%#L%s", binding->name, binding->defn, " ", sep);
 	else if (p->printed)	/* no need for defn - already printed */
 		fmtprint(f, "%S=$&ref %x%s", binding->name, p->id, sep);
 	else {			/* need both $&ref and defn */
 		p->printed = TRUE;
+		if (p->id == 0)
+			p->id = ++refid + (0xfff & (uintptr_t)rs);
 		fmtprint(f, "%S=$&ref %x%s%#L%s", binding->name, p->id, binding->defn != NULL ? " " : "", binding->defn, " ", sep);
 	}
 }
@@ -260,13 +260,12 @@ static void enclose(Format *f, Binding *binding, RefSet *rs, const char *sep) {
 static Boolean manualscope = FALSE;
 static RefSet *refset = NULL;
 
-extern void *refsetfromlist(List *lp) {
+extern void refsetfromlist(List *lp) {
 	for (; lp != NULL; lp = lp->next) {
 		Closure *c = getclosure(lp->term);
 		if (c != NULL)
 			refset = refsetfrombinding(c->binding, refset);
 	}
-	return refset;
 }
 
 extern void startrefscope(void) {
