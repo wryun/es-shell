@@ -69,8 +69,6 @@ static char *getrefid(Tree *defn) {
 	return defn->u[0].s;
 }
 
-static Closure *extractbindingsinrefscope(Tree *tree, Dict **refdictp);
-
 static Binding *extract(Tree *tree, Binding *bindings, Dict **refdictp) {
 	assert(gcisblocked());
 
@@ -135,7 +133,7 @@ static Binding *extract(Tree *tree, Binding *bindings, Dict **refdictp) {
 	return bindings;
 }
 
-static Closure *extractbindingsinrefscope(Tree *tree, Dict **refdictp) {
+extern Closure *extractbindingsinrefscope(Tree *tree, Dict **refdictp) {
 	Binding *bindings = NULL;
 	if (tree->kind == nList && tree->u[1].p == NULL)
 		tree = tree->u[0].p;

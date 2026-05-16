@@ -184,6 +184,7 @@ struct RefSet {
 	Binding *binding;
 	int id;
 	int count;
+	Boolean printed;
 	RefSet *next;
 };
 
@@ -194,6 +195,7 @@ static RefSet *mkrefset(Binding *b, RefSet *next) {
 	rs->id = 0;
 	rs->count = 1;
 	rs->next = next;
+	rs->printed = FALSE;
 	return rs;
 }
 
@@ -243,17 +245,48 @@ static void enclose(Format *f, Binding *binding, RefSet *rs, const char *sep) {
 
 	enclose(f, binding->next, rs, ";");
 	p = findbinding(rs, binding);
+	if (p->id == 0)
+		p->id = ++refid;
 	if (p->count < 2)	/* no need for $&ref when there's only one */
 		fmtprint(f, "%S=%#L%s", binding->name, binding->defn, " ", sep);
-	else if (p->id != 0)	/* no need for defn - already printed */
-		fmtprint(f, "%S=$&ref %d%s", binding->name, p->id, sep);
+	else if (p->printed)	/* no need for defn - already printed */
+		fmtprint(f, "%S=$&ref %x%s", binding->name, p->id, sep);
 	else {			/* need both $&ref and defn */
-		p->id = ++refid;
-		fmtprint(f, "%S=$&ref %d %#L%s", binding->name, p->id, binding->defn, " ", sep);
+		p->printed = TRUE;
+		fmtprint(f, "%S=$&ref %x%s%#L%s", binding->name, p->id, binding->defn != NULL ? " " : "", binding->defn, " ", sep);
 	}
 }
 
+static Boolean manualscope = FALSE;
 static RefSet *refset = NULL;
+
+extern void *refsetfromlist(List *lp) {
+	for (; lp != NULL; lp = lp->next) {
+		Closure *c = getclosure(lp->term);
+		if (c != NULL)
+			refset = refsetfrombinding(c->binding, refset);
+	}
+	return refset;
+}
+
+extern void startrefscope(void) {
+	assert(!manualscope);
+	manualscope = TRUE;
+}
+
+extern void reprintrefscope(void) {
+	RefSet *p;
+	for (p = refset; p != NULL; p = p->next)
+		p->printed = FALSE;
+}
+
+extern void endrefscope(void) {
+	assert(manualscope);
+	freerefset(refset);
+	manualscope = FALSE;
+	refid = 0;
+	refset = NULL;
+}
 
 /* %C -- print a closure */
 static Boolean Cconv(Format *f) {

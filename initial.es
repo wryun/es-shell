@@ -165,7 +165,7 @@ fn-%whatis	= $&whatis
 #	users don't have to type the infamous <= (nee <>) operator.
 #	Whatis also protects the used from exceptions raised by %whatis.
 
-fn var		{ for (i = $*) echo <={%var $i} }
+fn var	{ for (i = <={%var $*}) echo $i }
 
 fn whatis {
 	let (result = ) {

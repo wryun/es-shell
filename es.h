@@ -61,6 +61,8 @@ struct Tree {
 /*
  * miscellaneous data structures
  */
+typedef struct Dict Dict;
+
 typedef struct StrList StrList;
 struct StrList {
 	char *str;
@@ -142,6 +144,7 @@ extern Tree *gcmk(NodeKind VARARGS);	/* gcalloc a tree node */
 
 extern Closure *mkclosure(Tree *tree, Binding *binding);
 extern Closure *extractbindings(Tree *tree);
+extern Closure *extractbindingsinrefscope(Tree *tree, Dict **refdictp);
 extern Binding *mkbinding(char *name, List *defn, Binding *next);
 extern Binding *reversebindings(Binding *binding);
 
@@ -238,7 +241,6 @@ extern Noreturn esexit(int);
 
 /* dict.c */
 
-typedef struct Dict Dict;
 extern Dict *mkdict(void);
 extern void dictforall(Dict *dict, void (*proc)(void *, char *, void *), void *arg);
 extern void *dictget(Dict *dict, const char *name);
@@ -248,6 +250,10 @@ extern void *dictget2(Dict *dict, const char *name1, const char *name2);
 
 /* conv.c */
 
+extern void startrefscope(void);
+extern void reprintrefscope(void);
+extern void endrefscope(void);
+extern void *refsetfromlist(List *);
 extern void initconv(void);
 
 
