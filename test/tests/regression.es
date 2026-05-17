@@ -108,6 +108,10 @@ EOF
 	# https://github.com/wryun/es-shell/pull/255
 	local (fn %pathsearch {result ~})
 	assert {$es -c 'notarealbinary; true'}
+
+	assert {~ `` \n {$es -nc '<< !EOF &' >[2=1]} *'literal word'*}
+	assert {~ `` \n {$es -nc '>{} a=b' >[2=1]} *'redirection'*}
+	assert {$es -c '~~ 0x 0?**; true'}
 }
 
 # These tests are based on notes in the CHANGES file from the pre-git days.

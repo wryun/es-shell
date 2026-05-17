@@ -138,8 +138,13 @@ extern Tree *redirect(Parser *p, Tree *t) {
 		return t;
 	r = t->CAR;
 	t = t->CDR;
-	for (; r->kind == nRedir; r = r->CDR)
+	for (; r->kind == nRedir; r = r->CDR) {
+		if (t->kind != nList && t->kind != nRedir) {
+			yyerror(p, "bad command in /dev/fd redirection");
+			return NULL;
+		}
 		t = treeappend(t, r->CAR);
+	}
 	for (rp = r; rp->CAR != &placeholder; rp = rp->CDR) {
 		assert(rp != NULL);
 		assert(rp->kind == nList);

@@ -48,7 +48,7 @@ static int fill(Parser *p) {
 	size_t nread;
 	Input *in = p->input;
 
-	assert(p->buf == p->bufend);
+	assert(in->buf == in->bufend);
 
 	if (p->reader != NULL) {
 		result = eval(p->reader, NULL, 0);
@@ -67,28 +67,31 @@ static int fill(Parser *p) {
 		in->eof = TRUE;
 		return EOF;
 	}
-	if ((nread = strlen(read)) > p->buflen) {
-		p->bufbegin = erealloc(p->bufbegin, nread);
-		p->buflen = nread;
+	if ((nread = strlen(read)) > in->buflen) {
+		in->bufbegin = erealloc(in->bufbegin, nread);
+		in->buflen = nread;
 	}
-	memcpy(p->bufbegin, read, nread);
+	memcpy(in->bufbegin, read, nread);
 
-	p->buf = p->bufbegin;
-	p->bufend = &p->buf[nread];
+	in->buf = in->bufbegin;
+	in->bufend = &in->buf[nread];
 
-	return *p->buf++;
+	return *in->buf++;
 }
 
 /* get -- get a character, filter out nulls */
 extern int get(Parser *p) {
 	int c;
+	Input *in = p->input;
 	if (p->ungot > 0)
 		return p->unget[--p->ungot];
-	c = p->buf < p->bufend ? *p->buf++ : fill(p);
+	c = in->buf < in->bufend ? *in->buf++ : fill(p);
 	if (c != EOF && p->input->runflags & run_echoinput) {
 		char buf = (char)c;
 		ewrite(2, &buf, 1);
 	}
+	if (c == '\n')
+		p->input->lineno++;
 	return c;
 }
 
@@ -98,15 +101,15 @@ extern void unget(Parser *p, int c) {
 	p->unget[p->ungot++] = c;
 }
 
-static void initbuf(Parser *p) {
-	const char *initial = p->input->str;
-	p->buflen = initial == NULL ? BUFSIZE : strlen(initial);
-	p->bufbegin = p->buf = ealloc(p->buflen);
+static void initbuf(Input *in) {
+	const char *initial = in->str;
+	in->buflen = initial == NULL ? BUFSIZE : strlen(initial);
+	in->bufbegin = in->buf = ealloc(in->buflen);
 	if (initial != NULL) {
-		memcpy(p->buf, initial, p->buflen);
-		p->bufend = p->bufbegin + p->buflen;
+		memcpy(in->buf, initial, in->buflen);
+		in->bufend = in->bufbegin + in->buflen;
 	} else
-		p->bufend = p->bufbegin;
+		in->bufend = in->bufbegin;
 }
 
 /*
@@ -132,7 +135,6 @@ extern Tree *parse(List *reader) {
 	oldpspace = setpspace(p.space);
 
 	inityy(&p);
-	initbuf(&p);
 	p.tokenbuf = ealloc(p.bufsize);
 
 	if (input->fd > -1 || reader != NULL) {
@@ -159,8 +161,6 @@ extern Tree *parse(List *reader) {
 
 	undefer(ticket, FALSE);
 	RefRemove(p.reader);
-	assert(p.ungot == 0);
-	efree(p.bufbegin);
 	efree(p.tokenbuf);
 
 	if (result || p.error != NULL || readexception != NULL) {
@@ -175,6 +175,7 @@ extern Tree *parse(List *reader) {
 		RefEnd(e);
 	}
 
+	assert(p.ungot == 0);
 	Ref(Tree *, tree, pseal(p.tree));
 	setpspace(oldpspace);
 #if LISPTREES
@@ -191,6 +192,7 @@ extern Tree *parse(List *reader) {
 
 /* cleanup -- clean up after an input source */
 static void cleanup(Input *in) {
+	efree(in->bufbegin);
 	if (in->fd != -1) {
 		unregisterfd(&in->fd);
 		close(in->fd);
@@ -211,6 +213,7 @@ extern List *runinput(Input *in, int runflags) {
 		"fn-%noeval-print",
 	};
 
+	initbuf(in);
 	flags &= ~eval_inchild;
 	in->runflags = flags;
 	input = in;
@@ -299,6 +302,7 @@ extern Tree *parseinput(Input *in) {
 	Tree * volatile result = NULL;
 	Input *prev = input;
 
+	initbuf(in);
 	in->runflags = 0;
 	input = in;
 
