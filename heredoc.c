@@ -11,7 +11,7 @@ struct Here {
 };
 
 /* getherevar -- read a variable from a here doc */
-extern Tree *getherevar(Parser *p) {
+static Tree *getherevar(Parser *p) {
 	int c;
 	char *s;
 	size_t len;
@@ -30,7 +30,7 @@ extern Tree *getherevar(Parser *p) {
 }
 
 /* snarfheredoc -- read a heredoc until the eof marker */
-extern Tree *snarfheredoc(Parser *p, const char *eof, Boolean quoted) {
+static Tree *snarfheredoc(Parser *p, const char *eof, Boolean quoted) {
 	Tree *tree, **tailp;
 	Buffer *buf;
 	unsigned char *s;
@@ -43,7 +43,6 @@ extern Tree *snarfheredoc(Parser *p, const char *eof, Boolean quoted) {
 
 	for (tree = NULL, tailp = &tree, buf = openbuffer(0);;) {
 		int c;
-		p->input->lineno++;
 		for (s = (unsigned char *) eof; (c = get(p)) == *s; s++)
 			;
 		if (*s == '\0' && (c == '\n' || c == EOF)) {

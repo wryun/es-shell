@@ -201,8 +201,6 @@ top:	while ((c = get(p)) == ' ' || c == '\t')
 		i = 0;
 		while ((c = get(p)) != '\'' || (c = get(p)) == '\'') {
 			buf[i++] = c;
-			if (c == '\n')
-				p->input->lineno++;
 			if (c == EOF) {
 				p->ws = NW;
 				scanerror(p, c, "eof in quoted string");
@@ -217,7 +215,6 @@ top:	while ((c = get(p)) == ' ' || c == '\t')
 		return QWORD;
 	case '\\':
 		if ((c = get(p)) == '\n') {
-			p->input->lineno++;
 			unget(p, ' ');
 			goto top; /* Pretend it was just another space. */
 		}
@@ -283,7 +280,6 @@ top:	while ((c = get(p)) == ' ' || c == '\t')
 				return ENDFILE;
 		FALLTHROUGH;
 	case '\n':
-		p->input->lineno++;
 		p->ws = NW;
 		return NL;
 	case '(':
