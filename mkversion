@@ -2,5 +2,9 @@
 
 VERSION=0.10.0
 RELEASEDATE=15-Feb-2026
+GITINFO=""
+if ! [ "$(git describe --tags)" = "v$VERSION" ]; then
+	GITINFO=" $(git rev-parse --short HEAD)"
+fi
 
-echo "#define VERSION \"es version $VERSION $RELEASEDATE\""
+echo "#define VERSION \"es version $VERSION $RELEASEDATE$GITINFO\""
