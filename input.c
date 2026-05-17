@@ -3,6 +3,7 @@
 #define	REQUIRE_STAT	1
 
 #include "es.h"
+#include "gc.h"
 #include "input.h"
 
 /*
@@ -41,29 +42,44 @@ extern void yyerror(Parser *p, const char *s) {
  * getting and ungetting characters
  */
 
+/* read a BUFSIZE chunk of script from Input.
+ * this should be user-accessible through $&read or something. */
+static char *readchunk(Input *in) {
+	int nread;
+	char readbuf[BUFSIZE], *s = readbuf, *zp;
+	Buffer *buf;
+	do {
+		nread = read(in->fd, s, BUFSIZE);
+		SIGCHK();
+	} while (nread == -1 && errno == EINTR);
+	if (nread == 0)
+		return NULL;
+	buf = openbuffer(nread);
+	while ((zp = memchr(s, '\0', nread)) != NULL) {
+		eprint("%s\n", locate(in, "null character ignored"));
+		buf = bufncat(buf, s, zp - s);
+		nread -= zp - s + 1;
+		s = zp + 1;
+	}
+	buf = bufncat(buf, s, nread);
+	return sealcountedbuffer(buf);
+}
+
 /* fill -- fill input buffer by running a command */
 static int fill(Parser *p) {
-	List *result;
-	char *read;
+	char *read = "";
 	size_t nread;
 	Input *in = p->input;
 
 	assert(in->buf == in->bufend);
 
 	if (p->reader != NULL) {
-		result = eval(p->reader, NULL, 0);
-		read = str("%L\n", result, " ");
-	} else if (in->fd == -1) {
-		result = NULL;
-	} else {
-		result = prim("read", NULL, 0);
-		RefAdd(result);
-		if (length(result) > 1)
-			eprint("%s\n", locate(in, "null character ignored"));
-		read = str("%L\n", result, "");
-		RefRemove(result);
-	}
-	if (result == NULL) {	/* eof */
+		List *result = eval(p->reader, NULL, 0);
+		if (result != NULL)
+			read = str("%L\n", result, " ");
+	} else if (in->fd != -1)
+		read = readchunk(in);
+	if (read == NULL || *read == '\0') {	/* eof */
 		in->eof = TRUE;
 		return EOF;
 	}
