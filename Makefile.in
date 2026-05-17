@@ -107,7 +107,7 @@ token.h	: parse.y
 
 y.tab.c	: token.h
 
-version.h : mkversion
+version.h : mkversion .git/index
 	(cd $(srcdir) && sh mkversion) > version.h
 
 initial.c : esdump $(srcdir)/initial.es
