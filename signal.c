@@ -17,7 +17,7 @@ static Sighandler handler_in[NSIG];
  * system calls when a signal is received, since some of them don't do that
  * themselves.
  */
-jmp_buf slowlabel;
+sigjmp_buf slowlabel;
 Atomic slow = FALSE;
 
 #if HAVE_SIGACTION
@@ -118,6 +118,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 	if (effect != sig_nochange && effect != old) {
 		switch (effect) {
 		case sig_ignore:
+		case sig_noop:
 			if (setsignal(sig, SIG_IGN) == SIG_ERR) {
 				eprint("$&setsignals: cannot ignore %s\n", signame(sig));
 				return old;
@@ -130,7 +131,6 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 			}
 			FALLTHROUGH;
 		case sig_catch:
-		case sig_noop:
 			if (setsignal(sig, catcher) == SIG_ERR) {
 				eprint("$&setsignals: cannot catch %s\n", signame(sig));
 				return old;
@@ -312,7 +312,6 @@ extern void sigchk(void) {
 			return;
 		}
 	}
-	resetparser();
 	Ref(List *, e, NULL);
 	gcdisable();
 	e = mklist(mkstr("signal"), mklist(mkstr(signame(sig)), NULL));

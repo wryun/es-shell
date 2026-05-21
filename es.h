@@ -108,7 +108,7 @@ extern void closefds(void);
 extern int fdmap(int fd);
 extern int defer_mvfd(Boolean parent, int old, int new);
 extern int defer_close(Boolean parent, int fd);
-extern void undefer(int ticket);
+extern void undefer(int ticket, Boolean doclose);
 
 
 /* term.c */
@@ -261,6 +261,7 @@ extern Noreturn panic(const char *fmt VARARGS);
 /* str.c */
 
 extern char *str(const char *fmt VARARGS);	/* create a gc space string by printing */
+extern char *pstr(const char *fmt VARARGS);	/* create a pspace string by printing */
 extern char *mprint(const char *fmt VARARGS);	/* create an ealloc space string by printing */
 extern StrList *mkstrlist(char *, StrList *);
 
@@ -285,16 +286,13 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 
 /* input.c */
 
-extern char *prompt, *prompt2;
-extern Tree *parse(char *esprompt1, char *esprompt2);
+extern Tree *parse(List *reader);
 extern Tree *parsestring(const char *str);
 extern Boolean isinteractive(void);
 extern Boolean isfromfd(void);
-extern void initinput(void);
-extern void resetparser(void);
 
 extern List *runfd(int fd, const char *name, int flags);
-extern List *runstring(const char *str, const char *name, int flags);
+extern List *runstring(const char *str, int flags);
 
 /* eval_* flags are also understood as runflags */
 #define	run_interactive		 4	/* -i or $0[0] = '-' */
@@ -302,25 +300,6 @@ extern List *runstring(const char *str, const char *name, int flags);
 #define	run_echoinput		16	/* -v */
 #define	run_printcmds		32	/* -x */
 #define	run_lisptrees		64	/* -L and defined(LISPTREES) */
-
-#if HAVE_READLINE
-extern Boolean resetterminal;
-#endif
-
-
-/* history.c */
-#if HAVE_READLINE
-extern void inithistory(void);
-
-extern void sethistory(char *file);
-extern void loghistory(char *cmd);
-extern void setmaxhistorylength(int length);
-extern void checkreloadhistory(void);
-#endif
-
-extern void newhistbuffer(void);
-extern void addhistbuffer(char c);
-extern char *dumphistbuffer(void);
 
 
 /* opt.c */
@@ -381,7 +360,7 @@ extern int opentty(void);
 
 /* version.c */
 
-extern const char * const version;
+extern const List * const version;
 
 
 /* gc.c -- see gc.h for more */
@@ -401,6 +380,9 @@ extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
 
 /* operations with pspace, the explicitly-collected gc space for parse tree building */
+extern void *createpspace(void);
+extern void *setpspace(void *);
+
 extern void *palloc(size_t n, Tag *t);		/* allocate n with collection tag t, but in pspace */
 extern void *pseal(void *p);			/* collect pspace into gcspace with root p */
 extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */

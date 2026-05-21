@@ -196,7 +196,6 @@ static List *extractsinglematch(const char *subject, const char *pattern,
 					return mklist(mkstr(gcdup(s)), result);
 				for (begin = s;; s++) {
 					const char *q = TAILQUOTE(quoting, i);
-					assert(*s != '\0');
 					if (match(s, pattern + i, q)) {
 						result = mklist(mkstr(gcndup(begin, s - begin)), result);
 						return haswild(pattern + i, q)

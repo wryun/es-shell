@@ -76,7 +76,7 @@ extern int defer_close(Boolean parent, int fd) {
 	return pushdefer(parent, -1, fd);
 }
 
-extern void undefer(int ticket) {
+extern void undefer(int ticket, Boolean doclose) {
 	if (ticket != UNREGISTERED) {
 		Defer *defer;
 		assert(ticket >= 0);
@@ -84,7 +84,7 @@ extern void undefer(int ticket) {
 		defer = &deftab[--defcount];
 		assert(ticket == defcount);
 		unregisterfd(&defer->realfd);
-		if (defer->realfd != -1)
+		if (doclose && defer->realfd != -1)
 			close(defer->realfd);
 	}
 }

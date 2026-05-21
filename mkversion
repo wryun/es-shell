@@ -1,0 +1,14 @@
+#!/bin/sh
+
+VERSION=0.10.0
+DATE=15-Feb-2026
+
+COMMIT=""
+case "$(git describe --tags 2>/dev/null)" in
+"v$VERSION-"*)
+	COMMIT=" $(git rev-parse --short HEAD)"
+	DATE="$(git show --no-patch --format=%cd --date=format:'%d-%b-%Y')"
+	;;
+esac
+
+echo "#define VERSION \"es version $VERSION $DATE$COMMIT\""

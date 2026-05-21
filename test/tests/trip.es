@@ -164,7 +164,6 @@ test 'signals in exception catchers' {
 		let (
 			was-blocked = false
 			thrown = ()
-			thrown2 = ()
 		) {
 			catch @ {
 				thrown = $*
@@ -176,14 +175,24 @@ test 'signals in exception catchers' {
 					throw exception
 				}
 			}
-			catch @ {
-				thrown2 = $*
-			} {
-				catch @ e {kill -INT $pid} {throw exception2}
-			}
 			assert $was-blocked signal is blocked during catcher
 			assert {~ $thrown(1) signal} signal exception during catcher is thrown
-			assert {~ $thrown2(1) signal} second signal is caught
+		}
+		let (thrown = ()) {
+			catch @ {
+				thrown = $*
+			} {
+				catch @ e {kill -INT $pid} {throw exception}
+			}
+			assert {~ $thrown(1) signal} second signal is caught
+		}
+		let (thrown = ()) {
+			catch @ {
+				thrown = $*
+			} {
+				catch @ e {kill -INT $pid; throw exception} {throw exception}
+			}
+			assert {~ $thrown(1) signal} signal exception has precedence within catcher
 		}
 	}
 }

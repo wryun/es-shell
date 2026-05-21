@@ -77,8 +77,8 @@ dnl Checks for library functions.
 AC_TYPE_GETGROUPS
 AC_FUNC_MMAP
 
-AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
-sysconf sigsetjmp getrusage gettimeofday mmap mprotect)
+AC_CHECK_FUNCS(strerror strtol lseek lstat setrlimit sigrelse sighold \
+sigaction sysconf sigsetjmp getrusage gettimeofday mmap mprotect)
 
 AC_CACHE_CHECK(whether getenv can be redefined, es_cv_local_getenv,
 [if test "$ac_cv_header_stdlib_h" = no || test "$ac_cv_header_stdc" = no; then

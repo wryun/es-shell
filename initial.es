@@ -78,8 +78,6 @@ fn-throw	= $&throw
 fn-umask	= $&umask
 fn-wait		= $&wait
 
-fn-%read	= $&read
-
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.
 
@@ -101,6 +99,20 @@ fn-false	= { result 1 }
 fn-break	= throw break
 fn-exit		= throw exit
 fn-return	= throw return
+
+#	The %read builtin wraps the $&read primitive, which splits its
+#	return value on NUL characters.  This is done so that other ways
+#	to handle NULs can be implemented, while keeping the behavior
+#	of %read predictable.
+
+fn %read {
+	let (r = <=$&read)
+	if {~ $#r (0 1)} {
+		result $r
+	} {
+		%flatten '' $r
+	}
+}
 
 #	unwind-protect is a simple wrapper around catch that is used
 #	to ensure that some cleanup code is run after running a code
@@ -675,9 +687,38 @@ if {~ <=$&primitives writehistory} {
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%parse		= $&parse
 fn-%batch-loop		= $&batchloop
 fn-%is-interactive	= $&isinteractive
+
+if {~ <=$&primitives readline} {
+	fn-%read-line = $&readline
+} {
+	fn %read-line prompt {
+		echo -n $prompt
+		$&read
+	}
+}
+
+fn %parse {
+	if %is-interactive {
+		let (in = (); p = $*(1))
+		unwind-protect {
+			$&parse {
+				let (r = <={%read-line $p}) {
+					in = $in $r
+					p = $*(2)
+					result $r
+				}
+			}
+		} {
+			if {!~ $#fn-%write-history 0 && !~ $#in 0} {
+				%write-history <={%flatten \n $in}
+			}
+		}
+	} {
+		$&parse	# fall back to built-in read with no prompt
+	}
+}
 
 fn %interactive-loop {
 	let (result = <=true) {
@@ -711,6 +752,7 @@ fn %interactive-loop {
 		}
 	}
 }
+
 
 #	These functions are potentially passed to a REPL as the %dispatch
 #	function.  (For %eval-noprint, note that an empty list prepended

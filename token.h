@@ -44,6 +44,14 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 11 "./parse.y"
+
+typedef struct Input Input;
+typedef struct Parser Parser;
+typedef struct Here Here;
+
+#line 55 "y.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -87,13 +95,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 27 "./parse.y"
+#line 39 "./parse.y"
 
 	Tree *tree;
 	char *str;
 	NodeKind kind;
 
-#line 97 "y.tab.h"
+#line 105 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -104,7 +112,7 @@ typedef union YYSTYPE YYSTYPE;
 
 
 
-int yyparse (void);
+int yyparse (Parser *p);
 
 
 #endif /* !YY_YY_Y_TAB_H_INCLUDED  */

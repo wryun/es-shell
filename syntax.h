@@ -3,6 +3,7 @@
 #define	CAR	u[0].p
 #define	CDR	u[1].p
 
+#include "token.h"
 
 /* tree.c */
 
@@ -28,19 +29,15 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2);
 
 extern Tree *mkclose(int fd);
 extern Tree *mkdup(int fd0, int fd1);
-extern Tree *redirect(Tree *t);
-extern Tree *mkredir(Tree *cmd, Tree *file);
+extern Tree *redirect(Parser *p, Tree *t);
+extern Tree *mkredir(Parser *p, Tree *cmd, Tree *file);
 extern Tree *mkredircmd(char *cmd, int fd);
 extern Tree *redirappend(Tree *t, Tree *r);
 extern Tree *firstprepend(Tree *first, Tree *args);
 
 extern Tree *mkmatch(Tree *subj, Tree *cases);
 
-/* str.c */
-
-extern char *pstr(const char *fmt VARARGS);
-
 /* heredoc.c */
 
-extern Boolean readheredocs(Boolean endfile);
-extern Boolean queueheredoc(Tree *t);
+extern Boolean readheredocs(Parser *p, Boolean endfile);
+extern Boolean queueheredoc(Parser *p, Tree *t);
