@@ -136,17 +136,24 @@ PRIM(fsplit) {
 }
 
 PRIM(var) {
-	Term *term;
-	if (list == NULL)
-		return NULL;
-	Ref(List *, rest, list->next);
-	Ref(char *, name, getstr(list->term));
-	Ref(List *, defn, varlookup(name, NULL));
-	rest = prim_var(rest, evalflags);
-	term = mkstr(str("%S = %#L", name, defn, " "));
-	list = mklist(term, rest);
-	RefEnd3(defn, name, rest);
-	return list;
+	List *lp;
+	Ref(List *, result, NULL);
+	gcdisable();
+	startrefscope();
+	for (lp = list; lp != NULL; lp = lp->next)
+		refsetfromlist(varlookup(getstr(lp->term), NULL));
+	for (lp = list; lp != NULL; lp = lp->next) {
+		char *name;
+		List *defn;
+		name = getstr(lp->term);
+		defn = varlookup(name, NULL);
+		result = mklist(mkstr(str("%S = %#L", name, defn, " ")), result);
+		reprintrefscope();
+	}
+	endrefscope();
+	gcenable();
+	result = reverse(result);
+	RefReturn(result);
 }
 
 PRIM(parse) {

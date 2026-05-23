@@ -51,6 +51,32 @@ extern Closure *getclosure(Term *term) {
 	return term->closure;
 }
 
+extern Closure *getclosureinrefscope(Term *term, Dict **refdictp) {
+	if (term->closure == NULL) {
+		char *s = term->str;
+		assert(s != NULL);
+		if (
+			((*s == '{' || *s == '@') && s[strlen(s) - 1] == '}')
+			|| (*s == '$' && s[1] == '&')
+			|| hasprefix(s, "%closure")
+		) {
+			Closure *c;
+			Ref(Term *, tp, term);
+			Ref(Tree *, np, parsestring(s));
+			if (np == NULL) {
+				RefPop2(np, tp);
+				return NULL;
+			}
+			c = extractbindingsinrefscope(np, refdictp);
+			tp->closure = c;
+			tp->str = NULL;
+			term = tp;
+			RefEnd2(np, tp);
+		}
+	}
+	return term->closure;
+}
+
 extern char *getstr(Term *term) {
 	char *s = term->str;
 	Closure *closure = term->closure;

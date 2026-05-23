@@ -179,23 +179,113 @@ top:
 	NOTREACHED;
 }
 
-/* enclose -- build up a closure */
-static void enclose(Format *f, Binding *binding, const char *sep) {
-	if (binding != NULL) {
-		Binding *next = binding->next;
-		enclose(f, next, ";");
-		fmtprint(f, "%S=%#L%s", binding->name, binding->defn, " ", sep);
+typedef struct RefSet RefSet;
+struct RefSet {
+	Binding *binding;
+	int id;
+	int count;
+	Boolean printed;
+	RefSet *next;
+};
+
+/* create a new RefSet on top of the last one */
+static RefSet *mkrefset(Binding *b, RefSet *next) {
+	RefSet *rs = ealloc(sizeof(RefSet));
+	rs->binding = b;
+	rs->id = 0;
+	rs->count = 1;
+	rs->next = next;
+	rs->printed = FALSE;
+	return rs;
+}
+
+static RefSet *findbinding(RefSet *rs, Binding *b) {
+	RefSet *p;
+	for (p = rs; p != NULL; p = p->next)
+		if (p->binding == b)
+			return p;
+	return NULL;
+}
+
+/* recursively free RefSet */
+static void freerefset(RefSet *rs) {
+	RefSet *p, *n;
+	for (p = rs; p != NULL; p = n) {
+		n = p->next;
+		efree(p);
 	}
 }
 
-#if 0
-typedef struct Chain Chain;
-struct Chain {
-	Closure *closure;
-	Chain *next;
-};
-static Chain *chain = NULL;
-#endif
+/* recursively scan RefSet for counts of individual bindings */
+static RefSet *refsetfrombinding(Binding *b, RefSet *rs) {
+	for (; b != NULL; b = b->next) {
+		List *lp;
+		RefSet *p = findbinding(rs, b);
+
+		if (p != NULL) p->count++;
+		else rs = mkrefset(b, rs);
+
+		if (p == NULL || p->count <= 2)
+			for (lp = b->defn; lp != NULL; lp = lp->next) {
+				Closure *c;
+				if ((c = getclosure(lp->term)) != NULL)
+					rs = refsetfrombinding(c->binding, rs);
+			}
+	}
+	return rs;
+}
+
+static int refid = 0;
+
+/* enclose -- build up a closure */
+static void enclose(Format *f, Binding *binding, RefSet *rs, const char *sep) {
+	RefSet *p;
+	if (binding == NULL)
+		return;
+
+	enclose(f, binding->next, rs, ";");
+	p = findbinding(rs, binding);
+	if (p->count < 2)	/* no need for $&ref when there's only one */
+		fmtprint(f, "%S=%#L%s", binding->name, binding->defn, " ", sep);
+	else if (p->printed)	/* no need for defn - already printed */
+		fmtprint(f, "%S=$&ref %x%s", binding->name, p->id, sep);
+	else {			/* need both $&ref and defn */
+		p->printed = TRUE;
+		if (p->id == 0)
+			p->id = ++refid + (0xfff & (uintptr_t)rs);
+		fmtprint(f, "%S=$&ref %x%s%#L%s", binding->name, p->id, binding->defn != NULL ? " " : "", binding->defn, " ", sep);
+	}
+}
+
+static Boolean manualscope = FALSE;
+static RefSet *refset = NULL;
+
+extern void refsetfromlist(List *lp) {
+	for (; lp != NULL; lp = lp->next) {
+		Closure *c = getclosure(lp->term);
+		if (c != NULL)
+			refset = refsetfrombinding(c->binding, refset);
+	}
+}
+
+extern void startrefscope(void) {
+	assert(!manualscope);
+	manualscope = TRUE;
+}
+
+extern void reprintrefscope(void) {
+	RefSet *p;
+	for (p = refset; p != NULL; p = p->next)
+		p->printed = FALSE;
+}
+
+extern void endrefscope(void) {
+	assert(manualscope);
+	freerefset(refset);
+	manualscope = FALSE;
+	refid = 0;
+	refset = NULL;
+}
 
 /* %C -- print a closure */
 static Boolean Cconv(Format *f) {
@@ -203,37 +293,26 @@ static Boolean Cconv(Format *f) {
 	Tree *tree = closure->tree;
 	Binding *binding = closure->binding;
 	Boolean altform = (f->flags & FMT_altform) != 0;
+	Boolean makerefset = (refset == NULL);
 
-#if 0
-	int i;
-	Chain me, *cp;
-	assert(tree->kind == nThunk || tree->kind == nLambda || tree->kind == nPrim);
-	assert(binding == NULL || tree->kind != nPrim);
-
-	for (cp = chain, i = 0; cp != NULL; cp = cp->next, i++)
-		if (cp->closure == closure) {
-			fmtprint(f, "%d $&nestedbinding", i);
-			return FALSE;
-		}
-	me.closure = closure;
-	me.next = chain;
-	chain = &me;
-#endif
+	if (makerefset)
+		refset = refsetfrombinding(binding, NULL);
 
 	if (altform)
 		fmtprint(f, "%S", str("%C", closure));
 	else {
 		if (binding != NULL) {
 			fmtprint(f, "%%closure(");
-			enclose(f, binding, "");
+			enclose(f, binding, refset, "");
 			fmtprint(f, ")");
 		}
 		fmtprint(f, "%T", tree);
 	}
-
-#if 0
-	chain = chain->next;	/* TODO: exception unwinding? */
-#endif
+	if (makerefset) {
+		freerefset(refset);
+		refset = NULL;
+		refid = 0;
+	}
 	return FALSE;
 }
 
