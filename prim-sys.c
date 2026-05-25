@@ -305,13 +305,11 @@ static void tmerrchk(int result, char *str) {
 }
 
 static void getrealtime(struct times *ret) {
-#if HAVE_GETTIMEOFDAY && MILLISECOND_TIME
-#define HAVE_PRECISE_REALTIME	1
+#if HAVE_GETTIMEOFDAY
 	struct timeval tv;
 	tmerrchk(gettimeofday(&tv, NULL), "getrealtime()");
 	ret->real_usec = (tv.tv_sec * INTMAX_C(1000000)) + tv.tv_usec;
 #else	/* use time(3p) */
-#define HAVE_PRECISE_REALTIME	0
 	time_t t = time(NULL);
 	tmerrchk(t, "getrealtime()");
 	ret->real_usec = t * 1000000;
@@ -347,62 +345,62 @@ static void gettimes(struct times *ret) {
 	getusagetimes(ret);
 }
 
+static void parsetimes(List *list, struct times *ret) {
+	char *suffix;
+	if (length(list) != 3)
+		fail("$&time", "usage: $&time [r u s]");
+
+	ret->real_usec = strtoimax(getstr(list->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "real-time argument not an int", list->term);
+	ret->user_usec = strtoimax(getstr(list->next->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "user-time argument not an int", list->next->term);
+	ret->sys_usec = strtoimax(getstr(list->next->next->term), &suffix, 10);
+	if (*suffix != '\0')
+		fail("$&time", "sys-time argument not an int", list->next->next->term);
+}
+
 static void subtimes(struct times a, struct times b, struct times *ret) {
 	ret->real_usec = a.real_usec - b.real_usec;
 	ret->user_usec = a.user_usec - b.user_usec;
 	ret->sys_usec = a.sys_usec - b.sys_usec;
 }
 
-static void strtimes(struct times time, List *list) {
-#if MILLISECOND_TIME
-	eprint(
-#if HAVE_PRECISE_REALTIME
+static char *strtimes(struct times time) {
+	return str(
+#if HAVE_GETTIMEOFDAY
 		"%6.3jd"
 #else
 		"%6jd"
 #endif
-		"r %7.3jdu %7.3jds\t%L\n",
-#if HAVE_PRECISE_REALTIME
+		"r %7.3jdu %7.3jds",
+#if HAVE_GETTIMEOFDAY
 		time.real_usec / 1000,
 #else
 		time.real_usec / 1000000,
 #endif
 		time.user_usec / 1000,
-		time.sys_usec / 1000,
-		list, " "
+		time.sys_usec / 1000
 	);
-#else
-	eprint(
-		"%6jdr %7.1jdu %7.1jds\t%L\n",
-		time.real_usec / 1000000,
-		time.user_usec / 100000,
-		time.sys_usec / 100000,
-		list, " "
-	);
-#endif
 }
 
 PRIM(time) {
-	int pid, status;
 	struct times prev, time;
 
-	Ref(List *, lp, list);
-
-	gc();	/* do a garbage collection first to ensure reproducible results */
-	gettimes(&prev);
-	pid = efork(TRUE, FALSE);
-	if (pid == 0)
-		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewait(pid, FALSE);
 	gettimes(&time);
-	SIGCHK();
-	printstatus(0, status);
+	if (list != NULL) {
+		parsetimes(list, &prev);
+		subtimes(time, prev, &time);
+	}
 
-	subtimes(time, prev, &time);
-	strtimes(time, lp);
-
-	RefEnd(lp);
-	return mklist(mkstr(mkstatus(status)), NULL);
+	gcdisable();
+	list = mklist(mkstr(strtimes(time)),
+		mklist(mkstr(str("%jd", time.real_usec)),
+		mklist(mkstr(str("%jd", time.user_usec)),
+		mklist(mkstr(str("%jd", time.sys_usec)), NULL))));
+	gcenable();
+	return list;
 }
 #endif	/* BUILTIN_TIME */
 
