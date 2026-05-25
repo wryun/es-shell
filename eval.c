@@ -3,6 +3,7 @@
 #include "es.h"
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
+static Boolean did_assign = FALSE;
 
 static Noreturn failexec(char *file, List *args) {
 	List *fn;
@@ -76,6 +77,7 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 	}
 
 	RefEnd4(values, vars, binding, valueform);
+	did_assign = TRUE;
 	RefReturn(result);
 }
 
@@ -378,6 +380,7 @@ restart:
 		return ltrue;
 	}
 	assert(list->term != NULL);
+	did_assign = FALSE;
 
 	if ((cp = getclosure(list->term)) != NULL) {
 		switch (cp->tree->kind) {
@@ -478,7 +481,7 @@ restart:
 
 done:
 	--evaldepth;
-	if ((flags & eval_exitonfalse) && !istrue(list))
+	if ((flags & eval_exitonfalse) && !istrue(list) && !did_assign)
 		esexit(exitstatus(list));
 	RefEnd2(funcname, binding);
 	RefReturn(list);

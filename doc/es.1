@@ -2388,8 +2388,8 @@ shell scripts if the kernel does not.
 .TP
 .Cr "%exit-on-false \fIcmd\fP"
 Runs the command, and exits if any command
-(except those executing as the tests of conditional statements)
-returns a non-zero status.
+(except assignments, or those executing as the tests of conditional
+statements) returns a non-zero status.
 (This function is used in the definition of
 .Cr %dispatch
 when the shell is invoked with the
@@ -2901,8 +2901,8 @@ starts with a dash
 .Rc ( - ).
 .TP
 .Cr \-e
-Exit if any command (except those executing as the tests of
-conditional statements) returns a non-zero status.
+Exit if any command (except assignments, or those executing as the
+tests of conditional statements) returns a non-zero status.
 .TP
 .Cr \-v
 Echo all input to standard error.
