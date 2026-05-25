@@ -173,6 +173,10 @@ PRIM(exitonfalse) {
 	return eval(list, NULL, evalflags | eval_exitonfalse);
 }
 
+PRIM(throwonfalse) {
+	return eval(list, NULL, evalflags | eval_throwonfalse);
+}
+
 PRIM(batchloop) {
 	Ref(List *, result, ltrue);
 	Ref(List *, dispatch, NULL);
@@ -298,6 +302,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(result);
 	X(isinteractive);
 	X(exitonfalse);
+	X(throwonfalse);
 	X(noreturn);
 	X(setmaxevaldepth);
 	return primdict;

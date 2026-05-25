@@ -17,7 +17,11 @@ PRIM(if) {
 	for (; lp != NULL; lp = lp->next) {
 		List *cond = ltrue;
 		if (lp->next != NULL) {
-			cond = eval1(lp->term, 0);
+			ExceptionHandler
+				cond = eval1(lp->term, evalflags & eval_throwonfalse);
+			CatchException (e)
+				cond = e->next;
+			EndExceptionHandler
 			lp = lp->next;
 		}
 		if (istrue(cond)) {
@@ -33,7 +37,7 @@ PRIM(if) {
 PRIM(forever) {
 	Ref(List *, body, list);
 	for (;;)
-		list = eval(body, NULL, evalflags & eval_exitonfalse);
+		list = eval(body, NULL, evalflags &~ eval_inchild);
 	RefEnd(body);
 	return list;
 }

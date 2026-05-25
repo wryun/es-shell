@@ -65,7 +65,6 @@
 
 fn-.		= $&dot
 fn-access	= $&access
-fn-break	= $&break
 fn-catch	= $&catch
 fn-echo		= $&echo
 fn-exec		= $&exec
@@ -190,20 +189,33 @@ fn whatis {
 #	does not catch the return exception.  It does, however, catch break.
 
 fn-while = $&noreturn @ cond body {
+	let (result = <=true)
 	catch @ e value {
-		if {!~ $e break} {
+		if {~ $e break} {
+			result = $value
+		} {~ $e caught-false} {
+			throw false $value
+		} {
 			throw $e $value
 		}
-		result $value
 	} {
-		let (result = <=true)
-			forever {
-				if {!$cond} {
-					throw break $result
-				} {
-					result = <=$body
+		forever {
+			if {!$cond} {
+				throw break $result
+			} {
+				result = <={
+					catch @ e rest {
+						if {~ $e false} {
+							throw caught-false $rest
+						} {
+							throw $e $rest
+						}
+					} {
+						$body
+					}
 				}
 			}
+		}
 	}
 }
 
@@ -702,7 +714,6 @@ fn %interactive-loop {
 				throw $e $type $msg
 			} {~ $e error} {
 				echo >[1=2] $msg
-				$fn-%dispatch false
 			} {~ $e signal} {
 				if {!~ $type sigint sigterm sigquit} {
 					echo >[1=2] caught unexpected signal: $type
@@ -736,6 +747,7 @@ fn-%eval-print		= $&noreturn @ { echo $* >[1=2]; $* }	# -x
 fn-%noeval-noprint	= { }					# -n
 fn-%noeval-print	= @ { echo $* >[1=2] }			# -n -x
 fn-%exit-on-false	= $&exitonfalse				# -e
+# fn-%exit-on-false	= $&throwonfalse
 
 
 #
