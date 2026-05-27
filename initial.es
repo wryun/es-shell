@@ -746,8 +746,11 @@ fn-%eval-noprint	=					# <default>
 fn-%eval-print		= $&noreturn @ { echo $* >[1=2]; $* }	# -x
 fn-%noeval-noprint	= { }					# -n
 fn-%noeval-print	= @ { echo $* >[1=2] }			# -n -x
-fn-%exit-on-false	= $&exitonfalse				# -e
-# fn-%exit-on-false	= $&throwonfalse
+if {~ <=$&primitives throwonfalse} {
+	fn-%exit-on-false	= $&throwonfalse		# -e
+} {
+	fn-%exit-on-false	= $&exitonfalse			# -e
+}
 
 
 #

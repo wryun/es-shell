@@ -209,13 +209,17 @@ static List *glom1(Tree *tree, Binding *binding, int evalflags) {
 			RefEnd2(sub, name);
 			break;
 		case nCall:
+#if THROW_ON_FALSE
 			ExceptionHandler
+#endif
 				list = listcopy(walk(tp->u[0].p, bp,
 						evalflags & eval_throwonfalse));
+#if THROW_ON_FALSE
 			CatchException (e)
 				if (termeq(e->term, "false")) list = e->next;
 				else throw(e);
 			EndExceptionHandler
+#endif
 			tp = NULL;
 			break;
 		case nList:

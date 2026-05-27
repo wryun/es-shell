@@ -17,11 +17,15 @@ PRIM(if) {
 	for (; lp != NULL; lp = lp->next) {
 		List *cond = ltrue;
 		if (lp->next != NULL) {
+#if THROW_ON_FALSE
 			ExceptionHandler
+#endif
 				cond = eval1(lp->term, evalflags & eval_throwonfalse);
+#if THROW_ON_FALSE
 			CatchException (e)
 				cond = e->next;
 			EndExceptionHandler
+#endif
 			lp = lp->next;
 		}
 		if (istrue(cond)) {
