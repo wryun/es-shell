@@ -165,13 +165,14 @@ extern unsigned long evaldepth, maxevaldepth;
 
 #define	eval_inchild		1
 #define	eval_exitonfalse	2
-#define	eval_flags		(eval_inchild|eval_exitonfalse)
+#define	eval_throwonfalse	4
+#define	eval_flags		(eval_inchild|eval_exitonfalse|eval_throwonfalse)
 
 
 /* glom.c */
 
-extern List *glom(Tree *tree, Binding *binding, Boolean globit);
-extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
+extern List *glom(Tree *tree, Binding *binding, Boolean globit, int evalflags);
+extern List *glom2(Tree *tree, Binding *binding, StrList **quotep, int evalflags);
 
 
 /* glob.c */
@@ -303,11 +304,11 @@ extern List *runfd(int fd, const char *name, int flags);
 extern List *runstring(const char *str, int flags);
 
 /* eval_* flags are also understood as runflags */
-#define	run_interactive		 4	/* -i or $0[0] = '-' */
-#define	run_noexec		 8	/* -n */
-#define	run_echoinput		16	/* -v */
-#define	run_printcmds		32	/* -x */
-#define	run_lisptrees		64	/* -L and defined(LISPTREES) */
+#define	run_interactive		  8	/* -i or $0[0] = '-' */
+#define	run_noexec		 16	/* -n */
+#define	run_echoinput		 32	/* -v */
+#define	run_printcmds		 64	/* -x */
+#define	run_lisptrees		128	/* -L and defined(LISPTREES) */
 
 
 /* opt.c */
