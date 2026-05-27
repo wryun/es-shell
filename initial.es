@@ -169,10 +169,7 @@ fn var	{ for (i = <={%var $*}) echo $i }
 fn whatis {
 	let (result = ) {
 		for (i = $*) {
-			catch @ e from message {
-				if {!~ $e error} {
-					throw $e $from $message
-				}
+			catch error @ from message {
 				echo >[1=2] $message
 				result = $result 1
 			} {
@@ -189,10 +186,7 @@ fn whatis {
 #	does not catch the return exception.  It does, however, catch break.
 
 fn-while = $&noreturn @ cond body {
-	catch @ e value {
-		if {!~ $e break} {
-			throw $e $value
-		}
+	catch break @ value {
 		result $value
 	} {
 		let (result = <=true)
