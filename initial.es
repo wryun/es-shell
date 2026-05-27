@@ -65,8 +65,6 @@
 
 fn-.		= $&dot
 fn-access	= $&access
-fn-break	= $&break
-fn-catch	= $&catch
 fn-echo		= $&echo
 fn-exec		= $&exec
 fn-forever	= $&forever
@@ -75,6 +73,7 @@ fn-if		= $&if
 fn-newpgrp	= $&newpgrp
 fn-result	= $&result
 fn-throw	= $&throw
+fn-catch	= $&catch
 fn-umask	= $&umask
 fn-wait		= $&wait
 
@@ -170,10 +169,7 @@ fn var	{ for (i = <={%var $*}) echo $i }
 fn whatis {
 	let (result = ) {
 		for (i = $*) {
-			catch @ e from message {
-				if {!~ $e error} {
-					throw $e $from $message
-				}
+			catch error @ from message {
 				echo >[1=2] $message
 				result = $result 1
 			} {
@@ -190,10 +186,7 @@ fn whatis {
 #	does not catch the return exception.  It does, however, catch break.
 
 fn-while = $&noreturn @ cond body {
-	catch @ e value {
-		if {!~ $e break} {
-			throw $e $value
-		}
+	catch break @ value {
 		result $value
 	} {
 		let (result = <=true)

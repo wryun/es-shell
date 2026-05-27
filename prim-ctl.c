@@ -47,12 +47,18 @@ PRIM(throw) {
 
 PRIM(catch) {
 	Atomic retry;
+	int argc = length(list);
 
-	if (list == NULL)
-		fail("$&catch", "usage: catch catcher body");
+	if (argc != 2 && argc != 3)
+		fail("$&catch", "usage: catch [exception] catcher body");
 
 	Ref(List *, result, NULL);
 	Ref(List *, lp, list);
+	Ref(char *, exc, NULL);
+	if (argc == 3) {
+		exc = getstr(lp->term);
+		lp = lp->next;
+	}
 
 	do {
 		List *e = NULL;
@@ -62,7 +68,14 @@ PRIM(catch) {
 
 			result = eval(lp->next, NULL, evalflags);
 
-		CatchException (frombody)
+		CatchException (volatile frombody)
+
+			if (exc != NULL) {
+				if (termeq(frombody->term, exc))
+					frombody = frombody->next;
+				else
+					throw(frombody);
+			}
 
 			blocksignals();
 			ExceptionHandler
@@ -89,7 +102,7 @@ PRIM(catch) {
 			throw(e);
 
 	} while (retry);
-	RefEnd(lp);
+	RefEnd2(exc, lp);
 	RefReturn(result);
 }
 
