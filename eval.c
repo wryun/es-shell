@@ -5,47 +5,6 @@
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
 static Boolean did_assign = FALSE;
 
-static Noreturn failexec(char *file, List *args) {
-	List *fn;
-	assert(gcisblocked());
-	fn = varlookup("fn-%exec-failure", NULL);
-	if (fn != NULL) {
-		int olderror = errno;
-		Ref(List *, list, append(fn, mklist(mkstr(file), args)));
-		RefAdd(file);
-		gcenable();
-		eval(list, NULL, 0);
-		RefRemove(file);
-		RefEnd(list);
-		errno = olderror;
-	}
-	eprint("%s: %s\n", file, esstrerror(errno));
-	esexit(1);
-}
-
-/* forkexec -- fork (if necessary) and exec */
-extern List *forkexec(char *file, List *list, Boolean inchild) {
-	int pid, status;
-	Vector *env;
-	gcdisable();
-	env = mkenv();
-	pid = efork(!inchild, FALSE);
-	if (pid == 0) {
-		execve(file, vectorize(list)->vector, env->vector);
-		failexec(file, list);
-	}
-	gcenable();
-	status = ewaitfor(pid);
-	if ((status & 0xff) == 0) {
-		sigint_newline = FALSE;
-		SIGCHK();
-		sigint_newline = TRUE;
-	} else
-		SIGCHK();
-	printstatus(0, status);
-	return mklist(mkterm(mkstatus(status), NULL), NULL);
-}
-
 /* assign -- bind a list of values to a list of variables */
 static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 	Ref(List *, result, NULL);
@@ -347,17 +306,19 @@ extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
 	RefReturn(result);
 }
 
-/* pathsearch -- evaluate fn %pathsearch + some argument */
-extern List *pathsearch(Term *term) {
-	List *list;
-	Ref(List *, search, NULL);
-	search = varlookup("fn-%pathsearch", NULL);
+/* whatis -- evaluate fn %whatis + some argument */
+static List *whatis(Term *term, char *name) {
+	Ref(List *, list, NULL);
+	Ref(List *, search, varlookup("fn-%whatis", NULL));
 	if (search == NULL)
-		fail("es:pathsearch", "%E: fn %%pathsearch undefined", term);
-	list = mklist(term, NULL);
+		fail("es:whatis", "%E: fn %%whatis undefined", term);
+	gcdisable();
+	list = mklist(term, name == NULL ? NULL : mklist(mkstr(name), NULL));
 	list = append(search, list);
 	RefEnd(search);
-	return eval(list, NULL, 0);
+	gcenable();
+	list = eval(list, NULL, 0);
+	RefReturn(list);
 }
 
 /* eval -- evaluate a list, producing a list */
@@ -442,8 +403,6 @@ restart:
 		goto done;
 	}
 
-	/* the logic here is duplicated in $&whatis */
-
 	Ref(char *, name, getstr(list->term));
 	fn = varlookup2("fn-", name, binding);
 	if (fn != NULL) {
@@ -452,28 +411,9 @@ restart:
 		RefPop(name);
 		goto restart;
 	}
-	if (isabsolute(name)) {
-		char *error = checkexecutable(name);
-		if (error != NULL)
-			fail("$&whatis", "%s: %s", name, error);
-		if (funcname != NULL) {
-			Term *fn = mkstr(funcname);
-			list = mklist(fn, list->next);
-		}
-		list = forkexec(name, list, flags & eval_inchild);
-		RefPop(name);
-		goto done;
-	}
 	RefEnd(name);
 
-	fn = pathsearch(list->term);
-	if (fn != NULL && fn->next == NULL
-	    && (cp = getclosure(fn->term)) == NULL) {
-		char *name = getstr(fn->term);
-		list = forkexec(name, list, flags & eval_inchild);
-		goto done;
-	}
-
+	fn = whatis(list->term, funcname);
 	if (fn != NULL)
 		funcname = getstr(list->term);
 	list = append(fn, list->next);
