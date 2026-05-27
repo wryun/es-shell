@@ -129,3 +129,97 @@ test 'precedence' {
 		assert {~ `` \n {eval echo '{'$have'}'} '{'$want'}'}
 	}
 }
+
+# These %closures are relatively easy to parse, even if they aren't expected to
+# be produced by normal code.
+test 'valid %closures' {
+	for (test = (
+		{result a}
+		{result a b}
+		{result 'a b'}
+		{result $&b}
+		{result \e^';'}
+		{result {}}
+		{result @ {}}
+	)) {
+		let (a = <=$test)
+		let (
+			c = `` \n {$es -c '''%closure(a='^$a^')echo{}''' >[2=1]}
+			l = `` \n {$es -c 'let (a='^$a^')echo {}'}
+		) {
+			assert {~ $^c $^l} $a
+		}
+	}
+}
+
+# These %closures would require full glomming to make work right, which is a can
+# of worms.  Throw errors for them; they shouldn't be possible to produce with
+# normal code anyway.
+test 'bad %closures' {
+	for (test = (
+		'<={}'
+		'$x'
+		'$x(2)'
+	)) {
+		let ((status output) = <={$&backquote \n {
+			$es -c 'catch @ e {echo caught $e} {''%closure(a='^$test^')echo {ok}''}'
+		}}) {
+			assert {~ $output 'caught error $&parse'*} $test output
+			assert {~ $status 0} $test result
+		}
+	}
+}
+
+test 'split %closure' {
+	let (do-test = ()) {
+		let (s = one)
+		let (
+			fn assertion-one {
+				assert {~ $s one}
+				s = two
+			}
+			fn assertion-two {
+				assert {~ $s two}
+				s = one
+			}
+		)
+		do-test = @ {$*}
+
+		do-test = `` \n {echo $do-test}
+		$do-test assertion-one
+		$do-test assertion-two
+		$do-test assertion-one
+		$do-test assertion-two
+	}
+}
+
+test 'environment split %closure' {
+	local (test-one = (); test-two = ()) {
+		let (s = one) {
+			test-one = {
+				echo -n $s
+				s = two
+			}
+			test-two = {
+				echo -n $s
+				s = one
+			}
+		}
+		assert {~ `{$es -c '$test-one; $test-two; $test-one; $test-two'} onetwoonetwo}
+	}
+}
+
+test 'recursive %closure' {
+	let (do-test = ()) {
+		let (results = ()) {
+			results = {result fum}
+			results = $results {result foe <={$results(1)}}
+			results = $results {result fie <={$results(2)}}
+			results = $results {result fee <={$results(3)}}
+			do-test = {$results(4)}
+		}
+		do-test = `` \n {echo $do-test}
+		for (got = <=$do-test; want = fee fie foe fum)
+			assert {~ $got $want}
+	}
+}

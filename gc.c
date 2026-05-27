@@ -22,8 +22,7 @@ struct Space {
 #define	MIN_minpspace	1000
 
 #if GCPROTECT
-#define	NSPACES		12
-#define FIRSTSPACE	1
+#define	NSPACES		10
 #endif
 
 #if HAVE_SYSCONF
@@ -136,10 +135,20 @@ static void initmmu(void) {
  * ``half'' space management
  */
 
-#if GCPROTECT
+/* allocspace -- create a new ``half'' space by allocating it */
+static Space *allocspace(Space *next, size_t size) {
+	size_t n = ALIGN(size);
+	Space *space = ealloc(sizeof (Space) + n);
+	space->bot = (void *) &space[1];
+	space->top = (void *) (((char *) space->bot) + n);
+	space->current = space->bot;
+	space->next = next;
+	return space;
+}
 
-/* mkspace -- create a new ``half'' space in debugging mode */
-static Space *mkspace(Space *space, Space *next, size_t size) {
+#if GCPROTECT
+/* claimspace -- claim one of a fixed number of spaces */
+static Space *claimspace(Space *space, Space *next, size_t size) {
 	assert(space == NULL || (&spaces[0] <= space && space < &spaces[NSPACES]));
 
 	/* find and clear out any existing/next spaces */
@@ -180,25 +189,23 @@ static Space *mkspace(Space *space, Space *next, size_t size) {
 
 	return space;
 }
-#define	newspace(next)		mkspace(NULL, next, minspace)
-#define	newpspace(next)		mkspace(NULL, next, minpspace)
 
+#define	newspace(next)		claimspace(NULL, next, minspace)
 #else	/* !GCPROTECT */
+#define	newspace(next)		allocspace(next, minspace)
+#endif
 
-/* newspace -- create a new ``half'' space */
-static Space *newspacesz(Space *next, size_t size) {
-	size_t n = ALIGN(size);
-	Space *space = ealloc(sizeof (Space) + n);
-	space->bot = (void *) &space[1];
-	space->top = (void *) (((char *) space->bot) + n);
-	space->current = space->bot;
-	space->next = next;
-	return space;
+#define	newpspace(next)		allocspace(next, minpspace)
+
+extern void *createpspace(void) {
+	return (void *)newpspace(NULL);
 }
-#define	newspace(next)		newspacesz(next, minspace)
-#define	newpspace(next)		newspacesz(next, minpspace)
 
-#endif	/* !GCPROTECT */
+extern void *setpspace(void *new) {
+	void *old = (void *)pspace;
+	pspace = (Space *)new;
+	return old;
+}
 
 /* deprecate -- take a space and invalidate it */
 static void deprecate(Space *space) {
@@ -207,26 +214,26 @@ static void deprecate(Space *space) {
 	assert(space != NULL);
 	for (base = space; base->next != NULL; base = base->next)
 		;
-	assert(&spaces[0] <= base && base < &spaces[NSPACES]);
-	for (;;) {
-		invalidate(space->bot, SPACESIZE(space));
-		if (space == base)
-			break;
-		else {
-			Space *next = space->next;
-			space->next = base->next;
-			base->next = space;
-			space = next;
+	/* true for gc spaces, false for pspaces */
+	if (&spaces[0] <= base && base < &spaces[NSPACES]) {
+		for (;;) {
+			invalidate(space->bot, SPACESIZE(space));
+			if (space == base)
+				break;
+			else {
+				Space *next = space->next;
+				space->next = base->next;
+				base->next = space;
+				space = next;
+			}
 		}
-	}
-#else
+	} else
+#endif
 	while (space != NULL) {
 		Space *old = space;
 		space = space->next;
 		efree(old);
 	}
-
-#endif
 }
 
 /* isinspace -- does an object lie inside a given Space? */
@@ -421,8 +428,8 @@ extern void gc(void) {
 		for (; new->next != NULL; new = new->next)
 			;
 		if (++new >= &spaces[NSPACES])
-			new = &spaces[FIRSTSPACE];
-		new = mkspace(new, NULL, minspace);
+			new = &spaces[0];
+		new = claimspace(new, NULL, minspace);
 #else
 		new = newspace(NULL);
 #endif
@@ -479,8 +486,10 @@ extern void *pseal(void *p) {
 	for (sp = pspace; sp != NULL; sp = sp->next)
 		psize += SPACEUSED(sp);
 
-	if (psize == 0)
+	if (psize == 0) {
+		deprecate(pspace);
 		return p;
+	}
 
 	/* TODO: this is an overestimate since it counts garbage */
 	gcreserve(psize);
@@ -529,12 +538,6 @@ extern void *pseal(void *p) {
 		;
 #endif
 	deprecate(pspace);
-#if GCPROTECT
-	pspace = mkspace(base, NULL, minpspace);
-#else
-	pspace = newpspace(NULL);
-#endif
-
 	--gcblocked;
 	return p;
 }
@@ -545,12 +548,11 @@ extern void initgc(void) {
 	initmmu();
 	spaces = ealloc(NSPACES * sizeof (Space));
 	memzero(spaces, NSPACES * sizeof (Space));
-	new = mkspace(&spaces[FIRSTSPACE], NULL, minspace);
-	pspace = mkspace(&spaces[0], NULL, minpspace);
+	new = claimspace(&spaces[0], NULL, minspace);
 #else
 	new = newspace(NULL);
-	pspace = newpspace(NULL);
 #endif
+	pspace = NULL;
 	old = NULL;
 }
 

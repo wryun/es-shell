@@ -99,7 +99,7 @@ let (
 				echo - $#passed-cases cases passed, $#failed-cases failed.
 			}
 		}
-		result $#failed-cases
+		result <={%count $failed-cases $test-execution-failure}
 	}
 )
 # test is the function which can be called in the test files to actually run

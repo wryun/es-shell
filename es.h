@@ -61,6 +61,7 @@ struct Tree {
 /*
  * miscellaneous data structures
  */
+typedef struct Dict Dict;
 
 typedef struct StrList StrList;
 struct StrList {
@@ -108,7 +109,7 @@ extern void closefds(void);
 extern int fdmap(int fd);
 extern int defer_mvfd(Boolean parent, int old, int new);
 extern int defer_close(Boolean parent, int fd);
-extern void undefer(int ticket);
+extern void undefer(int ticket, Boolean doclose);
 
 
 /* term.c */
@@ -117,6 +118,7 @@ extern Term *mkterm(char *str, Closure *closure);
 extern Term *mkstr(char *str);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
+extern Closure *getclosureinrefscope(Term *term, Dict **refdictp);
 extern Term *termcat(Term *t1, Term *t2);
 extern Boolean termeq(Term *term, const char *s);
 extern Boolean isclosure(Term *term);
@@ -143,6 +145,7 @@ extern Tree *gcmk(NodeKind VARARGS);	/* gcalloc a tree node */
 
 extern Closure *mkclosure(Tree *tree, Binding *binding);
 extern Closure *extractbindings(Tree *tree);
+extern Closure *extractbindingsinrefscope(Tree *tree, Dict **refdictp);
 extern Binding *mkbinding(char *name, List *defn, Binding *next);
 extern Binding *reversebindings(Binding *binding);
 
@@ -174,7 +177,7 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
 /* glob.c */
 
 extern char QUOTED[], UNQUOTED[];
-extern List *glob(List *list, StrList *quote);
+extern List *glob(List *list, StrList *quote, Binding *binding);
 extern Boolean haswild(const char *pattern, const char *quoting);
 
 
@@ -197,7 +200,7 @@ extern Vector *mkenv(void);
 extern void setnoexport(List *list);
 extern void addtolist(void *arg, char *key, void *value);
 extern List *listvars(Boolean internal);
-extern List *varswithprefix(char *prefix);
+extern List *varswithprefix(const char *prefix);
 
 typedef struct Push Push;
 extern Push *pushlist;
@@ -239,7 +242,6 @@ extern Noreturn esexit(int);
 
 /* dict.c */
 
-typedef struct Dict Dict;
 extern Dict *mkdict(void);
 extern void dictforall(Dict *dict, void (*proc)(void *, char *, void *), void *arg);
 extern void *dictget(Dict *dict, const char *name);
@@ -249,6 +251,10 @@ extern void *dictget2(Dict *dict, const char *name1, const char *name2);
 
 /* conv.c */
 
+extern void startrefscope(void);
+extern void reprintrefscope(void);
+extern void endrefscope(void);
+extern void refsetfromlist(List *);
 extern void initconv(void);
 
 
@@ -263,6 +269,7 @@ extern Noreturn panic(const char *fmt VARARGS);
 /* str.c */
 
 extern char *str(const char *fmt VARARGS);	/* create a gc space string by printing */
+extern char *pstr(const char *fmt VARARGS);	/* create a pspace string by printing */
 extern char *mprint(const char *fmt VARARGS);	/* create an ealloc space string by printing */
 extern StrList *mkstrlist(char *, StrList *);
 
@@ -287,16 +294,13 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 
 /* input.c */
 
-extern char *prompt, *prompt2;
-extern Tree *parse(char *esprompt1, char *esprompt2);
+extern Tree *parse(List *reader);
 extern Tree *parsestring(const char *str);
 extern Boolean isinteractive(void);
 extern Boolean isfromfd(void);
-extern void initinput(void);
-extern void resetparser(void);
 
 extern List *runfd(int fd, const char *name, int flags);
-extern List *runstring(const char *str, const char *name, int flags);
+extern List *runstring(const char *str, int flags);
 
 /* eval_* flags are also understood as runflags */
 #define	run_interactive		 4	/* -i or $0[0] = '-' */
@@ -304,25 +308,6 @@ extern List *runstring(const char *str, const char *name, int flags);
 #define	run_echoinput		16	/* -v */
 #define	run_printcmds		32	/* -x */
 #define	run_lisptrees		64	/* -L and defined(LISPTREES) */
-
-#if HAVE_READLINE
-extern Boolean resetterminal;
-#endif
-
-
-/* history.c */
-#if HAVE_READLINE
-extern void inithistory(void);
-
-extern void sethistory(char *file);
-extern void loghistory(char *cmd);
-extern void setmaxhistorylength(int length);
-extern void checkreloadhistory(void);
-#endif
-
-extern void newhistbuffer(void);
-extern void addhistbuffer(char c);
-extern char *dumphistbuffer(void);
 
 
 /* opt.c */
@@ -335,9 +320,9 @@ extern List *esoptend(void);
 
 /* prim.c */
 
-extern List *prim(char *s, List *list, Binding *binding, int evalflags);
+extern List *prim(char *s, List *list, int evalflags);
 extern void initprims(void);
-extern List *primswithprefix(char *prefix);
+extern List *primswithprefix(const char *prefix);
 
 
 /* split.c */
@@ -364,7 +349,7 @@ extern void getsigeffects(Sigeffect effects[]);
 extern List *mksiglist(void);
 extern void initsignals(Boolean interactive, Boolean allowdumps);
 extern Atomic slow;
-extern jmp_buf slowlabel;
+extern sigjmp_buf slowlabel;
 extern Boolean sigint_newline;
 extern void sigchk(void);
 extern Boolean issilentsignal(List *e);
@@ -383,7 +368,7 @@ extern int opentty(void);
 
 /* version.c */
 
-extern const char * const version;
+extern const List * const version;
 
 
 /* gc.c -- see gc.h for more */
@@ -403,6 +388,9 @@ extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked(void);		/* is collection disabled? */
 
 /* operations with pspace, the explicitly-collected gc space for parse tree building */
+extern void *createpspace(void);
+extern void *setpspace(void *);
+
 extern void *palloc(size_t n, Tag *t);		/* allocate n with collection tag t, but in pspace */
 extern void *pseal(void *p);			/* collect pspace into gcspace with root p */
 extern char *pdup(const char *s);		/* copy a 0-terminated string into pspace */
@@ -506,7 +494,7 @@ struct Handler {
 	Root *rootlist;
 	Push *pushlist;
 	unsigned long evaldepth;
-	jmp_buf label;
+	sigjmp_buf label;
 };
 
 extern Handler *tophandler, *roothandler;
@@ -530,7 +518,7 @@ extern List *raised(List *e);
 		_localhandler.evaldepth = evaldepth; \
 		_localhandler.up = tophandler; \
 		tophandler = &_localhandler; \
-		if (!setjmp(_localhandler.label)) {
+		if (!sigsetjmp(_localhandler.label, 0)) {
 	
 #define CatchException(e) \
 			pophandler(&_localhandler); \

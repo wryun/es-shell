@@ -2,49 +2,60 @@
 
 #define	MAXUNGET	2		/* maximum 2 character pushback */
 
-typedef struct Input Input;
+#include "token.h"	/* for YYSTYPE */
+
+/* Input contains state that lasts longer than a $&parse. */
 struct Input {
-	int (*get)(Input *self);
-	int (*fill)(Input *self), (*rfill)(Input *self);
-	void (*cleanup)(Input *self);
-	Input *prev;
-	const char *name;
-	unsigned char *buf, *bufend, *bufbegin, *rbuf;
-	size_t buflen;
-	int unget[MAXUNGET];
-	int ungot;
+	const char *name, *str;
 	int lineno;
 	int fd;
+	Boolean eof;
 	int runflags;
+
+	/* read buffer */
+	size_t buflen;
+	unsigned char *buf, *bufend, *bufbegin;
 };
 
+typedef enum { NW, RW, KW } WordState;	/* nonword, realword, keyword */
 
-#define	GETC()		(*input->get)(input)
-#define	UNGETC(c)	unget(input, c)
+/* Parser contains state that lasts for one call to $&parse or less. */
+struct Parser {
+	Input *input;
+	List *reader;
+	void *space;	/* pspace, for parser-related allocations */
+
+	/* these variables are all allocated in pspace */
+	Tree *tree;		/* the final parse tree */
+	Here *hereq;		/* pending here document queue */
+	const char *error;	/* syntax error, if it exists */
+
+	/* token pushback buffer */
+	int ungot, unget[MAXUNGET];
+
+	/* lexer state */
+	WordState ws;
+	Boolean dollar;
+	size_t bufsize;
+	char *tokenbuf;
+};
 
 
 /* input.c */
 
-extern Input *input;
-extern void unget(Input *in, int c);
-extern Boolean ignoreeof;
-extern void yyerror(const char *s);
+extern int get(Parser *p);
+extern void unget(Parser *p, int c);
+extern void yyerror(Parser *p, const char *s);
 
 
 /* token.c */
 
 extern const char dnw[];
-extern int yylex(void);
-extern void inityy(void);
-extern void print_prompt2(void);
+extern int yylex(YYSTYPE *y, Parser *p);
+extern void inityy(Parser *p);
+extern void print_prompt2(Parser *p);
 
 
 /* parse.y */
 
-extern Tree *parsetree;
-extern int yyparse(void);
-
-
-/* heredoc.c */
-
-extern void emptyherequeue(void);
+extern int yyparse(Parser *p);

@@ -1,10 +1,7 @@
 
 `Bugs'
 
-1.  tag closures so that they are inherited in subshells.  This would
-    make some things a little more natural.
-
-2.  Make es tail recursive.  In addition to being a Right Thing, this
+1.  Make es tail recursive.  In addition to being a Right Thing, this
     could be useful for reducing the number of primitives.   The only
     difficulty here is making sure that the interaction with the garbage 
     collector is done correctly.

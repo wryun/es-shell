@@ -11,7 +11,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -qy make gcc libtool autoconf automake bison libreadline-dev
+            sudo apt-get install -qy make gcc libtool autoconf automake libreadline-dev
 
       - run:
           name: Autotools

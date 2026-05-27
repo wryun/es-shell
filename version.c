@@ -1,3 +1,8 @@
 #include "es.h"
-static const char id[] = "@(#)es version 0.9.2 2-Mar-2022";
-const char * const version = id + (sizeof "@(#)" - 1);
+#include "term.h"
+#include "version.h"
+
+static const Term
+	version_term = { VERSION, NULL };
+static const List versionstruct = { (Term *) &version_term, NULL };
+const List * const version = &versionstruct;

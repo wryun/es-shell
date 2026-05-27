@@ -177,11 +177,6 @@ getopt_done:
 
 	ExceptionHandler
 		roothandler = &_localhandler;	/* unhygeinic */
-
-		initinput();
-#if HAVE_READLINE
-		inithistory();
-#endif
 		initprims();
 		initvars();
 
@@ -215,7 +210,7 @@ getopt_done:
 		vardef("*", NULL, argp);
 		vardef("0", NULL, mklist(mkstr(argv[0]), NULL));
 		if (cmd != NULL)
-			status = exitstatus(runstring(cmd, NULL, runflags));
+			status = exitstatus(runstring(cmd, runflags));
 		else
 			status = exitstatus(runfd(0, "stdin", runflags));
 

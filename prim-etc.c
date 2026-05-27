@@ -4,6 +4,7 @@
 
 #include "es.h"
 #include "prim.h"
+#include "version.h"
 
 PRIM(result) {
 	return list;
@@ -33,7 +34,7 @@ PRIM(setnoexport) {
 }
 
 PRIM(version) {
-	return mklist(mkstr((char *) version), NULL);
+	return (List *)version;
 }
 
 PRIM(exec) {
@@ -97,7 +98,7 @@ PRIM(whatis) {
 		List *fn;
 		Ref(char *, prog, getstr(term));
 		assert(prog != NULL);
-		fn = varlookup2("fn-", prog, binding);
+		fn = varlookup2("fn-", prog, NULL);
 		if (fn != NULL)
 			list = fn;
 		else {
@@ -135,67 +136,36 @@ PRIM(fsplit) {
 }
 
 PRIM(var) {
-	Term *term;
-	if (list == NULL)
-		return NULL;
-	Ref(List *, rest, list->next);
-	Ref(char *, name, getstr(list->term));
-	Ref(List *, defn, varlookup(name, NULL));
-	rest = prim_var(rest, NULL, evalflags);
-	term = mkstr(str("%S = %#L", name, defn, " "));
-	list = mklist(term, rest);
-	RefEnd3(defn, name, rest);
-	return list;
-}
-
-static void loginput(char *input) {
-	char *c;
-	List *fn = varlookup("fn-%write-history", NULL);
-	if (!isinteractive() || !isfromfd() || fn == NULL)
-		return;
-	for (c = input;; c++)
-		switch (*c) {
-		case '#': case '\n': return;
-		case ' ': case '\t': break;
-		default: goto writeit;
-		}
-writeit:
+	List *lp;
+	Ref(List *, result, NULL);
 	gcdisable();
-	Ref(List *, list, append(fn, mklist(mkstr(input), NULL)));
+	startrefscope();
+	for (lp = list; lp != NULL; lp = lp->next)
+		refsetfromlist(varlookup(getstr(lp->term), NULL));
+	for (lp = list; lp != NULL; lp = lp->next) {
+		char *name;
+		List *defn;
+		name = getstr(lp->term);
+		defn = varlookup(name, NULL);
+		result = mklist(mkstr(str("%S = %#L", name, defn, " ")), result);
+		reprintrefscope();
+	}
+	endrefscope();
 	gcenable();
-	eval(list, NULL, 0);
-	RefEnd(list);
+	result = reverse(result);
+	RefReturn(result);
 }
 
 PRIM(parse) {
 	List *result;
-	Ref(char *, prompt1, NULL);
-	Ref(char *, prompt2, NULL);
-	Ref(List *, lp, list);
-	if (lp != NULL) {
-		prompt1 = getstr(lp->term);
-		if ((lp = lp->next) != NULL)
-			prompt2 = getstr(lp->term);
-	}
-	RefEnd(lp);
-	newhistbuffer();
-
+	Ref(List *, reader, list);
 	Ref(Tree *, tree, NULL);
-	ExceptionHandler
-		tree = parse(prompt1, prompt2);
-	CatchException (ex)
-		Ref(List *, e, ex);
-		loginput(dumphistbuffer());
-		throw(e);
-		RefEnd(e);
-	EndExceptionHandler
-
-	loginput(dumphistbuffer());
+	tree = parse(reader);
 	result = (tree == NULL)
 		   ? NULL
 		   : mklist(mkterm(NULL, mkclosure(gcmk(nThunk, tree), NULL)),
 			    NULL);
-	RefEnd3(tree, prompt2, prompt1);
+	RefEnd2(tree, reader);
 	return result;
 }
 
@@ -215,7 +185,7 @@ PRIM(batchloop) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
 			cmd = (parser == NULL)
-					? prim("parse", NULL, NULL, 0)
+					? prim("parse", NULL, 0)
 					: eval(parser, NULL, 0);
 			SIGCHK();
 			dispatch = varlookup("fn-%dispatch", NULL);
@@ -302,47 +272,6 @@ PRIM(setmaxevaldepth) {
 	RefReturn(lp);
 }
 
-#if HAVE_READLINE
-PRIM(sethistory) {
-	if (list == NULL) {
-		sethistory(NULL);
-		return NULL;
-	}
-	Ref(List *, lp, list);
-	sethistory(getstr(lp->term));
-	RefReturn(lp);
-}
-
-PRIM(writehistory) {
-	if (list == NULL || list->next != NULL)
-		fail("$&writehistory", "usage: $&writehistory command");
-	loghistory(getstr(list->term));
-	return NULL;
-}
-
-PRIM(setmaxhistorylength) {
-	char *s;
-	int n;
-	if (list == NULL) {
-		setmaxhistorylength(-1); /* unlimited */
-		return NULL;
-	}
-	if (list->next != NULL)
-		fail("$&setmaxhistorylength", "usage: $&setmaxhistorylength [limit]");
-	Ref(List *, lp, list);
-	n = (int)strtol(getstr(lp->term), &s, 0);
-	if (n < 0 || (s != NULL && *s != '\0'))
-		fail("$&setmaxhistorylength", "max-history-length must be set to a positive integer");
-	setmaxhistorylength(n);
-	RefReturn(lp);
-}
-
-PRIM(resetterminal) {
-	resetterminal = TRUE;
-	return ltrue;
-}
-#endif
-
 
 /*
  * initialization
@@ -371,11 +300,5 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(exitonfalse);
 	X(noreturn);
 	X(setmaxevaldepth);
-#if HAVE_READLINE
-	X(sethistory);
-	X(writehistory);
-	X(resetterminal);
-	X(setmaxhistorylength);
-#endif
 	return primdict;
 }
