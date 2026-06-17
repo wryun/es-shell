@@ -1773,18 +1773,11 @@ A signal prefixed by a slash
 .Rc ( / )
 is ignored in the current shell, but retains default behavior in
 child processes.
-In addition, the signal
-.Cr sigint
-may be preceded by the prefix
-.Rc ( . )
-to indicate that normal shell interrupt processing
-(i.e., the printing of an extra newline)
-occurs.
 By default
 .I es
 starts up with the values
 .Ds
-.Cr ".sigint /sigquit /sigterm"
+.Cr "sigint /sigquit /sigterm"
 .De
 .TP
 \&
