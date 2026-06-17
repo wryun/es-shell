@@ -160,7 +160,7 @@ never succeeded
 }
 
 test 'signals in exception catchers' {
-	local (signals = sigint) {
+	local (signals = sigterm) {
 		let (
 			was-blocked = false
 			thrown = ()
@@ -169,7 +169,7 @@ test 'signals in exception catchers' {
 				thrown = $*
 			} {
 				catch @ e {
-					kill -INT $pid
+					kill -TERM $pid
 					was-blocked = true
 				} {
 					throw exception
@@ -182,7 +182,7 @@ test 'signals in exception catchers' {
 			catch @ {
 				thrown = $*
 			} {
-				catch @ e {kill -INT $pid} {throw exception}
+				catch @ e {kill -TERM $pid} {throw exception}
 			}
 			assert {~ $thrown(1) signal} second signal is caught
 		}
@@ -190,7 +190,7 @@ test 'signals in exception catchers' {
 			catch @ {
 				thrown = $*
 			} {
-				catch @ e {kill -INT $pid; throw exception} {throw exception}
+				catch @ e {kill -TERM $pid; throw exception} {throw exception}
 			}
 			assert {~ $thrown(1) signal} signal exception has precedence within catcher
 		}

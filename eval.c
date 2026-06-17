@@ -36,12 +36,9 @@ extern List *forkexec(char *file, List *list, Boolean inchild) {
 	}
 	gcenable();
 	status = ewaitfor(pid);
-	if ((status & 0xff) == 0) {
-		sigint_newline = FALSE;
-		SIGCHK();
-		sigint_newline = TRUE;
-	} else
-		SIGCHK();
+	if (!WIFSIGNALED(status) || WTERMSIG(status) != SIGINT)
+		clearsignal(SIGINT);
+	SIGCHK();
 	printstatus(0, status);
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
 }
