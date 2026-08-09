@@ -137,7 +137,7 @@ fn-unwind-protect = $&noreturn @ body cleanup {
 
 if {~ <=$&primitives limit} {fn-limit = $&limit}
 if {~ <=$&primitives time} {
-	fn time cmd {
+	fn-time = $&noreturn @ cmd {
 		$&collect
 		let ((str times) = <=$&time)
 		unwind-protect {
