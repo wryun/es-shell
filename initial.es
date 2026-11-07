@@ -704,7 +704,9 @@ fn %interactive-loop {
 				echo >[1=2] $msg
 				$fn-%dispatch false
 			} {~ $e signal} {
-				if {!~ $type sigint sigterm sigquit} {
+				if {~ $type sigint sigtstp sigquit} {
+					echo  # this is the newline for (^C ^Z ^\)
+				} {!~ $type sigterm} {
 					echo >[1=2] caught unexpected signal: $type
 				}
 			} {

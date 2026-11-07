@@ -114,7 +114,6 @@ PRIM(setsignals) {
 		switch (*s) {
 		case '-':	effect = sig_ignore;	s++; break;
 		case '/':	effect = sig_noop;	s++; break;
-		case '.':	effect = sig_special;	s++; break;
 		}
 		sig = signumber(s);
 		if (sig < 0)

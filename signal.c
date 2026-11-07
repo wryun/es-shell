@@ -5,8 +5,6 @@
 
 typedef void (*Sighandler)(int);
 
-Boolean sigint_newline = TRUE;
-
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
@@ -124,12 +122,6 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 				return old;
 			}
 			break;
-		case sig_special:
-			if (sig != SIGINT) {
-				eprint("$&setsignals: special handler not defined for %s\n", signame(sig));
-				return old;
-			}
-			FALLTHROUGH;
 		case sig_catch:
 			if (setsignal(sig, catcher) == SIG_ERR) {
 				eprint("$&setsignals: cannot catch %s\n", signame(sig));
@@ -196,7 +188,7 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 	}
 
 	if (interactive || sigeffect[SIGINT] == sig_default)
-		esignal(SIGINT, sig_special);
+		esignal(SIGINT, sig_catch);
 	if (!allowdumps) {
 		if (interactive)
 			esignal(SIGTERM, sig_noop);
@@ -214,7 +206,7 @@ extern void setsigdefaults(void) {
 	int sig;
 	for (sig = 1; sig < NSIG; sig++) {
 		Sigeffect e = sigeffect[sig];
-		if (e == sig_catch || e == sig_noop || e == sig_special)
+		if (e == sig_catch || e == sig_noop)
 			esignal(sig, sig_default);
 	}
 }
@@ -247,6 +239,13 @@ extern void exitonsignal(List *exception) {
 	esignal(sig, e);
 }
 
+extern void clearsignal(int sig) {
+	if (caught[sig]) {
+		caught[sig] = FALSE;
+		--sigcount;
+	}
+}
+
 extern List *mksiglist(void) {
 	int sig = NSIG;
 	Sigeffect effects[NSIG];
@@ -260,7 +259,6 @@ extern List *mksiglist(void) {
 		case sig_catch:		prefix = '\0';	break;
 		case sig_ignore:	prefix = '-';	break;
 		case sig_noop:		prefix = '/';	break;
-		case sig_special:	prefix = '.';	break;
 		}
 		Ref(char *, name, signame(sig));
 		if (prefix != '\0')
@@ -319,15 +317,6 @@ extern void sigchk(void) {
 
 	switch (sigeffect[sig]) {
 	case sig_catch:
-		while (gcisblocked())
-			gcenable();
-		throw(e);
-	case sig_special:
-		assert(sig == SIGINT);
-		/* this is the newline you see when you hit ^C while typing a command */
-		if (sigint_newline)
-			eprint("\n");
-		sigint_newline = TRUE;
 		while (gcisblocked())
 			gcenable();
 		throw(e);
