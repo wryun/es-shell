@@ -161,7 +161,9 @@ fn-%var		= $&var
 
 #	These builtins are only around as a matter of convenience, so
 #	users don't have to type the infamous <= (nee <>) operator.
-#	Whatis also protects the used from exceptions raised by %whatis.
+#	Whatis also protects the user from exceptions raised by %whatis.
+
+fn var	{ for (i = <={%var $*}) echo $i }
 
 fn whatis {
 	let (result = ) {
@@ -187,8 +189,6 @@ fn whatis {
 		result $result
 	}
 }
-
-fn var		{ for (i = $*) echo <={%var $i} }
 
 
 #	The while function is implemented with the forever looping primitive.
