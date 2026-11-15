@@ -156,36 +156,12 @@ if {~ <=$&primitives time}  {fn-time  = $&time}
 fn-%apids	= $&apids
 fn-%fsplit      = $&fsplit
 fn-%newfd	= $&newfd
-fn-%run         = $&run
 fn-%split       = $&split
 fn-%var		= $&var
-
-#	The %whatis function is called by the shell to convert anything that
-#	isn't a function into a function that it can call.  The shell performs
-#	its own function lookup, but %whatis does too for user convenience.
-#
-#	$name is the optional name used to refer to the current term being
-#	looked up, which comes up in cases like `fn-name = /path/to/bin`.
-
-fn %whatis term name {
-	if {~ $#name 0} {
-		name = $term
-	}
-	if {!~ $#(fn-$term) 0} {
-		result $(fn-$term)
-	} {~ $term /* ./* ../*} {
-		result %run $term $name
-	} {
-		let (searched = <={%pathsearch $term})
-		result %run $searched(1) $name $searched(2 ...)
-	}
-}
 
 #	These builtins are only around as a matter of convenience, so
 #	users don't have to type the infamous <= (nee <>) operator.
 #	Whatis also protects the used from exceptions raised by %whatis.
-
-fn var		{ for (i = $*) echo <={%var $i} }
 
 fn whatis {
 	let (result = ) {
@@ -211,6 +187,9 @@ fn whatis {
 		result $result
 	}
 }
+
+fn var		{ for (i = $*) echo <={%var $i} }
+
 
 #	The while function is implemented with the forever looping primitive.
 #	While uses $&noreturn to indicate that, while it is a lambda, it
@@ -601,23 +580,48 @@ if {~ <=$&primitives writeto} {
 #	These hook functions aren't produced by any syntax rewriting, but
 #	are still useful to override.  Again, see the manual for details.
 
-#	%home, which is used for ~expansion.  ~ and ~/path generate calls
-#	to %home without arguments;  ~user and ~user/path generate calls
-#	to %home with one argument, the user name.
+#	%run is es' mechanism to run external executables.  It performs a
+#	fork()/exec(), and if the exec() fails, looks up and calls %exec-failure
+#	in the child process.
+#
+#	A default version of %exec-failure is provided (under conditional
+#	compilation) for systems that don't do #! interpretation themselves.
 
-fn-%home	= $&home
+fn-%run	= $&run
+
+if {~ <=$&primitives execfailure} {
+	fn-%exec-failure = $&execfailure
+}
+
+#	The es runtime can evaluate functions, primitives, and special syntactic
+#	forms.  For anything else, like external executables, the shell calls
+#	%whatis to convert the term into a call to a function (typically %run).
+#
+#	$name is the name used to refer to the current term being looked up,
+#	in order to preserve the right value of $0 in cases such as
+#
+#		fn-name = /path/to/bin
+#
+#	If the term being looked up by %whatis is not a function name or an
+#	absolute path, %whatis calls %pathsearch and wraps the result in a call
+#	to %run.
+
+fn %whatis term name {
+	if {!~ $#(fn-$term) 0} {
+		result $(fn-$term)
+	} {~ $term /* ./* ../*} {
+		result %run $term $name
+	} {
+		let (searched = <={%pathsearch $term})
+		result %run $searched(1) $name $searched(2 ...)
+	}
+}
 
 #	Path searching used to be a primitive, but the access function
-#	means that it can be written easier in es.  Is is not called for
-#	absolute path names or for functions.
+#	means that it can be written easier in es.  It is called by %whatis to
+#	convert a relative path to an absolute one.
 
 fn %pathsearch name { access -n $name -1e -xf $path }
-
-#	The exec-failure hook is called in the child if an exec() fails.
-#	A default version is provided (under conditional compilation) for
-#	systems that don't do #! interpretation themselves.
-
-if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
 #	The %write-history hook is used in interactive contexts to write
 #	command input to the history file (and/or readline's in-memory
@@ -640,6 +644,12 @@ if {~ <=$&primitives writehistory} {
 		}
 	}
 }
+
+#	%home, which is used for ~expansion.  ~ and ~/path generate calls
+#	to %home without arguments;  ~user and ~user/path generate calls
+#	to %home with one argument, the user name.
+
+fn-%home	= $&home
 
 
 #

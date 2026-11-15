@@ -311,7 +311,7 @@ static List *whatis(Term *term, char *name) {
 	if (search == NULL)
 		fail("es:whatis", "%E: fn %%whatis undefined", term);
 	gcdisable();
-	list = mklist(term, name == NULL ? NULL : mklist(mkstr(name), NULL));
+	list = mklist(term, mklist((name == NULL ? term : mkstr(name)), NULL));
 	list = append(search, list);
 	RefEnd(search);
 	gcenable();
