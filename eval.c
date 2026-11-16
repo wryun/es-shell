@@ -306,17 +306,19 @@ extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
 	RefReturn(result);
 }
 
-/* pathsearch -- evaluate fn %pathsearch + some argument */
-extern List *pathsearch(Term *term) {
-	List *list;
-	Ref(List *, search, NULL);
-	search = varlookup("fn-%pathsearch", NULL);
+/* whatis -- evaluate fn %whatis + some argument */
+static List *whatis(Term *term, char *name) {
+	Ref(List *, list, NULL);
+	Ref(List *, search, varlookup("fn-%whatis", NULL));
 	if (search == NULL)
-		fail("es:pathsearch", "%E: fn %%pathsearch undefined", term);
-	list = mklist(term, NULL);
+		fail("es:whatis", "%E: fn %%whatis undefined", term);
+	gcdisable();
+	list = mklist(term, mklist((name == NULL ? term : mkstr(name)), NULL));
 	list = append(search, list);
 	RefEnd(search);
-	return eval(list, NULL, 0);
+	gcenable();
+	list = eval(list, NULL, 0);
+	RefReturn(list);
 }
 
 /* eval -- evaluate a list, producing a list */
@@ -401,8 +403,6 @@ restart:
 		goto done;
 	}
 
-	/* the logic here is duplicated in $&whatis */
-
 	Ref(char *, name, getstr(list->term));
 	fn = varlookup2("fn-", name, binding);
 	if (fn != NULL) {
@@ -411,32 +411,9 @@ restart:
 		RefPop(name);
 		goto restart;
 	}
-	if (isabsolute(name)) {
-		char *error = checkexecutable(name);
-		if (error != NULL)
-			fail("$&whatis", "%s: %s", name, error);
-		if (funcname != NULL) {
-			Term *fn = mkstr(funcname);
-			list = mklist(fn, list->next);
-			funcname = NULL;
-		}
-		gcdisable();
-		list = mklist(mkstr("%run"), mklist(mkstr(name), list));
-		gcenable();
-		RefPop(name);
-		goto restart;
-	}
 	RefEnd(name);
 
-	fn = pathsearch(list->term);
-	if (fn != NULL && fn->next == NULL
-	    && (cp = getclosure(fn->term)) == NULL) {
-		gcdisable();
-		list = mklist(mkstr("%run"), append(fn, list));
-		gcenable();
-		goto restart;
-	}
-
+	fn = whatis(list->term, funcname);
 	if (fn != NULL)
 		funcname = getstr(list->term);
 	list = append(fn, list->next);
