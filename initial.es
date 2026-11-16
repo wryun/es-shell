@@ -617,6 +617,15 @@ fn %whatis term name {
 	}
 }
 
+#	The run hook is used to fork/exec external executables.  %run calls
+#	%exec-failure in the child process if the exec() call fails.
+#	A default version of %exec-failure is provided (under conditional
+#	compilation) for systems that don't do #! interpretation themselves.
+
+fn-%run	= $&run
+
+if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
+
 #	Path searching used to be a primitive, but the access function
 #	means that it can be written easier in es.  It is called by %whatis to
 #	convert a relative path to an absolute one.
