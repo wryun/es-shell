@@ -243,6 +243,9 @@ extern List *runinput(Input *in, int runflags) {
 		if (flags & eval_exitonfalse) {
 			dispatch = mklist(mkstr("%exit-on-false"), dispatch);
 			flags &= ~eval_exitonfalse;
+		} else if (flags & eval_throwonfalse) {
+			dispatch = mklist(mkstr("%exit-on-false"), dispatch);
+			flags &= ~eval_throwonfalse;
 		}
 		varpush(&push, "fn-%dispatch", dispatch);
 
