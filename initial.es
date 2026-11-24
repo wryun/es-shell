@@ -156,7 +156,6 @@ if {~ <=$&primitives time}  {fn-time  = $&time}
 fn-%apids	= $&apids
 fn-%fsplit      = $&fsplit
 fn-%newfd	= $&newfd
-fn-%run         = $&run
 fn-%split       = $&split
 fn-%var		= $&var
 fn-%whatis	= $&whatis
@@ -580,17 +579,20 @@ if {~ <=$&primitives writeto} {
 
 fn-%home	= $&home
 
+#	The run hook is used to fork/exec external executables.  %run calls
+#	%exec-failure in the child process if the exec() call fails.
+#	A default version of %exec-failure is provided (under conditional
+#	compilation) for systems that don't do #! interpretation themselves.
+
+fn-%run	= $&run
+
+if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
+
 #	Path searching used to be a primitive, but the access function
 #	means that it can be written easier in es.  Is is not called for
 #	absolute path names or for functions.
 
 fn %pathsearch name { access -n $name -1e -xf $path }
-
-#	The exec-failure hook is called in the child if an exec() fails.
-#	A default version is provided (under conditional compilation) for
-#	systems that don't do #! interpretation themselves.
-
-if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 
 #	The %write-history hook is used in interactive contexts to write
 #	command input to the history file (and/or readline's in-memory
