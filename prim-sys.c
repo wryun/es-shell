@@ -91,12 +91,7 @@ static List *forkexec(char *file, List *list, Boolean inchild) {
 	}
 	gcenable();
 	status = ewaitfor(pid);
-	if ((status & 0xff) == 0) {
-		sigint_newline = FALSE;
-		SIGCHK();
-		sigint_newline = TRUE;
-	} else
-		SIGCHK();
+	SIGCHK();
 	printstatus(0, status);
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
 }
@@ -155,7 +150,6 @@ PRIM(setsignals) {
 		switch (*s) {
 		case '-':	effect = sig_ignore;	s++; break;
 		case '/':	effect = sig_noop;	s++; break;
-		case '.':	effect = sig_special;	s++; break;
 		}
 		sig = signumber(s);
 		if (sig < 0)

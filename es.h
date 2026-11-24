@@ -340,7 +340,7 @@ extern char *sigmessage(int sig);
 
 #define	SIGCHK() sigchk()
 typedef enum {
-	sig_nochange, sig_catch, sig_default, sig_ignore, sig_noop, sig_special
+	sig_nochange, sig_catch, sig_default, sig_ignore, sig_noop
 } Sigeffect;
 extern Sigeffect esignal(int sig, Sigeffect effect);
 extern void setsigeffects(const Sigeffect effects[]);
@@ -349,7 +349,6 @@ extern List *mksiglist(void);
 extern void initsignals(Boolean interactive, Boolean allowdumps);
 extern Atomic slow;
 extern sigjmp_buf slowlabel;
-extern Boolean sigint_newline;
 extern void sigchk(void);
 extern Boolean issilentsignal(List *e);
 extern void exitonsignal(List *e);
