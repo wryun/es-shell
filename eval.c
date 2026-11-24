@@ -218,7 +218,7 @@ static List *forloop(Tree *defn0, Tree *body0,
 				RefPop(bp);
 				break;
 			}
-			result = walk(body, bp, evalflags & eval_exitonfalse);
+			result = walk(body, bp, evalflags &~ eval_inchild);
 			RefEnd(bp);
 			SIGCHK();
 		}

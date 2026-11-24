@@ -23,7 +23,8 @@ PRIM(if) {
 				cond = eval1(lp->term, evalflags & eval_throwonfalse);
 #if THROW_ON_FALSE
 			CatchException (e)
-				cond = e->next;
+				if (termeq(e->term, "false")) cond = e->next;
+				else throw(e);
 			EndExceptionHandler
 #endif
 			lp = lp->next;

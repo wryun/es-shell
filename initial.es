@@ -136,7 +136,7 @@ fn-unwind-protect = $&noreturn @ body cleanup {
 			if {~ $exception(1) caught} {
 				throw $exception(2 ...)
 			}
-			result $result
+			result = $result
 		}
 	}
 }

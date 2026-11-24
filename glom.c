@@ -216,7 +216,7 @@ static List *glom1(Tree *tree, Binding *binding, int evalflags) {
 						evalflags & eval_throwonfalse));
 #if THROW_ON_FALSE
 			CatchException (e)
-				if (termeq(e->term, "false")) list = e->next;
+				if (termeq(e->term, "false")) list = listcopy(e->next);
 				else throw(e);
 			EndExceptionHandler
 #endif
