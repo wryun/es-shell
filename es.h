@@ -356,7 +356,6 @@ extern void exitonsignal(List *e);
 extern void setsigdefaults(void);
 extern void blocksignals(void);
 extern void unblocksignals(void);
-extern void clearsignal(int sig);
 
 
 /* open.c */

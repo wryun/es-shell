@@ -239,13 +239,6 @@ extern void exitonsignal(List *exception) {
 	esignal(sig, e);
 }
 
-extern void clearsignal(int sig) {
-	if (caught[sig]) {
-		caught[sig] = FALSE;
-		--sigcount;
-	}
-}
-
 extern List *mksiglist(void) {
 	int sig = NSIG;
 	Sigeffect effects[NSIG];
