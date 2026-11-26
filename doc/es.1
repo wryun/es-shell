@@ -184,7 +184,7 @@
 es \- extensible shell
 .SH SYNOPSIS
 .B es
-.RB [ \-silevxnpo ]
+.RB [ \-silevxnpod ]
 .RB [ \-c
 .IR command
 |
@@ -219,7 +219,7 @@ is a sequence of words separated by white space (space and tab) characters.
 A word is either a string or a program fragment (see below).
 The first word is the command to be executed; the remaining
 words are passed as arguments to that command.
-If the first word is a string, it is a interpreted as the
+If the first word is a string, it is interpreted as the
 name of a program or shell function to run.
 If the name is the name of a shell function, that function
 is executed.
@@ -251,7 +251,7 @@ gives several characters special meaning;
 special characters automatically terminate words.
 The following characters, along with space, tab, and newline, are special:
 .Ds
-.Cr "# $ & \(aq ( ) ; < = > \e \(ha \(ga { | }"
+.Cr "# $ & \(aq ( ) ; < = > \e \(ha \(ga { | } !"
 .De
 .PP
 The single quote
@@ -464,7 +464,7 @@ To reference a variable with other
 characters in its name, quote the variable name.
 Thus:
 .Ds
-.Cr "echo $\(aqwe$Ird\Variab!le\(aq"
+.Cr "echo $\(aqwe$Ird\eVariab!le\(aq"
 .De
 .PP
 A variable name produced by some complex operation,
@@ -705,7 +705,7 @@ is replaced by the value of
 which is usually the home directory of the current user.
 A tilde followed by a username is replaced with the home directory
 of that user, according to
-.IR getpwent (3).
+.IR getpwnam (3).
 .SS "Pattern Matching"
 The tilde
 .Rc ( \(ti )
@@ -791,12 +791,10 @@ command for cases where repeated pattern matching with the tilde
 .Rc ( \(ti )
 operator is inconvenient.
 .PP
-This invocation compares the
+This example invocation compares the
 .I subject
 against the given patterns and executes the first action corresponding
-with a matched pattern, or raises an
-.Cr error
-exception if no matches for the
+with a matched pattern, or prints a complaint if no matches for the
 .I subject
 exist:
 .ta 2.5i
@@ -1287,7 +1285,7 @@ A function in
 .I es
 is a variable of the form
 .Ci fn\- name\fR.
-If name for which the appropriate
+If the name for which the appropriate
 .Cr fn-
 variable exists is found in the first position of a command,
 the value of the variable is substituted for the first word.
@@ -1582,7 +1580,7 @@ etc. are the same as
 .Cr $*(2) ,
 etc.
 .TP
-.Cr $0
+.Cr 0
 Holds the value of
 .Cr argv[0]
 with which
@@ -1599,6 +1597,9 @@ file being interpreted for the duration of a
 .TP
 .Cr apid
 The process ID of the last process started in the background.
+.TP
+.Cr bqstatus
+The exit status of the last command run within a command substitution.
 .TP
 .Cr history
 The name of a file to which commands are appended as
@@ -1648,7 +1649,9 @@ is space-tab-newline.
 Limits the maximum depth of the internal
 .I es
 call stack.
-If that maximum depth is reached, an error exception is raised.
+If that maximum depth is reached, an
+.Cr error
+exception is raised.
 This protects the shell (and the user) from crashes when unbounded
 recursion happens.
 If
@@ -1789,7 +1792,14 @@ starts up with the values
 .TP
 \&
 in
-.Cr $signals ;
+.Cr $signals
+when interactive, or
+.Ds
+.Cr ".sigint /sigquit"
+.De
+.TP
+\&
+otherwise;
 other values will be on the list if the shell starts up with
 some signals ignored.
 .PP
@@ -1919,7 +1929,8 @@ option is used, the name of the first file which the test succeeds for is return
 if the test succeeds for no file, the empty list is returned.
 However, if the
 .Cr \-e
-option was used,
+option was used in addition to
+.Cr \-1 ,
 .Cr access
 raises an
 .Cr error
@@ -2323,9 +2334,7 @@ This function catches the exception
 which causes it to return.
 This function is invoked by the shell on startup and from the dot
 .Rc ( . )
-and
-.Cr eval
-commands, when the input source is not interactive.
+command when the input source is not interactive.
 (See also
 .Cr %interactive-loop .)
 .TP
@@ -2521,11 +2530,15 @@ that has a true return value.
 Returns the result of the last command run.
 .TP
 .Cr "%parse \fIprompt1 prompt2\fP"
-Reads input from the current input source, printing
+Reads input from the current input source using
+.Cr %read-line ,
+printing
 .I prompt1
 before reading anything and
 .I prompt2
-before reading continued lines.
+before reading continued lines, and calling
+.Cr %write-history
+to write input to shell history.
 Returns a code fragment suitable for execution.
 Raises the exception
 .Cr eof
@@ -2560,6 +2573,18 @@ wish to have executed before being prompted (e.g., updating the value of the
 .Cr prompt
 variable to contain all or part of the current working directory).
 .TP
+.Cr "%read-line \fIprompt\fP"
+Prints
+.I prompt
+to standard error and reads from standard input using the readline library,
+or using the
+.Cr read
+primitive otherwise; if standard input is not a TTY, simply reads the input.
+input.
+In either case,
+.Cr %read-line
+returns the result.
+.TP
 .Cr "%readfrom \fIvar input cmd\fP"
 Runs
 .I cmd
@@ -2578,8 +2603,8 @@ with the argument vector set to the remaining arguments.
 .Cr "%seq \fIcmd ...\fP"
 Runs the commands, in order.
 .TP
-.Cr "%whatis \fIprogram ...\fP"
-For each named
+.Cr "%whatis \fIprogram\fP"
+For the named
 .IR program ,
 returns the pathname, primitive, lambda, or code fragment which
 would be run if the program appeared as the first word of a command.
@@ -2769,7 +2794,7 @@ The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
 .Ds
 .ft \*(Cf
-setnoexport	setsignals
+setmaxevaldepth	setnoexport	setsignals
 .ft R
 .De
 .PP
@@ -2826,7 +2851,7 @@ is used as the initial implementation of the
 .Cr %write-history
 function.
 .PP
-Several primitives are not directly associated with other function.
+Several primitives are not directly associated with other functions.
 They are:
 .TP
 .Cr "$&collect"
@@ -2915,7 +2940,8 @@ When combined with
 prints the entered command based on the internal (parsed) representation.
 .TP
 .Cr \-p
-Don't initialize functions from the environment.
+Don't initialize functions (including settor functions) from the
+environment.
 This is used to help make scripts that don't break unexpectedly when
 the environment contains functions that would override commands used in
 the script.
@@ -3056,7 +3082,7 @@ Please report bugs on the Github repository
 .IR execve (2),
 .IR getrlimit (2),
 .IR fopen (3),
-.IR getpwent (3)
+.IR getpwnam (3)
 .PP
 Paul Haahr and Byron Rakitzis,
 .I "Es \(em A shell with higher-order functions,"
