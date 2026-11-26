@@ -22,7 +22,7 @@ static int mode_masks[] = {
 	O_RDONLY,			/* rOpen */
 	O_WRONLY | O_CREAT | O_TRUNC,	/* rCreate */
 	O_WRONLY | O_CREAT | O_APPEND,	/* rAppend */
-	O_RDWR   | O_CREAT,		/* oReadWrite */
+	O_RDWR,				/* oReadWrite */
 	O_RDWR   | O_CREAT | O_TRUNC,	/* oReadCreate */
 	O_RDWR   | O_CREAT | O_APPEND,	/* oReadAppend */
 };
