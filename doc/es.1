@@ -68,47 +68,53 @@
 .\" I stole the Xf macro from the -man macros on my machine (originally
 .\" "}S", I renamed it so that it won't conflict).
 .\"-------
-.\" Set Cf to the name of the constant width font.
-.\" It will be "C" or "(CW", typically.
-.\" NOTEZ BIEN the lines defining Cf must have no trailing white space:
+.\" Set Cf to the name of the constant width font (for .ft), and Ce to its
+.\" \f escape argument (e.g. "(CR" or "(CW" for two-character font names).
+.\" NOTEZ BIEN the lines defining Cf and Ce must have no trailing white space:
 .\"-------
-.if t .ds Cf C
-.if n .ds Cf R
+.ds Cf R
+.ds Ce R
+.if t .if !\n(.g .ds Cf CW
+.if t .if !\n(.g .ds Ce (CW
+.if t .if \n(.g .if F CR .ds Cf CR
+.if t .if \n(.g .if F CR .ds Ce (CR
+.if t .if \n(.g .if !F CR .if F CW .ds Cf CW
+.if t .if \n(.g .if !F CR .if F CW .ds Ce (CW
 .\"-------
 .\" Rc - Alternate Roman and Courier
 .\"-------
 .de Rc
-.Xf R \\*(Cf \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
+.Xf R \\*(Ce \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
 ..
 .\"-------
 .\" Ic - Alternate Italic and Courier
 .\"-------
 .de Ic
-.Xf I \\*(Cf \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
+.Xf I \\*(Ce \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
 ..
 .\"-------
 .\" Bc - Alternate Bold and Courier
 .\"-------
 .de Bc
-.Xf B \\*(Cf \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
+.Xf B \\*(Ce \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
 ..
 .\"-------
 .\" Cr - Alternate Courier and Roman
 .\"-------
 .de Cr
-.Xf \\*(Cf R \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
+.Xf \\*(Ce R \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
 ..
 .\"-------
 .\" Ci - Alternate Courier and Italic
 .\"-------
 .de Ci
-.Xf \\*(Cf I \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
+.Xf \\*(Ce I \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
 ..
 .\"-------
 .\" Cb - Alternate Courier and Bold
 .\"-------
 .de Cb
-.Xf \\*(Cf B \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
+.Xf \\*(Ce B \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
 ..
 .\"-------
 .\" Xf - Alternate fonts
