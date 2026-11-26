@@ -112,6 +112,8 @@ EOF
 	assert {~ `` \n {$es -nc '<< !EOF &' >[2=1]} *'literal word'*}
 	assert {~ `` \n {$es -nc '>{} a=b' >[2=1]} *'redirection'*}
 	assert {$es -c '~~ 0x 0?**; true'}
+
+	assert {access -c /dev/tty && !access -c /dev}
 }
 
 # These tests are based on notes in the CHANGES file from the pre-git days.

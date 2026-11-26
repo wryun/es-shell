@@ -37,14 +37,22 @@ test 'access exceptions' {
 test 'file types' {
 	assert {access -d /}
 	assert {!access -d $es}
-	touch regular
-	ln -s regular symbolic
+	assert {access -c /dev/null}
+	assert {!access -c /dev}
+
 	unwind-protect {
+		touch regular
+		ln -s regular symbolic
+		mkfifo fifo
+
 		assert {access -f regular}
 		assert {access -l symbolic}
 		assert {!access -l regular}
 		assert {access -f symbolic}
+		assert {access -p fifo}
+		assert {!access -f fifo}
+		assert {!access -p regular}
 	} {
-		rm -f symbolic regular
+		rm -f symbolic regular fifo
 	}
 }

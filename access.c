@@ -72,6 +72,7 @@ static int testfile(char *path, unsigned int perm, unsigned int type) {
 	switch(type) {
 	case IFREG:	if (!S_ISREG(st.st_mode)) return EACCES; break;
 	case IFDIR:	if (!S_ISDIR(st.st_mode)) return EACCES; break;
+	case IFCHR:	if (!S_ISCHR(st.st_mode)) return EACCES; break;
 	case IFBLK:	if (!S_ISBLK(st.st_mode)) return EACCES; break;
 	case IFLNK:	if (!S_ISLNK(st.st_mode)) return EACCES; break;
 	case IFSOCK:	if (!S_ISSOCK(st.st_mode)) return EACCES; break;
