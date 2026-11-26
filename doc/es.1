@@ -2513,7 +2513,10 @@ and
 have the same meanings in
 .Cr %openfile
 as they do in
-.IR fopen (3).
+.IR fopen (3),
+except that
+.Cr r+
+creates the file if it does not exist.
 .Cr %openfile
 is invoked by the redirection hook functions:
 .Cr %append ,
